@@ -41,9 +41,10 @@
     box-sizing: border-box;
     display: grid;
     gap: 8px;
-    max-height: min(70vh, 640px);
+    max-height: min(82vh, 760px);
     min-width: 0;
     overscroll-behavior: contain;
+    overflow-x: hidden;
     overflow-y: auto;
     padding: 12px;
     scrollbar-width: thin;
@@ -51,9 +52,28 @@
 
 .node-edit-dialog-section {
     display: grid;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
     padding: 0;
+}
+
+.node-edit-dialog-identity {
+    margin-bottom: -2px;
+}
+
+.node-edit-dialog-node-id ::deep(.mud-input > input.mud-input-root) {
+    font-size: 0.88rem;
+    min-height: 34px;
+    padding-bottom: 6px;
+    padding-top: 10px;
+}
+
+.node-edit-dialog-node-id ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
+    min-height: 38px;
+}
+
+.node-edit-dialog-node-id ::deep(.mud-input-label) {
+    font-size: 0.72rem;
 }
 
 .node-edit-dialog-content ::deep(.mud-input-control) {
@@ -97,6 +117,34 @@
     display: contents;
 }
 
+.node-edit-dialog-content.dynamic-mapper-dialog {
+    gap: 8px;
+    grid-template-areas:
+        "identity config"
+        "workbench workbench";
+    grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+    max-height: min(84vh, 820px);
+    padding: 10px;
+}
+
+.node-edit-dialog-content.dynamic-mapper-dialog .node-edit-dialog-identity {
+    align-self: start;
+    grid-area: identity;
+    margin-bottom: 0;
+}
+
+.node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-editor) {
+    display: contents;
+}
+
+.node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-config-grid) {
+    grid-area: config;
+}
+
+.node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-workspace) {
+    grid-area: workbench;
+}
+
 .node-edit-dialog-editor ::deep(.mud-grid) {
     margin: 0;
 }
@@ -128,36 +176,9 @@
     height: 21px;
 }
 
-.node-edit-dialog-editor ::deep(.mapper-workbench .mapper-panel) {
-    background: transparent;
-    border-color: color-mix(in srgb, var(--flux-border) 68%, transparent);
+.node-edit-dialog-editor ::deep(.dynamic-mapper-workspace .dynamic-mapper-monaco-editor) {
     border-radius: 6px;
-    min-height: 260px;
-    padding: 8px;
-}
-
-.node-edit-dialog-editor ::deep(.mapper-workbench .mapper-editor-panel) {
-    min-height: 440px;
-}
-
-.node-edit-dialog-editor ::deep(.mapper-panel-heading) {
-    margin-bottom: 7px;
-}
-
-.node-edit-dialog-editor ::deep(.mapper-monaco-editor) {
-    border-radius: 6px;
-    height: 360px;
-    min-height: 360px;
-}
-
-.node-edit-dialog-editor ::deep(.mapper-input-editor) {
-    height: 240px;
-    min-height: 240px;
-}
-
-.node-edit-dialog-editor ::deep(.mapper-result-editor) {
-    height: 286px;
-    min-height: 286px;
+    min-height: 0;
 }
 
 .node-edit-dialog-actions {
@@ -178,10 +199,6 @@
     line-height: 1.2;
     min-height: 28px;
     min-width: 0;
-}
-
-.node-edit-dialog-action-status.ready {
-    display: none;
 }
 
 .node-edit-dialog-action-spacer {
@@ -223,5 +240,13 @@
 
     .node-edit-dialog-actions ::deep(.mud-button-root) {
         width: 100%;
+    }
+
+    .node-edit-dialog-content.dynamic-mapper-dialog {
+        grid-template-areas:
+            "identity"
+            "config"
+            "workbench";
+        grid-template-columns: minmax(0, 1fr);
     }
 }

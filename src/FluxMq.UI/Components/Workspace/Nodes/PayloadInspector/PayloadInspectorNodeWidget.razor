@@ -1,18 +1,84 @@
-@*
-    Inspector widget: shows what formats the inspector recognizes (JSON / hex / raw).
-*@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 
-<NodeWidgetShell Node="@Node" HeaderIcon="@Icons.Material.Filled.FindInPage" CategoryColor="@Color.Secondary">
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@Icons.Material.Filled.FindInPage"
+                 CategoryColor="@Color.Secondary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false">
     <Body>
-        <MudText Typo="Typo.caption" Color="Color.Secondary">
-            Maps incoming envelopes into typed payload inspections (JSON, text, binary).
-        </MudText>
-        <div class="d-flex gap-1 mt-2">
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">JSON</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">Text</MudChip>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">Hex</MudChip>
+        <div class="payload-inspector-node-summary">
+            <div class="payload-inspector-node-meta">
+                <div class="payload-inspector-node-meta-item input">
+                    <span>Input</span>
+                    <strong>MqttEnvelope</strong>
+                </div>
+                <div class="payload-inspector-node-meta-item output">
+                    <span>Output</span>
+                    <strong>InspectedMqttMessage</strong>
+                </div>
+                <div class="payload-inspector-node-meta-item">
+                    <span>Formats</span>
+                    <strong>Auto detect</strong>
+                </div>
+            </div>
+
+            <div class="payload-inspector-node-contracts">
+                <div class="payload-inspector-node-contract" aria-label="Payload inspector input fields">
+                    <span class="payload-inspector-node-contract-label">Input fields</span>
+                    <span class="payload-inspector-node-token">topic</span>
+                    <span class="payload-inspector-node-token">payload</span>
+                    <span class="payload-inspector-node-token">qos</span>
+                    <span class="payload-inspector-node-token">retain</span>
+                </div>
+                <div class="payload-inspector-node-contract" aria-label="Payload inspector result fields">
+                    <span class="payload-inspector-node-contract-label">Result fields</span>
+                    <span class="payload-inspector-node-token">kind</span>
+                    <span class="payload-inspector-node-token">contentType</span>
+                    <span class="payload-inspector-node-token">formatted</span>
+                    <span class="payload-inspector-node-token">hexDump</span>
+                </div>
+            </div>
         </div>
     </Body>
+    <Editor>
+        <div class="payload-inspector-node-editor" aria-label="Payload inspector settings">
+            <div class="payload-inspector-node-config-summary" aria-label="Payload inspector contract summary">
+                <div class="payload-inspector-node-setting-line">
+                    <span>Input</span>
+                    <strong>MqttEnvelope</strong>
+                    <div class="payload-inspector-node-token-group">
+                        <span class="payload-inspector-node-token">topic</span>
+                        <span class="payload-inspector-node-token">payload</span>
+                        <span class="payload-inspector-node-token">qos</span>
+                        <span class="payload-inspector-node-token">retain</span>
+                    </div>
+                </div>
+
+                <div class="payload-inspector-node-setting-line">
+                    <span>Output</span>
+                    <strong>InspectedMqttMessage</strong>
+                    <div class="payload-inspector-node-token-group">
+                        <span class="payload-inspector-node-token">kind</span>
+                        <span class="payload-inspector-node-token">contentType</span>
+                        <span class="payload-inspector-node-token">formatted</span>
+                        <span class="payload-inspector-node-token">hexDump</span>
+                    </div>
+                </div>
+
+                <div class="payload-inspector-node-setting-line" aria-label="Payload inspector decode behavior">
+                    <span>Decode</span>
+                    <strong>Auto detect</strong>
+                    <div class="payload-inspector-node-token-group">
+                        <span class="payload-inspector-node-token">json</span>
+                        <span class="payload-inspector-node-token">text</span>
+                        <span class="payload-inspector-node-token">binary</span>
+                        <span class="payload-inspector-node-token">hex</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Editor>
 </NodeWidgetShell>

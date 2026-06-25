@@ -4,83 +4,117 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Storage"
                  CategoryColor="@Color.Info"
-                 EditDialogMaxWidth="MaxWidth.Medium"
+                 EditDialogMaxWidth="MaxWidth.Large"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <div class="d-flex flex-wrap gap-1">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.Engine</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">@Model.MaxKeys keys</MudChip>
+        <div class="state-reducer-summary">
+            <div class="state-reducer-meta">
+                <div class="state-reducer-meta-item engine">
+                    <span>Engine</span>
+                    <strong>@EngineCaption</strong>
+                </div>
+                <div class="state-reducer-meta-item">
+                    <span>Key</span>
+                    <strong title="@KeyCaption">@KeyCaption</strong>
+                </div>
+                <div class="state-reducer-meta-item">
+                    <span>Max keys</span>
+                    <strong>@MaxKeysCaption</strong>
+                </div>
+                <div class="state-reducer-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
             </div>
-            @if (!string.IsNullOrWhiteSpace(Model.ExpressionName))
-            {
-                <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.ExpressionName</MudText>
-            }
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="node-expr-preview">@Model.Reducer</MudText>
-        </MudStack>
+
+            <div class="state-reducer-contracts">
+                <div class="state-reducer-contract" aria-label="State reducer contract fields">
+                    <span class="state-reducer-contract-label">Contract</span>
+                    <span class="state-reducer-token">StateReducerInput</span>
+                    <span class="state-reducer-token">StateReducerResult</span>
+                </div>
+            </div>
+
+            <div class="state-reducer-expression-preview" title="@ReducerCaption">
+                @ReducerCaption
+            </div>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
-                    <MudSelect T="string"
-                               Label="Engine"
-                               @bind-Value="_engine"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true">
-                        @foreach (var engine in StateReducerNodeModel.Engines)
+        <div class="state-reducer-editor" aria-label="State reducer settings">
+            <div class="state-reducer-config-row" aria-label="State reducer configuration">
+                <MudSelect T="string"
+                           Label="Engine"
+                           @bind-Value="_engine"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="state-reducer-engine-field">
+                    @foreach (var engine in StateReducerNodeModel.Engines)
+                    {
+                        <MudSelectItem Value="@engine">@EngineOptionLabel(engine)</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudTextField T="string"
+                              Label="Expression name"
+                              @bind-Value="_expressionName"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Class="state-reducer-name-field" />
+                <MudNumericField T="int"
+                                 Label="Max keys"
+                                 @bind-Value="_maxKeys"
+                                 Min="0"
+                                 Max="1000000"
+                                 Step="128"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="state-reducer-max-keys-field" />
+                <MudNumericField T="int"
+                                 Label="Input buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="64"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="state-reducer-buffer-field" />
+            </div>
+
+            <div class="state-reducer-expression-workspace" aria-label="State reducer rule">
+                <MudTextField T="string"
+                              Label="Key expression"
+                              @bind-Value="_keyExpression"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Lines="2"
+                              Class="state-reducer-key-field"
+                              Placeholder="topic or blank" />
+
+                <MudTextField T="string"
+                              Label="Reducer"
+                              @bind-Value="_reducer"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Lines="10"
+                              Class="state-reducer-reducer-field"
+                              Placeholder="input" />
+
+                <div class="state-reducer-reference" aria-label="State reducer expression variables">
+                    <span class="state-reducer-reference-label">Variables</span>
+                    <span class="state-reducer-variable-list">
+                        @foreach (var variable in ExpressionVariables)
                         {
-                            <MudSelectItem Value="@engine">@engine</MudSelectItem>
+                            <span class="state-reducer-variable">@variable</span>
                         }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField T="string"
-                                  Label="Expression name"
-                                  @bind-Value="_expressionName"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense" />
-                </MudItem>
-            </MudGrid>
-            <MudTextField T="string"
-                          Label="Key expression"
-                          @bind-Value="_keyExpression"
-                          Variant="Variant.Outlined"
-                          Lines="2"
-                          Class="node-expr-field"
-                          Placeholder="topic" />
-            <MudTextField T="string"
-                          Label="Reducer"
-                          @bind-Value="_reducer"
-                          Variant="Variant.Outlined"
-                          Lines="5"
-                          Class="node-expr-field"
-                          Placeholder="input" />
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
-                    <MudNumericField T="int"
-                                     Label="Input buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="64"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudNumericField T="int"
-                                     Label="Max keys"
-                                     @bind-Value="_maxKeys"
-                                     Min="0"
-                                     Max="1000000"
-                                     Step="128"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-            </MudGrid>
-        </MudStack>
+                    </span>
+                </div>
+            </div>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -95,11 +129,42 @@
     private string _expressionName = string.Empty;
     private int _boundedCapacity = StateReducerNodeModel.DefaultBoundedCapacity;
     private int _maxKeys = StateReducerNodeModel.DefaultMaxKeys;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
-    protected override void OnParametersSet() => LoadDraft();
+    private string EngineCaption => EngineOptionLabel(StateReducerNodeModel.NormalizeEngine(Model.Engine));
+    private string KeyCaption => string.IsNullOrWhiteSpace(Model.KeyExpression) ? "single state" : Model.KeyExpression.Trim();
+    private string MaxKeysCaption => StateReducerNodeModel.NormalizeMaxKeys(Model.MaxKeys) == 0
+        ? "unlimited"
+        : StateReducerNodeModel.NormalizeMaxKeys(Model.MaxKeys).ToString();
+    private string BufferCaption => StateReducerNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity).ToString();
+    private string ReducerCaption => string.IsNullOrWhiteSpace(Model.Reducer)
+        ? StateReducerNodeModel.DefaultReducer
+        : Model.Reducer.Trim();
+
+    private static readonly string[] ExpressionVariables =
+    [
+        "input",
+        "value",
+        "inputType",
+        "key",
+        "state",
+        "previousState",
+        "StateReducerOperation"
+    ];
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _engine = StateReducerNodeModel.NormalizeEngine(Model.Engine);
         _keyExpression = Model.KeyExpression;
         _reducer = Model.Reducer;
@@ -122,4 +187,9 @@
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
     }
+
+    private static string EngineOptionLabel(string engine)
+        => string.Equals(engine, "jsonata", StringComparison.Ordinal)
+            ? "JSONata"
+            : "Dynamic Expresso";
 }

@@ -77,6 +77,12 @@
     min-width: 0;
 }
 
+.mqtt-publisher-broker-cell {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
 .mqtt-publisher-editor ::deep(.mud-input-control) {
     margin-bottom: 0;
     margin-top: 0;

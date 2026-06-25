@@ -1,0 +1,197 @@
+.timer-node-summary {
+    display: grid;
+    gap: 5px;
+    margin-top: 3px;
+    min-width: 0;
+}
+
+.timer-node-meta {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: 72px minmax(0, 1fr) minmax(0, 0.82fr) 64px;
+    min-width: 0;
+}
+
+.timer-node-meta-item {
+    align-content: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 24%, transparent);
+    border-radius: 4px;
+    display: grid;
+    gap: 2px;
+    min-height: 30px;
+    min-width: 0;
+    padding: 4px 5px;
+}
+
+.timer-node-meta-item span,
+.timer-node-contract-label {
+    color: var(--flux-text-muted);
+    font-size: 0.52rem;
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    text-transform: uppercase;
+}
+
+.timer-node-meta-item strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    font-size: 0.66rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1.12;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.timer-node-contract {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    display: grid;
+    gap: 4px 3px;
+    grid-template-columns: repeat(4, minmax(0, auto));
+    justify-content: start;
+    min-width: 0;
+    padding: 5px 2px 0;
+}
+
+.timer-node-contract-label {
+    grid-column: 1 / -1;
+    white-space: nowrap;
+}
+
+.timer-node-token {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 28%, var(--flux-border-soft));
+    border-radius: 4px;
+    color: color-mix(in srgb, var(--mud-palette-primary) 78%, var(--mud-palette-text-primary));
+    font-size: 0.52rem;
+    font-weight: 760;
+    line-height: 1;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 3px 5px;
+    text-align: center;
+    white-space: normal;
+}
+
+.timer-node-token.muted {
+    color: var(--flux-text-muted);
+}
+
+.timer-node-token.passthrough {
+    border-color: color-mix(in srgb, var(--mud-palette-secondary) 28%, var(--flux-border-soft));
+    color: color-mix(in srgb, var(--mud-palette-secondary) 78%, var(--mud-palette-text-primary));
+}
+
+.timer-node-editor {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+.timer-node-config-section,
+.timer-node-timing-grid,
+.timer-node-passthrough-grid,
+.timer-node-limit-row,
+.timer-node-option-row {
+    display: grid;
+    min-width: 0;
+}
+
+.timer-node-config-section {
+    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
+    border-radius: 6px;
+    gap: 12px;
+    padding: 14px;
+}
+
+.timer-node-timing-grid,
+.timer-node-passthrough-grid,
+.timer-node-limit-row {
+    align-items: end;
+    gap: 8px;
+}
+
+.timer-node-timing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.timer-node-passthrough-grid {
+    grid-template-columns: minmax(0, 1fr) 160px 148px;
+}
+
+.timer-node-limit-row.interval {
+    grid-template-columns: 118px 136px minmax(132px, 0.78fr);
+}
+
+.timer-node-limit-row.schedule {
+    grid-template-columns: 132px 148px;
+}
+
+.timer-node-option-row {
+    align-items: center;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
+    min-height: 40px;
+    padding-top: 2px;
+}
+
+.timer-node-option-cell {
+    align-items: center;
+    display: flex;
+    min-height: 36px;
+    min-width: 0;
+    padding: 0 2px;
+}
+
+.timer-node-editor ::deep(.mud-input-control) {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.timer-node-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
+    min-height: 36px;
+}
+
+.timer-node-editor ::deep(.mud-input > input.mud-input-root),
+.timer-node-editor ::deep(.mud-input > .mud-select-input) {
+    font-size: 0.82rem;
+}
+
+.timer-node-option-cell ::deep(.timer-node-check) {
+    margin-inline-start: 0;
+}
+
+.timer-node-option-cell ::deep(.mud-checkbox) {
+    margin: 0;
+}
+
+.timer-node-option-cell ::deep(.mud-checkbox .mud-typography) {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    font-size: 0.82rem;
+    line-height: 1.2;
+}
+
+.timer-node-field {
+    min-width: 0;
+}
+
+@media (max-width: 760px) {
+    .timer-node-meta,
+    .timer-node-timing-grid,
+    .timer-node-passthrough-grid,
+    .timer-node-limit-row.interval,
+    .timer-node-limit-row.schedule {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .timer-node-contract {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .timer-node-contract-label {
+        grid-column: 1 / -1;
+    }
+}

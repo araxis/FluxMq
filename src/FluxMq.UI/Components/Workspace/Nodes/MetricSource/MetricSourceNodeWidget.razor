@@ -6,70 +6,130 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.StackedLineChart"
                  CategoryColor="@Color.Primary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.QueryStats" Label="Metric" Value="@MetricLabel(Model.MetricId)" />
-            <Stat Icon="@Icons.Material.Filled.Tag" Label="Output" Value="Number metric" />
-            <Stat Icon="@Icons.Material.Filled.Speed" Label="Latest" Value="@LatestValue" />
-        </MudStack>
+        <div class="metric-source-summary">
+            <div class="metric-source-meta">
+                <div class="metric-source-meta-item metric">
+                    <span>Metric</span>
+                    <strong title="@MetricCaption">@MetricCaption</strong>
+                </div>
+                <div class="metric-source-meta-item">
+                    <span>Latest</span>
+                    <strong>@LatestValue</strong>
+                </div>
+                <div class="metric-source-meta-item">
+                    <span>Start</span>
+                    <strong>@StartModeCaption</strong>
+                </div>
+                <div class="metric-source-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
+            </div>
+
+            @if (Model.Parameters.Count > 0)
+            {
+                <div class="metric-source-parameters" aria-label="Metric source parameters">
+                    <span class="metric-source-contract-label">Parameters</span>
+                    @foreach (var parameter in ParameterPreview)
+                    {
+                        <span class="metric-source-token" title="@($"{parameter.Key}: {parameter.Value}")">@parameter.Key</span>
+                    }
+                    @if (ParameterPreviewOverflow > 0)
+                    {
+                        <span class="metric-source-token overflow">+@ParameterPreviewOverflow</span>
+                    }
+                </div>
+            }
+
+            <div class="metric-source-contract" aria-label="Metric source output fields">
+                <span class="metric-source-contract-label">Output fields</span>
+                <span class="metric-source-token">NumberMetricReading</span>
+                <span class="metric-source-token">metricId</span>
+                <span class="metric-source-token">timestamp</span>
+                <span class="metric-source-token">value</span>
+            </div>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            @if (MetricOptions.Count > 0)
-            {
-                <MudSelect T="string"
-                           Label="Metric"
-                           Value="@_metricId"
-                           ValueChanged="@SetMetricId"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true">
-                    @foreach (var option in MetricOptions)
+        <div class="metric-source-editor" aria-label="Metric source settings">
+            <div class="metric-source-config-panel" aria-label="Metric source configuration">
+                <div class="metric-source-source-grid" aria-label="Metric source selection">
+                    @if (MetricOptions.Count > 0)
                     {
-                        <MudSelectItem Value="@option.Id">@option.Label</MudSelectItem>
+                        <MudSelect T="string"
+                                   Label="Metric"
+                                   Value="@_metricId"
+                                   ValueChanged="@SetMetricId"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="metric-source-metric-field">
+                            @foreach (var option in MetricOptions)
+                            {
+                                <MudSelectItem Value="@option.Id">@option.Label</MudSelectItem>
+                            }
+                        </MudSelect>
                     }
-                </MudSelect>
-            }
-            else
-            {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
-                    Add a metric in the Metrics tab, then select it here.
-                </MudAlert>
-            }
+                    else
+                    {
+                        <div class="metric-source-empty" role="status">
+                            Add a metric in the Metrics tab, then select it here.
+                        </div>
+                    }
 
-            @if (!string.IsNullOrWhiteSpace(SelectedMetricSummary))
-            {
-                <MudAlert Severity="Severity.Normal" Variant="Variant.Outlined" Dense="true">
-                    @SelectedMetricSummary
-                </MudAlert>
-            }
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     Value="@_boundedCapacity"
+                                     ValueChanged="@(value => _boundedCapacity = Math.Max(1, value))"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="metric-source-buffer-field" />
+                </div>
 
-            @if (SelectedDescriptor is { } descriptor && descriptor.Parameters.Count > 0)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Parameters</MudText>
-                @foreach (var parameter in descriptor.Parameters)
+                @if (!string.IsNullOrWhiteSpace(SelectedMetricSummary))
                 {
-                    @RenderParameterField(parameter)
+                    <div class="metric-source-description-row">
+                        <span>Metric</span>
+                        <strong>@SelectedMetricSummary</strong>
+                    </div>
                 }
-            }
 
-            <MudSwitch T="bool"
-                       Label="Emit latest reading on start"
-                       Value="@_emitLatestOnStart"
-                       ValueChanged="@(value => _emitLatestOnStart = value)"
-                       Color="Color.Primary" />
+                @if (SelectedDescriptor is { } descriptor && descriptor.Parameters.Count > 0)
+                {
+                    <div class="metric-source-parameter-table" aria-label="Metric parameters">
+                        <div class="metric-source-parameter-table-head" aria-hidden="true">
+                            <span>Parameter</span>
+                            <span>Value</span>
+                        </div>
 
-            <MudNumericField T="int"
-                             Label="Buffer"
-                             Value="@_boundedCapacity"
-                             ValueChanged="@(value => _boundedCapacity = Math.Max(1, value))"
-                             Min="1"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense"
-                             HelperText="Maximum pending readings before backpressure." />
-        </MudStack>
+                        <div class="metric-source-parameter-grid">
+                            @foreach (var parameter in descriptor.Parameters)
+                            {
+                                @RenderParameterField(parameter)
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="metric-source-start-row" aria-label="Metric source start behavior">
+                    <MudCheckBox T="bool"
+                                 Label="Emit latest reading on start"
+                                 Value="@_emitLatestOnStart"
+                                 ValueChanged="@(value => _emitLatestOnStart = value)"
+                                 Class="metric-source-start-check" />
+                </div>
+            </div>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -84,6 +144,14 @@
 
     private const string TrueValue = "true";
     private const string FalseValue = "false";
+    private const int MaxParameterTokens = 3;
+
+    private string MetricCaption => MetricLabel(Model.MetricId);
+    private string BufferCaption => Math.Max(1, Model.BoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private string StartModeCaption => Model.EmitLatestOnStart ? "latest" : "next";
+    private IReadOnlyList<KeyValuePair<string, string>> ParameterPreview
+        => Model.Parameters.Take(MaxParameterTokens).ToArray();
+    private int ParameterPreviewOverflow => Math.Max(0, Model.Parameters.Count - MaxParameterTokens);
 
     private IReadOnlyList<MetricOption> MetricOptions
         => Flow.GetMetricResources()
@@ -115,7 +183,7 @@
     {
         _metricId = Model.MetricId;
         _emitLatestOnStart = Model.EmitLatestOnStart;
-        _boundedCapacity = Model.BoundedCapacity;
+        _boundedCapacity = Math.Max(1, Model.BoundedCapacity);
         _parameters.Clear();
         foreach (var (key, value) in Model.Parameters)
         {
@@ -161,50 +229,59 @@
         var value = ParameterValue(parameter);
         if (parameter.Kind == MetricParamKind.Select && parameter.Options is { Count: > 0 } options)
         {
-            return @<MudSelect T="string"
-                               Label="@parameter.DisplayName"
-                               Value="@value"
-                               ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               HelperText="@parameter.HelpText">
-                @foreach (var option in options)
-                {
-                    <MudSelectItem Value="@option.Value">@option.Label</MudSelectItem>
-                }
-            </MudSelect>;
+            return @<div class="metric-source-parameter-cell" title="@ParameterHelpTitle(parameter)">
+                <MudSelect T="string"
+                           Label="@parameter.DisplayName"
+                           Value="@value"
+                           ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="metric-source-parameter-field">
+                    @foreach (var option in options)
+                    {
+                        <MudSelectItem Value="@option.Value">@option.Label</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>;
         }
 
         if (parameter.Kind == MetricParamKind.Toggle)
         {
-            return @<MudSelect T="string"
-                               Label="@parameter.DisplayName"
-                               Value="@value"
-                               ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true"
-                               HelperText="@parameter.HelpText">
-                <MudSelectItem Value="@string.Empty">Default</MudSelectItem>
-                <MudSelectItem Value="@TrueValue">On</MudSelectItem>
-                <MudSelectItem Value="@FalseValue">Off</MudSelectItem>
-            </MudSelect>;
+            return @<div class="metric-source-parameter-cell" title="@ParameterHelpTitle(parameter)">
+                <MudSelect T="string"
+                           Label="@parameter.DisplayName"
+                           Value="@value"
+                           ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="metric-source-parameter-field">
+                    <MudSelectItem Value="@string.Empty">Default</MudSelectItem>
+                    <MudSelectItem Value="@TrueValue">On</MudSelectItem>
+                    <MudSelectItem Value="@FalseValue">Off</MudSelectItem>
+                </MudSelect>
+            </div>;
         }
 
         var inputType = parameter.Kind is MetricParamKind.Integer or MetricParamKind.Number
             ? InputType.Number
             : InputType.Text;
-        return @<MudTextField T="string"
-                              Label="@parameter.DisplayName"
-                              Value="@value"
-                              ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
-                              Placeholder="@parameter.Placeholder"
-                              InputType="@inputType"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              HelperText="@parameter.HelpText" />;
+        return @<div class="metric-source-parameter-cell" title="@ParameterHelpTitle(parameter)">
+            <MudTextField T="string"
+                          Label="@parameter.DisplayName"
+                          Value="@value"
+                          ValueChanged="@(next => SetParameterValue(parameter.Key, next))"
+                          Placeholder="@parameter.Placeholder"
+                          InputType="@inputType"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Class="metric-source-parameter-field" />
+        </div>;
     }
+
+    private static string ParameterHelpTitle(MetricParamSpec parameter)
+        => parameter.HelpText?.Trim() ?? string.Empty;
 
     private void SetParameterValue(string parameterKey, string? value)
     {

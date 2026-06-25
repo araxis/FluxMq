@@ -30,7 +30,7 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
     protected override void OnConfigurationLoaded(JsonObject? config)
     {
         Engine = ReadString(config, "engine", "jsonata");
-        InputType = ReadString(config, "inputType", "MqttEnvelope");
+        InputType = NormalizeInputType(ReadString(config, "inputType", "MqttEnvelope"));
         OutputType = ReadString(config, "outputType", "MqttPublishRequest");
         OutputContract = NormalizeOutputContract(ReadString(config, "outputContract", OutputContractTyped));
         OutputSchemaPath = ReadString(config, "outputSchemaPath", string.Empty);
@@ -46,7 +46,7 @@ public sealed class DynamicMapperNodeModel(string id, DiagramPoint position, str
         => new()
         {
             ["engine"] = Engine,
-            ["inputType"] = InputType,
+            ["inputType"] = NormalizeInputType(InputType),
             ["outputType"] = OutputType,
             ["outputContract"] = NormalizeOutputContract(OutputContract),
             ["outputSchemaPath"] = OutputSchemaPath,

@@ -3,89 +3,106 @@
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.FactCheck"
-                 CategoryColor="@Color.Warning"
-                 EditDialogMaxWidth="MaxWidth.Medium"
+                 CategoryColor="@Color.Info"
+                 EditDialogMaxWidth="MaxWidth.Large"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.AssertionName</MudText>
-            <div class="d-flex flex-wrap gap-1">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">Passed</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">Failed</MudChip>
+        <div class="flow-assertion-summary">
+            <div class="flow-assertion-meta">
+                <div class="flow-assertion-meta-item assertion">
+                    <span>Assertion</span>
+                    <strong title="@AssertionCaption">@AssertionCaption</strong>
+                </div>
+                <div class="flow-assertion-meta-item">
+                    <span>Input</span>
+                    <strong title="@InputTypeCaption">@InputTypeCaption</strong>
+                </div>
+                <div class="flow-assertion-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
             </div>
-            @if (!string.IsNullOrWhiteSpace(Model.Expression))
-            {
-                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="node-expr-preview">@Model.Expression</MudText>
-            }
-            else
-            {
-                <MudText Typo="Typo.caption" Color="Color.Error">No assertion set</MudText>
-            }
-        </MudStack>
+
+            <div class="flow-assertion-contracts">
+                <div class="flow-assertion-contract" aria-label="Assertion output fields">
+                    <span class="flow-assertion-contract-label">Outputs</span>
+                    <span class="flow-assertion-token">result</span>
+                    <span class="flow-assertion-token pass">passed</span>
+                    <span class="flow-assertion-token fail">failed</span>
+                </div>
+            </div>
+
+            <div class="@ExpressionPreviewClass" title="@ExpressionCaption">
+                @ExpressionCaption
+            </div>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
-                    <MudTextField T="string"
-                                  Label="Assertion name"
-                                  @bind-Value="_assertionName"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudSelect T="string"
-                               Label="Input type"
-                               @bind-Value="_inputType"
-                               Variant="Variant.Outlined"
-                               Margin="Margin.Dense"
-                               Dense="true">
-                        @foreach (var inputType in FlowAssertionNodeModel.InputTypes)
+        <div class="flow-assertion-editor" aria-label="Flow assertion settings">
+            <div class="flow-assertion-config-row" aria-label="Flow assertion configuration">
+                <MudTextField T="string"
+                              Label="Assertion name"
+                              @bind-Value="_assertionName"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Class="flow-assertion-name-field" />
+                <MudSelect T="string"
+                           Label="Input type"
+                           @bind-Value="_inputType"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Dense="true"
+                           Class="flow-assertion-input-field">
+                    @foreach (var inputType in FlowAssertionNodeModel.InputTypes)
+                    {
+                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudNumericField T="int"
+                                 Label="Input buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="flow-assertion-buffer-field" />
+            </div>
+
+            <div class="flow-assertion-expression-workspace" aria-label="Flow assertion rule">
+                <MudTextField T="string"
+                              Label="Expression"
+                              @bind-Value="_expression"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Lines="9"
+                              Class="flow-assertion-expression-field"
+                              Placeholder='topic.StartsWith("factory/") && qos >= 1' />
+
+                <MudTextField T="string"
+                              Label="Failure message"
+                              @bind-Value="_failureMessage"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Lines="3"
+                              Class="flow-assertion-message-field"
+                              Placeholder="Message on failure" />
+
+                <div class="flow-assertion-reference" aria-label="Assertion expression variables">
+                    <span class="flow-assertion-reference-label">Variables</span>
+                    <span class="flow-assertion-variable-list">
+                        @foreach (var variable in ExpressionVariables)
                         {
-                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                            <span class="flow-assertion-variable">@variable</span>
                         }
-                    </MudSelect>
-                </MudItem>
-            </MudGrid>
-            <MudTextField T="string"
-                          Label="Expression"
-                          @bind-Value="_expression"
-                          Variant="Variant.Outlined"
-                          Lines="4"
-                          Class="node-expr-field"
-                          Placeholder='topic.StartsWith("factory/") && qos >= 1'
-                          HelperText="Must evaluate to bool. Variables always include input, value, and inputType; known types also expose helpers such as topic, payload, qos, path, isValid, or issueCount." />
-            <MudTextField T="string"
-                          Label="Failure message"
-                          @bind-Value="_failureMessage"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense" />
-            <MudNumericField T="int"
-                             Label="Input buffer"
-                             @bind-Value="_boundedCapacity"
-                             Min="1"
-                             Max="100000"
-                             Step="100"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-            <MudExpansionPanel Text="Expression variables" Dense="true" Class="pa-0">
-                <MudSimpleTable Dense="true" Striped="true" Class="mt-1">
-                    <thead>
-                        <tr><th>Variable</th><th>Available when</th><th>Example</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>input</code></td><td>all input types</td><td><code>input != null</code></td></tr>
-                        <tr><td><code>topic</code></td><td>MQTT-shaped values</td><td><code>topic.StartsWith("sensors/")</code></td></tr>
-                        <tr><td><code>qos</code></td><td>MQTT-shaped values</td><td><code>qos >= 1</code></td></tr>
-                        <tr><td><code>path</code></td><td>FileWriteRequest</td><td><code>path.EndsWith(".json")</code></td></tr>
-                        <tr><td><code>isValid</code></td><td>JsonSchemaValidationResult</td><td><code>isValid == true</code></td></tr>
-                        <tr><td><code>issueCount</code></td><td>JsonSchemaValidationResult</td><td><code>issueCount == 0</code></td></tr>
-                    </tbody>
-                </MudSimpleTable>
-            </MudExpansionPanel>
-        </MudStack>
+                    </span>
+                </div>
+            </div>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -99,11 +116,46 @@
     private string _expression = FlowAssertionNodeModel.DefaultExpression;
     private string _failureMessage = FlowAssertionNodeModel.DefaultFailureMessage;
     private int _boundedCapacity = FlowAssertionNodeModel.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
-    protected override void OnParametersSet() => LoadDraft();
+    private string AssertionCaption => string.IsNullOrWhiteSpace(Model.AssertionName)
+        ? FlowAssertionNodeModel.DefaultAssertionName
+        : Model.AssertionName.Trim();
+    private string InputTypeCaption => FlowAssertionNodeModel.NormalizeInputType(Model.InputType);
+    private string BufferCaption => FlowAssertionNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity).ToString();
+    private string ExpressionCaption => string.IsNullOrWhiteSpace(Model.Expression)
+        ? "No expression"
+        : Model.Expression.Trim();
+    private string ExpressionPreviewClass => string.IsNullOrWhiteSpace(Model.Expression)
+        ? "flow-assertion-expression-preview empty"
+        : "flow-assertion-expression-preview";
+
+    private static readonly string[] ExpressionVariables =
+    [
+        "input",
+        "value",
+        "inputType",
+        "topic",
+        "payload",
+        "qos",
+        "path",
+        "isValid",
+        "issueCount"
+    ];
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _assertionName = Model.AssertionName;
         _inputType = FlowAssertionNodeModel.NormalizeInputType(Model.InputType);
         _expression = Model.Expression;

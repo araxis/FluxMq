@@ -5,69 +5,104 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.PlayCircle"
                  CategoryColor="@Color.Primary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.Folder" Label="Session" Value="@(ResolvedSessionName ?? "-")" />
-            <Stat Icon="@Icons.Material.Filled.Speed" Label="Speed" Value="@($"{Model.Speed:0.##}x")" />
-            <Stat Icon="@Icons.Material.Filled.Memory" Label="Output buffer" Value="@Model.BoundedCapacity.ToString()" />
-        </MudStack>
+        <div class="replay-source-summary">
+            <div class="replay-source-meta">
+                <div class="replay-source-meta-item session">
+                    <span>Session</span>
+                    <strong title="@SessionCaption">@SessionCaption</strong>
+                </div>
+                <div class="replay-source-meta-item">
+                    <span>Speed</span>
+                    <strong>@SpeedCaption</strong>
+                </div>
+                <div class="replay-source-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
+            </div>
+
+            <div class="replay-source-contract" aria-label="Replay source output fields">
+                <span class="replay-source-contract-label">Output fields</span>
+                <span class="replay-source-token">MqttEnvelope</span>
+                <span class="replay-source-token">topic</span>
+                <span class="replay-source-token">payload</span>
+            </div>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
+        <div class="replay-source-editor" aria-label="Replay source settings">
             @{
                 var sessions = Live.StoredSessions;
             }
-            @if (sessions.Count > 0)
-            {
-                <MudSelect T="string"
-                           Label="Session"
-                           @bind-Value="_sessionId"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
-                    @foreach (var session in sessions)
+            <section class="replay-source-playback-panel" aria-label="Replay playback configuration">
+                <div class="replay-source-source-row">
+                    @if (sessions.Count > 0)
                     {
-                        <MudSelectItem Value="@session.Id.ToString()">
-                            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
-                                <MudText Typo="Typo.body2">@session.Name</MudText>
-                                @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
-                                {
-                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary">@session.ProjectName</MudChip>
-                                }
-                            </MudStack>
-                        </MudSelectItem>
+                        <MudSelect T="string"
+                                   Label="Session"
+                                   @bind-Value="_sessionId"
+                                   aria-label="Replay session"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="replay-source-session-field"
+                                   ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
+                            @foreach (var session in sessions)
+                            {
+                                <MudSelectItem Value="@session.Id.ToString()">
+                                    <div class="replay-source-session-option">
+                                        <span>@session.Name</span>
+                                        @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
+                                        {
+                                            <small>@session.ProjectName</small>
+                                        }
+                                    </div>
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
                     }
-                </MudSelect>
-            }
-            else
-            {
-                <MudTextField T="string"
-                              Label="Session ID"
-                              @bind-Value="_sessionId"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense" />
-            }
+                    else
+                    {
+                        <MudTextField T="string"
+                                      Label="Session ID"
+                                      @bind-Value="_sessionId"
+                                      aria-label="Replay session ID"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="replay-source-session-field" />
+                    }
 
-            <MudNumericField T="double"
-                             Label="Playback speed"
-                             @bind-Value="_speed"
-                             Min="0.1"
-                             Max="1000"
-                             Step="0.1"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-            <MudNumericField T="int"
-                             Label="Output buffer"
-                             @bind-Value="_boundedCapacity"
-                             Min="1"
-                             Max="100000"
-                             Step="100"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-        </MudStack>
+                    <MudNumericField T="double"
+                                     Label="Playback speed"
+                                     @bind-Value="_speed"
+                                     aria-label="Replay playback speed"
+                                     Min="0.1"
+                                     Max="1000"
+                                     Step="0.1"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="replay-source-speed-field" />
+
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Replay output buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="replay-source-buffer-field" />
+                </div>
+            </section>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -79,6 +114,11 @@
     private string _sessionId = string.Empty;
     private double _speed = 1;
     private int _boundedCapacity = SourceNodeConfiguration.DefaultBoundedCapacity;
+
+    private string SessionCaption => ResolvedSessionName ?? "No session";
+    private string SpeedCaption => $"{NormalizedSpeed:0.##}x";
+    private string BufferCaption => SourceNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity).ToString();
+    private double NormalizedSpeed => Model.Speed > 0 && double.IsFinite(Model.Speed) ? Model.Speed : 1;
 
     private string? ResolvedSessionName
     {

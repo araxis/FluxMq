@@ -1,26 +1,119 @@
 @using FluxMq.UI.Components.Diagram
+@using FluxMq.UI.Models
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 
-<NodeWidgetShell Node="@Node" HeaderIcon="@HeaderIcon" CategoryColor="@CategoryColor">
+<NodeWidgetShell Node="@Node"
+                 HeaderIcon="@HeaderIcon"
+                 CategoryColor="@CategoryColor"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false">
     <Body>
-        <MudText Typo="Typo.caption" Color="Color.Secondary">@Node.Summary</MudText>
-        @if (Node.PortDescriptors.Count > 0)
-        {
-            <div class="d-flex flex-wrap gap-1 mt-2">
-                @foreach (var output in Node.PortDescriptors.Where(p => !p.IsInput))
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">@output.Name</MudChip>
-                }
-                @foreach (var input in Node.PortDescriptors.Where(p => p.IsInput))
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@input.Name</MudChip>
-                }
+        <div class="generic-node-summary">
+            <div class="generic-node-description" title="@SummaryCaption">@SummaryCaption</div>
+            <div class="generic-node-meta">
+                <div class="generic-node-meta-item">
+                    <span>Inputs</span>
+                    <strong>@InputCount</strong>
+                </div>
+                <div class="generic-node-meta-item">
+                    <span>Outputs</span>
+                    <strong>@OutputCount</strong>
+                </div>
             </div>
-        }
+
+            @if (Node.PortDescriptors.Count > 0)
+            {
+                <div class="generic-node-ports" aria-label="Generic node ports">
+                    @foreach (var output in OutputPortPreview)
+                    {
+                        <span class="generic-node-token output" title="@output.ValueType">@output.Name</span>
+                    }
+                    @foreach (var input in InputPortPreview)
+                    {
+                        <span class="generic-node-token input" title="@input.ValueType">@input.Name</span>
+                    }
+                    @if (PortPreviewOverflow > 0)
+                    {
+                        <span class="generic-node-token overflow">+@PortPreviewOverflow</span>
+                    }
+                </div>
+            }
+        </div>
     </Body>
+    <Editor>
+        <div class="generic-node-editor" aria-label="Generic component details">
+            <div class="generic-node-editor-panel" aria-label="Generic component contract">
+                <div class="generic-node-editor-meta-row" aria-label="Generic component summary">
+                    <div class="generic-node-editor-meta-cell">
+                        <span>Type</span>
+                        <strong title="@Node.NodeType">@Node.NodeType</strong>
+                    </div>
+                    <div class="generic-node-editor-meta-cell">
+                        <span>Category</span>
+                        <strong>@Node.Category</strong>
+                    </div>
+                    <div class="generic-node-editor-meta-cell">
+                        <span>Ports</span>
+                        <strong>@InputCount in / @OutputCount out</strong>
+                    </div>
+                </div>
+
+                <div class="generic-node-editor-port-table" aria-label="Generic component port contracts">
+                    <div class="generic-node-editor-port-header" aria-hidden="true">
+                        <span>Name</span>
+                        <span>Direction</span>
+                        <span>Value type</span>
+                    </div>
+                    @if (SortedPortDescriptors.Count > 0)
+                    {
+                        @foreach (var port in SortedPortDescriptors)
+                        {
+                            <div class="generic-node-editor-port-row">
+                                <strong title="@port.Name">@port.Name</strong>
+                                <span class="generic-node-token @PortDirectionClass(port)">@PortDirection(port)</span>
+                                <span class="generic-node-editor-port-type" title="@port.ValueType">@port.ValueType</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="generic-node-editor-empty">No declared ports.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </Editor>
 </NodeWidgetShell>
 
 @code {
+    private const int MaxPortPreview = 5;
+
+    private string SummaryCaption => string.IsNullOrWhiteSpace(Node.Summary)
+        ? Node.NodeType
+        : Node.Summary.Trim();
+    private int InputCount => Node.PortDescriptors.Count(static port => port.IsInput);
+    private int OutputCount => Node.PortDescriptors.Count(static port => !port.IsInput);
+    private IReadOnlyList<ComponentPortDescriptor> OutputPortPreview
+        => Node.PortDescriptors
+            .Where(static port => !port.IsInput)
+            .Take(MaxPortPreview)
+            .ToArray();
+    private IReadOnlyList<ComponentPortDescriptor> InputPortPreview
+        => Node.PortDescriptors
+            .Where(static port => port.IsInput)
+            .Take(Math.Max(0, MaxPortPreview - OutputPortPreview.Count))
+            .ToArray();
+    private int PortPreviewOverflow => Math.Max(0, Node.PortDescriptors.Count - OutputPortPreview.Count - InputPortPreview.Count);
+    private IReadOnlyList<ComponentPortDescriptor> SortedPortDescriptors
+        => Node.PortDescriptors
+            .OrderBy(static port => port.IsInput ? 0 : 1)
+            .ThenBy(static port => port.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+    private static string PortDirection(ComponentPortDescriptor port) => port.IsInput ? "Input" : "Output";
+    private static string PortDirectionClass(ComponentPortDescriptor port) => port.IsInput ? "input" : "output";
+
     private string HeaderIcon => Node.NodeType switch
     {
         "generated.source" => Icons.Material.Filled.AutoAwesome,

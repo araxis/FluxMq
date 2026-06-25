@@ -10,20 +10,22 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Insights"
                  CategoryColor="@Color.Tertiary"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
         @{
-            var metricCards = MetricCards;
-            var metricColumns = MqttMetricsNodeModel.NormalizeMetricCardColumns(Model.MetricCardColumns);
+            var metricReadouts = MetricReadouts;
+            var readoutColumns = MqttMetricsNodeModel.NormalizeMetricCardColumns(Model.MetricCardColumns);
         }
-        <div class="metrics-grid" style="--metric-columns:@metricColumns">
-            @foreach (var card in metricCards)
+        <div class="metrics-readout-grid" style="--metric-readout-columns:@readoutColumns">
+            @foreach (var readout in metricReadouts)
             {
-                <div class="metrics-tile @card.CssClass">
-                    <MudIcon Icon="@card.Icon" Size="Size.Small" />
-                    <span class="metrics-value">@card.Value</span>
-                    <span class="metrics-label">@card.Label</span>
+                <div class="metrics-readout @readout.CssClass" aria-label="@($"{readout.Label}: {readout.Value}")">
+                    <span class="metrics-readout-value">@readout.Value</span>
+                    <span class="metrics-readout-label">@readout.Label</span>
                 </div>
             }
         </div>
@@ -62,159 +64,65 @@
         }
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudNumericField T="int"
-                             Label="Input buffer"
-                             @bind-Value="_boundedCapacity"
-                             Min="1"
-                             Max="100000"
-                             Step="100"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-            <MudNumericField T="double"
-                             Label="Current-rate window seconds"
-                             @bind-Value="_rateWindowSeconds"
-                             Min="1"
-                             Step="1"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense"
-                             HelperText="Current rate uses this rolling window. Average rate always uses all messages since this metrics node started." />
-            <MudGrid Spacing="2">
-                <MudItem xs="12">
+        <div class="metrics-editor" aria-label="MQTT metrics settings">
+            <div class="metrics-config-panel" aria-label="MQTT metrics configuration">
+                <div class="metrics-settings-grid">
                     <MudNumericField T="int"
-                                     Label="Card columns"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="metrics-buffer-field" />
+                    <MudNumericField T="double"
+                                     Label="Rate window seconds"
+                                     @bind-Value="_rateWindowSeconds"
+                                     Min="1"
+                                     Step="1"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="metrics-rate-window-field" />
+                    <MudNumericField T="int"
+                                     Label="Readout columns"
                                      @bind-Value="_metricCardColumns"
                                      Min="@MqttMetricsNodeModel.MinMetricCardColumns"
                                      Max="@MqttMetricsNodeModel.MaxMetricCardColumns"
                                      Step="1"
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
-                                     HelperText="Rows are calculated from the selected cards." />
-                </MudItem>
-            </MudGrid>
-            <MudDivider />
-            <MudText Typo="Typo.caption" Color="Color.Secondary">Metric cards</MudText>
-            <div class="metrics-display-options">
-                @foreach (var option in DisplayOptions)
-                {
-                    var selected = IsDisplayMetricSelected(option.Id);
-                    var disabled = selected && _displayMetrics.Count == 1;
+                                     Class="metrics-readout-columns-field" />
+                </div>
 
-                    <MudCheckBox T="bool"
-                                 Value="@selected"
-                                 ValueChanged="@(value => ToggleDisplayMetric(option.Id, value))"
-                                 Disabled="@disabled"
-                                 Dense="true"
-                                 Label="@option.Label" />
-                }
+                <div class="metrics-readout-table" aria-label="Visible metric readouts">
+                    <div class="metrics-readout-table-head" aria-hidden="true">
+                        <span>Readout</span>
+                        <span>Visible</span>
+                    </div>
+                    <div class="metrics-readout-table-body">
+                        @foreach (var option in DisplayOptions)
+                        {
+                            var selected = IsDisplayMetricSelected(option.Id);
+                            var disabled = selected && _displayMetrics.Count == 1;
+
+                            <div class="metrics-readout-option-row">
+                                <span class="metrics-readout-option-name">@option.Label</span>
+                                <MudCheckBox T="bool"
+                                             Value="@selected"
+                                             ValueChanged="@(value => ToggleDisplayMetric(option.Id, value))"
+                                             Disabled="@disabled"
+                                             Dense="true"
+                                             aria-label="@($"Show {option.Label}")"
+                                             Class="metrics-readout-option" />
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
-        </MudStack>
+        </div>
     </Editor>
 </NodeWidgetShell>
-
-<style>
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(var(--metric-columns), minmax(0, 1fr));
-        gap: 6px;
-        margin-bottom: 8px;
-    }
-    .metrics-tile {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
-        padding: 6px 4px;
-        border-radius: 6px;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
-    }
-    .metrics-tile-primary { border-color: var(--mud-palette-primary); }
-    .metrics-tile-rate { border-color: var(--mud-palette-info); }
-    .metrics-tile-secondary { border-color: var(--mud-palette-secondary); }
-    .metrics-tile-tertiary { border-color: var(--mud-palette-tertiary); }
-    .metrics-tile-payload { border-color: var(--mud-palette-success); }
-    .metrics-tile-retained { border-color: var(--mud-palette-warning); }
-    .metrics-value {
-        font-size: 0.95rem;
-        font-weight: 600;
-        line-height: 1;
-        margin-top: 2px;
-    }
-    .metrics-label {
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        opacity: 0.65;
-    }
-    .metrics-top-topics {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        margin-bottom: 6px;
-    }
-    .metrics-topic-row {
-        display: grid;
-        grid-template-columns: 1fr 60px 28px;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.7rem;
-    }
-    .metrics-topic-name {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        opacity: 0.85;
-    }
-    .metrics-topic-bar {
-        height: 4px;
-        border-radius: 2px;
-        background: rgba(255,255,255,0.08);
-        overflow: hidden;
-    }
-    .metrics-topic-bar-fill {
-        height: 100%;
-        background: linear-gradient(90deg, var(--mud-palette-tertiary), var(--mud-palette-primary));
-        transition: width 0.3s ease;
-    }
-    .metrics-topic-count {
-        text-align: right;
-        font-variant-numeric: tabular-nums;
-        opacity: 0.7;
-    }
-    .metrics-empty {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 0;
-        font-size: 0.75rem;
-        opacity: 0.6;
-    }
-    .metrics-last {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding-top: 4px;
-        border-top: 1px solid rgba(255,255,255,0.08);
-        font-size: 0.7rem;
-        opacity: 0.75;
-    }
-    .metrics-last-topic {
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .metrics-last-time {
-        font-variant-numeric: tabular-nums;
-        opacity: 0.65;
-    }
-    .metrics-display-options {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 2px 12px;
-    }
-</style>
 
 @code {
     [CascadingParameter] private FlowWorkspaceService Flow { get; set; } = null!;
@@ -239,9 +147,9 @@
         new(MqttMetricsNodeModel.MetricAveragePayload, "Avg payload")
     ];
 
-    private IReadOnlyList<MetricDisplayCard> MetricCards
+    private IReadOnlyList<MetricDisplayReadout> MetricReadouts
         => MqttMetricsNodeModel.NormalizeDisplayMetrics(Model.DisplayMetrics)
-            .Select(ToMetricDisplayCard)
+            .Select(ToMetricDisplayReadout)
             .ToArray();
 
     protected override void OnInitialized()
@@ -311,43 +219,36 @@
         }
     }
 
-    private MetricDisplayCard ToMetricDisplayCard(string id) => id switch
+    private MetricDisplayReadout ToMetricDisplayReadout(string id) => id switch
     {
         MqttMetricsNodeModel.MetricCurrentRate => new(
-            Icons.Material.Filled.Speed,
             FormatRate(_snapshot.MessagesPerSecond),
             "now / sec",
-            "metrics-tile-rate"),
+            "metrics-readout-rate"),
         MqttMetricsNodeModel.MetricAverageRate => new(
-            Icons.Material.Filled.QueryStats,
             FormatRate(_snapshot.AverageMessagesPerSecond),
             "avg / sec",
-            "metrics-tile-secondary"),
+            "metrics-readout-secondary"),
         MqttMetricsNodeModel.MetricPayloadBytes => new(
-            Icons.Material.Filled.DataUsage,
             FormatBytes(_snapshot.TotalPayloadBytes),
             "payload",
-            "metrics-tile-payload"),
+            "metrics-readout-payload"),
         MqttMetricsNodeModel.MetricTopics => new(
-            Icons.Material.Filled.Topic,
             _snapshot.UniqueTopicCount.ToString(),
             "topics",
-            "metrics-tile-tertiary"),
+            "metrics-readout-tertiary"),
         MqttMetricsNodeModel.MetricRetained => new(
-            Icons.Material.Filled.PushPin,
             FormatNumber(_snapshot.RetainedMessageCount),
             "retained",
-            "metrics-tile-retained"),
+            "metrics-readout-retained"),
         MqttMetricsNodeModel.MetricAveragePayload => new(
-            Icons.Material.Filled.DataUsage,
             FormatBytes(_snapshot.AveragePayloadBytes),
             "avg payload",
-            "metrics-tile-payload"),
+            "metrics-readout-payload"),
         _ => new(
-            Icons.Material.Filled.MailOutline,
             FormatNumber(_snapshot.MessageCount),
             "messages",
-            "metrics-tile-primary")
+            "metrics-readout-primary")
     };
 
     private static string FormatNumber(long value) => value switch
@@ -391,5 +292,5 @@
     }
 
     private sealed record MetricDisplayOption(string Id, string Label);
-    private sealed record MetricDisplayCard(string Icon, string Value, string Label, string CssClass);
+    private sealed record MetricDisplayReadout(string Value, string Label, string CssClass);
 }

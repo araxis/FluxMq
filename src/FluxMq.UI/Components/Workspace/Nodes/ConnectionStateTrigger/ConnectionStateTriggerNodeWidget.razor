@@ -6,36 +6,87 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.SyncAlt"
                  CategoryColor="@Color.Primary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <Stat Icon="@Icons.Material.Filled.Cable" Label="Broker" Value="@(Model.Connection.Length > 0 ? Model.Connection : "—")" />
-        </MudStack>
+        <div class="connection-state-trigger-summary">
+            <div class="connection-state-trigger-meta">
+                <div class="connection-state-trigger-meta-item broker">
+                    <span>Broker</span>
+                    <strong title="@ConnectionCaption">@ConnectionCaption</strong>
+                </div>
+                <div class="connection-state-trigger-meta-item">
+                    <span>Mode</span>
+                    <strong>State changes</strong>
+                </div>
+            </div>
+
+            <div class="connection-state-trigger-contracts">
+                <div class="connection-state-trigger-contract" aria-label="Connection state trigger output fields">
+                    <span class="connection-state-trigger-contract-label">Output</span>
+                    <span class="connection-state-trigger-token">MqttClientStateChanged</span>
+                    <span class="connection-state-trigger-token">errors</span>
+                </div>
+            </div>
+        </div>
     </Body>
     <Editor>
         @{
             var brokerOptions = BrokerOptions;
         }
-        @if (brokerOptions.Count > 0)
-        {
-            <MudSelect T="string" Label="Broker connection" @bind-Value="_connection"
-                       Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
-                @foreach (var option in brokerOptions)
-                {
-                    <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
-                }
-            </MudSelect>
-        }
-        else
-        {
-            <MudTextField T="string"
-                          Label="Connection name"
-                          @bind-Value="_connection"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          HelperText="Add a broker connection in the left panel to enable the dropdown." />
-        }
+        <div class="connection-state-trigger-editor" aria-label="Connection state trigger settings">
+            <div class="connection-state-trigger-broker-panel" aria-label="Broker state source">
+                <div class="connection-state-trigger-editor-grid">
+                    @if (brokerOptions.Count > 0)
+                    {
+                        <MudSelect T="string"
+                                   Label="Broker connection"
+                                   @bind-Value="_connection"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="connection-state-trigger-broker-field">
+                            @foreach (var option in brokerOptions)
+                            {
+                                <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                    else
+                    {
+                        <MudTextField T="string"
+                                      Label="Connection name"
+                                      @bind-Value="_connection"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="connection-state-trigger-broker-field" />
+                        <span class="connection-state-trigger-field-note">No broker resources are available for selection.</span>
+                    }
+                </div>
+
+                <div class="connection-state-trigger-event-table" aria-label="Connection state event payload">
+                    <div class="connection-state-trigger-event-head" aria-hidden="true">
+                        <span>Role</span>
+                        <span>Contract</span>
+                        <span>Fields</span>
+                    </div>
+
+                    <div class="connection-state-trigger-event-line">
+                        <span>Emits</span>
+                        <strong>MqttClientStateChanged</strong>
+                        <div class="connection-state-trigger-event-token-group">
+                            <span class="connection-state-trigger-token">profileId</span>
+                            <span class="connection-state-trigger-token">state</span>
+                            <span class="connection-state-trigger-token">errors</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -45,6 +96,12 @@
     private ConnectionStateTriggerNodeModel Model => (ConnectionStateTriggerNodeModel)Node;
 
     private string _connection = string.Empty;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
+
+    private string ConnectionCaption => string.IsNullOrWhiteSpace(Model.Connection)
+        ? FlowDefinitionComposer.BrokerResourceName
+        : Model.Connection.Trim();
 
     private IReadOnlyList<BrokerOption> BrokerOptions
     {
@@ -84,13 +141,24 @@
         }
     }
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
-    private void LoadDraft() => _connection = Model.Connection;
+    private void LoadDraft()
+    {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
+        _connection = Model.Connection;
+    }
 
     private Task SaveAsync()
     {
-        Model.Connection = _connection;
+        Model.Connection = _connection.Trim();
 
         var isExistingAppResource = Flow.GetConnectionNames()
             .Any(name => string.Equals(name, _connection, StringComparison.Ordinal));

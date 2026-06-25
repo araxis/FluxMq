@@ -19,6 +19,6 @@ public sealed class ConnectionStateTriggerNodeModel(string id, DiagramPoint posi
     public override JsonObject BuildConfiguration()
         => new()
         {
-            ["connection"] = string.IsNullOrWhiteSpace(Connection) ? FlowDefinitionComposer.BrokerResourceName : Connection
+            ["connection"] = string.IsNullOrWhiteSpace(Connection) ? FlowDefinitionComposer.BrokerResourceName : Connection.Trim()
         };
 }

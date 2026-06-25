@@ -164,6 +164,131 @@ public sealed class TimerNodeModelTests
     }
 
     [Fact]
+    public void TimerNodeModels_NormalizeInvalidValuesAndPreserveConfigShapes()
+    {
+        var interval = new TimerIntervalNodeModel(
+            "workflow1.interval",
+            new DiagramPoint(10, 20),
+            "interval",
+            descriptor: null,
+            isResource: false)
+        {
+            IntervalMilliseconds = 0,
+            InitialDelayMilliseconds = -1,
+            MaxTicks = -2,
+            BoundedCapacity = 0
+        };
+
+        var intervalConfig = interval.BuildConfiguration();
+
+        intervalConfig.Select(static pair => pair.Key).ShouldBe([
+            "intervalMilliseconds",
+            "initialDelayMilliseconds",
+            "emitImmediately",
+            "boundedCapacity"
+        ]);
+        intervalConfig["intervalMilliseconds"]!.GetValue<int>().ShouldBe(TimerIntervalNodeModel.DefaultIntervalMilliseconds);
+        intervalConfig["initialDelayMilliseconds"]!.GetValue<int>().ShouldBe(TimerIntervalNodeModel.DefaultInitialDelayMilliseconds);
+        intervalConfig["boundedCapacity"]!.GetValue<int>().ShouldBe(TimerIntervalNodeModel.DefaultBoundedCapacity);
+        intervalConfig.ContainsKey("maxTicks").ShouldBeFalse();
+
+        var schedule = new TimerScheduleNodeModel(
+            "workflow1.schedule",
+            new DiagramPoint(10, 20),
+            "schedule",
+            descriptor: null,
+            isResource: false)
+        {
+            Cron = " ",
+            TimeZoneId = " ",
+            MaxTicks = -1,
+            BoundedCapacity = 0
+        };
+
+        var scheduleConfig = schedule.BuildConfiguration();
+
+        scheduleConfig.Select(static pair => pair.Key).ShouldBe([
+            "cron",
+            "timeZoneId",
+            "boundedCapacity"
+        ]);
+        scheduleConfig["cron"]!.GetValue<string>().ShouldBe(TimerScheduleNodeModel.DefaultCron);
+        scheduleConfig["timeZoneId"]!.GetValue<string>().ShouldBe(TimerScheduleNodeModel.DefaultTimeZoneId);
+        scheduleConfig["boundedCapacity"]!.GetValue<int>().ShouldBe(TimerScheduleNodeModel.DefaultBoundedCapacity);
+        scheduleConfig.ContainsKey("maxTicks").ShouldBeFalse();
+
+        var delay = new TimerDelayNodeModel(
+            "workflow1.delay",
+            new DiagramPoint(10, 20),
+            "delay",
+            descriptor: null,
+            isResource: false)
+        {
+            InputType = "missing",
+            DelayMilliseconds = -1,
+            BoundedCapacity = 0
+        };
+
+        var delayConfig = delay.BuildConfiguration();
+
+        delayConfig.Select(static pair => pair.Key).ShouldBe([
+            "inputType",
+            "delayMilliseconds",
+            "boundedCapacity"
+        ]);
+        delayConfig["inputType"]!.GetValue<string>().ShouldBe(TimerDelayNodeModel.DefaultInputType);
+        delayConfig["delayMilliseconds"]!.GetValue<int>().ShouldBe(TimerDelayNodeModel.DefaultDelayMilliseconds);
+        delayConfig["boundedCapacity"]!.GetValue<int>().ShouldBe(TimerDelayNodeModel.DefaultBoundedCapacity);
+
+        var debounce = new TimerDebounceNodeModel(
+            "workflow1.debounce",
+            new DiagramPoint(10, 20),
+            "debounce",
+            descriptor: null,
+            isResource: false)
+        {
+            InputType = "missing",
+            QuietPeriodMilliseconds = 0,
+            BoundedCapacity = 0
+        };
+
+        var debounceConfig = debounce.BuildConfiguration();
+
+        debounceConfig.Select(static pair => pair.Key).ShouldBe([
+            "inputType",
+            "quietPeriodMilliseconds",
+            "boundedCapacity"
+        ]);
+        debounceConfig["inputType"]!.GetValue<string>().ShouldBe(TimerDelayNodeModel.DefaultInputType);
+        debounceConfig["quietPeriodMilliseconds"]!.GetValue<int>().ShouldBe(TimerDebounceNodeModel.DefaultQuietPeriodMilliseconds);
+        debounceConfig["boundedCapacity"]!.GetValue<int>().ShouldBe(TimerDebounceNodeModel.DefaultBoundedCapacity);
+
+        var throttle = new TimerThrottleNodeModel(
+            "workflow1.throttle",
+            new DiagramPoint(10, 20),
+            "throttle",
+            descriptor: null,
+            isResource: false)
+        {
+            InputType = "missing",
+            IntervalMilliseconds = 0,
+            BoundedCapacity = 0
+        };
+
+        var throttleConfig = throttle.BuildConfiguration();
+
+        throttleConfig.Select(static pair => pair.Key).ShouldBe([
+            "inputType",
+            "intervalMilliseconds",
+            "emitFirstImmediately",
+            "boundedCapacity"
+        ]);
+        throttleConfig["inputType"]!.GetValue<string>().ShouldBe(TimerDelayNodeModel.DefaultInputType);
+        throttleConfig["intervalMilliseconds"]!.GetValue<int>().ShouldBe(TimerThrottleNodeModel.DefaultIntervalMilliseconds);
+        throttleConfig["boundedCapacity"]!.GetValue<int>().ShouldBe(TimerThrottleNodeModel.DefaultBoundedCapacity);
+    }
+
+    [Fact]
     public void DynamicMapperNodeModel_UsesConfiguredInputTypeForTimerPorts()
     {
         var descriptor = new ComponentPortDescriptor("Input", "MqttEnvelope", IsInput: true);

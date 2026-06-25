@@ -1,0 +1,209 @@
+.routing-fork-summary {
+    display: grid;
+    gap: 5px;
+    margin-top: 3px;
+    min-width: 0;
+}
+
+.routing-fork-meta {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: minmax(0, 1fr) 72px 64px;
+    min-width: 0;
+}
+
+.routing-fork-meta-item {
+    align-content: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 24%, transparent);
+    border-radius: 4px;
+    display: grid;
+    gap: 2px;
+    min-height: 30px;
+    min-width: 0;
+    padding: 4px 5px;
+}
+
+.routing-fork-meta-item span,
+.routing-fork-contract-label {
+    color: var(--flux-text-muted);
+    font-size: 0.52rem;
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    text-transform: uppercase;
+}
+
+.routing-fork-meta-item strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    font-size: 0.66rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1.12;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.routing-fork-ports {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    display: grid;
+    gap: 4px 3px;
+    grid-template-columns: repeat(4, minmax(0, auto));
+    justify-content: start;
+    min-width: 0;
+    padding: 5px 2px 0;
+}
+
+.routing-fork-contract-label {
+    grid-column: 1 / -1;
+    white-space: nowrap;
+}
+
+.routing-fork-token {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-secondary) 28%, var(--flux-border-soft));
+    border-radius: 4px;
+    color: color-mix(in srgb, var(--mud-palette-secondary) 78%, var(--mud-palette-text-primary));
+    font-size: 0.52rem;
+    font-weight: 760;
+    line-height: 1;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 3px 5px;
+    text-align: center;
+    white-space: normal;
+}
+
+.routing-fork-token.overflow {
+    color: var(--flux-text-muted);
+}
+
+.routing-fork-editor {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.routing-fork-port-panel {
+    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
+    border-radius: 6px;
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px;
+}
+
+.routing-fork-source-row {
+    align-items: start;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    min-width: 0;
+}
+
+.routing-fork-editor ::deep(.mud-input-control) {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.routing-fork-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
+    min-height: 36px;
+}
+
+.routing-fork-editor ::deep(.mud-input > input.mud-input-root),
+.routing-fork-editor ::deep(.mud-input > .mud-select-input) {
+    font-size: 0.82rem;
+}
+
+.routing-fork-editor ::deep(.mud-input-label) {
+    font-size: 0.72rem;
+}
+
+.routing-fork-input-field,
+.routing-fork-buffer-field,
+.routing-fork-output-name-field {
+    min-width: 0;
+}
+
+.routing-fork-port-editor {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);
+    display: grid;
+    gap: 0;
+    min-width: 0;
+    padding-top: 10px;
+}
+
+.routing-fork-port-list {
+    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);
+    border-radius: 6px;
+    display: grid;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.routing-fork-port-column-header {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 46%, transparent);
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 30px;
+    min-width: 0;
+    padding: 8px 10px;
+}
+
+.routing-fork-port-column-header span {
+    color: var(--flux-text-muted);
+    font-size: 0.62rem;
+    font-weight: 780;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.routing-fork-port-row {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 30px;
+    min-width: 0;
+    padding: 8px 10px;
+}
+
+.routing-fork-port-row + .routing-fork-port-row {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
+}
+
+.routing-fork-port-column-header ::deep(.routing-fork-add-port.mud-icon-button),
+.routing-fork-port-row ::deep(.routing-fork-remove-port.mud-icon-button) {
+    height: 28px;
+    min-height: 28px;
+    min-width: 28px;
+    padding: 0;
+    width: 28px;
+}
+
+@media (max-width: 720px) {
+    .routing-fork-meta,
+    .routing-fork-source-row,
+    .routing-fork-port-column-header,
+    .routing-fork-port-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .routing-fork-ports {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .routing-fork-contract-label {
+        grid-column: 1 / -1;
+    }
+}

@@ -5,73 +5,91 @@
                  HeaderIcon="@Icons.Material.Filled.Hub"
                  CategoryColor="@Color.Secondary"
                  EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <div class="d-flex flex-wrap gap-1">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">Left: @Model.LeftInputType</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">Right: @Model.RightInputType</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">Output</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">Timeouts</MudChip>
+        <div class="routing-join-summary">
+            <div class="routing-join-meta">
+                <div class="routing-join-meta-item input">
+                    <span>Left</span>
+                    <strong title="@LeftInputTypeCaption">@LeftInputTypeCaption</strong>
+                </div>
+                <div class="routing-join-meta-item input">
+                    <span>Right</span>
+                    <strong title="@RightInputTypeCaption">@RightInputTypeCaption</strong>
+                </div>
+                <div class="routing-join-meta-item">
+                    <span>Output</span>
+                    <strong>FlowJoinResult</strong>
+                </div>
+                <div class="routing-join-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
             </div>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.LeftKeyExpression = @Model.RightKeyExpression</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.TimeoutMilliseconds ms / @Model.MaxPending pending</MudText>
-        </MudStack>
+
+            <div class="routing-join-rules" aria-label="Routing join rules">
+                <span class="routing-join-contract-label">Join</span>
+                <span class="routing-join-token" title="@JoinExpressionCaption">@JoinExpressionCaption</span>
+                <span class="routing-join-token">@TimeoutCaption</span>
+                <span class="routing-join-token">@PendingCaption</span>
+                <span class="routing-join-token">@CaseCaption</span>
+            </div>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+        <div class="routing-join-editor" aria-label="Routing join settings">
+            <div class="routing-join-rule-panel" aria-label="Routing join rule">
+                <div class="routing-join-input-grid" aria-label="Routing join input contracts">
                     <MudSelect T="string"
                                Label="Left input type"
                                @bind-Value="_leftInputType"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
-                               Dense="true">
+                               Dense="true"
+                               Class="routing-join-left-type-field">
                         @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
                         {
                             <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
                         }
                     </MudSelect>
-                </MudItem>
-                <MudItem xs="12" md="6">
+
                     <MudSelect T="string"
                                Label="Right input type"
                                @bind-Value="_rightInputType"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
-                               Dense="true">
+                               Dense="true"
+                               Class="routing-join-right-type-field">
                         @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
                         {
                             <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
                         }
                     </MudSelect>
-                </MudItem>
-            </MudGrid>
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+                </div>
+
+                <div class="routing-join-key-grid" aria-label="Routing join key expressions">
                     <MudTextField T="string"
                                   Label="Left key expression"
                                   @bind-Value="_leftKeyExpression"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Class="routing-join-left-key-field"
                                   Placeholder="topic" />
-                </MudItem>
-                <MudItem xs="12" md="6">
+
                     <MudTextField T="string"
                                   Label="Right key expression"
                                   @bind-Value="_rightKeyExpression"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Class="routing-join-right-key-field"
                                   Placeholder="topic" />
-                </MudItem>
-            </MudGrid>
-            <MudCheckBox T="bool"
-                         Label="Case sensitive"
-                         @bind-Value="_caseSensitive" />
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="4">
+                </div>
+
+                <div class="routing-join-limit-row" aria-label="Routing join limit settings">
                     <MudNumericField T="int"
                                      Label="Timeout ms"
                                      @bind-Value="_timeoutMilliseconds"
@@ -79,9 +97,9 @@
                                      Max="86400000"
                                      Step="1000"
                                      Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" md="4">
+                                     Margin="Margin.Dense"
+                                     Class="routing-join-timeout-field" />
+
                     <MudNumericField T="int"
                                      Label="Max pending"
                                      @bind-Value="_maxPending"
@@ -89,9 +107,9 @@
                                      Max="100000"
                                      Step="100"
                                      Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" md="4">
+                                     Margin="Margin.Dense"
+                                     Class="routing-join-pending-field" />
+
                     <MudNumericField T="int"
                                      Label="Input buffer"
                                      @bind-Value="_boundedCapacity"
@@ -99,10 +117,18 @@
                                      Max="100000"
                                      Step="100"
                                      Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-            </MudGrid>
-        </MudStack>
+                                     Margin="Margin.Dense"
+                                     Class="routing-join-buffer-field" />
+
+                    <div class="routing-join-case-option">
+                        <MudCheckBox T="bool"
+                                     Label="Case sensitive"
+                                     @bind-Value="_caseSensitive"
+                                     Class="routing-join-case-check" />
+                    </div>
+                </div>
+            </div>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -119,6 +145,22 @@
     private int _timeoutMilliseconds = RoutingJoinNodeModel.DefaultTimeoutMilliseconds;
     private int _maxPending = RoutingJoinNodeModel.DefaultMaxPending;
     private int _boundedCapacity = RoutingJoinNodeModel.DefaultBoundedCapacity;
+
+    private string LeftInputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.LeftInputType);
+    private string RightInputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.RightInputType);
+    private string LeftKeyExpressionCaption => RoutingNodeConfiguration.NormalizeText(
+        Model.LeftKeyExpression,
+        RoutingJoinNodeModel.DefaultLeftKeyExpression);
+    private string RightKeyExpressionCaption => RoutingNodeConfiguration.NormalizeText(
+        Model.RightKeyExpression,
+        RoutingJoinNodeModel.DefaultRightKeyExpression);
+    private string JoinExpressionCaption => $"{LeftKeyExpressionCaption} = {RightKeyExpressionCaption}";
+    private string CaseCaption => Model.CaseSensitive ? "case exact" : "case folded";
+    private string TimeoutCaption => $"{RoutingNodeConfiguration.NormalizePositiveInt(Model.TimeoutMilliseconds, RoutingJoinNodeModel.DefaultTimeoutMilliseconds)} ms";
+    private string PendingCaption => $"{RoutingNodeConfiguration.NormalizePositiveInt(Model.MaxPending, RoutingJoinNodeModel.DefaultMaxPending)} pending";
+    private string BufferCaption => RoutingNodeConfiguration.NormalizePositiveInt(
+        Model.BoundedCapacity,
+        RoutingJoinNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     protected override void OnParametersSet() => LoadDraft();
 

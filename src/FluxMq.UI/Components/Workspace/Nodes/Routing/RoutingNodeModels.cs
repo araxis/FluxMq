@@ -41,7 +41,9 @@ public sealed class RoutingSwitchNodeModel(
     {
         InputType = RoutingNodeConfiguration.NormalizeInputType(
             RoutingNodeConfiguration.ReadString(config, "inputType", DefaultInputType));
-        Expression = RoutingNodeConfiguration.ReadString(config, "expression", DefaultExpression);
+        Expression = RoutingNodeConfiguration.NormalizeText(
+            RoutingNodeConfiguration.ReadString(config, "expression", DefaultExpression),
+            DefaultExpression);
         EmitRouteEnvelope = RoutingNodeConfiguration.ReadBool(config, "emitRouteEnvelope", false);
         BoundedCapacity = RoutingNodeConfiguration.ReadPositiveInt(config, "boundedCapacity", DefaultBoundedCapacity);
         Routes = ReadRoutes(config);

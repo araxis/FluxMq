@@ -4,49 +4,113 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.CallMerge"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Small"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
-            <div class="d-flex flex-wrap gap-1">
-                @foreach (var input in Model.Inputs)
+        <div class="routing-merge-summary">
+            <div class="routing-merge-meta">
+                <div class="routing-merge-meta-item input">
+                    <span>Input</span>
+                    <strong title="@InputTypeCaption">@InputTypeCaption</strong>
+                </div>
+                <div class="routing-merge-meta-item">
+                    <span>Inputs</span>
+                    <strong>@InputCountCaption</strong>
+                </div>
+                <div class="routing-merge-meta-item output">
+                    <span>Output</span>
+                    <strong>FlowMergeItem</strong>
+                </div>
+                <div class="routing-merge-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
+            </div>
+
+            <div class="routing-merge-ports" aria-label="Routing merge inputs">
+                <span class="routing-merge-contract-label">Input ports</span>
+                @foreach (var input in InputPreview)
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@input</MudChip>
+                    <span class="routing-merge-token" title="@input">@input</span>
+                }
+                @if (InputPreviewOverflow > 0)
+                {
+                    <span class="routing-merge-token overflow">+@InputPreviewOverflow</span>
                 }
             </div>
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">FlowMergeItem</MudChip>
-        </MudStack>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudSelect T="string"
-                       Label="Input type"
-                       @bind-Value="_inputType"
-                       Variant="Variant.Outlined"
-                       Margin="Margin.Dense"
-                       Dense="true">
-                @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                {
-                    <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                }
-            </MudSelect>
-            <MudTextField T="string"
-                          Label="Inputs"
-                          @bind-Value="_inputsText"
-                          Variant="Variant.Outlined"
-                          Lines="4"
-                          HelperText="One input port per line." />
-            <MudNumericField T="int"
-                             Label="Input buffer"
-                             @bind-Value="_boundedCapacity"
-                             Min="1"
-                             Max="100000"
-                             Step="100"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-        </MudStack>
+        <div class="routing-merge-editor" aria-label="Routing merge settings">
+            <section class="routing-merge-port-panel" aria-label="Routing merge port configuration">
+                <div class="routing-merge-source-row">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               aria-label="Routing merge input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="routing-merge-input-field">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Routing merge input buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-merge-buffer-field" />
+                </div>
+
+                <div class="routing-merge-port-editor" aria-label="Routing merge input ports">
+                    <div class="routing-merge-port-list">
+                        <div class="routing-merge-port-column-header">
+                            <span>Input port</span>
+                            <MudTooltip Text="Add input port">
+                                <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                               Size="Size.Small"
+                                               Class="routing-merge-add-port"
+                                               aria-label="Add input port"
+                                               OnClick="@AddInput" />
+                            </MudTooltip>
+                        </div>
+                        @for (var index = 0; index < _inputDrafts.Count; index++)
+                        {
+                            var input = _inputDrafts[index];
+                            <div class="routing-merge-port-row" @key="input">
+                                <MudTextField T="string"
+                                              @bind-Value="input.Name"
+                                              aria-label="@($"Input port {index + 1}")"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="routing-merge-input-name-field"
+                                              Placeholder="Primary" />
+                                <MudTooltip Text="@(_inputDrafts.Count > 1 ? "Remove input port" : "Keep at least one input")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   Size="Size.Small"
+                                                   Disabled="@(_inputDrafts.Count <= 1)"
+                                                   Class="routing-merge-remove-port"
+                                                   aria-label="@($"Remove input port {input.Name}")"
+                                                   OnClick="@(() => RemoveInput(input))" />
+                                </MudTooltip>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -56,25 +120,56 @@
     private RoutingMergeNodeModel Model => (RoutingMergeNodeModel)Node;
 
     private string _inputType = RoutingMergeNodeModel.DefaultInputType;
-    private string _inputsText = string.Empty;
+    private List<PortDraft> _inputDrafts = [];
     private int _boundedCapacity = RoutingMergeNodeModel.DefaultBoundedCapacity;
+
+    private IReadOnlyList<string> NormalizedInputs => RoutingNodeConfiguration.NormalizePortList(
+        Model.Inputs,
+        ["Output", "Errors"],
+        ["Left", "Right"]);
+    private string InputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
+    private string InputCountCaption => $"{NormalizedInputs.Count} inputs";
+    private string BufferCaption => RoutingNodeConfiguration.NormalizePositiveInt(
+        Model.BoundedCapacity,
+        RoutingMergeNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private IReadOnlyList<string> InputPreview => NormalizedInputs.Take(4).ToArray();
+    private int InputPreviewOverflow => Math.Max(0, NormalizedInputs.Count - 4);
 
     protected override void OnParametersSet() => LoadDraft();
 
     private void LoadDraft()
     {
         _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
-        _inputsText = Model.FormatInputs();
+        _inputDrafts = RoutingNodeConfiguration.SplitLines(Model.FormatInputs())
+            .Select(static input => new PortDraft(input))
+            .ToList();
+        if (_inputDrafts.Count == 0)
+        {
+            _inputDrafts = [new("Left")];
+        }
+
         _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
             Model.BoundedCapacity,
             RoutingMergeNodeModel.DefaultBoundedCapacity);
+    }
+
+    private void AddInput() => _inputDrafts.Add(new($"Input{_inputDrafts.Count + 1}"));
+
+    private void RemoveInput(PortDraft input)
+    {
+        if (_inputDrafts.Count <= 1)
+        {
+            return;
+        }
+
+        _inputDrafts.Remove(input);
     }
 
     private Task SaveAsync()
     {
         Model.InputType = RoutingNodeConfiguration.NormalizeInputType(_inputType);
         Model.Inputs = RoutingNodeConfiguration.NormalizePortList(
-            RoutingNodeConfiguration.SplitLines(_inputsText),
+            _inputDrafts.Select(static input => input.Name),
             ["Output", "Errors"],
             ["Left", "Right"]);
         Model.BoundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
@@ -83,5 +178,10 @@
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private sealed class PortDraft(string name)
+    {
+        public string Name { get; set; } = name;
     }
 }

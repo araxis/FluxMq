@@ -5,36 +5,59 @@
                  HeaderIcon="@Icons.Material.Filled.SyncAlt"
                  CategoryColor="@Color.Secondary"
                  EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <div class="d-flex flex-wrap gap-1">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">Matched</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">Timeouts</MudChip>
+        <div class="routing-correlation-summary">
+            <div class="routing-correlation-meta">
+                <div class="routing-correlation-meta-item input">
+                    <span>Input</span>
+                    <strong title="@InputTypeCaption">@InputTypeCaption</strong>
+                </div>
+                <div class="routing-correlation-meta-item">
+                    <span>Outputs</span>
+                    <strong>2 outputs</strong>
+                </div>
+                <div class="routing-correlation-meta-item">
+                    <span>Timeout</span>
+                    <strong>@TimeoutCaption</strong>
+                </div>
+                <div class="routing-correlation-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
             </div>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.KeyExpression / @Model.SideExpression</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@Model.RequestSide -> @Model.ResponseSide / @Model.TimeoutMilliseconds ms</MudText>
-        </MudStack>
+
+            <div class="routing-correlation-rules" aria-label="Routing correlation rules">
+                <span class="routing-correlation-contract-label">Correlation</span>
+                <span class="routing-correlation-token" title="@KeyExpressionCaption">key @KeyExpressionCaption</span>
+                <span class="routing-correlation-token" title="@SideExpressionCaption">side @SideExpressionCaption</span>
+                <span class="routing-correlation-token" title="@SideFlowCaption">@SideFlowCaption</span>
+                <span class="routing-correlation-token">@CaseCaption</span>
+                <span class="routing-correlation-token">@PendingCaption</span>
+            </div>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+        <div class="routing-correlation-editor" aria-label="Routing correlation settings">
+            <div class="routing-correlation-rule-panel" aria-label="Routing correlation rule">
+                <div class="routing-correlation-source-grid" aria-label="Routing correlation source settings">
                     <MudSelect T="string"
                                Label="Input type"
                                @bind-Value="_inputType"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
-                               Dense="true">
+                               Dense="true"
+                               Class="routing-correlation-input-field">
                         @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
                         {
                             <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
                         }
                     </MudSelect>
-                </MudItem>
-                <MudItem xs="12" md="6">
+
                     <MudNumericField T="int"
                                      Label="Input buffer"
                                      @bind-Value="_boundedCapacity"
@@ -42,42 +65,52 @@
                                      Max="100000"
                                      Step="100"
                                      Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-            </MudGrid>
-            <MudTextField T="string"
-                          Label="Key expression"
-                          @bind-Value="_keyExpression"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          Placeholder="topic" />
-            <MudTextField T="string"
-                          Label="Side expression"
-                          @bind-Value="_sideExpression"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          Placeholder="payloadText" />
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+                                     Margin="Margin.Dense"
+                                     Class="routing-correlation-buffer-field" />
+                </div>
+
+                <div class="routing-correlation-expression-grid" aria-label="Routing correlation expressions">
+                    <MudTextField T="string"
+                                  Label="Key expression"
+                                  @bind-Value="_keyExpression"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="routing-correlation-key-field"
+                                  Placeholder="topic" />
+
+                    <MudTextField T="string"
+                                  Label="Side expression"
+                                  @bind-Value="_sideExpression"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="routing-correlation-side-field"
+                                  Placeholder="payloadText" />
+                </div>
+
+                <div class="routing-correlation-side-row" aria-label="Routing correlation side mapping">
                     <MudTextField T="string"
                                   Label="Request side"
                                   @bind-Value="_requestSide"
                                   Variant="Variant.Outlined"
-                                  Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" md="6">
+                                  Margin="Margin.Dense"
+                                  Class="routing-correlation-request-field" />
+
                     <MudTextField T="string"
                                   Label="Response side"
                                   @bind-Value="_responseSide"
                                   Variant="Variant.Outlined"
-                                  Margin="Margin.Dense" />
-                </MudItem>
-            </MudGrid>
-            <MudCheckBox T="bool"
-                         Label="Case sensitive"
-                         @bind-Value="_caseSensitive" />
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+                                  Margin="Margin.Dense"
+                                  Class="routing-correlation-response-field" />
+
+                    <div class="routing-correlation-case-option">
+                        <MudCheckBox T="bool"
+                                     Label="Case sensitive"
+                                     @bind-Value="_caseSensitive"
+                                     Class="routing-correlation-case-check" />
+                    </div>
+                </div>
+
+                <div class="routing-correlation-limit-row" aria-label="Routing correlation limits">
                     <MudNumericField T="int"
                                      Label="Timeout ms"
                                      @bind-Value="_timeoutMilliseconds"
@@ -85,9 +118,9 @@
                                      Max="86400000"
                                      Step="1000"
                                      Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" md="6">
+                                     Margin="Margin.Dense"
+                                     Class="routing-correlation-timeout-field" />
+
                     <MudNumericField T="int"
                                      Label="Max pending"
                                      @bind-Value="_maxPending"
@@ -95,10 +128,11 @@
                                      Max="100000"
                                      Step="100"
                                      Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-            </MudGrid>
-        </MudStack>
+                                     Margin="Margin.Dense"
+                                     Class="routing-correlation-pending-field" />
+                </div>
+            </div>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -116,6 +150,28 @@
     private int _timeoutMilliseconds = RoutingCorrelationNodeModel.DefaultTimeoutMilliseconds;
     private int _maxPending = RoutingCorrelationNodeModel.DefaultMaxPending;
     private int _boundedCapacity = RoutingCorrelationNodeModel.DefaultBoundedCapacity;
+
+    private string InputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
+    private string KeyExpressionCaption => RoutingNodeConfiguration.NormalizeText(
+        Model.KeyExpression,
+        RoutingCorrelationNodeModel.DefaultKeyExpression);
+    private string SideExpressionCaption => RoutingNodeConfiguration.NormalizeText(
+        Model.SideExpression,
+        RoutingCorrelationNodeModel.DefaultSideExpression);
+    private string RequestSideCaption => RoutingNodeConfiguration.NormalizeText(
+        Model.RequestSide,
+        RoutingCorrelationNodeModel.DefaultRequestSide);
+    private string ResponseSideCaption => RoutingCorrelationNodeModel.NormalizeResponseSide(
+        RequestSideCaption,
+        RoutingNodeConfiguration.NormalizeText(Model.ResponseSide, RoutingCorrelationNodeModel.DefaultResponseSide),
+        Model.CaseSensitive);
+    private string SideFlowCaption => $"{RequestSideCaption} to {ResponseSideCaption}";
+    private string CaseCaption => Model.CaseSensitive ? "case exact" : "case folded";
+    private string TimeoutCaption => $"{RoutingNodeConfiguration.NormalizePositiveInt(Model.TimeoutMilliseconds, RoutingCorrelationNodeModel.DefaultTimeoutMilliseconds)} ms";
+    private string PendingCaption => $"{RoutingNodeConfiguration.NormalizePositiveInt(Model.MaxPending, RoutingCorrelationNodeModel.DefaultMaxPending)} pending";
+    private string BufferCaption => RoutingNodeConfiguration.NormalizePositiveInt(
+        Model.BoundedCapacity,
+        RoutingCorrelationNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     protected override void OnParametersSet() => LoadDraft();
 

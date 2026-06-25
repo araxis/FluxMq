@@ -327,50 +327,41 @@
 
 .flow-link-condition-panel {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface) 96%, transparent);
-    border: 1px solid var(--flux-border);
+    background: color-mix(in srgb, var(--flux-surface) 92%, var(--flux-surface-2));
+    border: 1px solid color-mix(in srgb, var(--flux-border) 78%, transparent);
     border-radius: 6px;
     box-shadow: none;
-    display: flex;
-    gap: 5px;
-    max-width: min(680px, calc(100% - 24px));
+    display: grid;
+    gap: 6px;
+    grid-template-columns: minmax(170px, 0.42fr) minmax(240px, 1fr) 30px 30px;
+    max-width: min(760px, calc(100% - 24px));
     min-width: 0;
-    padding: 4px;
+    padding: 6px;
     position: absolute;
     right: 10px;
     top: 62px;
     z-index: 24;
 }
 
-.flow-link-condition-meta {
-    align-items: center;
-    border-right: 1px solid var(--flux-border);
-    color: var(--mud-palette-text-secondary);
-    display: flex;
-    flex: 0 0 auto;
-    gap: 6px;
-    max-width: 210px;
-    min-width: 0;
-    padding: 0 8px 0 4px;
-}
-
-.flow-link-condition-meta div {
+.flow-link-condition-title {
     display: grid;
     gap: 2px;
     min-width: 0;
+    padding: 0 4px 0 2px;
 }
 
-.flow-link-condition-meta span {
+.flow-link-condition-title span {
+    color: var(--mud-palette-text-secondary);
     font-size: 0.62rem;
     font-weight: 700;
     line-height: 1;
     text-transform: uppercase;
 }
 
-.flow-link-condition-meta strong {
-    color: var(--mud-palette-text-primary);
+.flow-link-condition-title strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
     font-family: Consolas, "Courier New", monospace;
-    font-size: 0.68rem;
+    font-size: 0.69rem;
     font-weight: 650;
     line-height: 1.1;
     overflow: hidden;
@@ -379,12 +370,27 @@
 }
 
 .flow-link-condition-panel ::deep .flow-link-condition-input {
-    width: min(380px, 48vw);
+    min-width: 0;
+    width: 100%;
 }
 
 .flow-link-condition-panel ::deep .mud-input-control {
     margin-bottom: 0;
     margin-top: 0;
+}
+
+.flow-link-condition-panel ::deep .flow-link-condition-action.mud-icon-button {
+    border-radius: 5px;
+    color: var(--mud-palette-text-secondary);
+    height: 30px;
+    min-height: 30px;
+    min-width: 30px;
+    padding: 0;
+    width: 30px;
+}
+
+.flow-link-condition-panel ::deep .flow-link-condition-action.apply.mud-icon-button {
+    color: var(--flux-accent);
 }
 
 @media (max-width: 720px) {
@@ -427,22 +433,20 @@
 
     .flow-link-condition-panel {
         align-items: stretch;
-        flex-direction: column;
+        grid-template-columns: minmax(0, 1fr) 30px 30px;
         left: 8px;
         max-width: none;
         right: 8px;
         top: 130px;
     }
 
-    .flow-link-condition-meta {
-        border-bottom: 1px solid var(--flux-border);
-        border-right: 0;
-        max-width: none;
-        padding: 2px 2px 7px;
+    .flow-link-condition-title {
+        grid-column: 1 / -1;
+        padding: 0 2px 2px;
     }
 
     .flow-link-condition-panel ::deep .flow-link-condition-input {
-        flex: 1 1 auto;
+        grid-column: 1 / 2;
         width: auto;
     }
 
@@ -612,51 +616,55 @@
     flex: 0 0 auto;
 }
 
-.flow-designer-root ::deep .flow-node-category-chip {
-    border-radius: 5px;
+.flow-designer-root ::deep .flow-node-category-token {
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
+    border-radius: 4px;
+    color: var(--flux-text-muted);
     flex: 0 1 auto;
-    height: 20px;
+    font-size: 0.58rem;
+    font-weight: 740;
+    line-height: 1;
     margin: 0;
-    max-width: 72px;
-}
-
-.flow-designer-root ::deep .flow-node-category-chip .mud-chip-content {
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0;
+    max-width: 74px;
+    min-width: 0;
     overflow: hidden;
-    padding: 0 2px;
+    padding: 4px 5px;
     text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0;
 }
 
 .flow-designer-root ::deep .flow-node-divider {
-    margin: 6px -8px;
+    background: color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
+    height: 1px;
+    margin: 6px 0;
 }
 
 .flow-designer-root ::deep .flow-node-activity {
     align-items: center;
-    display: flex;
-    margin: 0 0 6px;
-    min-height: 32px;
-    padding: 0 6px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-info) 42%, var(--flux-border-soft));
+    border-radius: 5px;
+    color: color-mix(in srgb, var(--mud-palette-info) 78%, var(--mud-palette-text-primary));
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 16px minmax(0, 1fr);
+    margin: 0 0 7px;
+    min-height: 30px;
+    min-width: 0;
+    padding: 5px 7px;
 }
 
-.flow-designer-root ::deep .flow-node-activity .mud-alert-icon {
-    align-items: center;
-    align-self: center;
+.flow-designer-root ::deep .flow-node-activity-icon {
     display: inline-flex;
     font-size: 1rem;
-    margin-inline-end: 6px;
-    padding: 0;
 }
 
-.flow-designer-root ::deep .flow-node-activity .mud-alert-message {
-    align-items: center;
-    align-self: center;
-    display: inline-flex;
+.flow-designer-root ::deep .flow-node-activity span {
     font-size: 0.68rem;
+    font-weight: 640;
     line-height: 1.25;
-    padding: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .flow-designer-root ::deep .flow-node-collapsed-activity {
@@ -750,7 +758,7 @@
 }
 
 .flow-designer-root ::deep .diagram-link .flow-link-selected {
-    filter: drop-shadow(0 0 2px color-mix(in srgb, #A78BFA 30%, transparent));
+    filter: drop-shadow(0 0 2px color-mix(in srgb, var(--flux-accent) 28%, transparent));
 }
 
 .flow-designer-root ::deep .diagram-link .flow-link-selection-halo {
@@ -763,10 +771,10 @@
 }
 
 .flow-designer-root ::deep .diagram-link div.default-link-label {
-    background: color-mix(in srgb, var(--flux-surface) 88%, #FBBF24);
-    border: 1px solid color-mix(in srgb, #FBBF24 68%, transparent);
+    background: color-mix(in srgb, var(--flux-surface) 90%, var(--flux-accent));
+    border: 1px solid color-mix(in srgb, var(--flux-accent) 48%, transparent);
     border-radius: 5px;
-    color: #FBBF24;
+    color: color-mix(in srgb, var(--flux-accent) 84%, var(--mud-palette-text-primary));
     display: inline-block;
     font-family: monospace;
     font-size: 10px;
@@ -782,9 +790,9 @@
 }
 
 .flow-designer-root ::deep .diagram-link:has(.flow-link-selected) div.default-link-label {
-    border-color: #A78BFA;
-    box-shadow: 0 0 0 1px color-mix(in srgb, #A78BFA 18%, transparent);
-    color: #DDD6FE;
+    border-color: color-mix(in srgb, var(--flux-accent) 70%, var(--mud-palette-info));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--flux-accent) 18%, transparent);
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 88%, var(--flux-accent));
 }
 
 .flow-designer-root ::deep .flow-node-port-list {
@@ -850,38 +858,6 @@
     color: var(--mud-palette-error);
 }
 
-
-.flow-designer-root ::deep .node-stat {
-    align-items: center;
-    display: grid;
-    font-size: 0.68rem;
-    gap: 4px;
-    grid-template-columns: 16px auto minmax(0, 1fr);
-    line-height: 1.18;
-    min-height: 18px;
-}
-
-.flow-designer-root ::deep .node-stat-icon {
-    font-size: 1rem;
-    opacity: 0.78;
-}
-
-.flow-designer-root ::deep .node-stat-label {
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0;
-    opacity: 0.64;
-    text-transform: uppercase;
-}
-
-.flow-designer-root ::deep .node-stat-value {
-    font-size: 0.68rem;
-    font-variant-numeric: tabular-nums;
-    overflow: hidden;
-    text-align: right;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
 
 /* Output port blink — animates the INNER dot, not the hit-target wrapper */
 @keyframes port-pulse-anim {

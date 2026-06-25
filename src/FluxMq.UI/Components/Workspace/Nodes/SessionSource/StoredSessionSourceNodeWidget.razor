@@ -5,57 +5,114 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.FolderOpen"
                  CategoryColor="@Color.Primary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudText Typo="Typo.caption" Color="Color.Secondary">
-            Replays messages from a stored MQTT recording session.
-        </MudText>
-        <MudStack Spacing="1" Class="mt-2">
-            <Stat Icon="@Icons.Material.Filled.Folder" Label="Session" Value="@(ResolvedSessionName ?? "—")" />
-            @if (Model.PreserveTiming)
-            {
-                <Stat Icon="@Icons.Material.Filled.Speed" Label="Speed" Value="@($"{Model.Speed:0.##}×")" />
-            }
-        </MudStack>
+        <div class="stored-session-source-summary">
+            <div class="stored-session-source-meta">
+                <div class="stored-session-source-meta-item session">
+                    <span>Session</span>
+                    <strong title="@SessionCaption">@SessionCaption</strong>
+                </div>
+                <div class="stored-session-source-meta-item">
+                    <span>Timing</span>
+                    <strong>@TimingCaption</strong>
+                </div>
+                <div class="stored-session-source-meta-item">
+                    <span>Speed</span>
+                    <strong>@SpeedCaption</strong>
+                </div>
+                <div class="stored-session-source-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
+            </div>
+
+            <div class="stored-session-source-contract" aria-label="Stored session source output fields">
+                <span class="stored-session-source-contract-label">Output fields</span>
+                <span class="stored-session-source-token">MqttEnvelope</span>
+                <span class="stored-session-source-token">topic</span>
+                <span class="stored-session-source-token">payload</span>
+            </div>
+        </div>
     </Body>
     <Editor>
-        @{
-            var sessions = Live.StoredSessions;
-        }
-        @if (sessions.Count > 0)
-        {
-            <MudSelect T="string" Label="Session" @bind-Value="_sessionId"
-                       Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true"
-                       ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
-                @foreach (var session in sessions)
-                {
-                    <MudSelectItem Value="@session.Id.ToString()">
-                        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
-                            <MudText Typo="Typo.body2">@session.Name</MudText>
-                            @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
+        <div class="stored-session-source-editor" aria-label="Stored session source settings">
+            @{
+                var sessions = Live.StoredSessions;
+            }
+            <section class="stored-session-source-playback-panel" aria-label="Stored session playback configuration">
+                <div class="stored-session-source-source-row">
+                    @if (sessions.Count > 0)
+                    {
+                        <MudSelect T="string"
+                                   Label="Session"
+                                   @bind-Value="_sessionId"
+                                   aria-label="Stored session"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="stored-session-source-session-field"
+                                   ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
+                            @foreach (var session in sessions)
                             {
-                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary">@session.ProjectName</MudChip>
+                                <MudSelectItem Value="@session.Id.ToString()">
+                                    <div class="stored-session-source-session-option">
+                                        <span>@session.Name</span>
+                                        @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
+                                        {
+                                            <small>@session.ProjectName</small>
+                                        }
+                                    </div>
+                                </MudSelectItem>
                             }
-                        </MudStack>
-                    </MudSelectItem>
-                }
-            </MudSelect>
-        }
-        else
-        {
-            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined">
-                No recorded sessions found. Record a session first.
-            </MudAlert>
-        }
-        <MudCheckBox T="bool" @bind-Value="_preserveTiming" Label="Preserve original timing" Dense="true" />
-        @if (_preserveTiming)
-        {
-            <MudNumericField T="double" Label="Playback speed" @bind-Value="_speed"
-                             Min="0.1" Max="100" Step="0.1"
-                             Variant="Variant.Outlined" Margin="Margin.Dense"
-                             HelperText="1 = real-time, 2 = double speed, 0.5 = half speed" />
-        }
+                        </MudSelect>
+                    }
+                    else
+                    {
+                        <div class="stored-session-source-empty" role="status">
+                            No recorded sessions found. Record a session first.
+                        </div>
+                    }
+
+                    <div class="stored-session-source-timing-option">
+                        <MudCheckBox T="bool"
+                                     @bind-Value="_preserveTiming"
+                                     Label="Preserve timing"
+                                     aria-label="Preserve original session timing"
+                                     Dense="true"
+                                     Class="stored-session-source-check" />
+                    </div>
+
+                    <MudNumericField T="double"
+                                     Label="Playback speed"
+                                     @bind-Value="_speed"
+                                     aria-label="Stored session playback speed"
+                                     Min="0.1"
+                                     Max="100"
+                                     Step="0.1"
+                                     Disabled="@(!_preserveTiming)"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="stored-session-source-speed-field" />
+
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Stored session output buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="stored-session-source-buffer-field" />
+                </div>
+            </section>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -75,7 +132,13 @@
 
     private string _sessionId = string.Empty;
     private bool _preserveTiming;
-    private double _speed = 1;
+    private double _speed = SessionSourceNodeModel.DefaultSpeed;
+    private int _boundedCapacity = SessionSourceNodeModel.DefaultBoundedCapacity;
+
+    private string SessionCaption => ResolvedSessionName ?? "No session";
+    private string TimingCaption => Model.PreserveTiming ? "Original" : "Immediate";
+    private string SpeedCaption => Model.PreserveTiming ? $"{SessionSourceNodeModel.NormalizeSpeed(Model.Speed):0.##}x" : "off";
+    private string BufferCaption => SessionSourceNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity).ToString();
 
     protected override void OnParametersSet()
     {
@@ -86,14 +149,16 @@
     {
         _sessionId = Model.SessionId;
         _preserveTiming = Model.PreserveTiming;
-        _speed = Model.Speed;
+        _speed = SessionSourceNodeModel.NormalizeSpeed(Model.Speed);
+        _boundedCapacity = SessionSourceNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity);
     }
 
     private Task SaveAsync()
     {
-        Model.SessionId = _sessionId;
+        Model.SessionId = _sessionId.Trim();
         Model.PreserveTiming = _preserveTiming;
-        Model.Speed = _speed;
+        Model.Speed = SessionSourceNodeModel.NormalizeSpeed(_speed);
+        Model.BoundedCapacity = SessionSourceNodeModel.NormalizeBoundedCapacity(_boundedCapacity);
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
     }

@@ -4,48 +4,109 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.CallSplit"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Small"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
-            <div class="d-flex flex-wrap gap-1">
-                @foreach (var output in Model.Outputs)
+        <div class="routing-fork-summary">
+            <div class="routing-fork-meta">
+                <div class="routing-fork-meta-item input">
+                    <span>Input</span>
+                    <strong title="@InputTypeCaption">@InputTypeCaption</strong>
+                </div>
+                <div class="routing-fork-meta-item">
+                    <span>Outputs</span>
+                    <strong>@OutputCountCaption</strong>
+                </div>
+                <div class="routing-fork-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
+            </div>
+
+            <div class="routing-fork-ports" aria-label="Routing fork outputs">
+                <span class="routing-fork-contract-label">Output ports</span>
+                @foreach (var output in OutputPreview)
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">@output</MudChip>
+                    <span class="routing-fork-token" title="@output">@output</span>
+                }
+                @if (OutputPreviewOverflow > 0)
+                {
+                    <span class="routing-fork-token overflow">+@OutputPreviewOverflow</span>
                 }
             </div>
-        </MudStack>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudSelect T="string"
-                       Label="Input type"
-                       @bind-Value="_inputType"
-                       Variant="Variant.Outlined"
-                       Margin="Margin.Dense"
-                       Dense="true">
-                @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                {
-                    <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                }
-            </MudSelect>
-            <MudTextField T="string"
-                          Label="Outputs"
-                          @bind-Value="_outputsText"
-                          Variant="Variant.Outlined"
-                          Lines="4"
-                          HelperText="One output port per line." />
-            <MudNumericField T="int"
-                             Label="Input buffer"
-                             @bind-Value="_boundedCapacity"
-                             Min="1"
-                             Max="100000"
-                             Step="100"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-        </MudStack>
+        <div class="routing-fork-editor" aria-label="Routing fork settings">
+            <section class="routing-fork-port-panel" aria-label="Routing fork port configuration">
+                <div class="routing-fork-source-row">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               aria-label="Routing fork input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="routing-fork-input-field">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Routing fork input buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-fork-buffer-field" />
+                </div>
+
+                <div class="routing-fork-port-editor" aria-label="Routing fork output ports">
+                    <div class="routing-fork-port-list">
+                        <div class="routing-fork-port-column-header">
+                            <span>Output port</span>
+                            <MudTooltip Text="Add output port">
+                                <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                               Size="Size.Small"
+                                               Class="routing-fork-add-port"
+                                               aria-label="Add output port"
+                                               OnClick="@AddOutput" />
+                            </MudTooltip>
+                        </div>
+                        @for (var index = 0; index < _outputDrafts.Count; index++)
+                        {
+                            var output = _outputDrafts[index];
+                            <div class="routing-fork-port-row" @key="output">
+                                <MudTextField T="string"
+                                              @bind-Value="output.Name"
+                                              aria-label="@($"Output port {index + 1}")"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="routing-fork-output-name-field"
+                                              Placeholder="Audit" />
+                                <MudTooltip Text="@(_outputDrafts.Count > 1 ? "Remove output port" : "Keep at least one output")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   Size="Size.Small"
+                                                   Disabled="@(_outputDrafts.Count <= 1)"
+                                                   Class="routing-fork-remove-port"
+                                                   aria-label="@($"Remove output port {output.Name}")"
+                                                   OnClick="@(() => RemoveOutput(output))" />
+                                </MudTooltip>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -55,25 +116,56 @@
     private RoutingForkNodeModel Model => (RoutingForkNodeModel)Node;
 
     private string _inputType = RoutingForkNodeModel.DefaultInputType;
-    private string _outputsText = string.Empty;
+    private List<PortDraft> _outputDrafts = [];
     private int _boundedCapacity = RoutingForkNodeModel.DefaultBoundedCapacity;
+
+    private IReadOnlyList<string> NormalizedOutputs => RoutingNodeConfiguration.NormalizePortList(
+        Model.Outputs,
+        ["Input", "Errors"],
+        ["A", "B"]);
+    private string InputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
+    private string OutputCountCaption => $"{NormalizedOutputs.Count} outputs";
+    private string BufferCaption => RoutingNodeConfiguration.NormalizePositiveInt(
+        Model.BoundedCapacity,
+        RoutingForkNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private IReadOnlyList<string> OutputPreview => NormalizedOutputs.Take(4).ToArray();
+    private int OutputPreviewOverflow => Math.Max(0, NormalizedOutputs.Count - 4);
 
     protected override void OnParametersSet() => LoadDraft();
 
     private void LoadDraft()
     {
         _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
-        _outputsText = Model.FormatOutputs();
+        _outputDrafts = RoutingNodeConfiguration.SplitLines(Model.FormatOutputs())
+            .Select(static output => new PortDraft(output))
+            .ToList();
+        if (_outputDrafts.Count == 0)
+        {
+            _outputDrafts = [new("A")];
+        }
+
         _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
             Model.BoundedCapacity,
             RoutingForkNodeModel.DefaultBoundedCapacity);
+    }
+
+    private void AddOutput() => _outputDrafts.Add(new($"Output{_outputDrafts.Count + 1}"));
+
+    private void RemoveOutput(PortDraft output)
+    {
+        if (_outputDrafts.Count <= 1)
+        {
+            return;
+        }
+
+        _outputDrafts.Remove(output);
     }
 
     private Task SaveAsync()
     {
         Model.InputType = RoutingNodeConfiguration.NormalizeInputType(_inputType);
         Model.Outputs = RoutingNodeConfiguration.NormalizePortList(
-            RoutingNodeConfiguration.SplitLines(_outputsText),
+            _outputDrafts.Select(static output => output.Name),
             ["Input", "Errors"],
             ["A", "B"]);
         Model.BoundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
@@ -82,5 +174,10 @@
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private sealed class PortDraft(string name)
+    {
+        public string Name { get; set; } = name;
     }
 }

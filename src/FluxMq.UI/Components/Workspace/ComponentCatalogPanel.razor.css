@@ -448,7 +448,7 @@
 }
 
 .catalog-icon-tile.actor {
-    color: var(--mud-palette-warning);
+    color: color-mix(in srgb, var(--mud-palette-tertiary) 80%, var(--mud-palette-text-primary));
 }
 
 .catalog-icon-tile.dashboard {

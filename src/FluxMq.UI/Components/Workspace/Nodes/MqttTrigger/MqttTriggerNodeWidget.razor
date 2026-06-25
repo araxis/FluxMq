@@ -51,7 +51,7 @@
         </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2" Class="mqtt-trigger-editor">
+        <div class="mqtt-trigger-editor">
             <section class="mqtt-trigger-editor-section" aria-label="Broker settings">
                 <div class="mqtt-trigger-editor-grid">
                     @{
@@ -74,13 +74,14 @@
                     }
                     else
                     {
-                        <MudTextField T="string"
-                                      Label="Connection name"
-                                      @bind-Value="_connection"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      HelperText="Add a broker connection in the left panel to enable the dropdown."
-                                      Class="mqtt-trigger-broker-field" />
+                        <div class="mqtt-trigger-broker-cell">
+                            <MudTextField T="string"
+                                          Label="Connection name"
+                                          @bind-Value="_connection"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="mqtt-trigger-broker-field" />
+                        </div>
                     }
                     <MudNumericField T="int"
                                      Label="Output buffer"
@@ -196,7 +197,7 @@
                     </MudTable>
                 </div>
             </section>
-        </MudStack>
+        </div>
     </Editor>
 </NodeWidgetShell>
 

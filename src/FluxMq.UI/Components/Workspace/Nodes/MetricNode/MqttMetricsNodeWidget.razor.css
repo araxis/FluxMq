@@ -1,0 +1,266 @@
+.metrics-readout-grid {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: repeat(var(--metric-readout-columns), minmax(0, 1fr));
+    margin-bottom: 8px;
+    min-width: 0;
+}
+
+.metrics-readout {
+    align-content: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 8%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 72%, transparent);
+    border-radius: 4px;
+    display: grid;
+    gap: 2px;
+    min-height: 34px;
+    min-width: 0;
+    padding: 5px 7px;
+}
+
+.metrics-readout-primary {
+    border-left-color: color-mix(in srgb, var(--mud-palette-primary) 74%, var(--flux-border-soft));
+}
+
+.metrics-readout-rate {
+    border-left-color: color-mix(in srgb, var(--mud-palette-info) 74%, var(--flux-border-soft));
+}
+
+.metrics-readout-secondary {
+    border-left-color: color-mix(in srgb, var(--mud-palette-secondary) 74%, var(--flux-border-soft));
+}
+
+.metrics-readout-tertiary {
+    border-left-color: color-mix(in srgb, var(--mud-palette-tertiary) 74%, var(--flux-border-soft));
+}
+
+.metrics-readout-payload {
+    border-left-color: color-mix(in srgb, var(--mud-palette-success) 74%, var(--flux-border-soft));
+}
+
+.metrics-readout-retained {
+    border-left-color: color-mix(in srgb, var(--mud-palette-tertiary) 68%, var(--flux-border-soft));
+}
+
+.metrics-readout-value {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 88%, var(--mud-palette-text-secondary));
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 740;
+    line-height: 1;
+    margin-top: 2px;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metrics-readout-label {
+    color: var(--flux-text-muted);
+    font-size: 0.55rem;
+    font-weight: 740;
+    letter-spacing: 0;
+    line-height: 1;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.metrics-top-topics {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 8px;
+    min-width: 0;
+}
+
+.metrics-topic-row {
+    align-items: center;
+    display: grid;
+    font-size: 0.68rem;
+    gap: 6px;
+    grid-template-columns: minmax(0, 1fr) 64px 30px;
+    min-width: 0;
+}
+
+.metrics-topic-name {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 74%, var(--mud-palette-text-secondary));
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metrics-topic-bar {
+    background: color-mix(in srgb, var(--flux-border-soft) 38%, transparent);
+    border-radius: 2px;
+    height: 4px;
+    overflow: hidden;
+}
+
+.metrics-topic-bar-fill {
+    background: color-mix(in srgb, var(--mud-palette-tertiary) 76%, var(--mud-palette-primary));
+    height: 100%;
+    transition: width 0.18s ease;
+}
+
+.metrics-topic-count {
+    color: var(--flux-text-muted);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.metrics-empty {
+    align-items: center;
+    color: var(--flux-text-muted);
+    display: flex;
+    font-size: 0.72rem;
+    gap: 6px;
+    min-width: 0;
+    padding: 6px 0;
+}
+
+.metrics-last {
+    align-items: center;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    color: var(--flux-text-muted);
+    display: flex;
+    font-size: 0.68rem;
+    gap: 4px;
+    min-width: 0;
+    padding-top: 5px;
+}
+
+.metrics-last-topic {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 70%, var(--mud-palette-text-secondary));
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metrics-last-time {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.metrics-editor {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+.metrics-config-panel {
+    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
+    border-radius: 6px;
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px;
+}
+
+.metrics-settings-grid {
+    align-items: start;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 150px);
+    min-width: 0;
+}
+
+.metrics-readout-table {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
+    display: grid;
+    gap: 0;
+    min-width: 0;
+    padding-top: 8px;
+}
+
+.metrics-readout-table-head,
+.metrics-readout-option-row {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 56px;
+    min-width: 0;
+}
+
+.metrics-readout-table-head {
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 46%, transparent);
+    color: var(--flux-text-muted);
+    font-size: 0.6rem;
+    font-weight: 780;
+    letter-spacing: 0;
+    line-height: 1;
+    padding: 0 6px 6px;
+    text-transform: uppercase;
+}
+
+.metrics-readout-table-body {
+    display: grid;
+    min-width: 0;
+}
+
+.metrics-readout-option-row {
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 28%, transparent);
+    min-height: 34px;
+    padding: 3px 6px;
+}
+
+.metrics-readout-option-row:last-child {
+    border-bottom: 0;
+}
+
+.metrics-readout-option-name {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 72%, var(--mud-palette-text-secondary));
+    font-size: 0.76rem;
+    font-weight: 640;
+    line-height: 1.1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metrics-editor ::deep(.mud-input-control) {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.metrics-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
+    min-height: 36px;
+}
+
+.metrics-editor ::deep(.mud-input > input.mud-input-root) {
+    font-size: 0.82rem;
+}
+
+.metrics-editor ::deep(.mud-input-label) {
+    font-size: 0.72rem;
+}
+
+.metrics-readout-table ::deep(.metrics-readout-option) {
+    justify-self: center;
+    margin-inline-start: 0;
+    min-width: 0;
+}
+
+.metrics-buffer-field,
+.metrics-rate-window-field,
+.metrics-readout-columns-field {
+    min-width: 0;
+}
+
+@media (max-width: 720px) {
+    .metrics-settings-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .metrics-topic-row {
+        grid-template-columns: minmax(0, 1fr) 44px 28px;
+    }
+}

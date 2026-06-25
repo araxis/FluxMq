@@ -1,0 +1,246 @@
+.message-filter-summary {
+    display: grid;
+    gap: 5px;
+    margin-top: 3px;
+    min-width: 0;
+}
+
+.message-filter-meta {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: minmax(0, 1fr) 88px;
+    min-width: 0;
+}
+
+.message-filter-meta-item {
+    align-content: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 24%, transparent);
+    border-radius: 4px;
+    display: grid;
+    gap: 2px;
+    min-height: 30px;
+    min-width: 0;
+    padding: 4px 5px;
+}
+
+.message-filter-meta-item span,
+.message-filter-pattern-label {
+    color: var(--flux-text-muted);
+    font-size: 0.52rem;
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    text-transform: uppercase;
+}
+
+.message-filter-meta-item strong {
+    color: var(--mud-palette-text-primary);
+    font-size: 0.66rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1.12;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.message-filter-patterns {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    display: grid;
+    gap: 4px 3px;
+    grid-template-columns: repeat(3, minmax(0, auto));
+    justify-content: start;
+    min-width: 0;
+    padding: 5px 2px 0;
+}
+
+.message-filter-pattern-label {
+    grid-column: 1 / -1;
+    white-space: nowrap;
+}
+
+.message-filter-token,
+.message-filter-variable {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-secondary) 28%, var(--flux-border-soft));
+    border-radius: 4px;
+    color: color-mix(in srgb, var(--mud-palette-secondary) 80%, var(--mud-palette-text-primary));
+    font-size: 0.52rem;
+    font-weight: 760;
+    line-height: 1;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 3px 5px;
+    text-align: center;
+    white-space: normal;
+}
+
+.message-filter-token.system {
+    border-color: color-mix(in srgb, var(--mud-palette-info) 32%, var(--flux-border-soft));
+    color: color-mix(in srgb, var(--mud-palette-info) 72%, var(--mud-palette-text-primary));
+}
+
+.message-filter-token.overflow {
+    color: var(--flux-text-muted);
+}
+
+.message-filter-expression-preview {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 74%, var(--mud-palette-text-secondary));
+    font-family: var(--mud-typography-default-family);
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 1.2;
+    min-width: 0;
+    overflow: hidden;
+    padding: 6px 2px 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.message-filter-editor {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.message-filter-rules-panel {
+    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
+    border-radius: 6px;
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px;
+}
+
+.message-filter-pattern-header,
+.message-filter-reference-label {
+    color: var(--flux-text-muted);
+    font-size: 0.58rem;
+    font-weight: 760;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    text-transform: uppercase;
+}
+
+.message-filter-pattern-list {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+}
+
+.message-filter-pattern-header {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 30px;
+    min-height: 30px;
+    padding: 0 0 6px;
+}
+
+.message-filter-pattern-row {
+    align-items: center;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 46%, transparent);
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) 30px;
+    min-height: 48px;
+    min-width: 0;
+    padding: 8px 0;
+}
+
+.message-filter-pattern-row:last-of-type {
+    padding-bottom: 0;
+}
+
+.message-filter-empty {
+    align-items: center;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 70%, transparent);
+    color: var(--flux-text-muted);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 650;
+    min-height: 36px;
+    padding: 8px 2px 0;
+}
+
+.message-filter-variable {
+    color: color-mix(in srgb, var(--mud-palette-info) 78%, var(--mud-palette-text-primary));
+    border-color: color-mix(in srgb, var(--mud-palette-info) 28%, var(--flux-border-soft));
+}
+
+.message-filter-expression-area {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 72%, transparent);
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding-top: 10px;
+}
+
+.message-filter-reference {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-width: 0;
+}
+
+.message-filter-reference-label {
+    margin-right: 3px;
+}
+
+.message-filter-editor ::deep(.mud-input-control) {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.message-filter-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
+    min-height: 36px;
+}
+
+.message-filter-editor ::deep(.mud-input > input.mud-input-root),
+.message-filter-editor ::deep(.mud-input > textarea.mud-input-root) {
+    font-size: 0.82rem;
+}
+
+.message-filter-editor ::deep(.mud-input > textarea.mud-input-root) {
+    line-height: 1.36;
+}
+
+.message-filter-pattern-row ::deep(.message-filter-remove.mud-icon-button),
+.message-filter-pattern-header ::deep(.message-filter-add.mud-icon-button) {
+    height: 30px;
+    min-height: 30px;
+    min-width: 30px;
+    padding: 0;
+    width: 30px;
+}
+
+.message-filter-pattern-field,
+.message-filter-expression-field {
+    min-width: 0;
+}
+
+@media (max-width: 760px) {
+    .message-filter-meta,
+    .message-filter-pattern-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .message-filter-pattern-header ::deep(.message-filter-add.mud-icon-button),
+    .message-filter-pattern-row ::deep(.message-filter-remove.mud-icon-button) {
+        justify-self: start;
+    }
+
+    .message-filter-patterns {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .message-filter-pattern-label {
+        grid-column: 1 / -1;
+    }
+}

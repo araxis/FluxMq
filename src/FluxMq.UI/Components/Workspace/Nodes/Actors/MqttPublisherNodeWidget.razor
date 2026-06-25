@@ -55,13 +55,14 @@
             }
             else
             {
-                <MudTextField T="string"
-                              Label="Connection name"
-                              @bind-Value="_connection"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              HelperText="Add a broker connection in the left panel to enable the dropdown."
-                              Class="mqtt-publisher-broker-field" />
+                <div class="mqtt-publisher-broker-cell">
+                    <MudTextField T="string"
+                                  Label="Connection name"
+                                  @bind-Value="_connection"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="mqtt-publisher-broker-field" />
+                </div>
             }
             <MudNumericField T="int"
                              Label="Input buffer"

@@ -5,69 +5,146 @@
                  HeaderIcon="@Icons.Material.Filled.AccountTree"
                  CategoryColor="@Color.Secondary"
                  EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <div class="d-flex flex-wrap gap-1">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
-                @foreach (var route in Model.Routes)
+        <div class="routing-switch-summary">
+            <div class="routing-switch-meta">
+                <div class="routing-switch-meta-item input">
+                    <span>Input</span>
+                    <strong title="@InputTypeCaption">@InputTypeCaption</strong>
+                </div>
+                <div class="routing-switch-meta-item">
+                    <span>Routes</span>
+                    <strong>@RouteCountCaption</strong>
+                </div>
+                <div class="routing-switch-meta-item">
+                    <span>Envelope</span>
+                    <strong>@EnvelopeCaption</strong>
+                </div>
+                <div class="routing-switch-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
+            </div>
+
+            <div class="routing-switch-expression" aria-label="Routing switch expression">
+                <span class="routing-switch-contract-label">Expression</span>
+                <strong title="@ExpressionPreview">@ExpressionPreview</strong>
+            </div>
+
+            <div class="routing-switch-routes" aria-label="Routing switch routes">
+                <span class="routing-switch-contract-label">Route outputs</span>
+                @foreach (var route in RoutePreview)
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">@route.OutputPort</MudChip>
+                    <span class="routing-switch-token" title="@($"{route.Key} => {route.OutputPort}")">@route.OutputPort</span>
                 }
-                @if (Model.EmitRouteEnvelope)
+                @if (RoutePreviewOverflow > 0)
                 {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">Routed</MudChip>
+                    <span class="routing-switch-token overflow">+@RoutePreviewOverflow</span>
                 }
             </div>
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="node-expr-preview">@Model.Expression</MudText>
-        </MudStack>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+        <div class="routing-switch-editor" aria-label="Routing switch settings">
+            <section class="routing-switch-rule-panel" aria-label="Routing switch rule set">
+                <div class="routing-switch-source-row">
                     <MudSelect T="string"
                                Label="Input type"
                                @bind-Value="_inputType"
+                               aria-label="Routing switch input type"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
-                               Dense="true">
+                               Dense="true"
+                               Class="routing-switch-input-field">
                         @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
                         {
                             <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
                         }
                     </MudSelect>
-                </MudItem>
-                <MudItem xs="12" md="6">
+
                     <MudNumericField T="int"
                                      Label="Input buffer"
                                      @bind-Value="_boundedCapacity"
+                                     aria-label="Routing switch input buffer"
                                      Min="1"
                                      Max="100000"
                                      Step="100"
                                      Variant="Variant.Outlined"
-                                     Margin="Margin.Dense" />
-                </MudItem>
-            </MudGrid>
-            <MudTextField T="string"
-                          Label="Expression"
-                          @bind-Value="_expression"
-                          Variant="Variant.Outlined"
-                          Lines="4"
-                          Class="node-expr-field"
-                          Placeholder='qos >= 1'
-                          HelperText="The result is matched against the route keys below." />
-            <MudTextField T="string"
-                          Label="Routes"
-                          @bind-Value="_routesText"
-                          Variant="Variant.Outlined"
-                          Lines="4"
-                          HelperText="One route per line as RouteKey=OutputPort." />
-            <MudCheckBox T="bool"
-                         Label="Emit route envelope"
-                         @bind-Value="_emitRouteEnvelope" />
-        </MudStack>
+                                     Margin="Margin.Dense"
+                                     Class="routing-switch-buffer-field" />
+
+                    <div class="routing-switch-envelope-option">
+                        <MudCheckBox T="bool"
+                                     Label="Emit envelope"
+                                     aria-label="Emit route envelope"
+                                     @bind-Value="_emitRouteEnvelope"
+                                     Class="routing-switch-envelope-check" />
+                    </div>
+                </div>
+
+                <div class="routing-switch-expression-cell">
+                    <MudTextField T="string"
+                                  Label="Expression"
+                                  @bind-Value="_expression"
+                                  aria-label="Routing switch expression"
+                                  Variant="Variant.Outlined"
+                                  Lines="5"
+                                  Class="routing-switch-expression-field"
+                                  Placeholder="qos >= 1" />
+                </div>
+
+                <div class="routing-switch-route-editor" aria-label="Routing switch route outputs">
+                    <div class="routing-switch-route-list">
+                        <div class="routing-switch-route-header">
+                            <span class="routing-switch-route-column-header">Match key</span>
+                            <span class="routing-switch-route-column-header">Output port</span>
+                            <MudTooltip Text="Add route">
+                                <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                               Size="Size.Small"
+                                               Color="Color.Primary"
+                                               Class="routing-switch-route-add"
+                                               aria-label="Add route"
+                                               OnClick="@AddRoute" />
+                            </MudTooltip>
+                        </div>
+
+                        @for (var index = 0; index < _routeDrafts.Count; index++)
+                        {
+                            var route = _routeDrafts[index];
+                            <div class="routing-switch-route-row" @key="route">
+                                <MudTextField T="string"
+                                              aria-label="@($"Route match key {index + 1}")"
+                                              @bind-Value="route.Key"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Placeholder="Match key"
+                                              Class="routing-switch-route-key-field" />
+                                <MudTextField T="string"
+                                              aria-label="@($"Route output port {index + 1}")"
+                                              @bind-Value="route.OutputPort"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Placeholder="Output port"
+                                              Class="routing-switch-route-output-field" />
+                                <MudTooltip Text="Remove route">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   Size="Size.Small"
+                                                   Disabled="@(_routeDrafts.Count == 1)"
+                                                   Class="routing-switch-route-remove"
+                                                   aria-label="@($"Remove route {route.Key}")"
+                                                   OnClick="@(() => RemoveRoute(route))" />
+                                </MudTooltip>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -78,9 +155,21 @@
 
     private string _inputType = RoutingSwitchNodeModel.DefaultInputType;
     private string _expression = RoutingSwitchNodeModel.DefaultExpression;
-    private string _routesText = string.Empty;
     private bool _emitRouteEnvelope;
     private int _boundedCapacity = RoutingSwitchNodeModel.DefaultBoundedCapacity;
+    private List<RouteDraft> _routeDrafts = [];
+
+    private string InputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
+    private string RouteCountCaption => $"{Model.Routes.Count} routes";
+    private string EnvelopeCaption => Model.EmitRouteEnvelope ? "on" : "off";
+    private string BufferCaption => RoutingNodeConfiguration.NormalizePositiveInt(
+        Model.BoundedCapacity,
+        RoutingSwitchNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private string ExpressionPreview => string.IsNullOrWhiteSpace(Model.Expression)
+        ? RoutingSwitchNodeModel.DefaultExpression
+        : Model.Expression.Trim();
+    private IReadOnlyList<RoutingSwitchRoute> RoutePreview => Model.Routes.Take(3).ToArray();
+    private int RoutePreviewOverflow => Math.Max(0, Model.Routes.Count - 3);
 
     protected override void OnParametersSet() => LoadDraft();
 
@@ -88,7 +177,17 @@
     {
         _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
         _expression = Model.Expression;
-        _routesText = Model.FormatRoutes();
+        _routeDrafts = Model.Routes
+            .Select(static route => new RouteDraft(route.Key, route.OutputPort))
+            .ToList();
+        if (_routeDrafts.Count == 0)
+        {
+            _routeDrafts =
+            [
+                new("True", "WhenTrue"),
+                new("False", "WhenFalse")
+            ];
+        }
         _emitRouteEnvelope = Model.EmitRouteEnvelope;
         _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
             Model.BoundedCapacity,
@@ -101,7 +200,7 @@
         Model.Expression = string.IsNullOrWhiteSpace(_expression)
             ? RoutingSwitchNodeModel.DefaultExpression
             : _expression.Trim();
-        Model.Routes = RoutingSwitchNodeModel.ParseRoutes(_routesText);
+        Model.Routes = RoutingSwitchNodeModel.ParseRoutes(FormatRouteDrafts());
         Model.EmitRouteEnvelope = _emitRouteEnvelope;
         Model.BoundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
             _boundedCapacity,
@@ -109,5 +208,41 @@
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private void AddRoute()
+    {
+        var ordinal = _routeDrafts.Count + 1;
+        var key = $"Route{ordinal}";
+        while (_routeDrafts.Any(route => string.Equals(route.Key, key, StringComparison.Ordinal)))
+        {
+            ordinal++;
+            key = $"Route{ordinal}";
+        }
+
+        _routeDrafts.Add(new RouteDraft(key, key));
+    }
+
+    private void RemoveRoute(RouteDraft route)
+    {
+        if (_routeDrafts.Count <= 1)
+        {
+            return;
+        }
+
+        _routeDrafts.Remove(route);
+    }
+
+    private string FormatRouteDrafts()
+        => string.Join(
+            Environment.NewLine,
+            _routeDrafts
+                .Select(static route => $"{route.Key?.Trim()}={route.OutputPort?.Trim()}")
+                .Where(static line => !string.IsNullOrWhiteSpace(line.Split('=', 2)[0])));
+
+    private sealed class RouteDraft(string key, string outputPort)
+    {
+        public string Key { get; set; } = key;
+        public string OutputPort { get; set; } = outputPort;
     }
 }

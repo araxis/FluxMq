@@ -5643,6 +5643,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: 20px minmax(0, 1fr) 38px;");
         css.ShouldContain("min-height: 31px;");
         css.ShouldContain("height: 20px;");
+        css.ShouldContain(".catalog-icon-tile.actor");
+        css.ShouldContain("color-mix(in srgb, var(--mud-palette-tertiary) 80%, var(--mud-palette-text-primary));");
         css.ShouldContain(".component-catalog.test .catalog-item");
         css.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) 34px;");
         css.ShouldContain("min-height: 46px;");
@@ -5696,6 +5698,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AddCircle");
         markup.ShouldContain("DiagramCanvas");
         markup.ShouldContain("NavigatorWidget");
+        markup.ShouldContain("ViewStrokeColor=\"#38BDF8\"");
+        markup.ShouldContain("flow-link-condition-title");
+        markup.ShouldContain("Label=\"Expression\"");
+        markup.ShouldContain("Class=\"flow-link-condition-action apply\"");
+        markup.ShouldContain("aria-label=\"Apply link condition\"");
+        markup.ShouldContain("aria-label=\"Clear link condition\"");
+        markup.ShouldNotContain("ViewStrokeColor=\"#FBBF24\"");
+        markup.ShouldNotContain("flow-link-condition-meta");
+        markup.ShouldNotContain("Icons.Material.Filled.Link");
         markup.IndexOf("class=\"flow-canvas-header\"", StringComparison.Ordinal)
             .ShouldBeLessThan(markup.IndexOf("class=\"flow-canvas\" role=\"group\"", StringComparison.Ordinal));
 
@@ -5722,6 +5733,16 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("max-width: min(100%, 420px);");
         css.ShouldContain("justify-items: center;");
         css.ShouldContain("text-align: center;");
+        css.ShouldContain(".flow-link-condition-title");
+        css.ShouldContain("grid-template-columns: minmax(170px, 0.42fr) minmax(240px, 1fr) 30px 30px;");
+        css.ShouldContain(".flow-link-condition-panel ::deep .flow-link-condition-action.mud-icon-button");
+        css.ShouldContain(".flow-link-condition-panel ::deep .flow-link-condition-action.apply.mud-icon-button");
+        css.ShouldContain("color-mix(in srgb, var(--flux-accent) 48%, transparent)");
+        css.ShouldContain("color-mix(in srgb, var(--flux-accent) 70%, var(--mud-palette-info))");
+        css.ShouldNotContain("#FBBF24");
+        css.ShouldNotContain("#A78BFA");
+        css.ShouldNotContain("#DDD6FE");
+        css.ShouldNotContain(".flow-link-condition-meta");
         css.ShouldContain("max-width: min(100%, 340px);");
         css.ShouldContain("grid-row: auto;");
         css.ShouldContain("@media (max-width: 720px)");
@@ -5785,6 +5806,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Icons.Material.Filled.Dns");
         markup.ShouldNotContain("Icons.Material.Filled.Topic");
         markup.ShouldContain("mqtt-trigger-editor-grid");
+        markup.ShouldContain("mqtt-trigger-broker-cell");
+        markup.ShouldNotContain("mqtt-trigger-field-note");
+        markup.ShouldNotContain("Add a broker connection in the left panel to enable the dropdown.");
+        markup.ShouldNotContain("HelperText=\"Add a broker connection in the left panel to enable the dropdown.\"");
         markup.ShouldContain("<MudTable T=\"MqttTriggerSubscriptionEditorRow\"");
         markup.ShouldContain("Items=\"@SubscriptionEditorRows\"");
         markup.ShouldContain("Elevation=\"0\"");
@@ -5839,6 +5864,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".mqtt-trigger-component-icon");
         css.ShouldNotContain(".mqtt-trigger-icon-node");
         css.ShouldContain(".mqtt-trigger-editor-section");
+        css.ShouldContain(".mqtt-trigger-broker-cell");
+        css.ShouldNotContain(".mqtt-trigger-field-note");
         css.ShouldContain("padding: 0;");
         css.ShouldNotContain("background: var(--flux-surface);");
         css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
@@ -5864,6 +5891,757 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".mqtt-trigger-editor-row");
         css.ShouldNotContain(".mqtt-trigger-flag-group");
         css.ShouldContain("@media (max-width: 720px)");
+    }
+
+    [Fact]
+    public void ConnectionStateTriggerNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "ConnectionStateTrigger",
+            "ConnectionStateTriggerNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "ConnectionStateTrigger",
+            "ConnectionStateTriggerNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("connection-state-trigger-summary");
+        markup.ShouldContain("connection-state-trigger-meta");
+        markup.ShouldContain("ConnectionCaption");
+        markup.ShouldContain("State changes");
+        markup.ShouldContain("connection-state-trigger-contracts");
+        markup.ShouldContain("aria-label=\"Connection state trigger output fields\"");
+        markup.ShouldContain("connection-state-trigger-token");
+        markup.ShouldContain("MqttClientStateChanged");
+        markup.ShouldContain("errors");
+        markup.ShouldContain("connection-state-trigger-editor");
+        markup.ShouldContain("aria-label=\"Connection state trigger settings\"");
+        markup.ShouldContain("connection-state-trigger-broker-panel");
+        markup.ShouldContain("connection-state-trigger-editor-grid");
+        markup.ShouldContain("aria-label=\"Broker state source\"");
+        markup.ShouldContain("Label=\"Broker connection\"");
+        markup.ShouldContain("@bind-Value=\"_connection\"");
+        markup.ShouldContain("Label=\"Connection name\"");
+        markup.ShouldContain("Class=\"connection-state-trigger-broker-field\"");
+        markup.ShouldContain("connection-state-trigger-field-note");
+        markup.ShouldContain("connection-state-trigger-event-table");
+        markup.ShouldContain("aria-label=\"Connection state event payload\"");
+        markup.ShouldContain("connection-state-trigger-event-head");
+        markup.ShouldContain("<span>Role</span>");
+        markup.ShouldContain("<span>Contract</span>");
+        markup.ShouldContain("<span>Fields</span>");
+        markup.ShouldContain("connection-state-trigger-event-line");
+        markup.ShouldContain("connection-state-trigger-event-token-group");
+        markup.ShouldContain("profileId");
+        markup.ShouldContain("state");
+        markup.ShouldContain("Flow.SyncConnectionAndUpdateNode");
+        markup.ShouldNotContain("connection-state-trigger-section-heading");
+        markup.ShouldNotContain("connection-state-trigger-panel-header");
+        markup.ShouldNotContain("connection-state-trigger-panel-kicker");
+        markup.ShouldNotContain("connection-state-trigger-panel-token");
+        markup.ShouldNotContain("connection-state-trigger-editor-contract");
+        markup.ShouldNotContain("connection-state-trigger-editor-token-group");
+        markup.ShouldNotContain("profile</span>");
+        markup.ShouldNotContain("HelperText=\"Add a broker connection in the left panel to enable the dropdown.\"");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+
+        css.ShouldContain(".connection-state-trigger-summary");
+        css.ShouldContain(".connection-state-trigger-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 112px;");
+        css.ShouldContain(".connection-state-trigger-contracts");
+        css.ShouldContain(".connection-state-trigger-contract");
+        css.ShouldContain(".connection-state-trigger-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain(".connection-state-trigger-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain(".connection-state-trigger-editor");
+        css.ShouldContain(".connection-state-trigger-broker-panel");
+        css.ShouldNotContain(".connection-state-trigger-panel-header");
+        css.ShouldNotContain(".connection-state-trigger-panel-kicker");
+        css.ShouldNotContain(".connection-state-trigger-panel-token");
+        css.ShouldContain("border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 46%, transparent);");
+        css.ShouldContain(".connection-state-trigger-editor-grid");
+        css.ShouldContain(".connection-state-trigger-event-table");
+        css.ShouldContain(".connection-state-trigger-event-head");
+        css.ShouldContain(".connection-state-trigger-event-line");
+        css.ShouldContain("grid-template-columns: 56px minmax(150px, 1fr) minmax(0, 1.4fr);");
+        css.ShouldContain(".connection-state-trigger-event-token-group");
+        css.ShouldContain(".connection-state-trigger-field-note");
+        css.ShouldContain(".connection-state-trigger-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".connection-state-trigger-section-heading");
+        css.ShouldNotContain(".connection-state-trigger-editor-contract");
+        css.ShouldNotContain(".connection-state-trigger-editor-token-group");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void StateReducerNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "StateReducer",
+            "StateReducerNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "StateReducer",
+            "StateReducerNodeWidget.razor.css"));
+
+        markup.ShouldContain("CategoryColor=\"@Color.Info\"");
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("state-reducer-summary");
+        markup.ShouldContain("state-reducer-meta");
+        markup.ShouldContain("EngineCaption");
+        markup.ShouldContain("KeyCaption");
+        markup.ShouldContain("MaxKeysCaption");
+        markup.ShouldContain("BufferCaption");
+        markup.ShouldContain("state-reducer-contracts");
+        markup.ShouldContain("aria-label=\"State reducer contract fields\"");
+        markup.ShouldContain("state-reducer-token");
+        markup.ShouldContain("StateReducerInput");
+        markup.ShouldContain("StateReducerResult");
+        markup.ShouldContain("state-reducer-expression-preview");
+        markup.ShouldContain("state-reducer-editor");
+        markup.ShouldContain("aria-label=\"State reducer settings\"");
+        markup.ShouldContain("state-reducer-config-row");
+        markup.ShouldContain("aria-label=\"State reducer configuration\"");
+        markup.ShouldContain("state-reducer-expression-workspace");
+        markup.ShouldContain("aria-label=\"State reducer rule\"");
+        markup.ShouldNotContain("state-reducer-rule-panel");
+        markup.ShouldNotContain("state-reducer-panel-header");
+        markup.ShouldNotContain("state-reducer-panel-kicker");
+        markup.ShouldNotContain("state-reducer-panel-token");
+        markup.ShouldNotContain("state-reducer-source-row");
+        markup.ShouldContain("Label=\"Engine\"");
+        markup.ShouldContain("@bind-Value=\"_engine\"");
+        markup.ShouldContain("EngineOptionLabel(engine)");
+        markup.ShouldContain("Label=\"Expression name\"");
+        markup.ShouldContain("@bind-Value=\"_expressionName\"");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Label=\"Max keys\"");
+        markup.ShouldContain("@bind-Value=\"_maxKeys\"");
+        markup.ShouldNotContain("state-reducer-expression-row");
+        markup.ShouldNotContain("state-reducer-key-cell");
+        markup.ShouldNotContain("aria-label=\"State key expression\"");
+        markup.ShouldNotContain("state-reducer-reducer-cell");
+        markup.ShouldNotContain("aria-label=\"State reducer expression\"");
+        markup.ShouldNotContain("state-reducer-config-grid");
+        markup.ShouldNotContain("state-reducer-expression-grid");
+        markup.ShouldNotContain("state-reducer-workbench");
+        markup.ShouldNotContain("state-reducer-key-panel");
+        markup.ShouldNotContain("state-reducer-reducer-panel");
+        markup.ShouldNotContain("state-reducer-section-heading");
+        markup.ShouldContain("Label=\"Key expression\"");
+        markup.ShouldContain("@bind-Value=\"_keyExpression\"");
+        markup.ShouldContain("Placeholder=\"topic or blank\"");
+        markup.ShouldContain("Label=\"Reducer\"");
+        markup.ShouldContain("@bind-Value=\"_reducer\"");
+        markup.ShouldContain("Lines=\"2\"");
+        markup.ShouldContain("Lines=\"10\"");
+        markup.ShouldNotContain("state-reducer-field-note");
+        markup.ShouldNotContain("Blank keeps one shared state.");
+        markup.ShouldContain("state-reducer-reference");
+        markup.ShouldContain("state-reducer-reference-label");
+        markup.ShouldContain("state-reducer-variable-list");
+        markup.ShouldContain("ExpressionVariables");
+        markup.ShouldNotContain("CategoryColor=\"@Color.Warning\"");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("node-expr-field");
+        markup.ShouldNotContain("node-expr-preview");
+
+        css.ShouldContain(".state-reducer-summary");
+        css.ShouldContain(".state-reducer-meta");
+        css.ShouldContain("grid-template-columns: 74px minmax(0, 1fr) 64px 54px;");
+        css.ShouldContain(".state-reducer-contracts");
+        css.ShouldContain(".state-reducer-contract");
+        css.ShouldContain(".state-reducer-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain(".state-reducer-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain(".state-reducer-expression-preview");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".state-reducer-editor");
+        css.ShouldContain(".state-reducer-config-row");
+        css.ShouldContain(".state-reducer-expression-workspace");
+        css.ShouldNotContain(".state-reducer-rule-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldNotContain(".state-reducer-panel-header");
+        css.ShouldNotContain(".state-reducer-panel-kicker");
+        css.ShouldNotContain(".state-reducer-panel-token");
+        css.ShouldNotContain(".state-reducer-source-row");
+        css.ShouldContain("grid-template-columns: minmax(150px, 0.82fr) minmax(190px, 1.18fr) 120px 140px;");
+        css.ShouldNotContain(".state-reducer-expression-row");
+        css.ShouldNotContain("grid-template-columns: minmax(220px, 0.58fr) minmax(0, 1.42fr);");
+        css.ShouldNotContain(".state-reducer-key-cell");
+        css.ShouldNotContain(".state-reducer-reducer-cell");
+        css.ShouldNotContain(".state-reducer-config-grid");
+        css.ShouldNotContain(".state-reducer-expression-grid");
+        css.ShouldNotContain(".state-reducer-workbench");
+        css.ShouldNotContain(".state-reducer-key-panel");
+        css.ShouldNotContain(".state-reducer-reducer-panel");
+        css.ShouldNotContain(".state-reducer-section-heading");
+        css.ShouldNotContain(".state-reducer-field-note");
+        css.ShouldContain(".state-reducer-reference");
+        css.ShouldContain(".state-reducer-reference-label");
+        css.ShouldContain(".state-reducer-variable-list");
+        css.ShouldContain("grid-template-columns: 74px minmax(0, 1fr);");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 44%, transparent);");
+        css.ShouldContain(".state-reducer-editor ::deep(.state-reducer-reducer-field textarea.mud-input-root)");
+        css.ShouldContain("min-height: 190px;");
+        css.ShouldContain(".state-reducer-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void FlowAssertionNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "FlowAssertion",
+            "FlowAssertionNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "FlowAssertion",
+            "FlowAssertionNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("flow-assertion-summary");
+        markup.ShouldContain("flow-assertion-meta");
+        markup.ShouldContain("AssertionCaption");
+        markup.ShouldContain("InputTypeCaption");
+        markup.ShouldContain("BufferCaption");
+        markup.ShouldContain("flow-assertion-contracts");
+        markup.ShouldContain("aria-label=\"Assertion output fields\"");
+        markup.ShouldContain("flow-assertion-token");
+        markup.ShouldContain("result");
+        markup.ShouldContain("passed");
+        markup.ShouldContain("failed");
+        markup.ShouldContain("flow-assertion-expression-preview");
+        markup.ShouldContain("flow-assertion-editor");
+        markup.ShouldContain("aria-label=\"Flow assertion settings\"");
+        markup.ShouldContain("flow-assertion-config-row");
+        markup.ShouldContain("aria-label=\"Flow assertion configuration\"");
+        markup.ShouldContain("flow-assertion-expression-workspace");
+        markup.ShouldContain("aria-label=\"Flow assertion rule\"");
+        markup.ShouldNotContain("flow-assertion-rule-panel");
+        markup.ShouldNotContain("flow-assertion-source-row");
+        markup.ShouldContain("Label=\"Assertion name\"");
+        markup.ShouldContain("@bind-Value=\"_assertionName\"");
+        markup.ShouldContain("Label=\"Input type\"");
+        markup.ShouldContain("@bind-Value=\"_inputType\"");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldNotContain("flow-assertion-expression-row");
+        markup.ShouldNotContain("flow-assertion-expression-cell");
+        markup.ShouldNotContain("aria-label=\"Assertion expression\"");
+        markup.ShouldNotContain("flow-assertion-message-cell");
+        markup.ShouldNotContain("aria-label=\"Assertion failure output\"");
+        markup.ShouldContain("Label=\"Expression\"");
+        markup.ShouldContain("@bind-Value=\"_expression\"");
+        markup.ShouldContain("Lines=\"9\"");
+        markup.ShouldContain("Label=\"Failure message\"");
+        markup.ShouldContain("@bind-Value=\"_failureMessage\"");
+        markup.ShouldContain("Lines=\"3\"");
+        markup.ShouldContain("Placeholder=\"Message on failure\"");
+        markup.ShouldContain("flow-assertion-reference");
+        markup.ShouldContain("flow-assertion-reference-label");
+        markup.ShouldContain("flow-assertion-variable-list");
+        markup.ShouldNotContain("flow-assertion-config-grid");
+        markup.ShouldNotContain("flow-assertion-expression-grid");
+        markup.ShouldNotContain("flow-assertion-field-note");
+        markup.ShouldNotContain("Used when the expression evaluates to false.");
+        markup.ShouldContain("ExpressionVariables");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("<MudExpansionPanel");
+        markup.ShouldNotContain("<MudSimpleTable");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("node-expr-field");
+        markup.ShouldNotContain("node-expr-preview");
+        markup.ShouldNotContain("flow-assertion-workbench");
+        markup.ShouldNotContain("flow-assertion-expression-panel");
+        markup.ShouldNotContain("flow-assertion-message-panel");
+        markup.ShouldNotContain("flow-assertion-section-heading");
+        markup.ShouldNotContain("flow-assertion-panel-header");
+        markup.ShouldNotContain("flow-assertion-panel-kicker");
+        markup.ShouldNotContain("flow-assertion-panel-token");
+
+        css.ShouldContain(".flow-assertion-summary");
+        css.ShouldContain(".flow-assertion-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 88px 54px;");
+        css.ShouldContain(".flow-assertion-contracts");
+        css.ShouldContain(".flow-assertion-contract");
+        css.ShouldContain(".flow-assertion-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain(".flow-assertion-token");
+        css.ShouldContain("color-mix(in srgb, var(--mud-palette-info) 70%, var(--mud-palette-text-primary));");
+        css.ShouldContain("color: var(--flux-text-muted);");
+        css.ShouldNotContain("color-mix(in srgb, var(--mud-palette-warning) 76%, var(--mud-palette-text-primary));");
+        css.ShouldNotContain("color: var(--mud-palette-warning);");
+        css.ShouldContain(".flow-assertion-token.pass");
+        css.ShouldContain(".flow-assertion-token.fail");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain(".flow-assertion-expression-preview");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".flow-assertion-editor");
+        css.ShouldContain(".flow-assertion-config-row");
+        css.ShouldContain(".flow-assertion-expression-workspace");
+        css.ShouldNotContain(".flow-assertion-rule-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldNotContain(".flow-assertion-source-row");
+        css.ShouldContain("grid-template-columns: minmax(220px, 1.25fr) minmax(180px, 1fr) 150px;");
+        css.ShouldNotContain(".flow-assertion-expression-row");
+        css.ShouldNotContain(".flow-assertion-expression-cell");
+        css.ShouldNotContain(".flow-assertion-message-cell");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.65fr);");
+        css.ShouldNotContain(".flow-assertion-config-grid");
+        css.ShouldNotContain(".flow-assertion-expression-grid");
+        css.ShouldNotContain(".flow-assertion-field-note");
+        css.ShouldContain(".flow-assertion-reference");
+        css.ShouldContain(".flow-assertion-reference-label");
+        css.ShouldContain(".flow-assertion-variable-list");
+        css.ShouldContain("grid-template-columns: 74px minmax(0, 1fr);");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 44%, transparent);");
+        css.ShouldContain(".flow-assertion-editor ::deep(.flow-assertion-expression-field textarea.mud-input-root)");
+        css.ShouldContain("min-height: 170px;");
+        css.ShouldContain(".flow-assertion-editor ::deep(.mud-input-control)");
+        css.ShouldNotContain(".flow-assertion-variables");
+        css.ShouldNotContain(".flow-assertion-workbench");
+        css.ShouldNotContain(".flow-assertion-expression-panel");
+        css.ShouldNotContain(".flow-assertion-message-panel");
+        css.ShouldNotContain(".flow-assertion-section-heading");
+        css.ShouldNotContain(".flow-assertion-panel-header");
+        css.ShouldNotContain(".flow-assertion-panel-kicker");
+        css.ShouldNotContain(".flow-assertion-panel-token");
+        css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void MessageFilterNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "MessageFilter",
+            "MessageFilterNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "MessageFilter",
+            "MessageFilterNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("message-filter-summary");
+        markup.ShouldContain("message-filter-meta");
+        markup.ShouldContain("ModeCaption");
+        markup.ShouldContain("RuleCountCaption");
+        markup.ShouldContain("message-filter-patterns");
+        markup.ShouldContain("aria-label=\"Topic filter patterns\"");
+        markup.ShouldContain("SummaryPatterns");
+        markup.ShouldContain("PatternOverflow");
+        markup.ShouldContain("message-filter-expression-preview");
+        markup.ShouldContain("message-filter-token");
+        markup.ShouldContain("message-filter-editor");
+        markup.ShouldContain("aria-label=\"Flow filter settings\"");
+        markup.ShouldContain("message-filter-rules-panel");
+        markup.ShouldContain("aria-label=\"Filter rules\"");
+        markup.ShouldContain("message-filter-pattern-list");
+        markup.ShouldContain("message-filter-pattern-header");
+        markup.ShouldNotContain("aria-hidden=\"true\"");
+        markup.ShouldContain("aria-label=\"Topic pattern filters\"");
+        markup.ShouldContain("message-filter-pattern-row");
+        markup.ShouldContain("aria-label=\"@($\"Topic pattern {index + 1}\")\"");
+        markup.ShouldContain("ValueChanged=\"@(v => _draftPatterns[index] = v ?? string.Empty)\"");
+        markup.ShouldContain("aria-label=\"Add topic pattern\"");
+        markup.ShouldContain("AddPattern");
+        markup.ShouldContain("aria-label=\"@($\"Remove topic pattern {index + 1}\")\"");
+        markup.ShouldContain("RemovePattern(index)");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("message-filter-expression-area");
+        markup.ShouldContain("aria-label=\"Expression filter\"");
+        markup.ShouldContain("Label=\"Filter expression\"");
+        markup.ShouldContain("aria-label=\"Filter expression\"");
+        markup.ShouldContain("@bind-Value=\"_expression\"");
+        markup.ShouldContain("Lines=\"6\"");
+        markup.ShouldContain("message-filter-reference");
+        markup.ShouldContain("message-filter-reference-label");
+        markup.ShouldContain("ExpressionVariables");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudTabs");
+        markup.ShouldNotContain("<MudTabPanel");
+        markup.ShouldNotContain("<MudExpansionPanel");
+        markup.ShouldNotContain("<MudSimpleTable");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("flow-node-filters");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("message-filter-rule-workbench");
+        markup.ShouldNotContain("message-filter-pattern-panel");
+        markup.ShouldNotContain("message-filter-expression-panel");
+        markup.ShouldNotContain("message-filter-section-heading");
+        markup.ShouldNotContain("message-filter-row-index");
+        markup.ShouldNotContain("message-filter-panel-title");
+        markup.ShouldNotContain("message-filter-panel-header");
+        markup.ShouldNotContain("message-filter-panel-kicker");
+        markup.ShouldNotContain("message-filter-panel-token");
+        markup.ShouldNotContain("DraftRuleCaption");
+        markup.ShouldNotContain("PatternLabel");
+
+        css.ShouldContain(".message-filter-summary");
+        css.ShouldContain(".message-filter-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 88px;");
+        css.ShouldContain(".message-filter-patterns");
+        css.ShouldContain(".message-filter-token");
+        css.ShouldContain(".message-filter-token.system");
+        css.ShouldContain("color-mix(in srgb, var(--mud-palette-info) 72%, var(--mud-palette-text-primary));");
+        css.ShouldNotContain("color-mix(in srgb, var(--mud-palette-warning) 76%, var(--mud-palette-text-primary));");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain(".message-filter-expression-preview");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".message-filter-editor");
+        css.ShouldContain(".message-filter-rules-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldContain(".message-filter-pattern-list");
+        css.ShouldContain(".message-filter-pattern-header");
+        css.ShouldContain(".message-filter-pattern-header ::deep(.message-filter-add.mud-icon-button)");
+        css.ShouldContain(".message-filter-expression-area");
+        css.ShouldContain("padding-top: 10px;");
+        css.ShouldContain(".message-filter-pattern-row");
+        css.ShouldContain("min-height: 48px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
+        css.ShouldContain("align-items: center;");
+        css.ShouldContain(".message-filter-reference");
+        css.ShouldContain(".message-filter-reference-label");
+        css.ShouldContain(".message-filter-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldNotContain(".message-filter-table-head");
+        css.ShouldNotContain(".message-filter-variables");
+        css.ShouldNotContain(".message-filter-rule-workbench");
+        css.ShouldNotContain(".message-filter-pattern-panel");
+        css.ShouldNotContain(".message-filter-expression-panel");
+        css.ShouldNotContain(".message-filter-section-heading");
+        css.ShouldNotContain(".message-filter-row-index");
+        css.ShouldNotContain(".message-filter-panel-title");
+        css.ShouldNotContain(".message-filter-panel-header");
+        css.ShouldNotContain(".message-filter-panel-kicker");
+        css.ShouldNotContain(".message-filter-panel-token");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void JsonSchemaValidatorNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "JsonSchemaValidator",
+            "JsonSchemaValidatorNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "JsonSchemaValidator",
+            "JsonSchemaValidatorNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("json-schema-validator-summary");
+        markup.ShouldContain("json-schema-validator-meta");
+        markup.ShouldContain("SchemaTargetCaption");
+        markup.ShouldContain("SchemaIdCaption");
+        markup.ShouldContain("json-schema-validator-contracts");
+        markup.ShouldContain("aria-label=\"Validator input fields\"");
+        markup.ShouldContain("aria-label=\"Validator output fields\"");
+        markup.ShouldContain("json-schema-validator-token");
+        markup.ShouldContain("MqttEnvelope");
+        markup.ShouldContain("result");
+        markup.ShouldContain("valid");
+        markup.ShouldContain("invalid");
+        markup.ShouldContain("json-schema-validator-editor");
+        markup.ShouldContain("aria-label=\"JSON schema validator settings\"");
+        markup.ShouldContain("json-schema-validator-schema-panel");
+        markup.ShouldContain("aria-label=\"JSON schema configuration\"");
+        markup.ShouldContain("json-schema-validator-source-row");
+        markup.ShouldContain("Label=\"Schema source\"");
+        markup.ShouldContain("ValueChanged=\"@SetSchemaSource\"");
+        markup.ShouldContain("aria-label=\"Schema source\"");
+        markup.ShouldContain("Label=\"Schema id\"");
+        markup.ShouldContain("aria-label=\"Schema id\"");
+        markup.ShouldContain("@bind-Value=\"_schemaId\"");
+        markup.ShouldContain("Label=\"JSON Schema file\"");
+        markup.ShouldContain("aria-label=\"JSON Schema file\"");
+        markup.ShouldContain("@bind-Value=\"_schemaPath\"");
+        markup.ShouldContain("aria-label=\"Select JSON Schema file\"");
+        markup.ShouldContain("PickSchemaFileAsync");
+        markup.ShouldContain("json-schema-validator-file-source");
+        markup.ShouldContain("aria-label=\"JSON schema file source\"");
+        markup.ShouldNotContain("json-schema-validator-field-note");
+        markup.ShouldNotContain("The validator loads this file when the flow runs.");
+        markup.ShouldContain("json-schema-validator-inline-source");
+        markup.ShouldContain("aria-label=\"Inline JSON schema\"");
+        markup.ShouldContain("CssClass=\"schema-monaco-editor\"");
+        markup.ShouldContain("ConstructionOptions=\"@EditorConstructionOptions\"");
+        markup.ShouldNotContain("json-schema-validator-panel-title");
+        markup.ShouldNotContain("json-schema-validator-config-grid");
+        markup.ShouldNotContain("json-schema-validator-file-panel");
+        markup.ShouldNotContain("json-schema-validator-section-heading");
+        markup.ShouldNotContain("json-schema-validator-schema-workspace");
+        markup.ShouldNotContain("json-schema-validator-panel-header");
+        markup.ShouldNotContain("json-schema-validator-panel-kicker");
+        markup.ShouldNotContain("json-schema-validator-panel-token");
+        markup.ShouldNotContain("SchemaModeCaption");
+        markup.ShouldNotContain("<strong>Schema file</strong>");
+        markup.ShouldNotContain("<strong>Inline JSON schema</strong>");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("<style>");
+
+        css.ShouldContain(".json-schema-validator-summary");
+        css.ShouldContain(".json-schema-validator-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 96px;");
+        css.ShouldContain(".json-schema-validator-contracts");
+        css.ShouldContain(".json-schema-validator-contract");
+        css.ShouldContain(".json-schema-validator-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain(".json-schema-validator-token");
+        css.ShouldContain(".json-schema-validator-editor");
+        css.ShouldContain(".json-schema-validator-schema-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldContain(".json-schema-validator-source-row");
+        css.ShouldContain("grid-template-columns: 180px minmax(0, 1fr);");
+        css.ShouldContain(".json-schema-validator-file-source");
+        css.ShouldContain("padding-top: 10px;");
+        css.ShouldContain(".json-schema-validator-file-row");
+        css.ShouldNotContain(".json-schema-validator-field-note");
+        css.ShouldContain(".json-schema-validator-inline-source");
+        css.ShouldContain(".json-schema-validator-inline-source ::deep(.schema-monaco-editor)");
+        css.ShouldContain("height: clamp(440px, 60vh, 600px);");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".json-schema-validator-panel-title");
+        css.ShouldNotContain(".json-schema-validator-config-grid");
+        css.ShouldNotContain(".json-schema-validator-file-panel");
+        css.ShouldNotContain(".json-schema-validator-section-heading");
+        css.ShouldNotContain(".json-schema-validator-schema-workspace");
+        css.ShouldNotContain(".json-schema-validator-panel-header");
+        css.ShouldNotContain(".json-schema-validator-panel-kicker");
+        css.ShouldNotContain(".json-schema-validator-panel-token");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border: 1px solid var(--flux-border-strong);");
+    }
+
+    [Fact]
+    public void DynamicMapperNodeWidget_UsesCompactSummaryAndScopedWorkbench()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "DynamicMapper",
+            "DynamicMapperNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "DynamicMapper",
+            "DynamicMapperNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.ExtraExtraLarge\"");
+        markup.ShouldContain("EditDialogContentClass=\"dynamic-mapper-dialog\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("dynamic-mapper-summary");
+        markup.ShouldContain("dynamic-mapper-meta");
+        markup.ShouldContain("dynamic-mapper-meta-item input");
+        markup.ShouldContain("EngineCaption");
+        markup.ShouldContain("OutputContractCaption");
+        markup.ShouldContain("dynamic-mapper-contracts");
+        markup.ShouldContain("aria-label=\"Mapper input variables\"");
+        markup.ShouldContain("aria-label=\"Mapper output fields\"");
+        markup.ShouldContain("SummaryVariables");
+        markup.ShouldContain("SummaryOutputFields");
+        markup.ShouldContain("dynamic-mapper-token");
+        markup.ShouldContain("dynamic-mapper-editor");
+        markup.ShouldContain("aria-label=\"Dynamic mapper settings\"");
+        markup.ShouldContain("dynamic-mapper-control-row");
+        markup.ShouldContain("Label=\"Input schema\"");
+        markup.ShouldContain("ValueChanged=\"@SetInputType\"");
+        markup.ShouldContain("Label=\"Engine\"");
+        markup.ShouldContain("ValueChanged=\"@SetEngine\"");
+        markup.ShouldContain("Label=\"Result contract\"");
+        markup.ShouldContain("ValueChanged=\"@SetOutputContract\"");
+        markup.ShouldContain("Label=\"Typed schema\"");
+        markup.ShouldContain("ValueChanged=\"@SetOutputType\"");
+        markup.ShouldContain("Label=\"JSON Schema file\"");
+        markup.ShouldContain("ValueChanged=\"@SetOutputSchemaPath\"");
+        markup.ShouldContain("PickOutputSchemaFileAsync");
+        markup.ShouldContain("dynamic-mapper-workspace");
+        markup.ShouldContain("dynamic-mapper-expression-workspace");
+        markup.ShouldContain("WorkspaceClass");
+        markup.ShouldContain("ShouldRenderSampleDrawer");
+        markup.ShouldContain("dynamic-mapper-sample-drawer");
+        markup.ShouldContain("dynamic-mapper-workspace-header");
+        markup.ShouldContain("dynamic-mapper-sample-header");
+        markup.ShouldContain("dynamic-mapper-heading-token");
+        markup.ShouldContain("SampleToggleText");
+        markup.ShouldContain("SampleToggleIcon");
+        markup.ShouldContain("ToggleSampleEditorAsync");
+        markup.ShouldContain("ReloadWorkspaceSample");
+        markup.ShouldContain("dynamic-mapper-input-error");
+        markup.ShouldContain("role=\"alert\"");
+        markup.ShouldContain("Id=\"@InputEditorId\"");
+        markup.ShouldContain("Id=\"@EditorId\"");
+        markup.ShouldContain("ConstructionOptions=\"@InputEditorConstructionOptions\"");
+        markup.ShouldContain("ConstructionOptions=\"@EditorConstructionOptions\"");
+        markup.ShouldContain("CssClass=\"dynamic-mapper-monaco-editor dynamic-mapper-input-editor\"");
+        markup.ShouldContain("CssClass=\"dynamic-mapper-monaco-editor dynamic-mapper-expression-editor\"");
+        markup.ShouldNotContain("dynamic-mapper-drawer-grid");
+        markup.ShouldNotContain("dynamic-mapper-config-grid");
+        markup.ShouldNotContain("dynamic-mapper-source-drawer");
+        markup.ShouldNotContain("dynamic-mapper-result-drawer");
+        markup.ShouldNotContain("dynamic-mapper-sample-strip");
+        markup.ShouldNotContain("Source Fields");
+        markup.ShouldNotContain("Output Preview");
+        markup.ShouldNotContain("Preview JSON");
+        markup.ShouldNotContain("dynamic-mapper-variable-list");
+        markup.ShouldNotContain("dynamic-mapper-shape-list");
+        markup.ShouldNotContain("CssClass=\"dynamic-mapper-monaco-editor dynamic-mapper-result-editor\"");
+        markup.ShouldNotContain("dynamic-mapper-sample-workspace");
+        markup.ShouldNotContain("<style>");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudAlert");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("Class=\"mapper-panel");
+        markup.ShouldNotContain("Class=\"mapper-workbench");
+        markup.ShouldNotContain("CssClass=\"mapper-monaco-editor");
+
+        css.ShouldContain(".dynamic-mapper-summary");
+        css.ShouldContain(".dynamic-mapper-meta");
+        css.ShouldContain(".dynamic-mapper-contracts");
+        css.ShouldContain(".dynamic-mapper-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain(".dynamic-mapper-editor");
+        css.ShouldContain(".dynamic-mapper-control-row");
+        css.ShouldContain(".dynamic-mapper-workspace");
+        css.ShouldContain("grid-template-rows: minmax(0, 1fr);");
+        css.ShouldContain(".dynamic-mapper-workspace.has-sample");
+        css.ShouldContain("grid-template-rows: minmax(0, 1fr) minmax(156px, 0.28fr);");
+        css.ShouldContain("height: clamp(680px, 76vh, 880px);");
+        css.ShouldContain("overflow: hidden;");
+        css.ShouldContain(".dynamic-mapper-expression-workspace");
+        css.ShouldContain(".dynamic-mapper-sample-drawer");
+        css.ShouldContain(".dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor)");
+        css.ShouldContain(".dynamic-mapper-workspace ::deep(.dynamic-mapper-input-editor)");
+        css.ShouldContain(".dynamic-mapper-input-error");
+        css.ShouldNotContain(".dynamic-mapper-workspace ::deep(.dynamic-mapper-result-editor)");
+        css.ShouldNotContain(".dynamic-mapper-drawer-grid");
+        css.ShouldNotContain(".dynamic-mapper-config-grid");
+        css.ShouldNotContain(".dynamic-mapper-drawer");
+        css.ShouldNotContain(".dynamic-mapper-result-grid");
+        css.ShouldNotContain(".dynamic-mapper-variable");
+        css.ShouldNotContain(".dynamic-mapper-sample-workspace");
+        css.ShouldNotContain(".dynamic-mapper-sample-strip");
+        css.ShouldNotContain("grid-template-rows: minmax(560px, 1fr) 112px;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.4fr) minmax(0, 0.86fr);");
+        css.ShouldContain("@media (max-width: 960px)");
+        css.ShouldNotContain(".dynamic-mapper-workbench");
+        css.ShouldNotContain(".dynamic-mapper-panel");
+        css.ShouldNotContain(".mapper-workbench");
+        css.ShouldNotContain(".mapper-panel");
+        css.ShouldNotContain(".mapper-monaco-editor");
     }
 
     [Fact]
@@ -5908,7 +6686,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Publisher settings\"");
         markup.ShouldContain("Label=\"Broker connection\"");
         markup.ShouldContain("Label=\"Connection name\"");
-        markup.ShouldContain("HelperText=\"Add a broker connection in the left panel to enable the dropdown.\"");
+        markup.ShouldContain("mqtt-publisher-broker-cell");
+        markup.ShouldNotContain("mqtt-publisher-field-note");
+        markup.ShouldNotContain("Add a broker connection in the left panel to enable the dropdown.");
+        markup.ShouldNotContain("HelperText=\"Add a broker connection in the left panel to enable the dropdown.\"");
         markup.ShouldContain("Label=\"Input buffer\"");
         markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
         markup.ShouldContain("Class=\"mqtt-publisher-broker-field\"");
@@ -5923,6 +6704,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".mqtt-publisher-contract");
         css.ShouldContain(".mqtt-publisher-token");
         css.ShouldContain(".mqtt-publisher-editor");
+        css.ShouldContain(".mqtt-publisher-broker-cell");
+        css.ShouldNotContain(".mqtt-publisher-field-note");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 160px;");
         css.ShouldContain(".mqtt-publisher-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 640px)");
@@ -6055,6 +6838,831 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void ConditionRouterNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "ConditionRouter",
+            "ConditionRouterNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "ConditionRouter",
+            "ConditionRouterNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("condition-router-summary");
+        markup.ShouldContain("condition-router-meta");
+        markup.ShouldContain("InputTypeCaption");
+        markup.ShouldContain("condition-router-expression");
+        markup.ShouldContain("aria-label=\"Condition router expression\"");
+        markup.ShouldContain("ExpressionPreview");
+        markup.ShouldContain("condition-router-variables");
+        markup.ShouldContain("SummaryVariables");
+        markup.ShouldContain("VariableOverflow");
+        markup.ShouldContain("condition-router-token");
+        markup.ShouldContain("condition-router-editor");
+        markup.ShouldContain("aria-label=\"Condition router settings\"");
+        markup.ShouldContain("condition-router-condition-panel");
+        markup.ShouldContain("aria-label=\"Condition router rule\"");
+        markup.ShouldContain("condition-router-source-row");
+        markup.ShouldContain("Label=\"Input type\"");
+        markup.ShouldContain("aria-label=\"Condition input type\"");
+        markup.ShouldContain("ValueChanged=\"@SetInputType\"");
+        markup.ShouldContain("Class=\"condition-router-input-field\"");
+        markup.ShouldContain("condition-router-output-map");
+        markup.ShouldContain("Label=\"Condition\"");
+        markup.ShouldContain("aria-label=\"Condition expression\"");
+        markup.ShouldContain("@bind-Value=\"_expression\"");
+        markup.ShouldContain("Lines=\"5\"");
+        markup.ShouldContain("Class=\"condition-router-expression-field\"");
+        markup.ShouldContain("condition-router-expression-cell");
+        markup.ShouldNotContain("HelperText=\"@ExpressionHelper\"");
+        markup.ShouldNotContain("ExpressionHelper");
+        markup.ShouldNotContain("condition-router-field-note");
+        markup.ShouldContain("condition-router-variable-strip");
+        markup.ShouldContain("condition-router-variable-label");
+        markup.ShouldContain("condition-router-variable-token");
+        markup.ShouldContain("Variables");
+        markup.ShouldNotContain("condition-router-variable-reference");
+        markup.ShouldNotContain("condition-router-variable-reference-grid");
+        markup.ShouldNotContain("condition-router-variable-reference-row");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("<MudItem");
+        markup.ShouldNotContain("<MudExpansionPanel");
+        markup.ShouldNotContain("<MudSimpleTable");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("node-expr-preview");
+        markup.ShouldNotContain("node-expr-field");
+        markup.ShouldNotContain("condition-router-route-strip");
+        markup.ShouldNotContain("condition-router-variable-panel");
+        markup.ShouldNotContain("condition-router-panel-title");
+        markup.ShouldNotContain("condition-router-config-grid");
+        markup.ShouldNotContain("condition-router-panel-header");
+        markup.ShouldNotContain("condition-router-panel-kicker");
+        markup.ShouldNotContain("condition-router-panel-token");
+
+        css.ShouldContain(".condition-router-summary");
+        css.ShouldContain(".condition-router-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 76px 82px;");
+        css.ShouldContain(".condition-router-expression");
+        css.ShouldContain(".condition-router-variables");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain(".condition-router-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".condition-router-editor");
+        css.ShouldContain(".condition-router-condition-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldContain(".condition-router-source-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 230px);");
+        css.ShouldContain(".condition-router-output-map");
+        css.ShouldContain("border-left: 2px solid");
+        css.ShouldContain(".condition-router-expression-cell");
+        css.ShouldContain("padding-top: 10px;");
+        css.ShouldContain(".condition-router-variable-strip");
+        css.ShouldContain(".condition-router-variable-label");
+        css.ShouldContain(".condition-router-variable-token");
+        css.ShouldContain(".condition-router-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain(".condition-router-route-strip");
+        css.ShouldNotContain(".condition-router-variable-panel");
+        css.ShouldNotContain(".condition-router-variable-reference");
+        css.ShouldNotContain(".condition-router-variable-reference-grid");
+        css.ShouldNotContain(".condition-router-variable-reference-row");
+        css.ShouldNotContain(".condition-router-field-note");
+        css.ShouldNotContain(".condition-router-panel-title");
+        css.ShouldNotContain(".condition-router-config-grid");
+        css.ShouldNotContain(".condition-router-panel-header");
+        css.ShouldNotContain(".condition-router-panel-kicker");
+        css.ShouldNotContain(".condition-router-panel-token");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void RoutingSwitchNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingSwitchNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingSwitchNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("routing-switch-summary");
+        markup.ShouldContain("routing-switch-meta");
+        markup.ShouldContain("InputTypeCaption");
+        markup.ShouldContain("RouteCountCaption");
+        markup.ShouldContain("EnvelopeCaption");
+        markup.ShouldContain("BufferCaption");
+        markup.ShouldContain("routing-switch-expression");
+        markup.ShouldContain("aria-label=\"Routing switch expression\"");
+        markup.ShouldContain("ExpressionPreview");
+        markup.ShouldContain("routing-switch-routes");
+        markup.ShouldContain("aria-label=\"Routing switch routes\"");
+        markup.ShouldContain("RoutePreview");
+        markup.ShouldContain("RoutePreviewOverflow");
+        markup.ShouldContain("routing-switch-token");
+        markup.ShouldContain("routing-switch-editor");
+        markup.ShouldContain("aria-label=\"Routing switch settings\"");
+        markup.ShouldContain("routing-switch-rule-panel");
+        markup.ShouldContain("aria-label=\"Routing switch rule set\"");
+        markup.ShouldContain("routing-switch-source-row");
+        markup.ShouldContain("Label=\"Input type\"");
+        markup.ShouldContain("aria-label=\"Routing switch input type\"");
+        markup.ShouldContain("@bind-Value=\"_inputType\"");
+        markup.ShouldContain("Class=\"routing-switch-input-field\"");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("aria-label=\"Routing switch input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Class=\"routing-switch-buffer-field\"");
+        markup.ShouldContain("Label=\"Emit envelope\"");
+        markup.ShouldContain("aria-label=\"Emit route envelope\"");
+        markup.ShouldContain("@bind-Value=\"_emitRouteEnvelope\"");
+        markup.ShouldContain("Class=\"routing-switch-envelope-check\"");
+        markup.ShouldContain("Label=\"Expression\"");
+        markup.ShouldContain("aria-label=\"Routing switch expression\"");
+        markup.ShouldContain("@bind-Value=\"_expression\"");
+        markup.ShouldContain("Lines=\"5\"");
+        markup.ShouldContain("Class=\"routing-switch-expression-field\"");
+        markup.ShouldContain("routing-switch-expression-cell");
+        markup.ShouldContain("routing-switch-route-editor");
+        markup.ShouldContain("aria-label=\"Routing switch route outputs\"");
+        markup.ShouldContain("routing-switch-route-list");
+        markup.ShouldContain("AddRoute");
+        markup.ShouldContain("routing-switch-route-header");
+        markup.ShouldContain("routing-switch-route-column-header");
+        markup.ShouldContain("Class=\"routing-switch-route-add\"");
+        markup.ShouldContain("routing-switch-route-row");
+        markup.ShouldContain("aria-label=\"@($\"Route match key {index + 1}\")\"");
+        markup.ShouldContain("aria-label=\"@($\"Route output port {index + 1}\")\"");
+        markup.ShouldContain("@bind-Value=\"route.Key\"");
+        markup.ShouldContain("@bind-Value=\"route.OutputPort\"");
+        markup.ShouldContain("Class=\"routing-switch-route-key-field\"");
+        markup.ShouldContain("Class=\"routing-switch-route-output-field\"");
+        markup.ShouldContain("RemoveRoute(route)");
+        markup.ShouldContain("FormatRouteDrafts");
+        markup.ShouldNotContain("routing-switch-panel-header");
+        markup.ShouldNotContain("routing-switch-panel-kicker");
+        markup.ShouldNotContain("routing-switch-panel-token");
+        markup.ShouldNotContain("SwitchPanelCaption");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("<MudItem");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("node-expr-preview");
+        markup.ShouldNotContain("node-expr-field");
+        markup.ShouldNotContain("@bind-Value=\"_routesText\"");
+        markup.ShouldNotContain("Class=\"routing-switch-routes-field\"");
+        markup.ShouldNotContain("Label=\"Match key\"");
+        markup.ShouldNotContain("Label=\"Output port\"");
+        markup.ShouldNotContain("routing-switch-route-table");
+        markup.ShouldNotContain("routing-switch-route-toolbar");
+        markup.ShouldNotContain("routing-switch-panel-title");
+        markup.ShouldNotContain("routing-switch-config-grid");
+
+        css.ShouldContain(".routing-switch-summary");
+        css.ShouldContain(".routing-switch-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 62px 68px 64px;");
+        css.ShouldContain(".routing-switch-expression");
+        css.ShouldContain(".routing-switch-routes");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain(".routing-switch-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".routing-switch-editor");
+        css.ShouldContain(".routing-switch-rule-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("gap: 12px;");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldNotContain(".routing-switch-panel-header");
+        css.ShouldNotContain(".routing-switch-panel-kicker");
+        css.ShouldNotContain(".routing-switch-panel-token");
+        css.ShouldContain(".routing-switch-source-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px minmax(0, 190px);");
+        css.ShouldContain(".routing-switch-expression-cell");
+        css.ShouldContain("padding-top: 10px;");
+        css.ShouldContain(".routing-switch-route-editor");
+        css.ShouldContain(".routing-switch-route-list");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);");
+        css.ShouldContain(".routing-switch-route-header");
+        css.ShouldContain(".routing-switch-route-column-header");
+        css.ShouldContain(".routing-switch-route-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px;");
+        css.ShouldContain("align-items: center;");
+        css.ShouldContain(".routing-switch-route-header ::deep(.routing-switch-route-add.mud-icon-button)");
+        css.ShouldContain(".routing-switch-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain(".routing-switch-routes-field");
+        css.ShouldNotContain(".routing-switch-route-table");
+        css.ShouldNotContain(".routing-switch-route-toolbar");
+        css.ShouldNotContain(".routing-switch-panel-title");
+        css.ShouldNotContain(".routing-switch-config-grid");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void RoutingFanNodeWidgets_UseCompactSummaryAndFlatEditors()
+    {
+        var root = FindRepositoryRoot();
+        var forkMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingForkNodeWidget.razor"));
+        var forkCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingForkNodeWidget.razor.css"));
+        var mergeMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingMergeNodeWidget.razor"));
+        var mergeCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingMergeNodeWidget.razor.css"));
+
+        forkMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        forkMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
+        forkMarkup.ShouldContain("ShowDisplayName=\"true\"");
+        forkMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        forkMarkup.ShouldContain("routing-fork-summary");
+        forkMarkup.ShouldContain("routing-fork-meta");
+        forkMarkup.ShouldContain("InputTypeCaption");
+        forkMarkup.ShouldContain("OutputCountCaption");
+        forkMarkup.ShouldContain("BufferCaption");
+        forkMarkup.ShouldContain("routing-fork-ports");
+        forkMarkup.ShouldContain("aria-label=\"Routing fork outputs\"");
+        forkMarkup.ShouldContain("OutputPreview");
+        forkMarkup.ShouldContain("OutputPreviewOverflow");
+        forkMarkup.ShouldContain("routing-fork-token");
+        forkMarkup.ShouldContain("routing-fork-editor");
+        forkMarkup.ShouldContain("aria-label=\"Routing fork settings\"");
+        forkMarkup.ShouldContain("routing-fork-port-panel");
+        forkMarkup.ShouldContain("aria-label=\"Routing fork port configuration\"");
+        forkMarkup.ShouldContain("routing-fork-source-row");
+        forkMarkup.ShouldContain("Label=\"Input type\"");
+        forkMarkup.ShouldContain("aria-label=\"Routing fork input type\"");
+        forkMarkup.ShouldContain("@bind-Value=\"_inputType\"");
+        forkMarkup.ShouldContain("Class=\"routing-fork-input-field\"");
+        forkMarkup.ShouldContain("Label=\"Input buffer\"");
+        forkMarkup.ShouldContain("aria-label=\"Routing fork input buffer\"");
+        forkMarkup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        forkMarkup.ShouldContain("Class=\"routing-fork-buffer-field\"");
+        forkMarkup.ShouldContain("routing-fork-port-editor");
+        forkMarkup.ShouldContain("aria-label=\"Routing fork output ports\"");
+        forkMarkup.ShouldContain("routing-fork-port-column-header");
+        forkMarkup.ShouldContain("Class=\"routing-fork-add-port\"");
+        forkMarkup.ShouldContain("aria-label=\"Add output port\"");
+        forkMarkup.ShouldContain("routing-fork-port-row");
+        forkMarkup.ShouldContain("_outputDrafts");
+        forkMarkup.ShouldContain("AddOutput");
+        forkMarkup.ShouldContain("RemoveOutput");
+        forkMarkup.ShouldContain("@bind-Value=\"output.Name\"");
+        forkMarkup.ShouldContain("aria-label=\"@($\"Output port {index + 1}\")\"");
+        forkMarkup.ShouldContain("aria-label=\"@($\"Remove output port {output.Name}\")\"");
+        forkMarkup.ShouldContain("Class=\"routing-fork-output-name-field\"");
+        forkMarkup.ShouldNotContain("routing-fork-panel-header");
+        forkMarkup.ShouldNotContain("routing-fork-panel-kicker");
+        forkMarkup.ShouldNotContain("routing-fork-panel-token");
+        forkMarkup.ShouldNotContain("OutputPanelCaption");
+        forkMarkup.ShouldNotContain("routing-fork-panel-title");
+        forkMarkup.ShouldNotContain("routing-fork-config-grid");
+        forkMarkup.ShouldNotContain("routing-fork-port-header");
+        forkMarkup.ShouldNotContain("aria-hidden=\"true\"");
+        forkMarkup.ShouldNotContain("Label=\"@($\"Output {index + 1}\")\"");
+        forkMarkup.ShouldNotContain("@bind-Value=\"_outputsText\"");
+        forkMarkup.ShouldNotContain("Class=\"routing-fork-outputs-field\"");
+        forkMarkup.ShouldNotContain("Lines=\"4\"");
+        forkMarkup.ShouldNotContain("<MudStack");
+        forkMarkup.ShouldNotContain("<MudChip");
+        forkMarkup.ShouldNotContain("d-flex flex-wrap gap-1");
+        forkMarkup.ShouldNotContain("HelperText=");
+
+        forkCss.ShouldContain(".routing-fork-summary");
+        forkCss.ShouldContain(".routing-fork-meta");
+        forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 72px 64px;");
+        forkCss.ShouldContain(".routing-fork-ports");
+        forkCss.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        forkCss.ShouldContain(".routing-fork-token");
+        forkCss.ShouldContain("overflow-wrap: anywhere;");
+        forkCss.ShouldContain("white-space: normal;");
+        forkCss.ShouldContain(".routing-fork-editor");
+        forkCss.ShouldContain(".routing-fork-port-panel");
+        forkCss.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        forkCss.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        forkCss.ShouldContain("gap: 12px;");
+        forkCss.ShouldContain("padding: 14px;");
+        forkCss.ShouldNotContain(".routing-fork-panel-header");
+        forkCss.ShouldNotContain(".routing-fork-panel-kicker");
+        forkCss.ShouldNotContain(".routing-fork-panel-token");
+        forkCss.ShouldContain(".routing-fork-source-row");
+        forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
+        forkCss.ShouldContain(".routing-fork-port-editor");
+        forkCss.ShouldContain("padding-top: 10px;");
+        forkCss.ShouldNotContain(".routing-fork-port-header");
+        forkCss.ShouldContain(".routing-fork-port-list");
+        forkCss.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);");
+        forkCss.ShouldContain(".routing-fork-port-column-header");
+        forkCss.ShouldContain(".routing-fork-port-row");
+        forkCss.ShouldContain("align-items: center;");
+        forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
+        forkCss.ShouldContain(".routing-fork-port-column-header ::deep(.routing-fork-add-port.mud-icon-button)");
+        forkCss.ShouldContain(".routing-fork-editor ::deep(.mud-input-control)");
+        forkCss.ShouldNotContain(".routing-fork-panel-title");
+        forkCss.ShouldNotContain(".routing-fork-config-grid");
+        forkCss.ShouldNotContain(".routing-fork-outputs-field");
+        forkCss.ShouldNotContain("textarea.mud-input-root");
+        forkCss.ShouldContain("@media (max-width: 720px)");
+        forkCss.ShouldNotContain(".flow-node-filters");
+        forkCss.ShouldNotContain("border-radius: 999px;");
+
+        mergeMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        mergeMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
+        mergeMarkup.ShouldContain("ShowDisplayName=\"true\"");
+        mergeMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        mergeMarkup.ShouldContain("routing-merge-summary");
+        mergeMarkup.ShouldContain("routing-merge-meta");
+        mergeMarkup.ShouldContain("InputTypeCaption");
+        mergeMarkup.ShouldContain("InputCountCaption");
+        mergeMarkup.ShouldContain("BufferCaption");
+        mergeMarkup.ShouldContain("routing-merge-ports");
+        mergeMarkup.ShouldContain("aria-label=\"Routing merge inputs\"");
+        mergeMarkup.ShouldContain("InputPreview");
+        mergeMarkup.ShouldContain("InputPreviewOverflow");
+        mergeMarkup.ShouldContain("routing-merge-token");
+        mergeMarkup.ShouldContain("routing-merge-editor");
+        mergeMarkup.ShouldContain("aria-label=\"Routing merge settings\"");
+        mergeMarkup.ShouldContain("routing-merge-port-panel");
+        mergeMarkup.ShouldContain("aria-label=\"Routing merge port configuration\"");
+        mergeMarkup.ShouldContain("routing-merge-source-row");
+        mergeMarkup.ShouldContain("Label=\"Input type\"");
+        mergeMarkup.ShouldContain("aria-label=\"Routing merge input type\"");
+        mergeMarkup.ShouldContain("@bind-Value=\"_inputType\"");
+        mergeMarkup.ShouldContain("Class=\"routing-merge-input-field\"");
+        mergeMarkup.ShouldContain("Label=\"Input buffer\"");
+        mergeMarkup.ShouldContain("aria-label=\"Routing merge input buffer\"");
+        mergeMarkup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        mergeMarkup.ShouldContain("Class=\"routing-merge-buffer-field\"");
+        mergeMarkup.ShouldContain("routing-merge-port-editor");
+        mergeMarkup.ShouldContain("aria-label=\"Routing merge input ports\"");
+        mergeMarkup.ShouldContain("routing-merge-port-column-header");
+        mergeMarkup.ShouldContain("Class=\"routing-merge-add-port\"");
+        mergeMarkup.ShouldContain("aria-label=\"Add input port\"");
+        mergeMarkup.ShouldContain("routing-merge-port-row");
+        mergeMarkup.ShouldContain("_inputDrafts");
+        mergeMarkup.ShouldContain("AddInput");
+        mergeMarkup.ShouldContain("RemoveInput");
+        mergeMarkup.ShouldContain("@bind-Value=\"input.Name\"");
+        mergeMarkup.ShouldContain("aria-label=\"@($\"Input port {index + 1}\")\"");
+        mergeMarkup.ShouldContain("aria-label=\"@($\"Remove input port {input.Name}\")\"");
+        mergeMarkup.ShouldContain("Class=\"routing-merge-input-name-field\"");
+        mergeMarkup.ShouldNotContain("routing-merge-panel-header");
+        mergeMarkup.ShouldNotContain("routing-merge-panel-kicker");
+        mergeMarkup.ShouldNotContain("routing-merge-panel-token");
+        mergeMarkup.ShouldNotContain("InputPanelCaption");
+        mergeMarkup.ShouldNotContain("routing-merge-panel-title");
+        mergeMarkup.ShouldNotContain("routing-merge-config-grid");
+        mergeMarkup.ShouldNotContain("routing-merge-port-header");
+        mergeMarkup.ShouldNotContain("aria-hidden=\"true\"");
+        mergeMarkup.ShouldNotContain("Label=\"@($\"Input {index + 1}\")\"");
+        mergeMarkup.ShouldNotContain("@bind-Value=\"_inputsText\"");
+        mergeMarkup.ShouldNotContain("Class=\"routing-merge-inputs-field\"");
+        mergeMarkup.ShouldNotContain("Lines=\"4\"");
+        mergeMarkup.ShouldNotContain("<MudStack");
+        mergeMarkup.ShouldNotContain("<MudChip");
+        mergeMarkup.ShouldNotContain("d-flex flex-wrap gap-1");
+        mergeMarkup.ShouldNotContain("HelperText=");
+
+        mergeCss.ShouldContain(".routing-merge-summary");
+        mergeCss.ShouldContain(".routing-merge-meta");
+        mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 66px 94px 64px;");
+        mergeCss.ShouldContain(".routing-merge-ports");
+        mergeCss.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        mergeCss.ShouldContain(".routing-merge-token");
+        mergeCss.ShouldContain("overflow-wrap: anywhere;");
+        mergeCss.ShouldContain("white-space: normal;");
+        mergeCss.ShouldContain(".routing-merge-editor");
+        mergeCss.ShouldContain(".routing-merge-port-panel");
+        mergeCss.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        mergeCss.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        mergeCss.ShouldContain("gap: 12px;");
+        mergeCss.ShouldContain("padding: 14px;");
+        mergeCss.ShouldNotContain(".routing-merge-panel-header");
+        mergeCss.ShouldNotContain(".routing-merge-panel-kicker");
+        mergeCss.ShouldNotContain(".routing-merge-panel-token");
+        mergeCss.ShouldContain(".routing-merge-source-row");
+        mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
+        mergeCss.ShouldContain(".routing-merge-port-editor");
+        mergeCss.ShouldContain("padding-top: 10px;");
+        mergeCss.ShouldNotContain(".routing-merge-port-header");
+        mergeCss.ShouldContain(".routing-merge-port-list");
+        mergeCss.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);");
+        mergeCss.ShouldContain(".routing-merge-port-column-header");
+        mergeCss.ShouldContain(".routing-merge-port-row");
+        mergeCss.ShouldContain("align-items: center;");
+        mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
+        mergeCss.ShouldContain(".routing-merge-port-column-header ::deep(.routing-merge-add-port.mud-icon-button)");
+        mergeCss.ShouldContain(".routing-merge-editor ::deep(.mud-input-control)");
+        mergeCss.ShouldNotContain(".routing-merge-panel-title");
+        mergeCss.ShouldNotContain(".routing-merge-config-grid");
+        mergeCss.ShouldNotContain(".routing-merge-inputs-field");
+        mergeCss.ShouldNotContain("textarea.mud-input-root");
+        mergeCss.ShouldContain("@media (max-width: 720px)");
+        mergeCss.ShouldNotContain(".flow-node-filters");
+        mergeCss.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void RoutingWindowNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingWindowNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingWindowNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("routing-window-summary");
+        markup.ShouldContain("routing-window-meta");
+        markup.ShouldContain("InputTypeCaption");
+        markup.ShouldContain("BufferCaption");
+        markup.ShouldContain("routing-window-limits");
+        markup.ShouldContain("aria-label=\"Routing window limits\"");
+        markup.ShouldContain("MaxItemsCaption");
+        markup.ShouldContain("TimeCaption");
+        markup.ShouldContain("PartialCaption");
+        markup.ShouldContain("routing-window-token");
+        markup.ShouldContain("routing-window-editor");
+        markup.ShouldContain("aria-label=\"Routing window settings\"");
+        markup.ShouldContain("routing-window-window-panel");
+        markup.ShouldContain("aria-label=\"Routing window configuration\"");
+        markup.ShouldContain("routing-window-source-row");
+        markup.ShouldContain("aria-label=\"Routing window source settings\"");
+        markup.ShouldContain("routing-window-limit-row");
+        markup.ShouldContain("aria-label=\"Routing window limit settings\"");
+        markup.ShouldContain("Label=\"Input type\"");
+        markup.ShouldContain("aria-label=\"Routing window input type\"");
+        markup.ShouldContain("@bind-Value=\"_inputType\"");
+        markup.ShouldContain("Class=\"routing-window-input-field\"");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("aria-label=\"Routing window input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Class=\"routing-window-buffer-field\"");
+        markup.ShouldContain("Label=\"Max items\"");
+        markup.ShouldContain("aria-label=\"Routing window max items\"");
+        markup.ShouldContain("@bind-Value=\"_maxItems\"");
+        markup.ShouldContain("Class=\"routing-window-max-items-field\"");
+        markup.ShouldContain("Label=\"Time window ms\"");
+        markup.ShouldContain("aria-label=\"Routing window time in milliseconds\"");
+        markup.ShouldContain("@bind-Value=\"_timeMilliseconds\"");
+        markup.ShouldContain("Class=\"routing-window-time-field\"");
+        markup.ShouldContain("Label=\"Emit partial\"");
+        markup.ShouldContain("aria-label=\"Emit partial window on completion\"");
+        markup.ShouldContain("@bind-Value=\"_emitPartialOnCompletion\"");
+        markup.ShouldContain("Class=\"routing-window-partial-check\"");
+        markup.ShouldNotContain("routing-window-panel-header");
+        markup.ShouldNotContain("routing-window-panel-kicker");
+        markup.ShouldNotContain("routing-window-panel-token");
+        markup.ShouldNotContain("WindowPanelCaption");
+        markup.ShouldNotContain("routing-window-panel-title");
+        markup.ShouldNotContain("routing-window-source-grid");
+        markup.ShouldNotContain("routing-window-limit-panel");
+        markup.ShouldNotContain("<span>Completion</span>");
+        markup.ShouldNotContain("routing-window-form-grid");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("<MudItem");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("HelperText=");
+
+        css.ShouldContain(".routing-window-summary");
+        css.ShouldContain(".routing-window-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 92px 64px;");
+        css.ShouldContain(".routing-window-limits");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, auto));");
+        css.ShouldContain(".routing-window-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".routing-window-editor");
+        css.ShouldContain(".routing-window-window-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("gap: 12px;");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldNotContain(".routing-window-panel-header");
+        css.ShouldNotContain(".routing-window-panel-kicker");
+        css.ShouldNotContain(".routing-window-panel-token");
+        css.ShouldContain(".routing-window-source-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
+        css.ShouldContain(".routing-window-limit-row");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);");
+        css.ShouldContain("padding-top: 10px;");
+        css.ShouldContain("grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) minmax(132px, 0.72fr);");
+        css.ShouldContain(".routing-window-partial-option");
+        css.ShouldContain("align-items: center;");
+        css.ShouldContain(".routing-window-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldNotContain(".routing-window-panel-title");
+        css.ShouldNotContain(".routing-window-source-grid");
+        css.ShouldNotContain(".routing-window-limit-panel");
+        css.ShouldNotContain(".routing-window-form-grid");
+        css.ShouldNotContain("grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(116px, 0.72fr)) minmax(128px, 0.66fr);");
+        css.ShouldNotContain(".routing-window-config-grid");
+        css.ShouldNotContain(".routing-window-limit-grid");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void RoutingCorrelationAndJoinNodeWidgets_UseCompactSummaryAndFlatEditors()
+    {
+        var root = FindRepositoryRoot();
+        var correlationMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingCorrelationNodeWidget.razor"));
+        var correlationCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingCorrelationNodeWidget.razor.css"));
+        var joinMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingJoinNodeWidget.razor"));
+        var joinCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Routing",
+            "RoutingJoinNodeWidget.razor.css"));
+
+        correlationMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
+        correlationMarkup.ShouldContain("ShowDisplayName=\"true\"");
+        correlationMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        correlationMarkup.ShouldContain("routing-correlation-summary");
+        correlationMarkup.ShouldContain("routing-correlation-meta");
+        correlationMarkup.ShouldContain("InputTypeCaption");
+        correlationMarkup.ShouldContain("TimeoutCaption");
+        correlationMarkup.ShouldContain("BufferCaption");
+        correlationMarkup.ShouldContain("routing-correlation-rules");
+        correlationMarkup.ShouldContain("aria-label=\"Routing correlation rules\"");
+        correlationMarkup.ShouldContain("KeyExpressionCaption");
+        correlationMarkup.ShouldContain("SideExpressionCaption");
+        correlationMarkup.ShouldContain("SideFlowCaption");
+        correlationMarkup.ShouldContain("CaseCaption");
+        correlationMarkup.ShouldContain("PendingCaption");
+        correlationMarkup.ShouldContain("routing-correlation-editor");
+        correlationMarkup.ShouldContain("aria-label=\"Routing correlation settings\"");
+        correlationMarkup.ShouldContain("routing-correlation-rule-panel");
+        correlationMarkup.ShouldContain("aria-label=\"Routing correlation rule\"");
+        correlationMarkup.ShouldContain("routing-correlation-source-grid");
+        correlationMarkup.ShouldContain("aria-label=\"Routing correlation source settings\"");
+        correlationMarkup.ShouldContain("routing-correlation-expression-grid");
+        correlationMarkup.ShouldContain("aria-label=\"Routing correlation expressions\"");
+        correlationMarkup.ShouldContain("routing-correlation-side-row");
+        correlationMarkup.ShouldContain("aria-label=\"Routing correlation side mapping\"");
+        correlationMarkup.ShouldContain("routing-correlation-limit-row");
+        correlationMarkup.ShouldContain("aria-label=\"Routing correlation limits\"");
+        correlationMarkup.ShouldContain("@bind-Value=\"_inputType\"");
+        correlationMarkup.ShouldContain("@bind-Value=\"_keyExpression\"");
+        correlationMarkup.ShouldContain("@bind-Value=\"_sideExpression\"");
+        correlationMarkup.ShouldContain("@bind-Value=\"_requestSide\"");
+        correlationMarkup.ShouldContain("@bind-Value=\"_responseSide\"");
+        correlationMarkup.ShouldContain("@bind-Value=\"_caseSensitive\"");
+        correlationMarkup.ShouldContain("@bind-Value=\"_timeoutMilliseconds\"");
+        correlationMarkup.ShouldContain("@bind-Value=\"_maxPending\"");
+        correlationMarkup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        correlationMarkup.ShouldNotContain("routing-correlation-panel-header");
+        correlationMarkup.ShouldNotContain("routing-correlation-panel-kicker");
+        correlationMarkup.ShouldNotContain("routing-correlation-panel-token");
+        correlationMarkup.ShouldNotContain("routing-correlation-config-grid");
+        correlationMarkup.ShouldNotContain("routing-correlation-side-grid");
+        correlationMarkup.ShouldNotContain("routing-correlation-form-grid");
+        correlationMarkup.ShouldNotContain("routing-correlation-side-panel");
+        correlationMarkup.ShouldNotContain("routing-correlation-limit-panel");
+        correlationMarkup.ShouldNotContain("<span>Matching</span>");
+        correlationMarkup.ShouldNotContain("<MudStack");
+        correlationMarkup.ShouldNotContain("<MudChip");
+        correlationMarkup.ShouldNotContain("<MudGrid");
+        correlationMarkup.ShouldNotContain("<MudItem");
+        correlationMarkup.ShouldNotContain("d-flex flex-wrap gap-1");
+
+        correlationCss.ShouldContain(".routing-correlation-summary");
+        correlationCss.ShouldContain(".routing-correlation-meta");
+        correlationCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 112px 76px 64px;");
+        correlationCss.ShouldContain(".routing-correlation-rules");
+        correlationCss.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        correlationCss.ShouldContain(".routing-correlation-token");
+        correlationCss.ShouldContain("overflow-wrap: anywhere;");
+        correlationCss.ShouldContain("white-space: normal;");
+        correlationCss.ShouldContain(".routing-correlation-editor");
+        correlationCss.ShouldContain(".routing-correlation-rule-panel");
+        correlationCss.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        correlationCss.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        correlationCss.ShouldContain("gap: 12px;");
+        correlationCss.ShouldContain("padding: 14px;");
+        correlationCss.ShouldNotContain(".routing-correlation-panel-header");
+        correlationCss.ShouldNotContain(".routing-correlation-panel-kicker");
+        correlationCss.ShouldNotContain(".routing-correlation-panel-token");
+        correlationCss.ShouldContain(".routing-correlation-source-grid");
+        correlationCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
+        correlationCss.ShouldContain(".routing-correlation-expression-grid");
+        correlationCss.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        correlationCss.ShouldContain(".routing-correlation-side-row");
+        correlationCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(132px, 0.72fr);");
+        correlationCss.ShouldContain(".routing-correlation-limit-row");
+        correlationCss.ShouldContain("grid-template-columns: repeat(2, minmax(130px, 1fr));");
+        correlationCss.ShouldContain(".routing-correlation-case-option");
+        correlationCss.ShouldContain("align-items: center;");
+        correlationCss.ShouldContain("@media (max-width: 840px)");
+        correlationCss.ShouldNotContain(".routing-correlation-case-option > span");
+        correlationCss.ShouldNotContain(".routing-correlation-config-grid");
+        correlationCss.ShouldNotContain(".routing-correlation-side-grid");
+        correlationCss.ShouldNotContain(".routing-correlation-form-grid");
+        correlationCss.ShouldNotContain(".routing-correlation-side-panel");
+        correlationCss.ShouldNotContain(".routing-correlation-limit-panel");
+        correlationCss.ShouldNotContain(".flow-node-filters");
+        correlationCss.ShouldNotContain("border-radius: 999px;");
+
+        joinMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
+        joinMarkup.ShouldContain("ShowDisplayName=\"true\"");
+        joinMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        joinMarkup.ShouldContain("routing-join-summary");
+        joinMarkup.ShouldContain("routing-join-meta");
+        joinMarkup.ShouldContain("LeftInputTypeCaption");
+        joinMarkup.ShouldContain("RightInputTypeCaption");
+        joinMarkup.ShouldContain("JoinExpressionCaption");
+        joinMarkup.ShouldContain("TimeoutCaption");
+        joinMarkup.ShouldContain("PendingCaption");
+        joinMarkup.ShouldContain("BufferCaption");
+        joinMarkup.ShouldContain("routing-join-rules");
+        joinMarkup.ShouldContain("aria-label=\"Routing join rules\"");
+        joinMarkup.ShouldContain("routing-join-editor");
+        joinMarkup.ShouldContain("aria-label=\"Routing join settings\"");
+        joinMarkup.ShouldContain("routing-join-rule-panel");
+        joinMarkup.ShouldContain("aria-label=\"Routing join rule\"");
+        joinMarkup.ShouldContain("routing-join-input-grid");
+        joinMarkup.ShouldContain("aria-label=\"Routing join input contracts\"");
+        joinMarkup.ShouldContain("routing-join-key-grid");
+        joinMarkup.ShouldContain("aria-label=\"Routing join key expressions\"");
+        joinMarkup.ShouldContain("routing-join-limit-row");
+        joinMarkup.ShouldContain("aria-label=\"Routing join limit settings\"");
+        joinMarkup.ShouldContain("@bind-Value=\"_leftInputType\"");
+        joinMarkup.ShouldContain("@bind-Value=\"_rightInputType\"");
+        joinMarkup.ShouldContain("@bind-Value=\"_leftKeyExpression\"");
+        joinMarkup.ShouldContain("@bind-Value=\"_rightKeyExpression\"");
+        joinMarkup.ShouldContain("@bind-Value=\"_caseSensitive\"");
+        joinMarkup.ShouldContain("@bind-Value=\"_timeoutMilliseconds\"");
+        joinMarkup.ShouldContain("@bind-Value=\"_maxPending\"");
+        joinMarkup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        joinMarkup.ShouldNotContain("routing-join-panel-header");
+        joinMarkup.ShouldNotContain("routing-join-panel-kicker");
+        joinMarkup.ShouldNotContain("routing-join-panel-token");
+        joinMarkup.ShouldNotContain("routing-join-type-grid");
+        joinMarkup.ShouldNotContain("routing-join-expression-grid");
+        joinMarkup.ShouldNotContain("routing-join-limit-grid");
+        joinMarkup.ShouldNotContain("routing-join-form-grid");
+        joinMarkup.ShouldNotContain("routing-join-limit-panel");
+        joinMarkup.ShouldNotContain("<span>Matching</span>");
+        joinMarkup.ShouldNotContain("<MudStack");
+        joinMarkup.ShouldNotContain("<MudChip");
+        joinMarkup.ShouldNotContain("<MudGrid");
+        joinMarkup.ShouldNotContain("<MudItem");
+        joinMarkup.ShouldNotContain("d-flex flex-wrap gap-1");
+
+        joinCss.ShouldContain(".routing-join-summary");
+        joinCss.ShouldContain(".routing-join-meta");
+        joinCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 96px 64px;");
+        joinCss.ShouldContain(".routing-join-rules");
+        joinCss.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        joinCss.ShouldContain(".routing-join-token");
+        joinCss.ShouldContain("overflow-wrap: anywhere;");
+        joinCss.ShouldContain("white-space: normal;");
+        joinCss.ShouldContain(".routing-join-editor");
+        joinCss.ShouldContain(".routing-join-rule-panel");
+        joinCss.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        joinCss.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        joinCss.ShouldContain("gap: 12px;");
+        joinCss.ShouldContain("padding: 14px;");
+        joinCss.ShouldNotContain(".routing-join-panel-header");
+        joinCss.ShouldNotContain(".routing-join-panel-kicker");
+        joinCss.ShouldNotContain(".routing-join-panel-token");
+        joinCss.ShouldContain(".routing-join-input-grid");
+        joinCss.ShouldContain(".routing-join-key-grid");
+        joinCss.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        joinCss.ShouldContain(".routing-join-limit-row");
+        joinCss.ShouldContain("grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) minmax(130px, 1fr) minmax(132px, 0.72fr);");
+        joinCss.ShouldContain(".routing-join-case-option");
+        joinCss.ShouldContain("align-items: center;");
+        joinCss.ShouldContain("@media (max-width: 840px)");
+        joinCss.ShouldNotContain(".routing-join-case-option > span");
+        joinCss.ShouldNotContain(".routing-join-type-grid");
+        joinCss.ShouldNotContain(".routing-join-expression-grid");
+        joinCss.ShouldNotContain(".routing-join-limit-grid");
+        joinCss.ShouldNotContain(".routing-join-form-grid");
+        joinCss.ShouldNotContain(".routing-join-limit-panel");
+        joinCss.ShouldNotContain(".flow-node-filters");
+        joinCss.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
     public void HttpRequestNodeWidget_UsesHttpClientSummaryAndFlatEditor()
     {
         var root = FindRepositoryRoot();
@@ -6139,6 +7747,365 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("@media (max-width: 640px)");
         css.ShouldNotContain(".flow-node-filters");
         css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
+    }
+
+    [Fact]
+    public void PayloadInspectorNodeWidget_UsesCompactSummaryAndReadOnlyEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "PayloadInspector",
+            "PayloadInspectorNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "PayloadInspector",
+            "PayloadInspectorNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("payload-inspector-node-summary");
+        markup.ShouldContain("payload-inspector-node-meta");
+        markup.ShouldContain("MqttEnvelope");
+        markup.ShouldContain("InspectedMqttMessage");
+        markup.ShouldContain("Auto detect");
+        markup.ShouldContain("payload-inspector-node-contracts");
+        markup.ShouldContain("aria-label=\"Payload inspector input fields\"");
+        markup.ShouldContain("aria-label=\"Payload inspector result fields\"");
+        markup.ShouldContain("payload-inspector-node-token");
+        markup.ShouldContain("topic");
+        markup.ShouldContain("payload");
+        markup.ShouldContain("kind");
+        markup.ShouldContain("contentType");
+        markup.ShouldContain("formatted");
+        markup.ShouldContain("hexDump");
+        markup.ShouldContain("payload-inspector-node-editor");
+        markup.ShouldContain("aria-label=\"Payload inspector settings\"");
+        markup.ShouldContain("payload-inspector-node-config-summary");
+        markup.ShouldContain("aria-label=\"Payload inspector contract summary\"");
+        markup.ShouldContain("payload-inspector-node-setting-line");
+        markup.ShouldContain("payload-inspector-node-token-group");
+        markup.ShouldContain("aria-label=\"Payload inspector decode behavior\"");
+        markup.ShouldContain("<span>Input</span>");
+        markup.ShouldContain("<span>Output</span>");
+        markup.ShouldContain("<span>Decode</span>");
+        markup.ShouldNotContain("payload-inspector-node-readonly");
+        markup.ShouldNotContain("payload-inspector-node-contract-table");
+        markup.ShouldNotContain("payload-inspector-node-contract-head");
+        markup.ShouldNotContain("payload-inspector-node-contract-line");
+        markup.ShouldNotContain("payload-inspector-node-contract-panel");
+        markup.ShouldNotContain("payload-inspector-node-panel-header");
+        markup.ShouldNotContain("payload-inspector-node-panel-kicker");
+        markup.ShouldNotContain("payload-inspector-node-panel-token");
+        markup.ShouldNotContain("payload-inspector-node-contract-row");
+        markup.ShouldNotContain("payload-inspector-node-editor-row");
+        markup.ShouldNotContain("payload-inspector-node-behavior");
+        markup.ShouldNotContain("payload-inspector-node-editor-overview");
+        markup.ShouldNotContain("payload-inspector-node-editor-meta");
+        markup.ShouldNotContain("payload-inspector-node-editor-panels");
+        markup.ShouldNotContain("payload-inspector-node-editor-panel");
+        markup.ShouldNotContain("payload-inspector-node-editor-contracts");
+        markup.ShouldNotContain("Detect from payload");
+        markup.ShouldNotContain("Automatic");
+        markup.ShouldNotContain("aria-label=\"Payload inspector input contract\"");
+        markup.ShouldNotContain("aria-label=\"Payload inspector output contract\"");
+        markup.ShouldNotContain("payload-inspector-node-section-heading");
+        markup.ShouldNotContain("payload-inspector-node-editor-contract");
+        markup.ShouldNotContain("Envelope fields");
+        markup.ShouldNotContain("Inspection fields");
+        markup.ShouldNotContain("payload-inspector-node-mode");
+        markup.ShouldNotContain("Automatic payload inspection");
+        markup.ShouldNotContain("Configuration");
+        markup.ShouldNotContain("Fixed");
+        markup.ShouldNotContain("Read only");
+        markup.ShouldNotContain("Decode envelope payloads");
+        markup.ShouldNotContain("<span>Role</span>");
+        markup.ShouldNotContain("<span>Contract</span>");
+        markup.ShouldNotContain("<span>Fields</span>");
+        markup.ShouldNotContain("<MudText");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("d-flex");
+        markup.ShouldNotContain("gap-1");
+
+        css.ShouldContain(".payload-inspector-node-summary");
+        css.ShouldContain(".payload-inspector-node-meta");
+        css.ShouldContain("grid-template-columns: 76px minmax(0, 1fr) 98px;");
+        css.ShouldContain(".payload-inspector-node-contracts");
+        css.ShouldContain(".payload-inspector-node-contract");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain(".payload-inspector-node-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".payload-inspector-node-editor");
+        css.ShouldContain(".payload-inspector-node-config-summary");
+        css.ShouldContain(".payload-inspector-node-setting-line");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("grid-template-columns: 68px minmax(172px, 0.9fr) minmax(0, 1.3fr);");
+        css.ShouldContain(".payload-inspector-node-setting-line:first-child");
+        css.ShouldContain(".payload-inspector-node-token-group");
+        css.ShouldNotContain(".payload-inspector-node-readonly");
+        css.ShouldNotContain(".payload-inspector-node-contract-table");
+        css.ShouldNotContain(".payload-inspector-node-contract-head");
+        css.ShouldNotContain(".payload-inspector-node-contract-line");
+        css.ShouldNotContain(".payload-inspector-node-contract-panel");
+        css.ShouldNotContain(".payload-inspector-node-panel-header");
+        css.ShouldNotContain(".payload-inspector-node-panel-kicker");
+        css.ShouldNotContain(".payload-inspector-node-panel-token");
+        css.ShouldNotContain(".payload-inspector-node-contract-row");
+        css.ShouldNotContain(".payload-inspector-node-editor-row");
+        css.ShouldNotContain(".payload-inspector-node-behavior");
+        css.ShouldNotContain(".payload-inspector-node-editor-overview");
+        css.ShouldNotContain(".payload-inspector-node-editor-meta");
+        css.ShouldNotContain(".payload-inspector-node-editor-contracts");
+        css.ShouldNotContain(".payload-inspector-node-editor-panels");
+        css.ShouldNotContain(".payload-inspector-node-editor-panel");
+        css.ShouldNotContain(".payload-inspector-node-section-heading");
+        css.ShouldNotContain(".payload-inspector-node-mode");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".payload-inspector-node-editor-grid");
+        css.ShouldNotContain("border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 46%, transparent);");
+        css.ShouldNotContain("grid-template-columns: 74px minmax(160px, 1fr) minmax(0, 1.6fr);");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void GenericFlowNodeWidget_UsesFlatFallbackSummary()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Generic",
+            "GenericFlowNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Generic",
+            "GenericFlowNodeWidget.razor.css"));
+
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("generic-node-summary");
+        markup.ShouldContain("generic-node-description");
+        markup.ShouldContain("SummaryCaption");
+        markup.ShouldContain("generic-node-meta");
+        markup.ShouldContain("InputCount");
+        markup.ShouldContain("OutputCount");
+        markup.ShouldContain("generic-node-ports");
+        markup.ShouldContain("aria-label=\"Generic node ports\"");
+        markup.ShouldContain("OutputPortPreview");
+        markup.ShouldContain("InputPortPreview");
+        markup.ShouldContain("PortPreviewOverflow");
+        markup.ShouldContain("generic-node-token");
+        markup.ShouldContain("generic-node-editor");
+        markup.ShouldContain("aria-label=\"Generic component details\"");
+        markup.ShouldContain("generic-node-editor-panel");
+        markup.ShouldContain("aria-label=\"Generic component contract\"");
+        markup.ShouldNotContain("generic-node-editor-panel-header");
+        markup.ShouldNotContain("generic-node-editor-kicker");
+        markup.ShouldNotContain("generic-node-editor-panel-token");
+        markup.ShouldContain("generic-node-editor-meta-row");
+        markup.ShouldContain("generic-node-editor-meta-cell");
+        markup.ShouldContain("aria-label=\"Generic component summary\"");
+        markup.ShouldContain("generic-node-editor-port-table");
+        markup.ShouldContain("aria-label=\"Generic component port contracts\"");
+        markup.ShouldContain("generic-node-editor-port-header");
+        markup.ShouldContain("SortedPortDescriptors");
+        markup.ShouldContain("generic-node-editor-port-row");
+        markup.ShouldContain("PortDirection(port)");
+        markup.ShouldContain("PortDirectionClass(port)");
+        markup.ShouldContain("generic-node-editor-port-type");
+        markup.ShouldContain("generic-node-editor-empty");
+        markup.ShouldNotContain("generic-node-editor-overview");
+        markup.ShouldNotContain("generic-node-editor-meta-item");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("flow-node-filters");
+
+        css.ShouldContain(".generic-node-summary");
+        css.ShouldContain(".generic-node-description");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".generic-node-meta");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldContain(".generic-node-ports");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, auto));");
+        css.ShouldContain(".generic-node-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".generic-node-editor");
+        css.ShouldContain(".generic-node-editor-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldNotContain(".generic-node-editor-panel-header");
+        css.ShouldNotContain(".generic-node-editor-kicker");
+        css.ShouldNotContain(".generic-node-editor-panel-token");
+        css.ShouldContain(".generic-node-editor-meta-row");
+        css.ShouldContain(".generic-node-editor-meta-cell");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(110px, 0.35fr) minmax(120px, 0.35fr);");
+        css.ShouldContain(".generic-node-editor-port-table");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);");
+        css.ShouldContain(".generic-node-editor-port-row");
+        css.ShouldContain("grid-template-columns: minmax(130px, 0.9fr) 82px minmax(160px, 1.1fr);");
+        css.ShouldContain(".generic-node-editor-port-type");
+        css.ShouldContain(".generic-node-editor-empty");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".generic-node-editor-overview");
+        css.ShouldNotContain(".generic-node-editor-meta-item");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void MqttMetricsNodeWidget_UsesScopedDisplayAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "MetricNode",
+            "MqttMetricsNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "MetricNode",
+            "MqttMetricsNodeWidget.razor.css"));
+
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("metrics-readout-grid");
+        markup.ShouldContain("--metric-readout-columns:@readoutColumns");
+        markup.ShouldContain("MetricReadouts");
+        markup.ShouldContain("metrics-top-topics");
+        markup.ShouldContain("metrics-empty");
+        markup.ShouldContain("metrics-last");
+        markup.ShouldContain("metrics-editor");
+        markup.ShouldContain("aria-label=\"MQTT metrics settings\"");
+        markup.ShouldContain("metrics-config-panel");
+        markup.ShouldContain("aria-label=\"MQTT metrics configuration\"");
+        markup.ShouldContain("metrics-settings-grid");
+        markup.ShouldContain("Label=\"Input buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Class=\"metrics-buffer-field\"");
+        markup.ShouldContain("Label=\"Rate window seconds\"");
+        markup.ShouldContain("@bind-Value=\"_rateWindowSeconds\"");
+        markup.ShouldContain("Class=\"metrics-rate-window-field\"");
+        markup.ShouldContain("Label=\"Readout columns\"");
+        markup.ShouldContain("@bind-Value=\"_metricCardColumns\"");
+        markup.ShouldContain("Class=\"metrics-readout-columns-field\"");
+        markup.ShouldContain("metrics-readout-table");
+        markup.ShouldContain("aria-label=\"Visible metric readouts\"");
+        markup.ShouldContain("metrics-readout-table-head");
+        markup.ShouldContain("metrics-readout-table-body");
+        markup.ShouldContain("_displayMetrics.Count");
+        markup.ShouldContain("metrics-readout-option-row");
+        markup.ShouldContain("metrics-readout-option-name");
+        markup.ShouldContain("aria-label=\"@($\"Show {option.Label}\")\"");
+        markup.ShouldContain("ToggleDisplayMetric");
+        markup.ShouldContain("Class=\"metrics-readout-option\"");
+        markup.ShouldNotContain("metrics-panel-header");
+        markup.ShouldNotContain("metrics-panel-kicker");
+        markup.ShouldNotContain("metrics-panel-token");
+        markup.ShouldNotContain("metrics-readout-section");
+        markup.ShouldNotContain("metrics-readout-section-header");
+        markup.ShouldNotContain("metrics-display-list");
+        markup.ShouldNotContain("metrics-readout-option-label");
+        markup.ShouldNotContain("Select at least one");
+        markup.ShouldNotContain("metrics-display-options");
+        markup.ShouldNotContain("metrics-readout-picker");
+        markup.ShouldNotContain("metrics-readout-picker-header");
+        markup.ShouldNotContain("<style>");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("<MudItem");
+        markup.ShouldNotContain("<MudDivider");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+        markup.ShouldNotContain("metrics-grid");
+        markup.ShouldNotContain("metrics-tile");
+        markup.ShouldNotContain("metrics-card-panel");
+        markup.ShouldNotContain("metrics-card-option");
+
+        css.ShouldContain(".metrics-readout-grid");
+        css.ShouldContain("grid-template-columns: repeat(var(--metric-readout-columns), minmax(0, 1fr));");
+        css.ShouldContain(".metrics-readout");
+        css.ShouldContain(".metrics-readout-value");
+        css.ShouldContain("border-left: 1px solid");
+        css.ShouldContain(".metrics-readout-retained");
+        css.ShouldContain("color-mix(in srgb, var(--mud-palette-tertiary) 68%, var(--flux-border-soft));");
+        css.ShouldNotContain("color-mix(in srgb, var(--mud-palette-warning) 76%, var(--flux-border-soft));");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".metrics-top-topics");
+        css.ShouldContain(".metrics-topic-row");
+        css.ShouldContain("background: color-mix(in srgb, var(--mud-palette-tertiary) 76%, var(--mud-palette-primary));");
+        css.ShouldNotContain("linear-gradient");
+        css.ShouldContain(".metrics-editor");
+        css.ShouldContain(".metrics-config-panel");
+        css.ShouldContain(".metrics-settings-grid");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 150px);");
+        css.ShouldContain(".metrics-readout-table");
+        css.ShouldContain(".metrics-readout-table-head");
+        css.ShouldContain(".metrics-readout-table-body");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain(".metrics-readout-option-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 56px;");
+        css.ShouldContain(".metrics-readout-option-name");
+        css.ShouldContain("justify-self: center;");
+        css.ShouldNotContain(".metrics-panel-header");
+        css.ShouldNotContain(".metrics-panel-kicker");
+        css.ShouldNotContain(".metrics-panel-token");
+        css.ShouldNotContain(".metrics-readout-section");
+        css.ShouldNotContain(".metrics-readout-section-header");
+        css.ShouldNotContain(".metrics-display-list");
+        css.ShouldNotContain(".metrics-readout-option-label");
+        css.ShouldNotContain(".metrics-display-options");
+        css.ShouldNotContain(".metrics-readout-picker");
+        css.ShouldNotContain(".metrics-readout-picker-header");
+        css.ShouldContain(".metrics-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain(".metrics-grid");
+        css.ShouldNotContain(".metrics-tile");
+        css.ShouldNotContain(".metrics-card-panel");
+        css.ShouldNotContain(".metrics-card-option");
+        css.ShouldNotContain("border-radius: 999px;");
     }
 
     [Fact]
@@ -6232,6 +8199,634 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void MetricSourceNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "MetricSource",
+            "MetricSourceNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "MetricSource",
+            "MetricSourceNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("metric-source-summary");
+        markup.ShouldContain("metric-source-meta");
+        markup.ShouldContain("MetricCaption");
+        markup.ShouldContain("LatestValue");
+        markup.ShouldContain("StartModeCaption");
+        markup.ShouldContain("BufferCaption");
+        markup.ShouldContain("metric-source-parameters");
+        markup.ShouldContain("aria-label=\"Metric source parameters\"");
+        markup.ShouldContain("ParameterPreview");
+        markup.ShouldContain("ParameterPreviewOverflow");
+        markup.ShouldContain("metric-source-contract");
+        markup.ShouldContain("aria-label=\"Metric source output fields\"");
+        markup.ShouldContain("metric-source-token");
+        markup.ShouldContain("NumberMetricReading");
+        markup.ShouldContain("metricId");
+        markup.ShouldContain("timestamp");
+        markup.ShouldContain("value");
+        markup.ShouldContain("metric-source-editor");
+        markup.ShouldContain("aria-label=\"Metric source settings\"");
+        markup.ShouldContain("metric-source-config-panel");
+        markup.ShouldContain("aria-label=\"Metric source configuration\"");
+        markup.ShouldContain("metric-source-source-grid");
+        markup.ShouldContain("aria-label=\"Metric source selection\"");
+        markup.ShouldContain("Class=\"metric-source-metric-field\"");
+        markup.ShouldContain("metric-source-description-row");
+        markup.ShouldContain("metric-source-parameter-table");
+        markup.ShouldContain("metric-source-parameter-table-head");
+        markup.ShouldContain("metric-source-parameter-grid");
+        markup.ShouldContain("aria-label=\"Metric parameters\"");
+        markup.ShouldContain("metric-source-parameter-cell");
+        markup.ShouldContain("ParameterHelpTitle(parameter)");
+        markup.ShouldNotContain("metric-source-parameter-note");
+        markup.ShouldNotContain("ParameterHelpNote(parameter)");
+        markup.ShouldContain("Class=\"metric-source-parameter-field\"");
+        markup.ShouldNotContain("HelperText=\"@parameter.HelpText\"");
+        markup.ShouldContain("metric-source-start-row");
+        markup.ShouldContain("aria-label=\"Metric source start behavior\"");
+        markup.ShouldContain("Class=\"metric-source-start-check\"");
+        markup.ShouldContain("Label=\"Emit latest reading on start\"");
+        markup.ShouldContain("Label=\"Output buffer\"");
+        markup.ShouldNotContain("Label=\"Input buffer\"");
+        markup.ShouldContain("Class=\"metric-source-buffer-field\"");
+        markup.ShouldNotContain("metric-source-main-grid");
+        markup.ShouldNotContain("metric-source-start-panel");
+        markup.ShouldNotContain("metric-source-start-option");
+        markup.ShouldNotContain("metric-source-config-grid");
+        markup.ShouldNotContain("metric-source-description-panel");
+        markup.ShouldNotContain("metric-source-parameter-panel");
+        markup.ShouldNotContain("metric-source-panel-header");
+        markup.ShouldNotContain("metric-source-panel-kicker");
+        markup.ShouldNotContain("metric-source-panel-token");
+        markup.ShouldNotContain("metric-source-parameter-section");
+        markup.ShouldNotContain("metric-source-parameter-header");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("<MudAlert");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+
+        css.ShouldContain(".metric-source-summary");
+        css.ShouldContain(".metric-source-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 64px 56px 64px;");
+        css.ShouldContain(".metric-source-parameters");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, auto));");
+        css.ShouldContain(".metric-source-contract");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain(".metric-source-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain(".metric-source-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".metric-source-editor");
+        css.ShouldContain(".metric-source-config-panel");
+        css.ShouldContain(".metric-source-source-grid");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
+        css.ShouldContain(".metric-source-description-row");
+        css.ShouldContain(".metric-source-parameter-table");
+        css.ShouldContain(".metric-source-parameter-table-head");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain(".metric-source-parameter-grid");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldContain(".metric-source-parameter-cell");
+        css.ShouldNotContain(".metric-source-parameter-note");
+        css.ShouldContain(".metric-source-start-row");
+        css.ShouldContain(".metric-source-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldNotContain(".metric-source-main-grid");
+        css.ShouldNotContain(".metric-source-start-panel");
+        css.ShouldNotContain(".metric-source-config-grid");
+        css.ShouldNotContain(".metric-source-start-option");
+        css.ShouldNotContain(".metric-source-description-panel");
+        css.ShouldNotContain(".metric-source-parameter-panel");
+        css.ShouldNotContain(".metric-source-panel-header");
+        css.ShouldNotContain(".metric-source-panel-kicker");
+        css.ShouldNotContain(".metric-source-panel-token");
+        css.ShouldNotContain(".metric-source-parameter-section");
+        css.ShouldNotContain(".metric-source-parameter-header");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void GeneratedSourceNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Sources",
+            "GeneratedSourceNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Sources",
+            "GeneratedSourceNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("generated-source-summary");
+        markup.ShouldContain("generated-source-meta");
+        markup.ShouldContain("MessageCountCaption");
+        markup.ShouldContain("FirstTopicCaption");
+        markup.ShouldContain("BufferCaption");
+        markup.ShouldContain("generated-source-previews");
+        markup.ShouldContain("aria-label=\"Generated message preview\"");
+        markup.ShouldContain("MessagePreview");
+        markup.ShouldContain("MessagePreviewOverflow");
+        markup.ShouldContain("generated-source-contract");
+        markup.ShouldContain("aria-label=\"Generated source output fields\"");
+        markup.ShouldContain("generated-source-token");
+        markup.ShouldContain("MqttEnvelope");
+        markup.ShouldContain("topic");
+        markup.ShouldContain("payload");
+        markup.ShouldContain("qos");
+        markup.ShouldContain("generated-source-editor");
+        markup.ShouldContain("aria-label=\"Generated source settings\"");
+        markup.ShouldContain("Label=\"Output buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("generated-source-message-panel");
+        markup.ShouldContain("aria-label=\"Generated messages\"");
+        markup.ShouldNotContain("generated-source-panel-header");
+        markup.ShouldNotContain("generated-source-panel-kicker");
+        markup.ShouldNotContain("generated-source-panel-token");
+        markup.ShouldNotContain("MessagePanelCaption");
+        markup.ShouldContain("generated-source-action-row");
+        markup.ShouldContain("aria-label=\"Generated source actions\"");
+        markup.ShouldContain("generated-source-message-header");
+        markup.ShouldContain("aria-hidden=\"true\"");
+        markup.ShouldContain("<span>Payload</span>");
+        markup.ShouldContain("<span>Retained</span>");
+        markup.ShouldContain("<span>Received at</span>");
+        markup.ShouldContain("generated-source-message-row");
+        markup.ShouldContain("generated-source-message-main");
+        markup.ShouldContain("generated-source-topic-field");
+        markup.ShouldContain("Placeholder=\"@($\"Topic {index + 1}\")\"");
+        markup.ShouldContain("aria-label=\"@($\"Generated message {index + 1} topic\")\"");
+        markup.ShouldContain("generated-source-qos-field");
+        markup.ShouldContain("generated-source-retain-cell");
+        markup.ShouldContain("Retain generated message");
+        markup.ShouldNotContain("<span>Retain</span>");
+        markup.ShouldContain("generated-source-payload-field");
+        markup.ShouldContain("Placeholder=\"Payload\"");
+        markup.ShouldContain("generated-source-received-field");
+        markup.ShouldContain("Placeholder=\"Received at\"");
+        markup.ShouldContain("AddMessageAsync");
+        markup.ShouldContain("aria-label=\"Add generated message\"");
+        markup.ShouldContain("RemoveMessage(index)");
+        markup.ShouldContain("aria-label=\"@($\"Remove generated message {index + 1}\")\"");
+        markup.ShouldNotContain("generated-source-message-table");
+        markup.ShouldNotContain("generated-source-table-header");
+        markup.ShouldNotContain("generated-source-table-title");
+        markup.ShouldNotContain("generated-source-table-actions");
+        markup.ShouldNotContain("generated-source-column-header");
+        markup.ShouldNotContain("generated-source-message-detail");
+        markup.ShouldNotContain("Label=\"Payload\"");
+        markup.ShouldNotContain("Label=\"Received at\"");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("<MudDivider");
+        markup.ShouldNotContain("flow-node-filters");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+
+        css.ShouldContain(".generated-source-summary");
+        css.ShouldContain(".generated-source-meta");
+        css.ShouldContain("grid-template-columns: 74px minmax(0, 1fr) 70px;");
+        css.ShouldContain(".generated-source-previews");
+        css.ShouldContain(".generated-source-preview-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto;");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".generated-source-contract");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain(".generated-source-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".generated-source-editor");
+        css.ShouldContain(".generated-source-message-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldNotContain(".generated-source-panel-header");
+        css.ShouldNotContain(".generated-source-panel-kicker");
+        css.ShouldNotContain(".generated-source-panel-token");
+        css.ShouldContain(".generated-source-action-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 28px;");
+        css.ShouldContain(".generated-source-message-header");
+        css.ShouldContain(".generated-source-message-row");
+        css.ShouldContain(".generated-source-message-main");
+        css.ShouldNotContain(".generated-source-message-detail");
+        css.ShouldContain("grid-template-columns: minmax(150px, 0.88fr) minmax(240px, 1.18fr) 96px 70px minmax(150px, 0.74fr) 30px;");
+        css.ShouldContain("justify-content: center;");
+        css.ShouldNotContain(".generated-source-retain-cell > span");
+        css.ShouldContain("min-height: 42px;");
+        css.ShouldContain(".generated-source-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldNotContain(".generated-source-message-table");
+        css.ShouldNotContain(".generated-source-table-header");
+        css.ShouldNotContain(".generated-source-table-title");
+        css.ShouldNotContain(".generated-source-table-actions");
+        css.ShouldNotContain(".generated-source-column-header");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void ReplaySourceNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Sources",
+            "ReplaySourceNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Sources",
+            "ReplaySourceNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("replay-source-summary");
+        markup.ShouldContain("replay-source-meta");
+        markup.ShouldContain("SessionCaption");
+        markup.ShouldContain("SpeedCaption");
+        markup.ShouldContain("BufferCaption");
+        markup.ShouldContain("replay-source-contract");
+        markup.ShouldContain("aria-label=\"Replay source output fields\"");
+        markup.ShouldContain("replay-source-token");
+        markup.ShouldContain("MqttEnvelope");
+        markup.ShouldContain("topic");
+        markup.ShouldContain("payload");
+        markup.ShouldContain("replay-source-editor");
+        markup.ShouldContain("aria-label=\"Replay source settings\"");
+        markup.ShouldContain("replay-source-playback-panel");
+        markup.ShouldContain("aria-label=\"Replay playback configuration\"");
+        markup.ShouldNotContain("replay-source-panel-header");
+        markup.ShouldNotContain("replay-source-panel-kicker");
+        markup.ShouldNotContain("replay-source-panel-token");
+        markup.ShouldNotContain("SessionOptionCountCaption");
+        markup.ShouldContain("replay-source-source-row");
+        markup.ShouldContain("Class=\"replay-source-session-field\"");
+        markup.ShouldContain("replay-source-session-option");
+        markup.ShouldContain("Label=\"Session\"");
+        markup.ShouldContain("aria-label=\"Replay session\"");
+        markup.ShouldContain("@bind-Value=\"_sessionId\"");
+        markup.ShouldContain("Label=\"Session ID\"");
+        markup.ShouldContain("aria-label=\"Replay session ID\"");
+        markup.ShouldNotContain("replay-source-main-grid");
+        markup.ShouldNotContain("replay-source-playback-grid");
+        markup.ShouldNotContain("replay-source-speed-cell");
+        markup.ShouldNotContain("replay-source-field-note");
+        markup.ShouldNotContain("1x is real time");
+        markup.ShouldContain("Label=\"Playback speed\"");
+        markup.ShouldContain("aria-label=\"Replay playback speed\"");
+        markup.ShouldContain("@bind-Value=\"_speed\"");
+        markup.ShouldContain("Label=\"Output buffer\"");
+        markup.ShouldContain("aria-label=\"Replay output buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldNotContain("replay-source-config-grid");
+        markup.ShouldNotContain("replay-source-number-grid");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+
+        css.ShouldContain(".replay-source-summary");
+        css.ShouldContain(".replay-source-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 70px 70px;");
+        css.ShouldContain(".replay-source-contract");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, auto));");
+        css.ShouldContain(".replay-source-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain(".replay-source-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".replay-source-editor");
+        css.ShouldContain(".replay-source-playback-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldNotContain(".replay-source-panel-header");
+        css.ShouldNotContain(".replay-source-panel-kicker");
+        css.ShouldNotContain(".replay-source-panel-token");
+        css.ShouldContain(".replay-source-source-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px 150px;");
+        css.ShouldNotContain(".replay-source-config-grid");
+        css.ShouldNotContain(".replay-source-main-grid");
+        css.ShouldNotContain(".replay-source-playback-grid");
+        css.ShouldNotContain(".replay-source-speed-cell");
+        css.ShouldNotContain(".replay-source-field-note");
+        css.ShouldContain(".replay-source-session-option");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".replay-source-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 640px)");
+        css.ShouldNotContain(".replay-source-number-grid");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void StoredSessionSourceNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "SessionSource",
+            "StoredSessionSourceNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "SessionSource",
+            "StoredSessionSourceNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("stored-session-source-summary");
+        markup.ShouldContain("stored-session-source-meta");
+        markup.ShouldContain("SessionCaption");
+        markup.ShouldContain("TimingCaption");
+        markup.ShouldContain("SpeedCaption");
+        markup.ShouldContain("BufferCaption");
+        markup.ShouldContain("stored-session-source-contract");
+        markup.ShouldContain("aria-label=\"Stored session source output fields\"");
+        markup.ShouldContain("stored-session-source-token");
+        markup.ShouldContain("MqttEnvelope");
+        markup.ShouldContain("topic");
+        markup.ShouldContain("payload");
+        markup.ShouldContain("stored-session-source-editor");
+        markup.ShouldContain("aria-label=\"Stored session source settings\"");
+        markup.ShouldContain("stored-session-source-playback-panel");
+        markup.ShouldContain("aria-label=\"Stored session playback configuration\"");
+        markup.ShouldNotContain("stored-session-source-panel-header");
+        markup.ShouldNotContain("stored-session-source-panel-kicker");
+        markup.ShouldNotContain("stored-session-source-panel-token");
+        markup.ShouldNotContain("SessionOptionCountCaption");
+        markup.ShouldContain("stored-session-source-source-row");
+        markup.ShouldContain("Class=\"stored-session-source-session-field\"");
+        markup.ShouldContain("stored-session-source-session-option");
+        markup.ShouldContain("stored-session-source-empty");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("Label=\"Session\"");
+        markup.ShouldContain("aria-label=\"Stored session\"");
+        markup.ShouldContain("@bind-Value=\"_sessionId\"");
+        markup.ShouldContain("Label=\"Preserve timing\"");
+        markup.ShouldContain("aria-label=\"Preserve original session timing\"");
+        markup.ShouldContain("@bind-Value=\"_preserveTiming\"");
+        markup.ShouldContain("Label=\"Playback speed\"");
+        markup.ShouldContain("aria-label=\"Stored session playback speed\"");
+        markup.ShouldContain("@bind-Value=\"_speed\"");
+        markup.ShouldContain("Disabled=\"@(!_preserveTiming)\"");
+        markup.ShouldNotContain("stored-session-source-main-grid");
+        markup.ShouldNotContain("stored-session-source-timing-grid");
+        markup.ShouldNotContain("stored-session-source-speed-cell");
+        markup.ShouldNotContain("stored-session-source-field-note");
+        markup.ShouldNotContain("1x is real time");
+        markup.ShouldNotContain("HelperText=\"1 = real-time\"");
+        markup.ShouldContain("Label=\"Output buffer\"");
+        markup.ShouldContain("aria-label=\"Stored session output buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldNotContain("stored-session-source-config-grid");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("<MudAlert");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+
+        css.ShouldContain(".stored-session-source-summary");
+        css.ShouldContain(".stored-session-source-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 76px 64px 64px;");
+        css.ShouldContain(".stored-session-source-contract");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, auto));");
+        css.ShouldContain(".stored-session-source-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain(".stored-session-source-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".stored-session-source-editor");
+        css.ShouldContain(".stored-session-source-playback-panel");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding: 14px;");
+        css.ShouldNotContain(".stored-session-source-panel-header");
+        css.ShouldNotContain(".stored-session-source-panel-kicker");
+        css.ShouldNotContain(".stored-session-source-panel-token");
+        css.ShouldContain(".stored-session-source-source-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(170px, 0.48fr) 150px 150px;");
+        css.ShouldNotContain(".stored-session-source-config-grid");
+        css.ShouldContain("min-height: 42px;");
+        css.ShouldNotContain(".stored-session-source-main-grid");
+        css.ShouldNotContain(".stored-session-source-timing-grid");
+        css.ShouldNotContain(".stored-session-source-speed-cell");
+        css.ShouldNotContain(".stored-session-source-field-note");
+        css.ShouldContain(".stored-session-source-session-option");
+        css.ShouldContain(".stored-session-source-empty");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".stored-session-source-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
+    public void TimerNodeWidget_UsesCompactSummaryAndFlatEditor()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Timers",
+            "TimerNodeWidget.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes",
+            "Timers",
+            "TimerNodeWidget.razor.css"));
+
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("CategoryColor=\"@TimerCategoryColor\"");
+        markup.ShouldContain("TimerCategoryColor");
+        markup.ShouldContain("Color.Secondary");
+        markup.ShouldContain("Color.Primary");
+        markup.ShouldContain("TimerTokenClass");
+        markup.ShouldNotContain("CategoryColor=\"@Color.Warning\"");
+        markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        markup.ShouldContain("ShowDisplayName=\"true\"");
+        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("timer-node-summary");
+        markup.ShouldContain("timer-node-meta");
+        markup.ShouldContain("ModeCaption");
+        markup.ShouldContain("PrimaryCaption");
+        markup.ShouldContain("SecondaryCaption");
+        markup.ShouldContain("BoundedCapacityCaption");
+        markup.ShouldContain("timer-node-contract");
+        markup.ShouldContain("aria-label=\"@ContractAriaLabel\"");
+        markup.ShouldContain("timer-node-token");
+        markup.ShouldContain("class=\"@TimerTokenClass\"");
+        markup.ShouldContain("TimerTick");
+        markup.ShouldContain("ScheduleTick");
+        markup.ShouldContain("timer-node-editor");
+        markup.ShouldContain("aria-label=\"Timer settings\"");
+        markup.ShouldContain("timer-node-config-section interval");
+        markup.ShouldContain("aria-label=\"Interval timer settings\"");
+        markup.ShouldContain("timer-node-config-section schedule");
+        markup.ShouldContain("aria-label=\"Scheduled timer settings\"");
+        markup.ShouldContain("timer-node-config-section passthrough");
+        markup.ShouldContain("aria-label=\"Delay timer settings\"");
+        markup.ShouldContain("aria-label=\"Debounce timer settings\"");
+        markup.ShouldContain("timer-node-config-section passthrough throttle");
+        markup.ShouldContain("aria-label=\"Throttle timer settings\"");
+        markup.ShouldContain("timer-node-timing-grid");
+        markup.ShouldContain("timer-node-passthrough-grid");
+        markup.ShouldContain("timer-node-limit-row interval");
+        markup.ShouldContain("timer-node-limit-row schedule");
+        markup.ShouldContain("timer-node-option-row");
+        markup.ShouldContain("timer-node-option-cell");
+        markup.ShouldContain("Label=\"Interval ms\"");
+        markup.ShouldContain("@bind-Value=\"_intervalMilliseconds\"");
+        markup.ShouldContain("Label=\"Initial delay ms\"");
+        markup.ShouldContain("@bind-Value=\"_initialDelayMilliseconds\"");
+        markup.ShouldContain("Label=\"Cron\"");
+        markup.ShouldContain("@bind-Value=\"_cron\"");
+        markup.ShouldContain("Label=\"Time zone\"");
+        markup.ShouldContain("@bind-Value=\"_timeZoneId\"");
+        markup.ShouldContain("Label=\"Input type\"");
+        markup.ShouldContain("@bind-Value=\"_inputType\"");
+        markup.ShouldContain("Label=\"Delay ms\"");
+        markup.ShouldContain("@bind-Value=\"_delayMilliseconds\"");
+        markup.ShouldContain("Label=\"Quiet period ms\"");
+        markup.ShouldContain("@bind-Value=\"_quietPeriodMilliseconds\"");
+        markup.ShouldContain("Label=\"Output buffer\"");
+        markup.ShouldContain("Label=\"Buffer\"");
+        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Label=\"Emit immediately\"");
+        markup.ShouldContain("@bind-Value=\"_emitImmediately\"");
+        markup.ShouldContain("Label=\"Emit first immediately\"");
+        markup.ShouldContain("@bind-Value=\"_emitFirstImmediately\"");
+        markup.ShouldContain("InputTypeSelect()");
+        markup.ShouldContain("BufferField()");
+        markup.ShouldNotContain("HelperText=\"0 = unlimited\"");
+        markup.ShouldNotContain("<span>Emission</span>");
+        markup.ShouldNotContain("timer-node-config-grid");
+        markup.ShouldNotContain("timer-node-limit-panel");
+        markup.ShouldNotContain("timer-node-option-panel");
+        markup.ShouldNotContain("timer-node-check-row");
+        markup.ShouldNotContain("timer-node-panel-header");
+        markup.ShouldNotContain("timer-node-panel-kicker");
+        markup.ShouldNotContain("timer-node-panel-token");
+        markup.ShouldNotContain("<Stat ");
+        markup.ShouldNotContain("<MudStack");
+        markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudGrid");
+        markup.ShouldNotContain("d-flex flex-wrap gap-1");
+
+        css.ShouldContain(".timer-node-summary");
+        css.ShouldContain(".timer-node-meta");
+        css.ShouldContain("grid-template-columns: 72px minmax(0, 1fr) minmax(0, 0.82fr) 64px;");
+        css.ShouldContain(".timer-node-contract");
+        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain(".timer-node-contract-label");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain(".timer-node-token");
+        css.ShouldContain("color-mix(in srgb, var(--mud-palette-primary) 78%, var(--mud-palette-text-primary));");
+        css.ShouldContain(".timer-node-token.passthrough");
+        css.ShouldContain("color-mix(in srgb, var(--mud-palette-secondary) 78%, var(--mud-palette-text-primary));");
+        css.ShouldNotContain("color-mix(in srgb, var(--mud-palette-warning) 76%, var(--mud-palette-text-primary));");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldContain(".timer-node-editor");
+        css.ShouldContain(".timer-node-config-section");
+        css.ShouldContain(".timer-node-timing-grid");
+        css.ShouldContain(".timer-node-passthrough-grid");
+        css.ShouldContain(".timer-node-limit-row");
+        css.ShouldContain(".timer-node-option-row");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldContain("grid-template-columns: 118px 136px minmax(132px, 0.78fr);");
+        css.ShouldContain("grid-template-columns: 132px 148px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 160px 148px;");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain(".timer-node-option-cell");
+        css.ShouldContain("align-items: center;");
+        css.ShouldContain("min-height: 36px;");
+        css.ShouldContain(".timer-node-editor ::deep(.mud-input-control)");
+        css.ShouldContain("@media (max-width: 760px)");
+        css.ShouldNotContain(".timer-node-config-grid");
+        css.ShouldNotContain(".timer-node-limit-panel");
+        css.ShouldNotContain(".timer-node-option-panel");
+        css.ShouldNotContain(".timer-node-option-cell > span");
+        css.ShouldNotContain(".timer-node-check-row");
+        css.ShouldNotContain(".timer-node-panel-header");
+        css.ShouldNotContain(".timer-node-panel-kicker");
+        css.ShouldNotContain(".timer-node-panel-token");
+        css.ShouldNotContain(".flow-node-filters");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
     public void NodeWidgetShell_UsesCompactNodeChrome()
     {
         var root = FindRepositoryRoot();
@@ -6242,14 +8837,6 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Diagram",
             "NodeWidgetShell.razor"));
-        var statMarkup = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FluxMq.UI",
-            "Components",
-            "Workspace",
-            "Nodes",
-            "Stat.razor"));
         var css = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -6263,6 +8850,7 @@ public sealed class DashboardEventFilterCatalogTests
         shellMarkup.ShouldContain("ShowDisplayName");
         shellMarkup.ShouldContain("ShowCategoryChip");
         shellMarkup.ShouldContain("HeaderBadge");
+        shellMarkup.ShouldContain("EditDialogContentClass");
         shellMarkup.ShouldContain("EditorValidationError");
         shellMarkup.ShouldContain("flow-node-type-icon");
         shellMarkup.ShouldContain("flow-node-name");
@@ -6270,27 +8858,37 @@ public sealed class DashboardEventFilterCatalogTests
         shellMarkup.ShouldNotContain("Color=\"Color.Secondary\" Class=\"flow-node-display-name\"");
         shellMarkup.ShouldContain("flow-node-action flow-node-edit");
         shellMarkup.ShouldContain("Icons.Material.Filled.Settings");
-        shellMarkup.ShouldContain("flow-node-category-chip");
+        shellMarkup.ShouldContain("flow-node-category-token");
         shellMarkup.ShouldContain("flow-node-divider");
         shellMarkup.ShouldContain("flow-node-activity");
+        shellMarkup.ShouldContain("flow-node-activity-icon");
+        shellMarkup.ShouldContain("role=\"status\"");
+        shellMarkup.ShouldContain("aria-live=\"polite\"");
         shellMarkup.ShouldContain("flow-node-collapsed-activity");
-        statMarkup.ShouldContain("node-stat-icon");
+        shellMarkup.ShouldNotContain("<MudChip");
+        shellMarkup.ShouldNotContain("<MudAlert");
+        shellMarkup.ShouldNotContain("<MudDivider");
 
         css.ShouldContain(".flow-designer-root ::deep .flow-node-action");
         css.ShouldContain("flex: 0 0 24px;");
-        css.ShouldContain(".flow-designer-root ::deep .flow-node-category-chip");
-        css.ShouldContain("max-width: 72px;");
+        css.ShouldContain(".flow-designer-root ::deep .flow-node-category-token");
+        css.ShouldContain("max-width: 74px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-display-name");
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-secondary) 72%, var(--mud-palette-text-disabled));");
         css.ShouldContain("font-weight: 620;");
         css.ShouldContain("opacity: 0.9;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-divider");
+        css.ShouldContain("height: 1px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-activity");
         css.ShouldContain("align-items: center;");
-        css.ShouldContain("min-height: 32px;");
+        css.ShouldContain("grid-template-columns: 16px minmax(0, 1fr);");
+        css.ShouldContain("min-height: 30px;");
         css.ShouldContain("margin: 6px -8px -6px;");
-        css.ShouldContain("grid-template-columns: 16px auto minmax(0, 1fr);");
-        css.ShouldContain(".flow-designer-root ::deep .node-stat-icon");
+        css.ShouldNotContain(".flow-node-category-chip");
+        css.ShouldNotContain(".mud-alert-message");
+        css.ShouldNotContain(".mud-alert-icon");
+        css.ShouldNotContain(".node-stat");
+        css.ShouldNotContain(".node-stat-icon");
     }
 
     [Fact]
@@ -6420,19 +9018,22 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("node-edit-dialog-heading");
         markup.ShouldContain("node-edit-dialog-status");
         markup.ShouldContain("node-edit-dialog-content");
+        markup.ShouldContain("ContentClassName");
+        markup.ShouldContain("[Parameter] public string? ContentClass");
         markup.ShouldContain("role=\"form\" aria-label=\"Edit node\"");
         markup.ShouldContain("node-edit-dialog-section node-edit-dialog-identity");
         markup.ShouldContain("aria-label=\"Node identity\"");
         markup.ShouldContain("node-edit-dialog-editor");
         markup.ShouldContain("Icons.Material.Filled.Settings");
-        markup.ShouldContain("aria-describedby=\"node-edit-dialog-status\"");
+        markup.ShouldContain("aria-describedby=\"@StatusElementId\"");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("OnNodeIdKeyDown");
+        markup.ShouldContain("@if (!CanSubmit)");
+        markup.ShouldContain("StatusElementId");
         markup.ShouldContain("SubmitStatusText");
-        markup.ShouldContain("SubmitStatusClass");
         markup.ShouldContain("<span id=\"node-edit-dialog-status\"");
-        markup.ShouldContain("class=\"@SubmitStatusClass\"");
+        markup.ShouldContain("class=\"node-edit-dialog-action-status\"");
         markup.ShouldContain("[Parameter] public Func<string?>? EditorValidationError");
         markup.ShouldContain("private string? _editorError;");
         markup.ShouldContain("private string? EditorError => _editorError;");
@@ -6440,6 +9041,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("RefreshValidationState();");
         markup.ShouldContain("string.IsNullOrWhiteSpace(EditorError)");
         markup.ShouldContain("NodeIdError ?? EditorError ?? \"Review required\"");
+        markup.ShouldNotContain("Ready to save");
+        markup.ShouldNotContain("SubmitStatusClass");
         markup.ShouldContain("node-edit-dialog-actions");
         markup.ShouldContain("aria-label=\"Cancel node edit\"");
         markup.ShouldContain("aria-label=\"Save node edit\"");
@@ -6460,20 +9063,29 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("background: var(--flux-surface);");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain("padding: 12px;");
-        css.ShouldContain("max-height: min(70vh, 640px);");
+        css.ShouldContain("max-height: min(82vh, 760px);");
         css.ShouldContain(".node-edit-dialog-section");
         css.ShouldContain("padding: 0;");
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-primary) 78%, var(--mud-palette-text-secondary));");
         css.ShouldContain(".node-edit-dialog-editor");
         css.ShouldContain("display: contents;");
+        css.ShouldContain(".node-edit-dialog-content.dynamic-mapper-dialog");
+        css.ShouldContain("grid-template-areas:");
+        css.ShouldContain("\"identity config\"");
+        css.ShouldContain("\"workbench workbench\"");
+        css.ShouldContain("overflow-x: hidden;");
         css.ShouldContain(".node-edit-dialog-content ::deep(.mud-input-control)");
         css.ShouldContain(".node-edit-dialog-content ::deep(.mud-input-label)");
         css.ShouldContain(".node-edit-dialog-content ::deep(.mud-input-root)");
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));");
-        css.ShouldContain(".node-edit-dialog-editor ::deep(.mapper-workbench .mapper-panel)");
-        css.ShouldContain("height: 360px;");
+        css.ShouldContain(".node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-workspace)");
+        css.ShouldContain(".node-edit-dialog-editor ::deep(.dynamic-mapper-workspace .dynamic-mapper-monaco-editor)");
+        css.ShouldNotContain(".node-edit-dialog-editor ::deep(.dynamic-mapper-workbench .dynamic-mapper-panel)");
+        css.ShouldNotContain("height: 96px;");
+        css.ShouldNotContain("height: 280px;");
+        css.ShouldNotContain("height: 570px;");
         css.ShouldContain(".node-edit-dialog-action-status");
-        css.ShouldContain(".node-edit-dialog-action-status.ready");
+        css.ShouldNotContain(".node-edit-dialog-action-status.ready");
         css.ShouldContain("min-height: 28px;");
         css.ShouldContain(".node-edit-dialog-actions");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 72%, var(--flux-surface));");

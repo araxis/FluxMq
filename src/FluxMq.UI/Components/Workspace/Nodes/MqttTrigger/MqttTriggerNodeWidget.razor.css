@@ -119,6 +119,8 @@
 }
 
 .mqtt-trigger-editor {
+    display: grid;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -138,6 +140,12 @@
     display: grid;
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) 190px;
+    min-width: 0;
+}
+
+.mqtt-trigger-broker-cell {
+    display: grid;
+    gap: 4px;
     min-width: 0;
 }
 

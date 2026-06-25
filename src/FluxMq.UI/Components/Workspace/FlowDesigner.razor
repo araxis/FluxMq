@@ -98,7 +98,7 @@
                                      UseNodeShape="false"
                                      NodeColor="#2DD4BF"
                                      GroupColor="#1C222D"
-                                     ViewStrokeColor="#FBBF24"
+                                     ViewStrokeColor="#38BDF8"
                                      Class="flow-navigator" />
                 </Widgets>
             </DiagramCanvas>
@@ -125,17 +125,14 @@
     @if (_selectedWorkflowLink is not null)
     {
         <div class="flow-link-condition-panel">
-            <div class="flow-link-condition-meta">
-                <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
-                <div>
-                    <span>Selected link</span>
-                    <strong>@SelectedLinkLabel</strong>
-                </div>
+            <div class="flow-link-condition-title">
+                <span>Link condition</span>
+                <strong title="@SelectedLinkLabel">@SelectedLinkLabel</strong>
             </div>
             <MudTextField T="string"
                           Value="@_selectedLinkCondition"
                           ValueChanged="@OnSelectedLinkConditionChanged"
-                          Label="Condition"
+                          Label="Expression"
                           Placeholder="input.Topic.StartsWith(&quot;factory/&quot;)"
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
@@ -145,11 +142,15 @@
                 <MudIconButton Icon="@Icons.Material.Filled.Check"
                                Size="Size.Small"
                                Color="Color.Primary"
+                               Class="flow-link-condition-action apply"
+                               aria-label="Apply link condition"
                                OnClick="@ApplySelectedLinkCondition" />
             </MudTooltip>
             <MudTooltip Text="Clear condition">
                 <MudIconButton Icon="@Icons.Material.Filled.Clear"
                                Size="Size.Small"
+                               Class="flow-link-condition-action"
+                               aria-label="Clear link condition"
                                OnClick="@ClearSelectedLinkCondition" />
             </MudTooltip>
         </div>

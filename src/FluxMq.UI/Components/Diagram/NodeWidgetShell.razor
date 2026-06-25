@@ -50,18 +50,19 @@
         }
         else if (ShowCategoryChip)
         {
-            <MudChip T="string" Size="Size.Small" Color="@CategoryColor" Class="flow-node-category-chip">@Node.Category</MudChip>
+            <span class="flow-node-category-token">@Node.Category</span>
         }
     </div>
 
     @if (!Node.IsCollapsed)
     {
-        <MudDivider Class="flow-node-divider" />
+        <div class="flow-node-divider" aria-hidden="true"></div>
         @if (!string.IsNullOrWhiteSpace(Node.ActivityText))
         {
-            <MudAlert Severity="Severity.Info" Dense="true" Variant="Variant.Outlined" Class="flow-node-activity">
-                @Node.ActivityText
-            </MudAlert>
+            <div class="flow-node-activity" role="status" aria-live="polite">
+                <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Class="flow-node-activity-icon" />
+                <span>@Node.ActivityText</span>
+            </div>
         }
         @Body
     }
@@ -137,6 +138,7 @@
     [Parameter] public bool ShowDisplayName { get; set; } = true;
     [Parameter] public bool ShowCategoryChip { get; set; } = true;
     [Parameter] public RenderFragment? HeaderBadge { get; set; }
+    [Parameter] public string? EditDialogContentClass { get; set; }
 
     /// <summary>Called before the dialog closes with Save, so the widget can flush its draft state.</summary>
     [Parameter] public EventCallback OnSave { get; set; }
@@ -257,6 +259,7 @@
             [nameof(NodeEditDialog.WorkflowName)] = Flow?.ActiveWorkflowName ?? string.Empty,
             [nameof(NodeEditDialog.CategoryColor)] = CategoryColor,
             [nameof(NodeEditDialog.EditorContent)] = Editor,
+            [nameof(NodeEditDialog.ContentClass)] = EditDialogContentClass,
             [nameof(NodeEditDialog.EditorValidationError)] = EditorValidationError,
             [nameof(NodeEditDialog.OnSave)] = OnSave,
             [nameof(NodeEditDialog.OnCancel)] = OnCancel,

@@ -4,80 +4,100 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.ViewColumn"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Small"
+                 EditDialogMaxWidth="MaxWidth.Medium"
+                 ShowHeaderIcon="false"
+                 ShowDisplayName="true"
+                 ShowCategoryChip="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <MudStack Spacing="1" Class="mt-1">
-            <div class="d-flex flex-wrap gap-1">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@Model.InputType</MudChip>
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">FlowWindow</MudChip>
+        <div class="routing-window-summary">
+            <div class="routing-window-meta">
+                <div class="routing-window-meta-item input">
+                    <span>Input</span>
+                    <strong title="@InputTypeCaption">@InputTypeCaption</strong>
+                </div>
+                <div class="routing-window-meta-item">
+                    <span>Output</span>
+                    <strong>FlowWindow</strong>
+                </div>
+                <div class="routing-window-meta-item">
+                    <span>Buffer</span>
+                    <strong>@BufferCaption</strong>
+                </div>
             </div>
-            <div class="d-flex flex-wrap gap-1">
-                @if (Model.MaxItems > 0)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">max @Model.MaxItems</MudChip>
-                }
-                @if (Model.TimeMilliseconds > 0)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">@Model.TimeMilliseconds ms</MudChip>
-                }
-                @if (Model.EmitPartialOnCompletion)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">partial</MudChip>
-                }
+
+            <div class="routing-window-limits" aria-label="Routing window limits">
+                <span class="routing-window-contract-label">Window limits</span>
+                <span class="routing-window-token">@MaxItemsCaption</span>
+                <span class="routing-window-token">@TimeCaption</span>
+                <span class="routing-window-token">@PartialCaption</span>
             </div>
-        </MudStack>
+        </div>
     </Body>
     <Editor>
-        <MudStack Spacing="2">
-            <MudSelect T="string"
-                       Label="Input type"
-                       @bind-Value="_inputType"
-                       Variant="Variant.Outlined"
-                       Margin="Margin.Dense"
-                       Dense="true">
-                @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                {
-                    <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                }
-            </MudSelect>
-            <MudGrid Spacing="2">
-                <MudItem xs="12" md="6">
+        <div class="routing-window-editor" aria-label="Routing window settings">
+            <section class="routing-window-window-panel" aria-label="Routing window configuration">
+                <div class="routing-window-source-row" aria-label="Routing window source settings">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               aria-label="Routing window input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="routing-window-input-field">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Routing window input buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-window-buffer-field" />
+                </div>
+
+                <div class="routing-window-limit-row" aria-label="Routing window limit settings">
                     <MudNumericField T="int"
                                      Label="Max items"
                                      @bind-Value="_maxItems"
+                                     aria-label="Routing window max items"
                                      Min="0"
                                      Max="100000"
                                      Step="10"
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
-                                     HelperText="0 disables count." />
-                </MudItem>
-                <MudItem xs="12" md="6">
+                                     Class="routing-window-max-items-field" />
+
                     <MudNumericField T="int"
                                      Label="Time window ms"
                                      @bind-Value="_timeMilliseconds"
+                                     aria-label="Routing window time in milliseconds"
                                      Min="0"
                                      Max="86400000"
                                      Step="100"
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
-                                     HelperText="0 disables time." />
-                </MudItem>
-            </MudGrid>
-            <MudCheckBox T="bool"
-                         Label="Emit partial on completion"
-                         @bind-Value="_emitPartialOnCompletion" />
-            <MudNumericField T="int"
-                             Label="Input buffer"
-                             @bind-Value="_boundedCapacity"
-                             Min="1"
-                             Max="100000"
-                             Step="100"
-                             Variant="Variant.Outlined"
-                             Margin="Margin.Dense" />
-        </MudStack>
+                                     Class="routing-window-time-field" />
+
+                    <div class="routing-window-partial-option">
+                        <MudCheckBox T="bool"
+                                     Label="Emit partial"
+                                     aria-label="Emit partial window on completion"
+                                     @bind-Value="_emitPartialOnCompletion"
+                                     Class="routing-window-partial-check" />
+                    </div>
+                </div>
+            </section>
+        </div>
     </Editor>
 </NodeWidgetShell>
 
@@ -91,6 +111,27 @@
     private int _timeMilliseconds = RoutingWindowNodeModel.DefaultTimeMilliseconds;
     private bool _emitPartialOnCompletion = RoutingWindowNodeModel.DefaultEmitPartialOnCompletion;
     private int _boundedCapacity = RoutingWindowNodeModel.DefaultBoundedCapacity;
+
+    private string InputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
+    private int NormalizedMaxItems => RoutingNodeConfiguration.NormalizeNonNegativeInt(
+        Model.MaxItems,
+        RoutingWindowNodeModel.DefaultMaxItems);
+    private int NormalizedTimeMilliseconds => RoutingNodeConfiguration.NormalizeNonNegativeInt(
+        Model.TimeMilliseconds,
+        RoutingWindowNodeModel.DefaultTimeMilliseconds);
+    private int EffectiveMaxItems => NormalizedMaxItems == 0 && NormalizedTimeMilliseconds == 0
+        ? RoutingWindowNodeModel.DefaultMaxItems
+        : NormalizedMaxItems;
+    private string MaxItemsCaption => EffectiveMaxItems > 0
+        ? $"max {EffectiveMaxItems}"
+        : "count off";
+    private string TimeCaption => NormalizedTimeMilliseconds > 0
+        ? $"{NormalizedTimeMilliseconds} ms"
+        : "time off";
+    private string PartialCaption => Model.EmitPartialOnCompletion ? "partial on" : "partial off";
+    private string BufferCaption => RoutingNodeConfiguration.NormalizePositiveInt(
+        Model.BoundedCapacity,
+        RoutingWindowNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     protected override void OnParametersSet() => LoadDraft();
 

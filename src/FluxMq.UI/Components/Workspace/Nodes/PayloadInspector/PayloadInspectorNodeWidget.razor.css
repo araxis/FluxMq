@@ -1,0 +1,164 @@
+.payload-inspector-node-summary {
+    display: grid;
+    gap: 5px;
+    margin-top: 3px;
+    min-width: 0;
+}
+
+.payload-inspector-node-meta {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: 76px minmax(0, 1fr) 98px;
+    min-width: 0;
+}
+
+.payload-inspector-node-meta-item {
+    align-content: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 24%, transparent);
+    border-radius: 4px;
+    display: grid;
+    gap: 2px;
+    min-height: 30px;
+    min-width: 0;
+    padding: 4px 5px;
+}
+
+.payload-inspector-node-meta-item span,
+.payload-inspector-node-contract-label,
+.payload-inspector-node-setting-line > span {
+    color: var(--flux-text-muted);
+    font-size: 0.52rem;
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    text-transform: uppercase;
+}
+
+.payload-inspector-node-meta-item strong,
+.payload-inspector-node-setting-line > strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    font-size: 0.66rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1.12;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.payload-inspector-node-contracts {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    padding: 5px 2px 0;
+}
+
+.payload-inspector-node-contract {
+    display: grid;
+    gap: 4px 3px;
+    grid-template-columns: repeat(4, minmax(0, auto));
+    justify-content: start;
+    min-width: 0;
+}
+
+.payload-inspector-node-contract-label {
+    grid-column: 1 / -1;
+    white-space: nowrap;
+}
+
+.payload-inspector-node-token {
+    border: 1px solid color-mix(in srgb, var(--mud-palette-secondary) 28%, var(--flux-border-soft));
+    border-radius: 4px;
+    color: color-mix(in srgb, var(--mud-palette-secondary) 78%, var(--mud-palette-text-primary));
+    font-size: 0.52rem;
+    font-weight: 760;
+    line-height: 1;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 3px 5px;
+    text-align: center;
+    white-space: normal;
+}
+
+.payload-inspector-node-editor {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+.payload-inspector-node-config-summary {
+    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
+    border-radius: 6px;
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    padding: 14px;
+}
+
+.payload-inspector-node-setting-line {
+    align-items: center;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 68px minmax(172px, 0.9fr) minmax(0, 1.3fr);
+    min-width: 0;
+}
+
+.payload-inspector-node-setting-line {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
+    min-height: 42px;
+    padding: 6px 2px;
+}
+
+.payload-inspector-node-setting-line:first-child {
+    border-top: 0;
+}
+
+.payload-inspector-node-setting-line > span {
+    font-size: 0.58rem;
+    font-weight: 760;
+}
+
+.payload-inspector-node-setting-line > strong {
+    font-size: 0.78rem;
+    font-weight: 760;
+}
+
+.payload-inspector-node-token-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+@media (max-width: 640px) {
+    .payload-inspector-node-meta {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .payload-inspector-node-contract {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .payload-inspector-node-contract-label {
+        grid-column: 1 / -1;
+    }
+
+    .payload-inspector-node-setting-line {
+        align-items: start;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .payload-inspector-node-setting-line {
+        padding: 8px 0;
+    }
+
+    .payload-inspector-node-token-group {
+        justify-content: flex-start;
+    }
+}
