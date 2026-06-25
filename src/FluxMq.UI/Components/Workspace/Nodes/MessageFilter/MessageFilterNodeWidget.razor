@@ -48,20 +48,26 @@
     <Editor>
         <div class="message-filter-editor" aria-label="Flow filter settings">
             <section class="message-filter-rules-surface" aria-label="Filter rules">
-                <div class="message-filter-rule-title">
-                    <span>Rule definition</span>
-                    <small>Topic patterns are used unless a filter expression is set</small>
+                <div class="message-filter-editor-status" aria-label="Filter rule status">
+                    <div>
+                        <span>Mode</span>
+                        <strong>@DraftModeCaption</strong>
+                    </div>
+                    <div>
+                        <span>Patterns</span>
+                        <strong>@DraftPatternCountCaption</strong>
+                    </div>
                 </div>
 
                 <div class="message-filter-rule-composer">
-                    <div class="message-filter-expression-column" aria-label="Expression filter">
+                    <div class="message-filter-expression-row" aria-label="Expression filter">
                         <MudTextField T="string"
                                       @bind-Value="_expression"
                                       Label="Filter expression"
                                       aria-label="Filter expression"
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
-                                      Lines="8"
+                                      Lines="7"
                                       Class="message-filter-expression-field"
                                       Placeholder='topic.StartsWith("sensors/") && payload.Length < 1024' />
                         <div class="message-filter-reference" aria-label="Filter expression variables">
@@ -73,8 +79,8 @@
                         </div>
                     </div>
 
-                    <aside class="message-filter-pattern-column" aria-label="Topic pattern filters">
-                        <div class="message-filter-column-heading">
+                    <div class="message-filter-pattern-table" aria-label="Topic pattern filters">
+                        <div class="message-filter-pattern-table-header">
                             <span>Topic patterns</span>
                             <MudTooltip Text="Add pattern">
                                 <MudIconButton Size="Size.Small"
@@ -114,7 +120,7 @@
                                 <div class="message-filter-empty" role="status">No topic patterns</div>
                             }
                         </div>
-                    </aside>
+                    </div>
                 </div>
             </section>
         </div>
@@ -141,6 +147,15 @@
         => Model.Patterns.Where(static pattern => !string.IsNullOrWhiteSpace(pattern)).Take(MaxSummaryPatterns).ToArray();
     private int PatternOverflow
         => Math.Max(0, Model.Patterns.Count(static pattern => !string.IsNullOrWhiteSpace(pattern)) - MaxSummaryPatterns);
+    private string DraftModeCaption => string.IsNullOrWhiteSpace(_expression) ? "Topic patterns" : "Expression";
+    private string DraftPatternCountCaption
+    {
+        get
+        {
+            var count = _draftPatterns.Count(static pattern => !string.IsNullOrWhiteSpace(pattern));
+            return $"{count} {(count == 1 ? "pattern" : "patterns")}";
+        }
+    }
 
     private const int MaxSummaryPatterns = 3;
 
