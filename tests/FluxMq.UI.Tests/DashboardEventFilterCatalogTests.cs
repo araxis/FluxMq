@@ -7659,7 +7659,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".routing-window-editor");
         css.ShouldContain(".routing-window-primary-row");
-        css.ShouldContain("gap: 10px;");
+        css.ShouldNotContain("gap: 10px;");
+        css.ShouldContain("gap: 8px;");
+        css.ShouldContain("gap: 7px;");
         css.ShouldNotContain(".routing-window-editor-surface");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
@@ -7676,6 +7678,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) minmax(124px, 0.6fr);");
         css.ShouldContain(".routing-window-partial-option");
         css.ShouldContain("align-items: center;");
+        css.ShouldContain("min-height: 34px;");
         css.ShouldContain(".routing-window-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldNotContain(".routing-window-panel-title");
@@ -7807,7 +7810,9 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldNotContain(".routing-correlation-match-title");
         correlationCss.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         correlationCss.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        correlationCss.ShouldContain("gap: 10px;");
+        correlationCss.ShouldNotContain("gap: 10px;");
+        correlationCss.ShouldContain("gap: 8px;");
+        correlationCss.ShouldContain("gap: 7px;");
         correlationCss.ShouldNotContain("padding: 12px;");
         correlationCss.ShouldNotContain(".routing-correlation-panel-header");
         correlationCss.ShouldNotContain(".routing-correlation-panel-kicker");
@@ -7823,10 +7828,13 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldNotContain(".routing-correlation-expression-grid");
         correlationCss.ShouldContain(".routing-correlation-side-map-row");
         correlationCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(132px, 0.72fr);");
+        correlationCss.ShouldNotContain("padding-top: 10px;");
+        correlationCss.ShouldContain("padding-top: 8px;");
         correlationCss.ShouldNotContain(".routing-correlation-side-row");
         correlationCss.ShouldNotContain(".routing-correlation-limit-row");
         correlationCss.ShouldContain(".routing-correlation-case-option");
         correlationCss.ShouldContain("align-items: center;");
+        correlationCss.ShouldContain("min-height: 34px;");
         correlationCss.ShouldContain("@media (max-width: 840px)");
         correlationCss.ShouldNotContain(".routing-correlation-case-option > span");
         correlationCss.ShouldNotContain(".routing-correlation-config-grid");
@@ -7909,7 +7917,9 @@ public sealed class DashboardEventFilterCatalogTests
         joinCss.ShouldNotContain(".routing-join-match-title");
         joinCss.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         joinCss.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        joinCss.ShouldContain("gap: 10px;");
+        joinCss.ShouldNotContain("gap: 10px;");
+        joinCss.ShouldContain("gap: 8px;");
+        joinCss.ShouldContain("gap: 7px;");
         joinCss.ShouldNotContain("padding: 12px;");
         joinCss.ShouldNotContain(".routing-join-panel-header");
         joinCss.ShouldNotContain(".routing-join-panel-kicker");
@@ -7926,8 +7936,11 @@ public sealed class DashboardEventFilterCatalogTests
         joinCss.ShouldNotContain(".routing-join-limit-row");
         joinCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 150px;");
         joinCss.ShouldContain("grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) minmax(132px, 0.72fr);");
+        joinCss.ShouldNotContain("padding-top: 10px;");
+        joinCss.ShouldContain("padding-top: 8px;");
         joinCss.ShouldContain(".routing-join-case-option");
         joinCss.ShouldContain("align-items: center;");
+        joinCss.ShouldContain("min-height: 34px;");
         joinCss.ShouldContain("@media (max-width: 840px)");
         joinCss.ShouldNotContain(".routing-join-case-option > span");
         joinCss.ShouldNotContain(".routing-join-type-grid");

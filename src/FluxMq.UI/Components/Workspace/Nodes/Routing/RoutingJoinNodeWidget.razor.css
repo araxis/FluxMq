@@ -78,7 +78,7 @@
 
 .routing-join-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -87,7 +87,7 @@
 .routing-join-control-row {
     align-items: end;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -98,9 +98,9 @@
 .routing-join-match-composer {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
-    padding-top: 10px;
+    padding-top: 8px;
 }
 
 .routing-join-key-row {
@@ -114,7 +114,7 @@
 .routing-join-case-option {
     align-items: center;
     display: flex;
-    min-height: 36px;
+    min-height: 34px;
     min-width: 0;
 }
 
@@ -124,7 +124,7 @@
 }
 
 .routing-join-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .routing-join-editor ::deep(.mud-input > input.mud-input-root),
