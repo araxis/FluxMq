@@ -92,7 +92,7 @@
 
 .routing-switch-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -113,22 +113,27 @@
 }
 
 .routing-switch-rule-grid {
-    align-items: start;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(0, 1fr) minmax(172px, 220px);
+    gap: 7px;
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
-    padding-top: 10px;
+    padding-top: 8px;
+}
+
+.routing-switch-expression-stack {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
 }
 
 .routing-switch-variable-reference {
-    align-content: start;
-    border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
-    display: grid;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
     gap: 5px;
     min-width: 0;
-    padding-left: 10px;
+    padding: 0 2px;
 }
 
 .routing-switch-variable-label {
@@ -145,7 +150,8 @@
 .routing-switch-variable-list {
     display: grid;
     gap: 4px;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(3, minmax(0, auto));
+    justify-content: start;
     min-width: 0;
 }
 
@@ -249,7 +255,7 @@
 }
 
 .routing-switch-editor ::deep(.routing-switch-expression-field textarea.mud-input-root) {
-    min-height: 168px;
+    min-height: 120px;
 }
 
 .routing-switch-envelope-option ::deep(.routing-switch-envelope-check) {
@@ -279,13 +285,6 @@
     .routing-switch-rule-grid,
     .routing-switch-route-row {
         grid-template-columns: minmax(0, 1fr);
-    }
-
-    .routing-switch-variable-reference {
-        border-left: 0;
-        border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
-        padding-left: 0;
-        padding-top: 8px;
     }
 
     .routing-switch-variable-list {

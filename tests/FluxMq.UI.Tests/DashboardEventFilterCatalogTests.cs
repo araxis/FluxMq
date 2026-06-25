@@ -7169,9 +7169,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Label=\"Expression\"");
         markup.ShouldContain("aria-label=\"Routing switch expression\"");
         markup.ShouldContain("@bind-Value=\"_expression\"");
-        markup.ShouldContain("Lines=\"7\"");
+        markup.ShouldContain("Lines=\"5\"");
         markup.ShouldContain("Class=\"routing-switch-expression-field\"");
         markup.ShouldContain("routing-switch-rule-grid");
+        markup.ShouldContain("routing-switch-expression-stack");
         markup.ShouldNotContain("routing-switch-expression-row");
         markup.ShouldContain("aria-label=\"Routing switch rule expression\"");
         markup.ShouldContain("routing-switch-variable-reference");
@@ -7237,6 +7238,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".routing-switch-editor");
         css.ShouldContain(".routing-switch-config-row");
         css.ShouldContain(".routing-switch-rule-grid");
+        css.ShouldContain(".routing-switch-expression-stack");
         css.ShouldNotContain(".routing-switch-editor-surface");
         css.ShouldNotContain(".routing-switch-expression-row");
         css.ShouldContain(".routing-switch-route-composer");
@@ -7244,7 +7246,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".routing-switch-route-header");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("gap: 10px;");
+        css.ShouldNotContain("gap: 10px;");
         css.ShouldNotContain("padding: 12px;");
         css.ShouldNotContain(".routing-switch-panel-header");
         css.ShouldNotContain(".routing-switch-panel-kicker");
@@ -7252,10 +7254,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".routing-switch-rule-panel");
         css.ShouldNotContain(".routing-switch-source-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(130px, 170px) minmax(128px, 154px);");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(172px, 220px);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(172px, 220px);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldContain(".routing-switch-variable-reference");
         css.ShouldContain(".routing-switch-variable-token");
-        css.ShouldContain("border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);");
+        css.ShouldNotContain("border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, auto));");
         css.ShouldNotContain(".routing-switch-expression-cell");
         css.ShouldNotContain(".routing-switch-route-editor");
         css.ShouldContain(".routing-switch-route-list");

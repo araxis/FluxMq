@@ -87,25 +87,27 @@
             </div>
 
             <div class="routing-switch-rule-grid" aria-label="Routing switch rule expression">
-                <MudTextField T="string"
-                              Label="Expression"
-                              @bind-Value="_expression"
-                              aria-label="Routing switch expression"
-                              Variant="Variant.Outlined"
-                              Lines="7"
-                              Class="routing-switch-expression-field"
-                              Placeholder="qos >= 1" />
+                <div class="routing-switch-expression-stack">
+                    <MudTextField T="string"
+                                  Label="Expression"
+                                  @bind-Value="_expression"
+                                  aria-label="Routing switch expression"
+                                  Variant="Variant.Outlined"
+                                  Lines="5"
+                                  Class="routing-switch-expression-field"
+                                  Placeholder="qos >= 1" />
 
-                <div class="routing-switch-variable-reference" aria-label="Routing switch expression variables">
-                    <span class="routing-switch-variable-label">Variables</span>
-                    <div class="routing-switch-variable-list">
-                        @foreach (var variable in ExpressionVariables)
-                        {
-                            <span class="routing-switch-variable-token">
-                                <code>@variable.Name</code>
-                                <small>@variable.Type</small>
-                            </span>
-                        }
+                    <div class="routing-switch-variable-reference" aria-label="Routing switch expression variables">
+                        <span class="routing-switch-variable-label">Variables</span>
+                        <div class="routing-switch-variable-list">
+                            @foreach (var variable in ExpressionVariables)
+                            {
+                                <span class="routing-switch-variable-token">
+                                    <code>@variable.Name</code>
+                                    <small>@variable.Type</small>
+                                </span>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
