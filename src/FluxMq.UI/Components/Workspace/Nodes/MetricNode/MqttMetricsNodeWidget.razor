@@ -79,67 +79,61 @@
     </Body>
     <Editor>
         <div class="metrics-editor" aria-label="MQTT metrics settings">
-            <section class="metrics-editor-surface" aria-label="MQTT metrics configuration">
-                <div class="metrics-config-row">
-                    <span class="metrics-field-label">Buffer</span>
-                    <span class="metrics-field-label">Window</span>
-                    <span class="metrics-field-label">Columns</span>
+            <div class="metrics-config-row" aria-label="MQTT metrics configuration">
+                <MudNumericField T="int"
+                                 Label="Input buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="metrics-buffer-field" />
+                <MudNumericField T="double"
+                                 Label="Rate window seconds"
+                                 @bind-Value="_rateWindowSeconds"
+                                 Min="1"
+                                 Step="1"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="metrics-rate-window-field" />
+                <MudNumericField T="int"
+                                 Label="Readout columns"
+                                 @bind-Value="_metricCardColumns"
+                                 Min="@MqttMetricsNodeModel.MinMetricCardColumns"
+                                 Max="@MqttMetricsNodeModel.MaxMetricCardColumns"
+                                 Step="1"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="metrics-readout-columns-field" />
+            </div>
 
-                    <MudNumericField T="int"
-                                     Label="Input buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="metrics-buffer-field" />
-                    <MudNumericField T="double"
-                                     Label="Rate window seconds"
-                                     @bind-Value="_rateWindowSeconds"
-                                     Min="1"
-                                     Step="1"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="metrics-rate-window-field" />
-                    <MudNumericField T="int"
-                                     Label="Readout columns"
-                                     @bind-Value="_metricCardColumns"
-                                     Min="@MqttMetricsNodeModel.MinMetricCardColumns"
-                                     Max="@MqttMetricsNodeModel.MaxMetricCardColumns"
-                                     Step="1"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="metrics-readout-columns-field" />
+            <div class="metrics-readout-selector" aria-label="Visible metric readouts">
+                <div class="metrics-readout-selector-header">
+                    <div>
+                        <span>Visible readouts</span>
+                    </div>
+                    <strong>@SelectedReadoutCaption</strong>
                 </div>
+                <div class="metrics-readout-options">
+                    @foreach (var option in DisplayOptions)
+                    {
+                        var selected = IsDisplayMetricSelected(option.Id);
+                        var disabled = selected && _displayMetrics.Count == 1;
 
-                <div class="metrics-readout-selector" aria-label="Visible metric readouts">
-                    <div class="metrics-readout-selector-header">
-                        <div>
-                            <span>Visible readouts</span>
+                        <div class="@ReadoutOptionClass(selected, disabled)">
+                            <span class="metrics-readout-option-name">@option.Label</span>
+                            <MudCheckBox T="bool"
+                                         Value="@selected"
+                                         ValueChanged="@(value => ToggleDisplayMetric(option.Id, value))"
+                                         Disabled="@disabled"
+                                         Dense="true"
+                                         aria-label="@($"Show {option.Label}")"
+                                         Class="metrics-readout-option-check" />
                         </div>
-                        <strong>@SelectedReadoutCaption</strong>
-                    </div>
-                    <div class="metrics-readout-options">
-                        @foreach (var option in DisplayOptions)
-                        {
-                            var selected = IsDisplayMetricSelected(option.Id);
-                            var disabled = selected && _displayMetrics.Count == 1;
-
-                            <div class="@ReadoutOptionClass(selected, disabled)">
-                                <span class="metrics-readout-option-name">@option.Label</span>
-                                <MudCheckBox T="bool"
-                                             Value="@selected"
-                                             ValueChanged="@(value => ToggleDisplayMetric(option.Id, value))"
-                                             Disabled="@disabled"
-                                             Dense="true"
-                                             aria-label="@($"Show {option.Label}")"
-                                             Class="metrics-readout-option-check" />
-                            </div>
-                        }
-                    </div>
+                    }
                 </div>
-            </section>
+            </div>
         </div>
     </Editor>
 </NodeWidgetShell>
