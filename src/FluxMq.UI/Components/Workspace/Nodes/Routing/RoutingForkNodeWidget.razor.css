@@ -82,22 +82,22 @@
 
 .routing-fork-editor {
     display: grid;
-    gap: 8px;
+    gap: 12px;
     min-width: 0;
 }
 
-.routing-fork-port-panel {
+.routing-fork-config-row,
+.routing-fork-port-workspace {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
-    gap: 12px;
     min-width: 0;
     padding: 14px;
 }
 
-.routing-fork-source-row {
-    align-items: start;
+.routing-fork-config-row {
+    align-items: end;
     display: grid;
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) 150px;
@@ -128,32 +128,25 @@
     min-width: 0;
 }
 
-.routing-fork-port-editor {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);
+.routing-fork-port-workspace {
     display: grid;
-    gap: 0;
+    gap: 8px;
     min-width: 0;
-    padding-top: 10px;
 }
 
 .routing-fork-port-list {
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);
-    border-radius: 6px;
     display: grid;
     min-width: 0;
-    overflow: hidden;
 }
 
 .routing-fork-port-column-header {
     align-items: center;
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 46%, transparent);
     display: grid;
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) 30px;
     min-width: 0;
-    padding: 8px 10px;
+    padding: 0 0 8px;
 }
 
 .routing-fork-port-column-header span {
@@ -175,10 +168,10 @@
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) 30px;
     min-width: 0;
-    padding: 8px 10px;
+    padding: 8px 0 0;
 }
 
-.routing-fork-port-row + .routing-fork-port-row {
+.routing-fork-port-row {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
 }
 
@@ -193,7 +186,7 @@
 
 @media (max-width: 720px) {
     .routing-fork-meta,
-    .routing-fork-source-row,
+    .routing-fork-config-row,
     .routing-fork-port-column-header,
     .routing-fork-port-row {
         grid-template-columns: minmax(0, 1fr);
