@@ -112,14 +112,14 @@
 
 .flow-assertion-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .flow-assertion-config-row {
     align-items: end;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(220px, 1.24fr) minmax(180px, 1fr) 138px;
     min-width: 0;
 }
@@ -128,20 +128,20 @@
     align-items: stretch;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 9px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr);
     min-width: 0;
-    padding-top: 9px;
+    padding-top: 8px;
 }
 
 .flow-assertion-variable-strip {
     align-items: start;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
-    gap: 7px;
+    gap: 6px;
     grid-template-columns: 72px minmax(0, 1fr);
     min-width: 0;
-    padding: 8px 2px 0;
+    padding: 7px 2px 0;
 }
 
 .flow-assertion-variable-label {
@@ -172,7 +172,7 @@
 }
 
 .flow-assertion-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .flow-assertion-editor ::deep(.mud-input > input.mud-input-root),

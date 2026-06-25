@@ -92,7 +92,7 @@
 
 .condition-router-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -105,7 +105,7 @@
 .condition-router-rule-grid {
     align-items: start;
     display: grid;
-    gap: 10px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) minmax(172px, 220px);
     min-width: 0;
 }
@@ -124,9 +124,9 @@
     align-content: start;
     border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 5px;
+    gap: 4px;
     min-width: 0;
-    padding-left: 10px;
+    padding-left: 8px;
 }
 
 .condition-router-variable-label {
@@ -179,7 +179,7 @@
 }
 
 .condition-router-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .condition-router-editor ::deep(.mud-input > input.mud-input-root),

@@ -81,13 +81,13 @@
 
 .http-client-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .http-client-number-grid {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     min-width: 0;
 }
@@ -96,8 +96,8 @@
     align-items: center;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 22px;
-    min-height: 40px;
+    gap: 7px 18px;
+    min-height: 36px;
     min-width: 0;
 }
 

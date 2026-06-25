@@ -84,13 +84,13 @@
 
 .payload-inspector-node-editor {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
 .payload-inspector-node-editor-summary {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(132px, 0.7fr) minmax(0, 1.2fr) minmax(110px, 0.45fr);
     min-width: 0;
 }
@@ -136,10 +136,10 @@
 .payload-inspector-node-editor-contract-item {
     align-items: center;
     display: grid;
-    gap: 10px;
+    gap: 7px;
     grid-template-columns: 84px minmax(0, 1fr);
     min-width: 0;
-    padding: 9px 2px;
+    padding: 7px 2px;
 }
 
 .payload-inspector-node-editor-contract-item + .payload-inspector-node-editor-contract-item {

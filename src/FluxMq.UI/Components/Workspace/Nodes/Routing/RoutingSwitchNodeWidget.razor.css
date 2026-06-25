@@ -99,7 +99,7 @@
 .routing-switch-config-row {
     align-items: end;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) minmax(130px, 170px) minmax(128px, 154px);
     min-width: 0;
 }
@@ -107,7 +107,7 @@
 .routing-switch-envelope-option {
     align-items: center;
     display: flex;
-    min-height: 36px;
+    min-height: 34px;
     min-width: 0;
     padding: 0 2px;
 }
@@ -190,16 +190,16 @@
 .routing-switch-route-composer {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
-    padding-top: 10px;
+    padding-top: 8px;
 }
 
 .routing-switch-route-header {
     align-items: center;
     color: color-mix(in srgb, var(--mud-palette-text-primary) 70%, var(--mud-palette-text-secondary));
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px;
     min-height: 30px;
     min-width: 0;
@@ -241,7 +241,7 @@
 }
 
 .routing-switch-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .routing-switch-editor ::deep(.mud-input > input.mud-input-root),
