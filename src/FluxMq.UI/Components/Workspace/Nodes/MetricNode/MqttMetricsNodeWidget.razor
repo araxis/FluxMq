@@ -21,6 +21,13 @@
             var readoutColumns = MqttMetricsNodeModel.NormalizeMetricCardColumns(Model.MetricCardColumns);
         }
         <div class="metrics-summary">
+            <div class="metrics-status-line" aria-label="MQTT metrics status">
+                <span>Window</span>
+                <strong>@RateWindowCaption</strong>
+                <span>Readouts</span>
+                <strong>@ReadoutLayoutCaption</strong>
+            </div>
+
             <div class="metrics-readout-strip"
                  style="--metric-readout-columns:@readoutColumns"
                  aria-label="MQTT metrics readouts">
@@ -36,7 +43,10 @@
             @if (_topTopics.Count > 0)
             {
                 <div class="metrics-topic-list" aria-label="Top MQTT topics">
-                    <span class="metrics-section-label">Top topics</span>
+                    <div class="metrics-topic-list-header">
+                        <span class="metrics-section-label">Top topics</span>
+                        <strong>@TopicSummaryCaption</strong>
+                    </div>
                     @foreach (var entry in _topTopics)
                     {
                         var pct = _snapshot.MessageCount == 0 ? 0 : (double)entry.Count / _snapshot.MessageCount * 100.0;
@@ -71,6 +81,10 @@
         <div class="metrics-editor" aria-label="MQTT metrics settings">
             <section class="metrics-editor-surface" aria-label="MQTT metrics configuration">
                 <div class="metrics-config-row">
+                    <span class="metrics-field-label">Buffer</span>
+                    <span class="metrics-field-label">Window</span>
+                    <span class="metrics-field-label">Columns</span>
+
                     <MudNumericField T="int"
                                      Label="Input buffer"
                                      @bind-Value="_boundedCapacity"
@@ -101,7 +115,9 @@
 
                 <div class="metrics-readout-selector" aria-label="Visible metric readouts">
                     <div class="metrics-readout-selector-header">
-                        <span>Visible readouts</span>
+                        <div>
+                            <span>Visible readouts</span>
+                        </div>
                         <strong>@SelectedReadoutCaption</strong>
                     </div>
                     <div class="metrics-readout-options">
@@ -206,7 +222,16 @@
         => _displayMetrics.Contains(id, StringComparer.Ordinal);
 
     private string SelectedReadoutCaption
-        => $"{_displayMetrics.Count} selected";
+        => $"{_displayMetrics.Count} of {DisplayOptions.Count}";
+
+    private string RateWindowCaption
+        => $"{MqttMetricsNodeModel.NormalizeRateWindowSeconds(Model.RateWindowSeconds):0.##}s";
+
+    private string ReadoutLayoutCaption
+        => $"{MqttMetricsNodeModel.NormalizeDisplayMetrics(Model.DisplayMetrics).Count} / {MqttMetricsNodeModel.NormalizeMetricCardColumns(Model.MetricCardColumns)} cols";
+
+    private string TopicSummaryCaption
+        => _snapshot.UniqueTopicCount == 1 ? "1 topic" : $"{_snapshot.UniqueTopicCount} topics";
 
     private static string ReadoutOptionClass(bool selected, bool disabled)
     {

@@ -8317,12 +8317,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
         markup.ShouldContain("metrics-summary");
+        markup.ShouldContain("metrics-status-line");
+        markup.ShouldContain("RateWindowCaption");
+        markup.ShouldContain("ReadoutLayoutCaption");
         markup.ShouldContain("metrics-readout-strip");
         markup.ShouldContain("--metric-readout-columns:@readoutColumns");
         markup.ShouldContain("MetricReadouts");
         markup.ShouldContain("metrics-readout-token @readout.CssClass");
         markup.ShouldContain("aria-label=\"MQTT metrics readouts\"");
         markup.ShouldContain("metrics-topic-list");
+        markup.ShouldContain("metrics-topic-list-header");
+        markup.ShouldContain("TopicSummaryCaption");
         markup.ShouldContain("aria-label=\"Top MQTT topics\"");
         markup.ShouldContain("metrics-section-label");
         markup.ShouldContain("metrics-empty");
@@ -8333,6 +8338,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-editor-surface");
         markup.ShouldContain("metrics-config-row");
         markup.ShouldContain("aria-label=\"MQTT metrics configuration\"");
+        markup.ShouldContain("metrics-field-label");
+        markup.ShouldContain("Buffer</span>");
+        markup.ShouldContain("Window</span>");
+        markup.ShouldContain("Columns</span>");
         markup.ShouldContain("Label=\"Input buffer\"");
         markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
         markup.ShouldContain("Class=\"metrics-buffer-field\"");
@@ -8390,6 +8399,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("metrics-readout-table\" aria-label");
 
         css.ShouldContain(".metrics-summary");
+        css.ShouldContain(".metrics-status-line");
         css.ShouldContain(".metrics-readout-strip");
         css.ShouldContain("grid-template-columns: repeat(var(--metric-readout-columns), minmax(0, 1fr));");
         css.ShouldContain(".metrics-readout-token");
@@ -8402,6 +8412,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("color-mix(in srgb, var(--mud-palette-warning) 76%, var(--flux-border-soft));");
         css.ShouldContain("text-overflow: ellipsis;");
         css.ShouldContain(".metrics-topic-list");
+        css.ShouldContain(".metrics-topic-list-header");
         css.ShouldContain(".metrics-section-label");
         css.ShouldContain(".metrics-topic-row");
         css.ShouldContain("background: color-mix(in srgb, var(--mud-palette-tertiary) 76%, var(--mud-palette-primary));");
@@ -8410,15 +8421,18 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metrics-editor");
         css.ShouldContain(".metrics-editor-surface");
         css.ShouldContain(".metrics-config-row");
+        css.ShouldContain(".metrics-field-label");
         css.ShouldContain(".metrics-readout-selector");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 150px);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(112px, 150px);");
         css.ShouldContain(".metrics-readout-selector-header");
+        css.ShouldContain(".metrics-readout-selector-header > div");
         css.ShouldContain(".metrics-readout-options");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
         css.ShouldContain("padding: 12px;");
         css.ShouldContain(".metrics-readout-option-tile");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 34px;");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
         css.ShouldContain(".metrics-readout-option-tile.selected");
         css.ShouldContain(".metrics-readout-option-tile.locked");
         css.ShouldContain(".metrics-readout-option-name");
