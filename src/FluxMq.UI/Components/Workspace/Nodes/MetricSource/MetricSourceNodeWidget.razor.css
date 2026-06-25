@@ -90,16 +90,18 @@
 
 .metric-source-editor {
     display: grid;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
 }
 
-.metric-source-config-panel {
+.metric-source-config-row,
+.metric-source-description-row,
+.metric-source-parameter-workspace,
+.metric-source-start-row {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
-    gap: 12px;
     min-width: 0;
     padding: 14px;
 }
@@ -116,31 +118,27 @@
     padding: 0 2px;
 }
 
-.metric-source-source-grid,
+.metric-source-config-row,
 .metric-source-parameter-grid,
 .metric-source-start-row {
-    align-items: start;
+    align-items: end;
     display: grid;
     gap: 8px;
     min-width: 0;
 }
 
-.metric-source-source-grid {
+.metric-source-config-row {
     grid-template-columns: minmax(0, 1fr) 150px;
 }
 
 .metric-source-description-row {
     align-items: start;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
     color: color-mix(in srgb, var(--mud-palette-text-primary) 66%, var(--mud-palette-text-secondary));
-    display: grid;
     font-size: 0.78rem;
     font-weight: 650;
     gap: 8px;
     grid-template-columns: 72px minmax(0, 1fr);
     line-height: 1.35;
-    min-width: 0;
-    padding-top: 10px;
 }
 
 .metric-source-description-row span,
@@ -162,12 +160,9 @@
     overflow-wrap: anywhere;
 }
 
-.metric-source-parameter-table {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
+.metric-source-parameter-workspace {
     display: grid;
     gap: 10px;
-    min-width: 0;
-    padding-top: 10px;
 }
 
 .metric-source-parameter-table-head {
@@ -192,10 +187,8 @@
 
 .metric-source-start-row {
     align-items: center;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
     grid-template-columns: minmax(0, 1fr);
     min-height: 38px;
-    padding-top: 2px;
 }
 
 .metric-source-editor ::deep(.mud-input-control) {
@@ -228,7 +221,7 @@
 
 @media (max-width: 720px) {
     .metric-source-meta,
-    .metric-source-source-grid,
+    .metric-source-config-row,
     .metric-source-parameter-grid,
     .metric-source-start-row,
     .metric-source-description-row,

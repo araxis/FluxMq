@@ -150,34 +150,28 @@
 
 .metrics-editor {
     display: grid;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
 }
 
-.metrics-config-panel {
+.metrics-config-row,
+.metrics-readout-workspace {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
-    gap: 12px;
     min-width: 0;
     padding: 14px;
 }
 
-.metrics-settings-grid {
-    align-items: start;
-    display: grid;
+.metrics-config-row {
+    align-items: end;
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 150px);
-    min-width: 0;
 }
 
-.metrics-readout-table {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
-    display: grid;
+.metrics-readout-workspace {
     gap: 0;
-    min-width: 0;
-    padding-top: 8px;
 }
 
 .metrics-readout-table-head,
@@ -196,7 +190,7 @@
     font-weight: 780;
     letter-spacing: 0;
     line-height: 1;
-    padding: 0 6px 6px;
+    padding: 0 2px 7px;
     text-transform: uppercase;
 }
 
@@ -208,7 +202,7 @@
 .metrics-readout-option-row {
     border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 28%, transparent);
     min-height: 34px;
-    padding: 3px 6px;
+    padding: 4px 2px;
 }
 
 .metrics-readout-option-row:last-child {
@@ -243,7 +237,7 @@
     font-size: 0.72rem;
 }
 
-.metrics-readout-table ::deep(.metrics-readout-option) {
+.metrics-readout-workspace ::deep(.metrics-readout-option) {
     justify-self: center;
     margin-inline-start: 0;
     min-width: 0;
@@ -256,7 +250,7 @@
 }
 
 @media (max-width: 720px) {
-    .metrics-settings-grid {
+    .metrics-config-row {
         grid-template-columns: minmax(0, 1fr);
     }
 

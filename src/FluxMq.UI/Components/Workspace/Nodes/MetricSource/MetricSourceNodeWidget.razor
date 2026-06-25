@@ -59,75 +59,73 @@
     </Body>
     <Editor>
         <div class="metric-source-editor" aria-label="Metric source settings">
-            <div class="metric-source-config-panel" aria-label="Metric source configuration">
-                <div class="metric-source-source-grid" aria-label="Metric source selection">
-                    @if (MetricOptions.Count > 0)
-                    {
-                        <MudSelect T="string"
-                                   Label="Metric"
-                                   Value="@_metricId"
-                                   ValueChanged="@SetMetricId"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Dense="true"
-                                   Class="metric-source-metric-field">
-                            @foreach (var option in MetricOptions)
-                            {
-                                <MudSelectItem Value="@option.Id">@option.Label</MudSelectItem>
-                            }
-                        </MudSelect>
-                    }
-                    else
-                    {
-                        <div class="metric-source-empty" role="status">
-                            Add a metric in the Metrics tab, then select it here.
-                        </div>
-                    }
-
-                    <MudNumericField T="int"
-                                     Label="Output buffer"
-                                     Value="@_boundedCapacity"
-                                     ValueChanged="@(value => _boundedCapacity = Math.Max(1, value))"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="metric-source-buffer-field" />
-                </div>
-
-                @if (!string.IsNullOrWhiteSpace(SelectedMetricSummary))
+            <div class="metric-source-config-row" aria-label="Metric source configuration">
+                @if (MetricOptions.Count > 0)
                 {
-                    <div class="metric-source-description-row">
-                        <span>Metric</span>
-                        <strong>@SelectedMetricSummary</strong>
+                    <MudSelect T="string"
+                               Label="Metric"
+                               Value="@_metricId"
+                               ValueChanged="@SetMetricId"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="metric-source-metric-field">
+                        @foreach (var option in MetricOptions)
+                        {
+                            <MudSelectItem Value="@option.Id">@option.Label</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <div class="metric-source-empty" role="status">
+                        Add a metric in the Metrics tab, then select it here.
                     </div>
                 }
 
-                @if (SelectedDescriptor is { } descriptor && descriptor.Parameters.Count > 0)
-                {
-                    <div class="metric-source-parameter-table" aria-label="Metric parameters">
-                        <div class="metric-source-parameter-table-head" aria-hidden="true">
-                            <span>Parameter</span>
-                            <span>Value</span>
-                        </div>
+                <MudNumericField T="int"
+                                 Label="Output buffer"
+                                 Value="@_boundedCapacity"
+                                 ValueChanged="@(value => _boundedCapacity = Math.Max(1, value))"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="metric-source-buffer-field" />
+            </div>
 
-                        <div class="metric-source-parameter-grid">
-                            @foreach (var parameter in descriptor.Parameters)
-                            {
-                                @RenderParameterField(parameter)
-                            }
-                        </div>
-                    </div>
-                }
-
-                <div class="metric-source-start-row" aria-label="Metric source start behavior">
-                    <MudCheckBox T="bool"
-                                 Label="Emit latest reading on start"
-                                 Value="@_emitLatestOnStart"
-                                 ValueChanged="@(value => _emitLatestOnStart = value)"
-                                 Class="metric-source-start-check" />
+            @if (!string.IsNullOrWhiteSpace(SelectedMetricSummary))
+            {
+                <div class="metric-source-description-row">
+                    <span>Metric</span>
+                    <strong>@SelectedMetricSummary</strong>
                 </div>
+            }
+
+            @if (SelectedDescriptor is { } descriptor && descriptor.Parameters.Count > 0)
+            {
+                <section class="metric-source-parameter-workspace" aria-label="Metric parameters">
+                    <div class="metric-source-parameter-table-head" aria-hidden="true">
+                        <span>Parameter</span>
+                        <span>Value</span>
+                    </div>
+
+                    <div class="metric-source-parameter-grid">
+                        @foreach (var parameter in descriptor.Parameters)
+                        {
+                            @RenderParameterField(parameter)
+                        }
+                    </div>
+                </section>
+            }
+
+            <div class="metric-source-start-row" aria-label="Metric source start behavior">
+                <MudCheckBox T="bool"
+                             Label="Emit latest reading on start"
+                             Value="@_emitLatestOnStart"
+                             ValueChanged="@(value => _emitLatestOnStart = value)"
+                             Class="metric-source-start-check" />
             </div>
         </div>
     </Editor>
