@@ -116,24 +116,14 @@
     min-width: 0;
 }
 
-.generated-source-control-strip {
+.generated-source-settings-row {
     align-items: center;
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(180px, 220px) 28px;
+    grid-template-columns: minmax(180px, 220px);
     justify-content: end;
     min-width: 0;
     width: 100%;
-}
-
-.generated-source-control-strip ::deep(.generated-source-add-button.mud-icon-button) {
-    color: var(--mud-palette-primary);
-    height: 28px;
-    justify-self: end;
-    min-height: 28px;
-    min-width: 28px;
-    padding: 0;
-    width: 28px;
 }
 
 .generated-source-message-table {
@@ -173,6 +163,21 @@
     text-align: center;
 }
 
+.generated-source-column-header.action {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.generated-source-column-header.action ::deep(.generated-source-add-button.mud-icon-button) {
+    color: var(--mud-palette-primary);
+    height: 28px;
+    min-height: 28px;
+    min-width: 28px;
+    padding: 0;
+    width: 28px;
+}
+
 .generated-source-message-row {
     border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     padding: 8px 0;
@@ -205,14 +210,13 @@
 
 .generated-source-empty {
     align-items: center;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     color: var(--flux-text-muted);
     display: flex;
     font-size: 0.78rem;
     font-weight: 650;
-    min-height: 42px;
+    min-height: 48px;
     min-width: 0;
-    padding: 10px 2px 0;
+    padding: 10px 2px;
 }
 
 .generated-source-editor ::deep(.mud-input-control) {
@@ -267,12 +271,24 @@
 
 @media (max-width: 720px) {
     .generated-source-meta,
-    .generated-source-control-strip {
+    .generated-source-settings-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
     .generated-source-table-header {
+        grid-template-columns: minmax(0, 1fr) 30px;
+    }
+
+    .generated-source-table-header .generated-source-column-header:not(.action):not(:nth-child(2)) {
         display: none;
+    }
+
+    .generated-source-table-header .generated-source-column-header.number {
+        display: none;
+    }
+
+    .generated-source-table-header .generated-source-column-header:nth-child(2) {
+        display: inline-flex;
     }
 
     .generated-source-message-row {

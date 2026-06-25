@@ -58,7 +58,7 @@
     </Body>
     <Editor>
         <div class="generated-source-editor" aria-label="Generated source settings">
-            <div class="generated-source-control-strip" aria-label="Generated source controls">
+            <div class="generated-source-settings-row" aria-label="Generated source configuration">
                 <MudNumericField T="int"
                                  Label="Output buffer"
                                  @bind-Value="_boundedCapacity"
@@ -68,33 +68,34 @@
                                  Variant="Variant.Outlined"
                                  Margin="Margin.Dense"
                                  Class="generated-source-buffer-field" />
-                <MudTooltip Text="Add message">
-                    <MudIconButton Size="Size.Small"
-                                   Icon="@Icons.Material.Filled.Add"
-                                   aria-label="Add generated message"
-                                   Class="generated-source-add-button"
-                                   OnClick="@AddMessageAsync" />
-                </MudTooltip>
             </div>
 
-            @if (_messages.Count == 0)
-            {
-                <div class="generated-source-empty" role="status">
-                    Add at least one generated message.
+            <div class="generated-source-message-table" aria-label="Generated message rows">
+                <div class="generated-source-table-header">
+                    <span class="generated-source-column-header number">#</span>
+                    <span class="generated-source-column-header">Topic</span>
+                    <span class="generated-source-column-header">Payload</span>
+                    <span class="generated-source-column-header">QoS</span>
+                    <span class="generated-source-column-header">Retain</span>
+                    <span class="generated-source-column-header">Received at</span>
+                    <span class="generated-source-column-header action">
+                        <MudTooltip Text="Add message">
+                            <MudIconButton Size="Size.Small"
+                                           Icon="@Icons.Material.Filled.Add"
+                                           aria-label="Add generated message"
+                                           Class="generated-source-add-button"
+                                           OnClick="@AddMessageAsync" />
+                        </MudTooltip>
+                    </span>
                 </div>
-            }
-            else
-            {
-                <div class="generated-source-message-table" aria-label="Generated message rows">
-                    <div class="generated-source-table-header" aria-hidden="true">
-                        <span class="generated-source-column-header number">#</span>
-                        <span class="generated-source-column-header">Topic</span>
-                        <span class="generated-source-column-header">Payload</span>
-                        <span class="generated-source-column-header">QoS</span>
-                        <span class="generated-source-column-header">Retain</span>
-                        <span class="generated-source-column-header">Received at</span>
-                        <span class="generated-source-column-header action"></span>
+                @if (_messages.Count == 0)
+                {
+                    <div class="generated-source-empty" role="status">
+                        Add at least one generated message.
                     </div>
+                }
+                else
+                {
                     @for (var i = 0; i < _messages.Count; i++)
                     {
                         var index = i;
@@ -155,8 +156,8 @@
                             </MudTooltip>
                         </div>
                     }
-                </div>
-            }
+                }
+            </div>
         </div>
     </Editor>
 </NodeWidgetShell>
