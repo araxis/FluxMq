@@ -79,10 +79,6 @@
                                   Margin="Margin.Dense"
                                   Class="replay-source-session-field" />
                 }
-                <div class="replay-source-session-state" aria-label="Stored replay sessions">
-                    <span>Stored sessions</span>
-                    <strong>@SessionOptionCountCaption</strong>
-                </div>
                 <MudNumericField T="double"
                                  Label="Playback speed"
                                  @bind-Value="_speed"
@@ -122,12 +118,6 @@
     private string SpeedCaption => $"{NormalizedSpeed:0.##}x";
     private string BufferCaption => SourceNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity).ToString();
     private double NormalizedSpeed => Model.Speed > 0 && double.IsFinite(Model.Speed) ? Model.Speed : 1;
-    private string SessionOptionCountCaption => Live.StoredSessions.Count switch
-    {
-        0 => "None",
-        1 => "1 available",
-        var count => $"{count} available"
-    };
 
     private string? ResolvedSessionName
     {

@@ -8965,9 +8965,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("replay-source-editor-grid");
         markup.ShouldContain("aria-label=\"Replay source configuration fields\"");
         markup.ShouldNotContain("replay-source-field-label");
-        markup.ShouldContain("replay-source-session-state");
+        markup.ShouldNotContain("replay-source-session-state");
         markup.ShouldNotContain("aria-label=\"Replay source configuration\"");
-        markup.ShouldContain("SessionOptionCountCaption");
+        markup.ShouldNotContain("SessionOptionCountCaption");
         markup.ShouldNotContain("replay-source-panel-header");
         markup.ShouldNotContain("replay-source-panel-kicker");
         markup.ShouldNotContain("replay-source-panel-token");
@@ -9016,7 +9016,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".replay-source-editor-surface");
         css.ShouldContain(".replay-source-editor-grid");
         css.ShouldNotContain(".replay-source-field-label");
-        css.ShouldContain(".replay-source-session-state");
+        css.ShouldNotContain(".replay-source-session-state");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
         css.ShouldNotContain("padding: 12px;");
@@ -9029,7 +9029,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".replay-source-playback-row");
         css.ShouldNotContain(".replay-source-source-row");
         css.ShouldNotContain(".replay-source-config-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 132px minmax(120px, 154px) minmax(120px, 154px);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(120px, 154px) minmax(120px, 154px);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 132px minmax(120px, 154px) minmax(120px, 154px);");
         css.ShouldNotContain(".replay-source-config-grid");
         css.ShouldNotContain(".replay-source-main-grid");
         css.ShouldNotContain(".replay-source-playback-grid");
