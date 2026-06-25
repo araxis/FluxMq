@@ -45,6 +45,11 @@
         }
         <div class="connection-state-trigger-editor" aria-label="Connection state trigger settings">
             <section class="connection-state-trigger-editor-surface" aria-label="Broker state source">
+                <div class="connection-state-trigger-editor-title">
+                    <span>Broker state source</span>
+                    <small>Emit an event whenever the selected broker connection changes state</small>
+                </div>
+
                 @if (brokerOptions.Count > 0)
                 {
                     <MudSelect T="string"

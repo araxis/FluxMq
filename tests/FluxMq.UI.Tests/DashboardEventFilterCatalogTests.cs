@@ -5937,6 +5937,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Connection state trigger settings\"");
         markup.ShouldContain("connection-state-trigger-editor-surface");
         markup.ShouldContain("aria-label=\"Broker state source\"");
+        markup.ShouldContain("connection-state-trigger-editor-title");
+        markup.ShouldContain("Emit an event whenever the selected broker connection changes state");
         markup.ShouldContain("Label=\"Broker connection\"");
         markup.ShouldContain("@bind-Value=\"_connection\"");
         markup.ShouldContain("Label=\"Connection name\"");
@@ -5977,6 +5979,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".connection-state-trigger-editor");
         css.ShouldContain(".connection-state-trigger-editor-surface");
+        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain(".connection-state-trigger-editor-title");
         css.ShouldNotContain(".connection-state-trigger-broker-panel");
         css.ShouldNotContain(".connection-state-trigger-panel-header");
         css.ShouldNotContain(".connection-state-trigger-panel-kicker");
