@@ -92,25 +92,25 @@
 
 .routing-switch-editor {
     display: grid;
-    gap: 12px;
     min-width: 0;
 }
 
-.routing-switch-config-row,
-.routing-switch-expression-workspace,
-.routing-switch-route-workspace {
+.routing-switch-editor-surface {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
+    gap: 10px;
     min-width: 0;
-    padding: 14px;
+    padding: 12px;
 }
 
 .routing-switch-config-row {
     align-items: start;
+    display: grid;
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) 150px minmax(0, 190px);
+    min-width: 0;
 }
 
 .routing-switch-envelope-option {
@@ -120,10 +120,12 @@
     min-width: 0;
 }
 
-.routing-switch-expression-workspace {
+.routing-switch-expression-row {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
     gap: 10px;
     min-width: 0;
+    padding-top: 10px;
 }
 
 .routing-switch-variable-reference {
@@ -183,10 +185,12 @@
     overflow-wrap: anywhere;
 }
 
-.routing-switch-route-workspace {
+.routing-switch-route-section {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
     gap: 0;
     min-width: 0;
+    padding-top: 4px;
 }
 
 .routing-switch-route-list {
@@ -201,7 +205,7 @@
     gap: 8px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px;
     min-width: 0;
-    padding: 8px 10px;
+    padding: 8px 2px;
 }
 
 .routing-switch-route-header {
@@ -252,7 +256,7 @@
 }
 
 .routing-switch-route-header ::deep(.routing-switch-route-add.mud-icon-button),
-.routing-switch-route-workspace ::deep(.routing-switch-route-remove.mud-icon-button) {
+.routing-switch-route-section ::deep(.routing-switch-route-remove.mud-icon-button) {
     height: 28px;
     min-height: 28px;
     min-width: 28px;

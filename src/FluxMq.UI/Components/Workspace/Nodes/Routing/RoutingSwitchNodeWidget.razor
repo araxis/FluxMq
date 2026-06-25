@@ -51,108 +51,110 @@
     </Body>
     <Editor>
         <div class="routing-switch-editor" aria-label="Routing switch settings">
-            <section class="routing-switch-config-row" aria-label="Routing switch configuration">
-                <MudSelect T="string"
-                           Label="Input type"
-                           @bind-Value="_inputType"
-                           aria-label="Routing switch input type"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-switch-input-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
-
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 aria-label="Routing switch input buffer"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-switch-buffer-field" />
-
-                <div class="routing-switch-envelope-option">
-                    <MudCheckBox T="bool"
-                                 Label="Emit envelope"
-                                 aria-label="Emit route envelope"
-                                 @bind-Value="_emitRouteEnvelope"
-                                 Class="routing-switch-envelope-check" />
-                </div>
-            </section>
-
-            <section class="routing-switch-expression-workspace" aria-label="Routing switch rule expression">
-                <MudTextField T="string"
-                              Label="Expression"
-                              @bind-Value="_expression"
-                              aria-label="Routing switch expression"
-                              Variant="Variant.Outlined"
-                              Lines="6"
-                              Class="routing-switch-expression-field"
-                              Placeholder="qos >= 1" />
-
-                <div class="routing-switch-variable-reference" aria-label="Routing switch expression variables">
-                    <span class="routing-switch-variable-label">Variables</span>
-                    <div class="routing-switch-variable-list">
-                        @foreach (var variable in ExpressionVariables)
+            <section class="routing-switch-editor-surface" aria-label="Routing switch configuration">
+                <div class="routing-switch-config-row">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               aria-label="Routing switch input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="routing-switch-input-field">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
                         {
-                            <span class="routing-switch-variable-token">
-                                <code>@variable.Name</code>
-                                <small>@variable.Type</small>
-                            </span>
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
                         }
+                    </MudSelect>
+
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Routing switch input buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-switch-buffer-field" />
+
+                    <div class="routing-switch-envelope-option">
+                        <MudCheckBox T="bool"
+                                     Label="Emit envelope"
+                                     aria-label="Emit route envelope"
+                                     @bind-Value="_emitRouteEnvelope"
+                                     Class="routing-switch-envelope-check" />
                     </div>
                 </div>
-            </section>
 
-            <section class="routing-switch-route-workspace" aria-label="Routing switch route outputs">
-                <div class="routing-switch-route-list">
-                    <div class="routing-switch-route-header">
-                        <span class="routing-switch-route-column-header">Match key</span>
-                        <span class="routing-switch-route-column-header">Output port</span>
-                        <MudTooltip Text="Add route">
-                            <MudIconButton Icon="@Icons.Material.Filled.Add"
-                                           Size="Size.Small"
-                                           Color="Color.Primary"
-                                           Class="routing-switch-route-add"
-                                           aria-label="Add route"
-                                           OnClick="@AddRoute" />
-                        </MudTooltip>
+                <div class="routing-switch-expression-row" aria-label="Routing switch rule expression">
+                    <MudTextField T="string"
+                                  Label="Expression"
+                                  @bind-Value="_expression"
+                                  aria-label="Routing switch expression"
+                                  Variant="Variant.Outlined"
+                                  Lines="6"
+                                  Class="routing-switch-expression-field"
+                                  Placeholder="qos >= 1" />
+
+                    <div class="routing-switch-variable-reference" aria-label="Routing switch expression variables">
+                        <span class="routing-switch-variable-label">Variables</span>
+                        <div class="routing-switch-variable-list">
+                            @foreach (var variable in ExpressionVariables)
+                            {
+                                <span class="routing-switch-variable-token">
+                                    <code>@variable.Name</code>
+                                    <small>@variable.Type</small>
+                                </span>
+                            }
+                        </div>
                     </div>
+                </div>
 
-                    @for (var index = 0; index < _routeDrafts.Count; index++)
-                    {
-                        var route = _routeDrafts[index];
-                        <div class="routing-switch-route-row" @key="route">
-                            <MudTextField T="string"
-                                          aria-label="@($"Route match key {index + 1}")"
-                                          @bind-Value="route.Key"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Placeholder="Match key"
-                                          Class="routing-switch-route-key-field" />
-                            <MudTextField T="string"
-                                          aria-label="@($"Route output port {index + 1}")"
-                                          @bind-Value="route.OutputPort"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Placeholder="Output port"
-                                          Class="routing-switch-route-output-field" />
-                            <MudTooltip Text="Remove route">
-                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                <div class="routing-switch-route-section" aria-label="Routing switch route outputs">
+                    <div class="routing-switch-route-list">
+                        <div class="routing-switch-route-header">
+                            <span class="routing-switch-route-column-header">Match key</span>
+                            <span class="routing-switch-route-column-header">Output port</span>
+                            <MudTooltip Text="Add route">
+                                <MudIconButton Icon="@Icons.Material.Filled.Add"
                                                Size="Size.Small"
-                                               Disabled="@(_routeDrafts.Count == 1)"
-                                               Class="routing-switch-route-remove"
-                                               aria-label="@($"Remove route {route.Key}")"
-                                               OnClick="@(() => RemoveRoute(route))" />
+                                               Color="Color.Primary"
+                                               Class="routing-switch-route-add"
+                                               aria-label="Add route"
+                                               OnClick="@AddRoute" />
                             </MudTooltip>
                         </div>
-                    }
+
+                        @for (var index = 0; index < _routeDrafts.Count; index++)
+                        {
+                            var route = _routeDrafts[index];
+                            <div class="routing-switch-route-row" @key="route">
+                                <MudTextField T="string"
+                                              aria-label="@($"Route match key {index + 1}")"
+                                              @bind-Value="route.Key"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Placeholder="Match key"
+                                              Class="routing-switch-route-key-field" />
+                                <MudTextField T="string"
+                                              aria-label="@($"Route output port {index + 1}")"
+                                              @bind-Value="route.OutputPort"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Placeholder="Output port"
+                                              Class="routing-switch-route-output-field" />
+                                <MudTooltip Text="Remove route">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   Size="Size.Small"
+                                                   Disabled="@(_routeDrafts.Count == 1)"
+                                                   Class="routing-switch-route-remove"
+                                                   aria-label="@($"Remove route {route.Key}")"
+                                                   OnClick="@(() => RemoveRoute(route))" />
+                                </MudTooltip>
+                            </div>
+                        }
+                    </div>
                 </div>
             </section>
         </div>

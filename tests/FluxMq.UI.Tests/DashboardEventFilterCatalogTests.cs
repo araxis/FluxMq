@@ -7064,6 +7064,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("routing-switch-token");
         markup.ShouldContain("routing-switch-editor");
         markup.ShouldContain("aria-label=\"Routing switch settings\"");
+        markup.ShouldContain("routing-switch-editor-surface");
         markup.ShouldContain("routing-switch-config-row");
         markup.ShouldContain("aria-label=\"Routing switch configuration\"");
         markup.ShouldContain("Label=\"Input type\"");
@@ -7083,12 +7084,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@bind-Value=\"_expression\"");
         markup.ShouldContain("Lines=\"6\"");
         markup.ShouldContain("Class=\"routing-switch-expression-field\"");
-        markup.ShouldContain("routing-switch-expression-workspace");
+        markup.ShouldContain("routing-switch-expression-row");
         markup.ShouldContain("aria-label=\"Routing switch rule expression\"");
         markup.ShouldContain("routing-switch-variable-reference");
         markup.ShouldContain("ExpressionVariables");
         markup.ShouldContain("routing-switch-variable-token");
-        markup.ShouldContain("routing-switch-route-workspace");
+        markup.ShouldContain("routing-switch-route-section");
         markup.ShouldContain("aria-label=\"Routing switch route outputs\"");
         markup.ShouldContain("routing-switch-route-list");
         markup.ShouldContain("AddRoute");
@@ -7128,6 +7129,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("routing-switch-route-toolbar");
         markup.ShouldNotContain("routing-switch-panel-title");
         markup.ShouldNotContain("routing-switch-config-grid");
+        markup.ShouldNotContain("routing-switch-expression-workspace");
+        markup.ShouldNotContain("routing-switch-route-workspace");
 
         css.ShouldContain(".routing-switch-summary");
         css.ShouldContain(".routing-switch-meta");
@@ -7139,13 +7142,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".routing-switch-editor");
+        css.ShouldContain(".routing-switch-editor-surface");
         css.ShouldContain(".routing-switch-config-row");
-        css.ShouldContain(".routing-switch-expression-workspace");
-        css.ShouldContain(".routing-switch-route-workspace");
+        css.ShouldContain(".routing-switch-expression-row");
+        css.ShouldContain(".routing-switch-route-section");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("gap: 12px;");
-        css.ShouldContain("padding: 14px;");
+        css.ShouldContain("gap: 10px;");
+        css.ShouldContain("padding: 12px;");
         css.ShouldNotContain(".routing-switch-panel-header");
         css.ShouldNotContain(".routing-switch-panel-kicker");
         css.ShouldNotContain(".routing-switch-panel-token");
@@ -7171,6 +7175,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".routing-switch-route-toolbar");
         css.ShouldNotContain(".routing-switch-panel-title");
         css.ShouldNotContain(".routing-switch-config-grid");
+        css.ShouldNotContain(".routing-switch-expression-workspace");
+        css.ShouldNotContain(".routing-switch-route-workspace");
+        css.ShouldNotContain("padding: 14px;");
         css.ShouldNotContain("border-radius: 999px;");
     }
 
