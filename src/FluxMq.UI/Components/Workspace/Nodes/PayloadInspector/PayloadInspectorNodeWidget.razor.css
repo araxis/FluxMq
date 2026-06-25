@@ -24,8 +24,7 @@
 }
 
 .payload-inspector-node-meta-item span,
-.payload-inspector-node-contract-label,
-.payload-inspector-node-setting-line > span {
+.payload-inspector-node-contract-label {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
     font-weight: 750;
@@ -35,8 +34,7 @@
     text-transform: uppercase;
 }
 
-.payload-inspector-node-meta-item strong,
-.payload-inspector-node-setting-line > strong {
+.payload-inspector-node-meta-item strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
@@ -84,58 +82,6 @@
     white-space: normal;
 }
 
-.payload-inspector-node-editor {
-    display: grid;
-    gap: 10px;
-    min-width: 0;
-}
-
-.payload-inspector-node-config-summary {
-    background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    border-radius: 6px;
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-    padding: 14px;
-}
-
-.payload-inspector-node-setting-line {
-    align-items: center;
-    display: grid;
-    gap: 12px;
-    grid-template-columns: 68px minmax(172px, 0.9fr) minmax(0, 1.3fr);
-    min-width: 0;
-}
-
-.payload-inspector-node-setting-line {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
-    min-height: 42px;
-    padding: 6px 2px;
-}
-
-.payload-inspector-node-setting-line:first-child {
-    border-top: 0;
-}
-
-.payload-inspector-node-setting-line > span {
-    font-size: 0.58rem;
-    font-weight: 760;
-}
-
-.payload-inspector-node-setting-line > strong {
-    font-size: 0.78rem;
-    font-weight: 760;
-}
-
-.payload-inspector-node-token-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    justify-content: flex-end;
-    min-width: 0;
-}
-
 @media (max-width: 640px) {
     .payload-inspector-node-meta {
         grid-template-columns: minmax(0, 1fr);
@@ -149,16 +95,4 @@
         grid-column: 1 / -1;
     }
 
-    .payload-inspector-node-setting-line {
-        align-items: start;
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .payload-inspector-node-setting-line {
-        padding: 8px 0;
-    }
-
-    .payload-inspector-node-token-group {
-        justify-content: flex-start;
-    }
 }

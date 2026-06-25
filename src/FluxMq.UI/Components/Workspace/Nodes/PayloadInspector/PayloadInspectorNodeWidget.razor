@@ -4,7 +4,6 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.FindInPage"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Medium"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false">
@@ -43,42 +42,4 @@
             </div>
         </div>
     </Body>
-    <Editor>
-        <div class="payload-inspector-node-editor" aria-label="Payload inspector settings">
-            <div class="payload-inspector-node-config-summary" aria-label="Payload inspector contract summary">
-                <div class="payload-inspector-node-setting-line">
-                    <span>Input</span>
-                    <strong>MqttEnvelope</strong>
-                    <div class="payload-inspector-node-token-group">
-                        <span class="payload-inspector-node-token">topic</span>
-                        <span class="payload-inspector-node-token">payload</span>
-                        <span class="payload-inspector-node-token">qos</span>
-                        <span class="payload-inspector-node-token">retain</span>
-                    </div>
-                </div>
-
-                <div class="payload-inspector-node-setting-line">
-                    <span>Output</span>
-                    <strong>InspectedMqttMessage</strong>
-                    <div class="payload-inspector-node-token-group">
-                        <span class="payload-inspector-node-token">kind</span>
-                        <span class="payload-inspector-node-token">contentType</span>
-                        <span class="payload-inspector-node-token">formatted</span>
-                        <span class="payload-inspector-node-token">hexDump</span>
-                    </div>
-                </div>
-
-                <div class="payload-inspector-node-setting-line" aria-label="Payload inspector decode behavior">
-                    <span>Decode</span>
-                    <strong>Auto detect</strong>
-                    <div class="payload-inspector-node-token-group">
-                        <span class="payload-inspector-node-token">json</span>
-                        <span class="payload-inspector-node-token">text</span>
-                        <span class="payload-inspector-node-token">binary</span>
-                        <span class="payload-inspector-node-token">hex</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </Editor>
 </NodeWidgetShell>

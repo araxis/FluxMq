@@ -7838,7 +7838,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void PayloadInspectorNodeWidget_UsesCompactSummaryAndReadOnlyEditor()
+    public void PayloadInspectorNodeWidget_UsesCompactSummaryAndRenameOnlyEditor()
     {
         var root = FindRepositoryRoot();
         var markup = File.ReadAllText(Path.Combine(
@@ -7860,7 +7860,7 @@ public sealed class DashboardEventFilterCatalogTests
             "PayloadInspector",
             "PayloadInspectorNodeWidget.razor.css"));
 
-        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldNotContain("EditDialogMaxWidth=");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
@@ -7879,16 +7879,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("contentType");
         markup.ShouldContain("formatted");
         markup.ShouldContain("hexDump");
-        markup.ShouldContain("payload-inspector-node-editor");
-        markup.ShouldContain("aria-label=\"Payload inspector settings\"");
-        markup.ShouldContain("payload-inspector-node-config-summary");
-        markup.ShouldContain("aria-label=\"Payload inspector contract summary\"");
-        markup.ShouldContain("payload-inspector-node-setting-line");
-        markup.ShouldContain("payload-inspector-node-token-group");
-        markup.ShouldContain("aria-label=\"Payload inspector decode behavior\"");
         markup.ShouldContain("<span>Input</span>");
         markup.ShouldContain("<span>Output</span>");
-        markup.ShouldContain("<span>Decode</span>");
+        markup.ShouldNotContain("<Editor>");
+        markup.ShouldNotContain("payload-inspector-node-editor");
+        markup.ShouldNotContain("aria-label=\"Payload inspector settings\"");
+        markup.ShouldNotContain("payload-inspector-node-config-summary");
+        markup.ShouldNotContain("aria-label=\"Payload inspector contract summary\"");
+        markup.ShouldNotContain("payload-inspector-node-setting-line");
+        markup.ShouldNotContain("payload-inspector-node-token-group");
+        markup.ShouldNotContain("aria-label=\"Payload inspector decode behavior\"");
+        markup.ShouldNotContain("<span>Decode</span>");
         markup.ShouldNotContain("payload-inspector-node-readonly");
         markup.ShouldNotContain("payload-inspector-node-contract-table");
         markup.ShouldNotContain("payload-inspector-node-contract-head");
@@ -7938,14 +7939,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".payload-inspector-node-token");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
-        css.ShouldContain(".payload-inspector-node-editor");
-        css.ShouldContain(".payload-inspector-node-config-summary");
-        css.ShouldContain(".payload-inspector-node-setting-line");
-        css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
-        css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("grid-template-columns: 68px minmax(172px, 0.9fr) minmax(0, 1.3fr);");
-        css.ShouldContain(".payload-inspector-node-setting-line:first-child");
-        css.ShouldContain(".payload-inspector-node-token-group");
+        css.ShouldNotContain(".payload-inspector-node-editor");
+        css.ShouldNotContain(".payload-inspector-node-config-summary");
+        css.ShouldNotContain(".payload-inspector-node-setting-line");
+        css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
+        css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldNotContain("grid-template-columns: 68px minmax(172px, 0.9fr) minmax(0, 1.3fr);");
+        css.ShouldNotContain(".payload-inspector-node-setting-line:first-child");
+        css.ShouldNotContain(".payload-inspector-node-token-group");
         css.ShouldNotContain(".payload-inspector-node-readonly");
         css.ShouldNotContain(".payload-inspector-node-contract-table");
         css.ShouldNotContain(".payload-inspector-node-contract-head");
@@ -7964,7 +7965,6 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".payload-inspector-node-editor-panel");
         css.ShouldNotContain(".payload-inspector-node-section-heading");
         css.ShouldNotContain(".payload-inspector-node-mode");
-        css.ShouldContain("padding: 14px;");
         css.ShouldContain("@media (max-width: 640px)");
         css.ShouldNotContain(".payload-inspector-node-editor-grid");
         css.ShouldNotContain("border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 46%, transparent);");
