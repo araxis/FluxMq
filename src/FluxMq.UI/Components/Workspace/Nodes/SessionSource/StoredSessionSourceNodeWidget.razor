@@ -45,40 +45,53 @@
             @{
                 var sessions = Live.StoredSessions;
             }
-            <section class="stored-session-source-playback-panel" aria-label="Stored session playback configuration">
-                <div class="stored-session-source-source-row">
-                    @if (sessions.Count > 0)
-                    {
-                        <MudSelect T="string"
-                                   Label="Session"
-                                   @bind-Value="_sessionId"
-                                   aria-label="Stored session"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Dense="true"
-                                   Class="stored-session-source-session-field"
-                                   ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
-                            @foreach (var session in sessions)
-                            {
-                                <MudSelectItem Value="@session.Id.ToString()">
-                                    <div class="stored-session-source-session-option">
-                                        <span>@session.Name</span>
-                                        @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
-                                        {
-                                            <small>@session.ProjectName</small>
-                                        }
-                                    </div>
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
-                    }
-                    else
-                    {
-                        <div class="stored-session-source-empty" role="status">
-                            No recorded sessions found. Record a session first.
-                        </div>
-                    }
+            <div class="stored-session-source-config-row" aria-label="Stored session source configuration">
+                @if (sessions.Count > 0)
+                {
+                    <MudSelect T="string"
+                               Label="Session"
+                               @bind-Value="_sessionId"
+                               aria-label="Stored session"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="stored-session-source-session-field"
+                               ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
+                        @foreach (var session in sessions)
+                        {
+                            <MudSelectItem Value="@session.Id.ToString()">
+                                <div class="stored-session-source-session-option">
+                                    <span>@session.Name</span>
+                                    @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
+                                    {
+                                        <small>@session.ProjectName</small>
+                                    }
+                                </div>
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <div class="stored-session-source-empty" role="status">
+                        No recorded sessions found. Record a session first.
+                    </div>
+                }
 
+                <MudNumericField T="int"
+                                 Label="Output buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 aria-label="Stored session output buffer"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="stored-session-source-buffer-field" />
+            </div>
+
+            <section class="stored-session-source-playback-workspace" aria-label="Stored session playback settings">
+                <div class="stored-session-source-timing-row">
                     <div class="stored-session-source-timing-option">
                         <MudCheckBox T="bool"
                                      @bind-Value="_preserveTiming"
@@ -99,17 +112,6 @@
                                      Variant="Variant.Outlined"
                                      Margin="Margin.Dense"
                                      Class="stored-session-source-speed-field" />
-
-                    <MudNumericField T="int"
-                                     Label="Output buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     aria-label="Stored session output buffer"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="stored-session-source-buffer-field" />
                 </div>
             </section>
         </div>

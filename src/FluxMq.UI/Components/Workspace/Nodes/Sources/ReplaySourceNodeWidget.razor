@@ -41,66 +41,64 @@
             @{
                 var sessions = Live.StoredSessions;
             }
-            <section class="replay-source-playback-panel" aria-label="Replay playback configuration">
-                <div class="replay-source-source-row">
-                    @if (sessions.Count > 0)
-                    {
-                        <MudSelect T="string"
-                                   Label="Session"
-                                   @bind-Value="_sessionId"
-                                   aria-label="Replay session"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Dense="true"
-                                   Class="replay-source-session-field"
-                                   ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
-                            @foreach (var session in sessions)
-                            {
-                                <MudSelectItem Value="@session.Id.ToString()">
-                                    <div class="replay-source-session-option">
-                                        <span>@session.Name</span>
-                                        @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
-                                        {
-                                            <small>@session.ProjectName</small>
-                                        }
-                                    </div>
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
-                    }
-                    else
-                    {
-                        <MudTextField T="string"
-                                      Label="Session ID"
-                                      @bind-Value="_sessionId"
-                                      aria-label="Replay session ID"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Class="replay-source-session-field" />
-                    }
+            <section class="replay-source-config-row" aria-label="Replay source configuration">
+                @if (sessions.Count > 0)
+                {
+                    <MudSelect T="string"
+                               Label="Session"
+                               @bind-Value="_sessionId"
+                               aria-label="Replay session"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="replay-source-session-field"
+                               ToStringFunc="@(id => sessions.FirstOrDefault(s => s.Id.ToString() == id)?.Name ?? id)">
+                        @foreach (var session in sessions)
+                        {
+                            <MudSelectItem Value="@session.Id.ToString()">
+                                <div class="replay-source-session-option">
+                                    <span>@session.Name</span>
+                                    @if (!string.IsNullOrWhiteSpace(session.ProjectName) && session.ProjectName != "Default")
+                                    {
+                                        <small>@session.ProjectName</small>
+                                    }
+                                </div>
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudTextField T="string"
+                                  Label="Session ID"
+                                  @bind-Value="_sessionId"
+                                  aria-label="Replay session ID"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="replay-source-session-field" />
+                }
 
-                    <MudNumericField T="double"
-                                     Label="Playback speed"
-                                     @bind-Value="_speed"
-                                     aria-label="Replay playback speed"
-                                     Min="0.1"
-                                     Max="1000"
-                                     Step="0.1"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="replay-source-speed-field" />
+                <MudNumericField T="double"
+                                 Label="Playback speed"
+                                 @bind-Value="_speed"
+                                 aria-label="Replay playback speed"
+                                 Min="0.1"
+                                 Max="1000"
+                                 Step="0.1"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="replay-source-speed-field" />
 
-                    <MudNumericField T="int"
-                                     Label="Output buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     aria-label="Replay output buffer"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="replay-source-buffer-field" />
-                </div>
+                <MudNumericField T="int"
+                                 Label="Output buffer"
+                                 @bind-Value="_boundedCapacity"
+                                 aria-label="Replay output buffer"
+                                 Min="1"
+                                 Max="100000"
+                                 Step="100"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="replay-source-buffer-field" />
             </section>
         </div>
     </Editor>

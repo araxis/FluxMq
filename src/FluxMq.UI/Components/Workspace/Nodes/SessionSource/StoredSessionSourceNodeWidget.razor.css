@@ -78,25 +78,37 @@
 
 .stored-session-source-editor {
     display: grid;
-    gap: 8px;
+    gap: 12px;
     min-width: 0;
 }
 
-.stored-session-source-playback-panel {
+.stored-session-source-config-row,
+.stored-session-source-playback-workspace {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
-    gap: 12px;
     min-width: 0;
     padding: 14px;
 }
 
-.stored-session-source-source-row {
-    align-items: start;
+.stored-session-source-config-row {
+    align-items: end;
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(0, 1fr) minmax(170px, 0.48fr) 150px 150px;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    min-width: 0;
+}
+
+.stored-session-source-playback-workspace {
+    gap: 8px;
+}
+
+.stored-session-source-timing-row {
+    align-items: end;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(170px, 0.48fr) minmax(150px, 0.52fr);
     min-width: 0;
 }
 
@@ -173,7 +185,8 @@
 
 @media (max-width: 720px) {
     .stored-session-source-meta,
-    .stored-session-source-source-row {
+    .stored-session-source-config-row,
+    .stored-session-source-timing-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
