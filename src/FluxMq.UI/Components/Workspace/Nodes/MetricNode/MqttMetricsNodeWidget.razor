@@ -99,18 +99,18 @@
                                      Class="metrics-readout-columns-field" />
                 </div>
 
-                <div class="metrics-readout-workspace" aria-label="Visible metric readouts">
-                    <div class="metrics-readout-table-head" aria-hidden="true">
-                        <span>Readout</span>
-                        <span>Visible</span>
+                <div class="metrics-readout-selector" aria-label="Visible metric readouts">
+                    <div class="metrics-readout-selector-header">
+                        <span>Visible readouts</span>
+                        <strong>@SelectedReadoutCaption</strong>
                     </div>
-                    <div class="metrics-readout-table-body">
+                    <div class="metrics-readout-options">
                         @foreach (var option in DisplayOptions)
                         {
                             var selected = IsDisplayMetricSelected(option.Id);
                             var disabled = selected && _displayMetrics.Count == 1;
 
-                            <div class="metrics-readout-option-row">
+                            <div class="@ReadoutOptionClass(selected, disabled)">
                                 <span class="metrics-readout-option-name">@option.Label</span>
                                 <MudCheckBox T="bool"
                                              Value="@selected"
@@ -118,7 +118,7 @@
                                              Disabled="@disabled"
                                              Dense="true"
                                              aria-label="@($"Show {option.Label}")"
-                                             Class="metrics-readout-option" />
+                                             Class="metrics-readout-option-check" />
                             </div>
                         }
                     </div>
@@ -204,6 +204,15 @@
 
     private bool IsDisplayMetricSelected(string id)
         => _displayMetrics.Contains(id, StringComparer.Ordinal);
+
+    private string SelectedReadoutCaption
+        => $"{_displayMetrics.Count} selected";
+
+    private static string ReadoutOptionClass(bool selected, bool disabled)
+    {
+        var cssClass = selected ? "metrics-readout-option-tile selected" : "metrics-readout-option-tile";
+        return disabled ? $"{cssClass} locked" : cssClass;
+    }
 
     private void ToggleDisplayMetric(string id, bool selected)
     {
