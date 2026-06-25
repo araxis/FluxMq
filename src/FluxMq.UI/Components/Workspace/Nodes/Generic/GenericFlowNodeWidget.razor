@@ -43,45 +43,43 @@
     </Body>
     <Editor>
         <div class="generic-node-editor" aria-label="Generic component details">
-            <div class="generic-node-editor-surface" aria-label="Generic component contract">
-                <div class="generic-node-editor-meta-row" aria-label="Generic component summary">
-                    <div class="generic-node-editor-meta-cell">
-                        <span>Type</span>
-                        <strong title="@Node.NodeType">@Node.NodeType</strong>
-                    </div>
-                    <div class="generic-node-editor-meta-cell">
-                        <span>Category</span>
-                        <strong>@Node.Category</strong>
-                    </div>
-                    <div class="generic-node-editor-meta-cell">
-                        <span>Ports</span>
-                        <strong>@InputCount in / @OutputCount out</strong>
-                    </div>
+            <div class="generic-node-editor-meta-row" aria-label="Generic component summary">
+                <div class="generic-node-editor-meta-cell">
+                    <span>Type</span>
+                    <strong title="@Node.NodeType">@Node.NodeType</strong>
                 </div>
+                <div class="generic-node-editor-meta-cell">
+                    <span>Category</span>
+                    <strong>@Node.Category</strong>
+                </div>
+                <div class="generic-node-editor-meta-cell">
+                    <span>Ports</span>
+                    <strong>@InputCount in / @OutputCount out</strong>
+                </div>
+            </div>
 
-                <div class="generic-node-editor-port-list" aria-label="Generic component port contracts">
-                    @if (SortedPortDescriptors.Count > 0)
+            <div class="generic-node-editor-port-list" aria-label="Generic component port contracts">
+                @if (SortedPortDescriptors.Count > 0)
+                {
+                    @foreach (var port in SortedPortDescriptors)
                     {
-                        @foreach (var port in SortedPortDescriptors)
-                        {
-                            <div class="generic-node-editor-port-row">
-                                <div class="generic-node-editor-port-main">
-                                    <span>Name</span>
-                                    <strong title="@port.Name">@port.Name</strong>
-                                </div>
-                                <span class="generic-node-token @PortDirectionClass(port)">@PortDirection(port)</span>
-                                <div class="generic-node-editor-port-main type">
-                                    <span>Value type</span>
-                                    <strong title="@port.ValueType">@port.ValueType</strong>
-                                </div>
+                        <div class="generic-node-editor-port-row">
+                            <div class="generic-node-editor-port-main">
+                                <span>Name</span>
+                                <strong title="@port.Name">@port.Name</strong>
                             </div>
-                        }
+                            <span class="generic-node-token @PortDirectionClass(port)">@PortDirection(port)</span>
+                            <div class="generic-node-editor-port-main type">
+                                <span>Value type</span>
+                                <strong title="@port.ValueType">@port.ValueType</strong>
+                            </div>
+                        </div>
                     }
-                    else
-                    {
-                        <div class="generic-node-editor-empty">No declared ports.</div>
-                    }
-                </div>
+                }
+                else
+                {
+                    <div class="generic-node-editor-empty">No declared ports.</div>
+                }
             </div>
         </div>
     </Editor>
