@@ -48,6 +48,17 @@
     <Editor>
         <div class="condition-router-editor" aria-label="Condition router settings">
             <section class="condition-router-editor-surface" aria-label="Condition router configuration">
+                <div class="condition-router-editor-status" aria-label="Condition router draft status">
+                    <div>
+                        <span>Input</span>
+                        <strong>@DraftInputTypeCaption</strong>
+                    </div>
+                    <div>
+                        <span>Branches</span>
+                        <strong>WhenTrue / WhenFalse</strong>
+                    </div>
+                </div>
+
                 <div class="condition-router-config-row">
                     <MudSelect T="string"
                                Value="@_inputType"
@@ -63,17 +74,6 @@
                             <MudSelectItem Value="@inputType">@InputTypeLabel(inputType)</MudSelectItem>
                         }
                     </MudSelect>
-
-                    <div class="condition-router-output-map" aria-label="Condition router outputs">
-                        <div>
-                            <span>True</span>
-                            <strong>WhenTrue</strong>
-                        </div>
-                        <div>
-                            <span>False</span>
-                            <strong>WhenFalse</strong>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="condition-router-expression-row" aria-label="Condition router rule">
@@ -82,7 +82,7 @@
                                   Label="Condition"
                                   aria-label="Condition expression"
                                   Variant="Variant.Outlined"
-                                  Lines="8"
+                                  Lines="7"
                                   Class="condition-router-expression-field"
                                   Placeholder="@ExpressionPlaceholder" />
 
@@ -119,6 +119,7 @@
     private IReadOnlyList<ConditionVariable> Variables => IsMetricInput ? MetricVariables : MqttVariables;
     private IReadOnlyList<ConditionVariable> SummaryVariables => Variables.Take(MaxSummaryVariables).ToArray();
     private int VariableOverflow => Math.Max(0, Variables.Count - MaxSummaryVariables);
+    private string DraftInputTypeCaption => InputTypeLabel(_inputType);
     private string ExpressionPlaceholder => IsMetricInput ? "value > 10" : "topic.StartsWith(\"sensors/\") && qos >= 1";
     private const int MaxSummaryVariables = 4;
 

@@ -6976,6 +6976,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("condition-router-editor");
         markup.ShouldContain("aria-label=\"Condition router settings\"");
         markup.ShouldContain("condition-router-editor-surface");
+        markup.ShouldContain("condition-router-editor-status");
+        markup.ShouldContain("DraftInputTypeCaption");
+        markup.ShouldContain("aria-label=\"Condition router draft status\"");
         markup.ShouldContain("condition-router-config-row");
         markup.ShouldContain("aria-label=\"Condition router configuration\"");
         markup.ShouldContain("condition-router-expression-row");
@@ -6987,11 +6990,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Condition input type\"");
         markup.ShouldContain("ValueChanged=\"@SetInputType\"");
         markup.ShouldContain("Class=\"condition-router-input-field\"");
-        markup.ShouldContain("condition-router-output-map");
+        markup.ShouldNotContain("condition-router-output-map");
         markup.ShouldContain("Label=\"Condition\"");
         markup.ShouldContain("aria-label=\"Condition expression\"");
         markup.ShouldContain("@bind-Value=\"_expression\"");
-        markup.ShouldContain("Lines=\"8\"");
+        markup.ShouldContain("Lines=\"7\"");
         markup.ShouldContain("Class=\"condition-router-expression-field\"");
         markup.ShouldNotContain("condition-router-expression-cell");
         markup.ShouldNotContain("HelperText=\"@ExpressionHelper\"");
@@ -7034,6 +7037,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".condition-router-editor");
         css.ShouldContain(".condition-router-editor-surface");
+        css.ShouldContain(".condition-router-editor-status");
+        css.ShouldContain(".condition-router-editor-status > div");
         css.ShouldContain(".condition-router-config-row");
         css.ShouldContain(".condition-router-expression-row");
         css.ShouldNotContain(".condition-router-expression-workspace");
@@ -7044,8 +7049,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("padding: 12px;");
         css.ShouldNotContain("padding: 14px;");
         css.ShouldNotContain(".condition-router-source-row");
-        css.ShouldContain("grid-template-columns: minmax(180px, 1fr) minmax(230px, 0.72fr);");
-        css.ShouldContain(".condition-router-output-map");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(180px, 1fr) minmax(230px, 0.72fr);");
+        css.ShouldNotContain(".condition-router-output-map");
         css.ShouldContain("border-left: 2px solid");
         css.ShouldNotContain(".condition-router-expression-cell");
         css.ShouldContain(".condition-router-variable-reference");
@@ -7053,9 +7060,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".condition-router-variable-strip");
         css.ShouldContain(".condition-router-variable-label");
         css.ShouldContain(".condition-router-variable-token");
-        css.ShouldContain("grid-template-columns: 74px minmax(0, 1fr);");
+        css.ShouldNotContain("grid-template-columns: 74px minmax(0, 1fr);");
         css.ShouldContain(".condition-router-editor ::deep(.condition-router-expression-field textarea.mud-input-root)");
-        css.ShouldContain("min-height: 150px;");
+        css.ShouldContain("min-height: 136px;");
         css.ShouldContain(".condition-router-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldNotContain(".flow-node-filters");

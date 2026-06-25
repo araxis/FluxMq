@@ -105,11 +105,26 @@
     padding: 12px;
 }
 
-.condition-router-config-row {
-    align-items: start;
+.condition-router-editor-status {
     display: grid;
     gap: 8px;
-    grid-template-columns: minmax(180px, 1fr) minmax(230px, 0.72fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+}
+
+.condition-router-editor-status > div {
+    align-content: center;
+    border-left: 2px solid color-mix(in srgb, var(--mud-palette-secondary) 34%, var(--flux-border-soft));
+    display: grid;
+    gap: 3px;
+    min-height: 32px;
+    min-width: 0;
+    padding-left: 8px;
+}
+
+.condition-router-config-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
 }
 
@@ -121,25 +136,7 @@
     padding-top: 10px;
 }
 
-.condition-router-output-map {
-    align-items: stretch;
-    display: grid;
-    gap: 4px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-height: 36px;
-    min-width: 0;
-}
-
-.condition-router-output-map > div {
-    align-content: center;
-    border-left: 2px solid color-mix(in srgb, var(--mud-palette-secondary) 34%, var(--flux-border-soft));
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-    padding: 4px 0 4px 7px;
-}
-
-.condition-router-output-map span,
+.condition-router-editor-status span,
 .condition-router-variable-label {
     color: var(--flux-text-muted);
     font-size: 0.66rem;
@@ -147,9 +144,10 @@
     letter-spacing: 0;
     line-height: 1;
     min-width: 0;
+    text-transform: uppercase;
 }
 
-.condition-router-output-map strong {
+.condition-router-editor-status strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 78%, var(--mud-palette-text-secondary));
     font-size: 0.76rem;
     font-weight: 760;
@@ -161,18 +159,17 @@
 }
 
 .condition-router-variable-reference {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 44%, transparent);
-    display: grid;
-    gap: 6px;
-    grid-template-columns: 74px minmax(0, 1fr);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
     min-width: 0;
-    padding: 8px 2px 0;
+    padding: 7px 2px 0;
 }
 
 .condition-router-variable-label {
     min-width: 0;
-    padding-top: 5px;
-    text-transform: uppercase;
+    padding: 3px 4px 0 0;
 }
 
 .condition-router-variable-list {
@@ -187,11 +184,11 @@
     border: 1px solid color-mix(in srgb, var(--mud-palette-secondary) 24%, var(--flux-border-soft));
     border-radius: 4px;
     display: inline-grid;
-    gap: 3px;
+    gap: 4px;
     grid-template-columns: minmax(0, auto) minmax(0, auto);
     max-width: 100%;
     min-width: 0;
-    padding: 3px 5px;
+    padding: 4px 5px;
 }
 
 .condition-router-variable-token code {
@@ -232,7 +229,7 @@
 }
 
 .condition-router-editor ::deep(.condition-router-expression-field textarea.mud-input-root) {
-    min-height: 150px;
+    min-height: 136px;
 }
 
 .condition-router-input-field,
@@ -242,9 +239,8 @@
 
 @media (max-width: 720px) {
     .condition-router-meta,
-    .condition-router-config-row,
-    .condition-router-variable-reference,
-    .condition-router-output-map {
+    .condition-router-editor-status,
+    .condition-router-config-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
