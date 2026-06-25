@@ -127,57 +127,79 @@
     min-width: 0;
 }
 
-.routing-merge-port-section {
+.routing-merge-port-composer {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
     gap: 8px;
     min-width: 0;
-    padding-top: 4px;
+    padding-top: 10px;
+}
+
+.routing-merge-port-actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.routing-merge-port-title {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.routing-merge-port-title span {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    font-size: 0.76rem;
+    font-weight: 760;
+    line-height: 1;
+    min-width: 0;
+}
+
+.routing-merge-port-title small {
+    color: var(--flux-text-muted);
+    font-size: 0.62rem;
+    font-weight: 650;
+    line-height: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .routing-merge-port-list {
     display: grid;
+    gap: 5px;
     min-width: 0;
 }
 
-.routing-merge-port-column-header {
+.routing-merge-port-row {
     align-items: center;
-    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 46%, transparent);
+    background: color-mix(in srgb, var(--flux-surface-2) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 28%, transparent);
+    border-radius: 5px;
     display: grid;
-    gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 30px;
+    gap: 7px;
+    grid-template-columns: 24px minmax(0, 1fr) 30px;
     min-width: 0;
-    padding: 0 0 8px;
+    padding: 6px 7px;
 }
 
-.routing-merge-port-column-header span {
+.routing-merge-port-index {
+    align-items: center;
+    background: color-mix(in srgb, var(--flux-surface-2) 34%, transparent);
+    border-radius: 4px;
     color: var(--flux-text-muted);
-    font-size: 0.62rem;
-    font-weight: 780;
-    letter-spacing: 0;
+    display: inline-flex;
+    font-size: 0.64rem;
+    font-weight: 760;
+    height: 24px;
+    justify-content: center;
     line-height: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-transform: uppercase;
-    white-space: nowrap;
+    width: 24px;
 }
 
-.routing-merge-port-row {
-    align-items: center;
-    display: grid;
-    gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 30px;
-    min-width: 0;
-    padding: 8px 2px 0;
-}
-
-.routing-merge-port-row {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
-}
-
-.routing-merge-port-column-header ::deep(.routing-merge-add-port.mud-icon-button),
-.routing-merge-port-row ::deep(.routing-merge-remove-port.mud-icon-button) {
+.routing-merge-port-actions ::deep(.routing-merge-add-port.mud-icon-button),
+.routing-merge-port-composer ::deep(.routing-merge-remove-port.mud-icon-button) {
     height: 28px;
     min-height: 28px;
     min-width: 28px;
@@ -188,9 +210,12 @@
 @media (max-width: 720px) {
     .routing-merge-meta,
     .routing-merge-config-row,
-    .routing-merge-port-column-header,
     .routing-merge-port-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .routing-merge-port-index {
+        width: 100%;
     }
 
     .routing-merge-ports {
