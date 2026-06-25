@@ -78,18 +78,17 @@
 
 .routing-window-editor {
     display: grid;
-    gap: 12px;
     min-width: 0;
 }
 
-.routing-window-config-row,
-.routing-window-limit-workspace {
+.routing-window-editor-surface {
     background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     border-radius: 6px;
     display: grid;
+    gap: 10px;
     min-width: 0;
-    padding: 14px;
+    padding: 12px;
 }
 
 .routing-window-config-row {
@@ -100,16 +99,14 @@
     min-width: 0;
 }
 
-.routing-window-limit-workspace {
-    gap: 8px;
-}
-
 .routing-window-limit-row {
     align-items: end;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
     gap: 8px;
     grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) minmax(132px, 0.72fr);
     min-width: 0;
+    padding-top: 10px;
 }
 
 .routing-window-partial-option {

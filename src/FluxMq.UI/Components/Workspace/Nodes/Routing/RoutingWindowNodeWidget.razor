@@ -37,35 +37,35 @@
     </Body>
     <Editor>
         <div class="routing-window-editor" aria-label="Routing window settings">
-            <div class="routing-window-config-row" aria-label="Routing window configuration">
-                <MudSelect T="string"
-                           Label="Input type"
-                           @bind-Value="_inputType"
-                           aria-label="Routing window input type"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-window-input-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
+            <section class="routing-window-editor-surface" aria-label="Routing window configuration">
+                <div class="routing-window-config-row">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               aria-label="Routing window input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="routing-window-input-field">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
 
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 aria-label="Routing window input buffer"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-window-buffer-field" />
-            </div>
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Routing window input buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-window-buffer-field" />
+                </div>
 
-            <section class="routing-window-limit-workspace" aria-label="Routing window limit settings">
-                <div class="routing-window-limit-row">
+                <div class="routing-window-limit-row" aria-label="Routing window limit settings">
                     <MudNumericField T="int"
                                      Label="Max items"
                                      @bind-Value="_maxItems"

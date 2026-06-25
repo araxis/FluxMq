@@ -7458,9 +7458,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("routing-window-token");
         markup.ShouldContain("routing-window-editor");
         markup.ShouldContain("aria-label=\"Routing window settings\"");
+        markup.ShouldContain("routing-window-editor-surface");
         markup.ShouldContain("routing-window-config-row");
         markup.ShouldContain("aria-label=\"Routing window configuration\"");
-        markup.ShouldContain("routing-window-limit-workspace");
         markup.ShouldContain("routing-window-limit-row");
         markup.ShouldContain("aria-label=\"Routing window limit settings\"");
         markup.ShouldContain("Label=\"Input type\"");
@@ -7492,6 +7492,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("routing-window-source-row");
         markup.ShouldNotContain("routing-window-source-grid");
         markup.ShouldNotContain("routing-window-limit-panel");
+        markup.ShouldNotContain("routing-window-limit-workspace");
         markup.ShouldNotContain("<span>Completion</span>");
         markup.ShouldNotContain("routing-window-form-grid");
         markup.ShouldNotContain("<MudStack");
@@ -7510,11 +7511,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".routing-window-editor");
+        css.ShouldContain(".routing-window-editor-surface");
         css.ShouldContain(".routing-window-config-row");
-        css.ShouldContain(".routing-window-limit-workspace");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
-        css.ShouldContain("padding: 14px;");
+        css.ShouldContain("gap: 10px;");
+        css.ShouldContain("padding: 12px;");
         css.ShouldNotContain(".routing-window-panel-header");
         css.ShouldNotContain(".routing-window-panel-kicker");
         css.ShouldNotContain(".routing-window-panel-token");
@@ -7522,8 +7524,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".routing-window-source-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
         css.ShouldContain(".routing-window-limit-row");
-        css.ShouldNotContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);");
-        css.ShouldNotContain("padding-top: 10px;");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
+        css.ShouldContain("padding-top: 10px;");
         css.ShouldContain("grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) minmax(132px, 0.72fr);");
         css.ShouldContain(".routing-window-partial-option");
         css.ShouldContain("align-items: center;");
@@ -7536,6 +7538,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(116px, 0.72fr)) minmax(128px, 0.66fr);");
         css.ShouldNotContain(".routing-window-config-grid");
         css.ShouldNotContain(".routing-window-limit-grid");
+        css.ShouldNotContain(".routing-window-limit-workspace");
+        css.ShouldNotContain("padding: 14px;");
         css.ShouldNotContain(".flow-node-filters");
         css.ShouldNotContain("border-radius: 999px;");
     }
