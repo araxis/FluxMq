@@ -6899,6 +6899,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".mqtt-publisher-editor");
         css.ShouldContain(".mqtt-publisher-broker-cell");
         css.ShouldNotContain(".mqtt-publisher-field-note");
+        css.ShouldContain("gap: 7px;");
+        css.ShouldNotContain("gap: 8px;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 160px;");
         css.ShouldContain(".mqtt-publisher-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 640px)");
@@ -6958,6 +6960,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".mqtt-recorder-contract");
         css.ShouldContain(".mqtt-recorder-token");
         css.ShouldContain(".mqtt-recorder-editor");
+        css.ShouldContain("gap: 7px;");
+        css.ShouldNotContain("gap: 8px;");
         css.ShouldContain("grid-template-columns: minmax(0, 180px);");
         css.ShouldContain(".mqtt-recorder-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 640px)");
@@ -7025,6 +7029,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".file-writer-editor");
+        css.ShouldContain("gap: 7px;");
+        css.ShouldNotContain("gap: 8px;");
         css.ShouldContain("grid-template-columns: minmax(0, 180px);");
         css.ShouldContain(".file-writer-editor ::deep(.mud-input-control)");
         css.ShouldContain("min-height: 34px;");
