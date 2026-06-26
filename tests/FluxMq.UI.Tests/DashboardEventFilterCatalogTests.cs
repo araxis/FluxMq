@@ -7447,6 +7447,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".routing-switch-meta");
         css.ShouldContain("grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.58fr) minmax(0, 0.64fr) minmax(0, 0.6fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 62px 68px 64px;");
+        css.ShouldContain("display: -webkit-box;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".routing-switch-expression");
         css.ShouldContain(".routing-switch-routes");
         css.ShouldContain("display: flex;");
@@ -7510,6 +7512,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("align-items: center;");
         css.ShouldContain(".routing-switch-route-header ::deep(.routing-switch-route-add.mud-icon-button)");
         css.ShouldContain(".routing-switch-editor ::deep(.mud-input-control)");
+        css.ShouldContain("align-self: center;");
+        css.ShouldContain("justify-self: end;");
+        css.ShouldContain("border-radius: 4px;");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldNotContain(".flow-node-filters");
         css.ShouldNotContain(".routing-switch-routes-field");
