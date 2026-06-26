@@ -8103,6 +8103,8 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldContain(".routing-correlation-meta");
         correlationCss.ShouldContain("grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.68fr) minmax(0, 0.58fr) minmax(0, 0.52fr);");
         correlationCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 112px 76px 64px;");
+        correlationCss.ShouldContain("display: -webkit-box;");
+        correlationCss.ShouldContain("-webkit-line-clamp: 2;");
         correlationCss.ShouldContain(".routing-correlation-rules");
         correlationCss.ShouldContain("flex-wrap: wrap;");
         correlationCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
@@ -8223,6 +8225,8 @@ public sealed class DashboardEventFilterCatalogTests
         joinCss.ShouldContain(".routing-join-meta");
         joinCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.74fr) minmax(0, 0.56fr);");
         joinCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 96px 64px;");
+        joinCss.ShouldContain("display: -webkit-box;");
+        joinCss.ShouldContain("-webkit-line-clamp: 2;");
         joinCss.ShouldContain(".routing-join-rules");
         joinCss.ShouldContain("display: flex;");
         joinCss.ShouldContain("flex-wrap: wrap;");
