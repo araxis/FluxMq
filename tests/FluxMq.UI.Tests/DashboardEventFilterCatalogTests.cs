@@ -6640,6 +6640,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(160px, 210px) minmax(0, 1fr);");
         css.ShouldContain(".json-schema-validator-file-source");
         css.ShouldContain(".json-schema-validator-file-row");
+        css.ShouldContain(".json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button)");
+        css.ShouldContain("justify-self: end;");
+        css.ShouldContain("border-radius: 4px;");
+        css.ShouldContain(".json-schema-validator-file-row ::deep(.schema-file-picker-button .mud-icon-root)");
         css.ShouldNotContain(".json-schema-validator-field-note");
         css.ShouldContain(".json-schema-validator-inline-source");
         css.ShouldContain(".json-schema-validator-inline-source ::deep(.schema-monaco-editor)");

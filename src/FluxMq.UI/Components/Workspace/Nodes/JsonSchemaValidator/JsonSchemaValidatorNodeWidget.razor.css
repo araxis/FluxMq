@@ -154,11 +154,22 @@
 }
 
 .json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button) {
+    border-radius: 4px;
+    color: color-mix(in srgb, var(--mud-palette-info) 82%, var(--mud-palette-text-primary));
     height: 30px;
+    justify-self: end;
     min-height: 30px;
     min-width: 30px;
     padding: 0;
     width: 30px;
+}
+
+.json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button:hover:not(.mud-disabled)) {
+    background-color: color-mix(in srgb, var(--flux-surface-2) 44%, transparent);
+}
+
+.json-schema-validator-file-row ::deep(.schema-file-picker-button .mud-icon-root) {
+    font-size: 1.04rem;
 }
 
 .json-schema-validator-inline-source ::deep(.schema-monaco-editor) {
