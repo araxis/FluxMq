@@ -6302,12 +6302,19 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".flow-assertion-summary");
         css.ShouldContain(".flow-assertion-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 82px 54px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.6fr) minmax(0, 0.42fr);");
         css.ShouldContain(".flow-assertion-contracts");
         css.ShouldContain(".flow-assertion-contract");
         css.ShouldContain(".flow-assertion-contract-label");
-        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldContain("flex: 0 0 100%;");
+        css.ShouldNotContain("grid-template-columns: repeat(3, minmax(0, auto));");
+        css.ShouldNotContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldNotContain("grid-column: 1 / -1;");
         css.ShouldContain(".flow-assertion-token");
+        css.ShouldContain("display: inline-flex;");
+        css.ShouldContain("justify-content: center;");
         css.ShouldContain("color-mix(in srgb, var(--mud-palette-info) 70%, var(--mud-palette-text-primary));");
         css.ShouldContain("color: var(--flux-text-muted);");
         css.ShouldNotContain("color-mix(in srgb, var(--mud-palette-warning) 76%, var(--mud-palette-text-primary));");
