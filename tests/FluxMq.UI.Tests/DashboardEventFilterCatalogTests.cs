@@ -8846,6 +8846,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metric-source-config-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
         css.ShouldContain(".metric-source-description-row");
+        css.ShouldContain("grid-template-columns: 72px minmax(0, 1fr);");
+        css.ShouldContain("display: grid;");
+        css.ShouldContain("min-width: 0;");
         css.ShouldNotContain(".metric-source-parameter-surface");
         css.ShouldNotContain(".metric-source-parameter-summary");
         css.ShouldContain(".metric-source-parameter-group");
@@ -8862,6 +8865,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metric-source-start-row");
         css.ShouldContain("min-height: 34px;");
         css.ShouldNotContain("min-height: 38px;");
+        css.ShouldContain(".metric-source-start-row ::deep(.mud-checkbox)");
+        css.ShouldContain(".metric-source-start-row ::deep(.mud-checkbox .mud-typography)");
+        css.ShouldContain("margin: 0;");
         css.ShouldContain(".metric-source-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldNotContain(".metric-source-main-grid");

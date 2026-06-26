@@ -124,11 +124,13 @@
     align-items: start;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 32%, transparent);
     color: color-mix(in srgb, var(--mud-palette-text-primary) 66%, var(--mud-palette-text-secondary));
+    display: grid;
     font-size: 0.78rem;
     font-weight: 650;
     gap: 7px;
     grid-template-columns: 72px minmax(0, 1fr);
     line-height: 1.35;
+    min-width: 0;
     padding-top: 8px;
 }
 
@@ -214,6 +216,16 @@
 
 .metric-source-start-row ::deep(.metric-source-start-check) {
     margin-inline-start: 0;
+}
+
+.metric-source-start-row ::deep(.mud-checkbox) {
+    margin: 0;
+}
+
+.metric-source-start-row ::deep(.mud-checkbox .mud-typography) {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    font-size: 0.82rem;
+    line-height: 1.2;
 }
 
 .metric-source-metric-field,
