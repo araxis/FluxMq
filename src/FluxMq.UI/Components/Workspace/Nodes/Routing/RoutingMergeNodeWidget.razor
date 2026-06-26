@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.CallMerge"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="routing-merge-summary">
             <div class="routing-merge-meta">
@@ -91,10 +93,12 @@
                         var input = _inputDrafts[index];
                         <div class="routing-merge-port-row" @key="input">
                             <MudTextField T="string"
-                                          @bind-Value="input.Name"
+                                          Value="@input.Name"
+                                          ValueChanged="@(value => SetInputNameAsync(input, value))"
                                           aria-label="@($"Input port {index + 1}")"
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
+                                          Immediate="true"
                                           Class="routing-merge-input-name-field"
                                           Placeholder="Primary" />
                             <MudTooltip Text="@(_inputDrafts.Count > 1 ? "Remove input port" : "Keep at least one input")">
@@ -162,9 +166,13 @@
             RoutingMergeNodeModel.DefaultBoundedCapacity);
     }
 
-    private void AddInput() => _inputDrafts.Add(new($"Input{_inputDrafts.Count + 1}"));
+    private async Task AddInput()
+    {
+        _inputDrafts.Add(new($"Input{_inputDrafts.Count + 1}"));
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
 
-    private void RemoveInput(PortDraft input)
+    private async Task RemoveInput(PortDraft input)
     {
         if (_inputDrafts.Count <= 1)
         {
@@ -172,6 +180,13 @@
         }
 
         _inputDrafts.Remove(input);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetInputNameAsync(PortDraft input, string value)
+    {
+        input.Name = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
     }
 
     private Task SaveAsync()
@@ -188,6 +203,62 @@
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
     }
+
+    private string? ValidateEditor()
+        => ValidatePortDrafts(
+            _inputDrafts,
+            ["Output", "Errors"],
+            "Add at least one input port before saving.",
+            "Each input port needs a name.",
+            "Input port names can use letters, numbers, and underscores and cannot start with a number.",
+            "Input port names cannot be Output or Errors.",
+            "Input port names must be unique.");
+
+    private static string? ValidatePortDrafts(
+        IReadOnlyCollection<PortDraft> drafts,
+        IReadOnlyCollection<string> reserved,
+        string emptyMessage,
+        string blankMessage,
+        string invalidNameMessage,
+        string reservedMessage,
+        string duplicateMessage)
+    {
+        if (drafts.Count == 0 || !drafts.Any(IsNamedPort))
+        {
+            return emptyMessage;
+        }
+
+        foreach (var draft in drafts)
+        {
+            var name = draft.Name?.Trim() ?? string.Empty;
+            if (name.Length == 0)
+            {
+                return blankMessage;
+            }
+
+            var normalized = RoutingNodeConfiguration.NormalizePortName(name, string.Empty);
+            if (!string.Equals(name, normalized, StringComparison.Ordinal))
+            {
+                return invalidNameMessage;
+            }
+
+            if (reserved.Contains(normalized, StringComparer.Ordinal))
+            {
+                return reservedMessage;
+            }
+        }
+
+        return drafts
+            .GroupBy(
+                draft => RoutingNodeConfiguration.NormalizePortName(draft.Name, string.Empty),
+                StringComparer.Ordinal)
+            .Any(group => group.Count() > 1)
+            ? duplicateMessage
+            : null;
+    }
+
+    private static bool IsNamedPort(PortDraft draft)
+        => !string.IsNullOrWhiteSpace(draft.Name);
 
     private sealed class PortDraft(string name)
     {
