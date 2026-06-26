@@ -7484,6 +7484,10 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldNotContain("min-height: 40px;");
         forkCss.ShouldContain(".routing-fork-port-header ::deep(.routing-fork-add-port.mud-icon-button)");
         forkCss.ShouldContain(".routing-fork-editor ::deep(.mud-input-control)");
+        forkCss.ShouldContain("justify-self: end;");
+        forkCss.ShouldContain("border-radius: 4px;");
+        forkCss.ShouldContain(".routing-fork-port-header ::deep(.routing-fork-add-port .mud-icon-root)");
+        forkCss.ShouldContain(".routing-fork-port-composer ::deep(.routing-fork-remove-port.mud-disabled)");
         forkCss.ShouldNotContain(".routing-fork-panel-title");
         forkCss.ShouldNotContain(".routing-fork-config-grid");
         forkCss.ShouldNotContain(".routing-fork-outputs-field");
@@ -7603,6 +7607,10 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldNotContain("min-height: 40px;");
         mergeCss.ShouldContain(".routing-merge-port-header ::deep(.routing-merge-add-port.mud-icon-button)");
         mergeCss.ShouldContain(".routing-merge-editor ::deep(.mud-input-control)");
+        mergeCss.ShouldContain("justify-self: end;");
+        mergeCss.ShouldContain("border-radius: 4px;");
+        mergeCss.ShouldContain(".routing-merge-port-header ::deep(.routing-merge-add-port .mud-icon-root)");
+        mergeCss.ShouldContain(".routing-merge-port-composer ::deep(.routing-merge-remove-port.mud-disabled)");
         mergeCss.ShouldNotContain(".routing-merge-panel-title");
         mergeCss.ShouldNotContain(".routing-merge-config-grid");
         mergeCss.ShouldNotContain(".routing-merge-inputs-field");

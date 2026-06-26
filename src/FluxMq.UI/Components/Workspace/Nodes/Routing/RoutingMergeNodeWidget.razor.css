@@ -167,11 +167,37 @@
 
 .routing-merge-port-header ::deep(.routing-merge-add-port.mud-icon-button),
 .routing-merge-port-composer ::deep(.routing-merge-remove-port.mud-icon-button) {
+    border-radius: 4px;
     height: 28px;
+    justify-self: end;
     min-height: 28px;
     min-width: 28px;
     padding: 0;
     width: 28px;
+}
+
+.routing-merge-port-header ::deep(.routing-merge-add-port.mud-icon-button) {
+    color: color-mix(in srgb, var(--mud-palette-secondary) 82%, var(--mud-palette-text-primary));
+}
+
+.routing-merge-port-composer ::deep(.routing-merge-remove-port.mud-icon-button) {
+    color: color-mix(in srgb, var(--mud-palette-text-secondary) 78%, transparent);
+}
+
+.routing-merge-port-header ::deep(.routing-merge-add-port.mud-icon-button:hover:not(.mud-disabled)),
+.routing-merge-port-composer ::deep(.routing-merge-remove-port.mud-icon-button:hover:not(.mud-disabled)) {
+    background-color: color-mix(in srgb, var(--flux-surface-2) 44%, transparent);
+}
+
+.routing-merge-port-header ::deep(.routing-merge-add-port .mud-icon-root),
+.routing-merge-port-composer ::deep(.routing-merge-remove-port .mud-icon-root) {
+    font-size: 1.04rem;
+}
+
+.routing-merge-port-composer ::deep(.routing-merge-remove-port.mud-disabled),
+.routing-merge-port-composer ::deep(.routing-merge-remove-port:disabled) {
+    color: color-mix(in srgb, var(--mud-palette-text-disabled) 76%, transparent);
+    opacity: 0.52;
 }
 
 @media (max-width: 720px) {
