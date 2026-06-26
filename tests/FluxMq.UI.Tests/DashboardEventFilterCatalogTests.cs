@@ -6635,7 +6635,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".json-schema-validator-summary");
         css.ShouldContain(".json-schema-validator-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 90px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.34fr) minmax(0, 0.66fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 90px;");
         css.ShouldContain(".json-schema-validator-contracts");
         css.ShouldContain(".json-schema-validator-contract");
         css.ShouldContain(".json-schema-validator-contract-label");
@@ -6659,7 +6660,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
         css.ShouldNotContain("border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);");
         css.ShouldNotContain("padding: 12px;");
-        css.ShouldContain("grid-template-columns: minmax(160px, 210px) minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 0.64fr) minmax(0, 1.36fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(160px, 210px) minmax(0, 1fr);");
         css.ShouldContain(".json-schema-validator-file-source");
         css.ShouldContain(".json-schema-validator-file-row");
         css.ShouldContain(".json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button)");

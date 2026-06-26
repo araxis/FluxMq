@@ -8,7 +8,7 @@
 .json-schema-validator-meta {
     display: grid;
     gap: 2px;
-    grid-template-columns: minmax(0, 1fr) 90px;
+    grid-template-columns: minmax(0, 1.34fr) minmax(0, 0.66fr);
     min-width: 0;
 }
 
@@ -92,7 +92,7 @@
     align-items: end;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(160px, 210px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 0.64fr) minmax(0, 1.36fr);
     min-width: 0;
 }
 
