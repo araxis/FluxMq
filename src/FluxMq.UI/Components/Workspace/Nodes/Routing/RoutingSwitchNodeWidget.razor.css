@@ -92,7 +92,7 @@
 
 .routing-switch-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -118,7 +118,7 @@
     gap: 7px;
     grid-template-columns: minmax(0, 1fr);
     min-width: 0;
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .routing-switch-expression-stack {
@@ -192,7 +192,7 @@
     display: grid;
     gap: 7px;
     min-width: 0;
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .routing-switch-route-header {
@@ -200,10 +200,10 @@
     color: color-mix(in srgb, var(--mud-palette-text-primary) 70%, var(--mud-palette-text-secondary));
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px;
-    min-height: 30px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 28px;
+    min-height: 28px;
     min-width: 0;
-    padding: 0 0 5px;
+    padding: 0 0 4px;
 }
 
 .routing-switch-route-header span {
@@ -229,10 +229,10 @@
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 32%, transparent);
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px;
-    min-height: 42px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 28px;
+    min-height: 40px;
     min-width: 0;
-    padding: 6px 0;
+    padding: 5px 0;
 }
 
 .routing-switch-editor ::deep(.mud-input-control) {
@@ -270,7 +270,7 @@
 }
 
 .routing-switch-envelope-option ::deep(.mud-checkbox .mud-button-root) {
-    padding: 4px;
+    padding: 3px;
 }
 
 .routing-switch-envelope-option ::deep(.mud-checkbox .mud-typography) {
@@ -309,7 +309,7 @@
     }
 
     .routing-switch-route-header {
-        grid-template-columns: minmax(0, 1fr) 30px;
+        grid-template-columns: minmax(0, 1fr) 28px;
     }
 
     .routing-switch-route-header span:nth-child(2) {

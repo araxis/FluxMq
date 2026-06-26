@@ -78,7 +78,7 @@
 
 .routing-join-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -100,7 +100,7 @@
     display: grid;
     gap: 7px;
     min-width: 0;
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .routing-join-key-row {
@@ -150,7 +150,7 @@
 }
 
 .routing-join-case-option ::deep(.mud-checkbox .mud-button-root) {
-    padding: 4px;
+    padding: 3px;
 }
 
 .routing-join-case-option ::deep(.mud-checkbox .mud-typography) {

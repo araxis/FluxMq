@@ -78,7 +78,7 @@
 
 .routing-window-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -97,7 +97,7 @@
     gap: 7px;
     grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) minmax(124px, 0.6fr);
     min-width: 0;
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .routing-window-partial-option {
@@ -139,7 +139,7 @@
 }
 
 .routing-window-partial-option ::deep(.mud-checkbox .mud-button-root) {
-    padding: 4px;
+    padding: 3px;
 }
 
 .routing-window-partial-option ::deep(.mud-checkbox .mud-typography) {
