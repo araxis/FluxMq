@@ -7942,6 +7942,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".routing-window-meta");
         css.ShouldContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.7fr) minmax(0, 0.52fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 86px 62px;");
+        css.ShouldContain("display: -webkit-box;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".routing-window-boundary");
         css.ShouldContain("flex-wrap: wrap;");
         css.ShouldNotContain("grid-template-columns: repeat(3, minmax(0, auto));");
