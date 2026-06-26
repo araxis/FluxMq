@@ -8714,7 +8714,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".generic-node-summary");
         css.ShouldContain(".generic-node-description");
-        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain("display: -webkit-box;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".generic-node-meta");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
         css.ShouldContain(".generic-node-ports");
@@ -8740,6 +8741,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".generic-node-editor-row");
         css.ShouldContain(".generic-node-editor-label");
         css.ShouldContain(".generic-node-editor-note");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain("grid-template-columns: minmax(0, 0.5fr) minmax(0, 1fr) minmax(0, 0.62fr);");
         css.ShouldNotContain("grid-template-columns: 84px minmax(0, 1fr) minmax(120px, 0.45fr);");
         css.ShouldContain("min-height: 38px;");

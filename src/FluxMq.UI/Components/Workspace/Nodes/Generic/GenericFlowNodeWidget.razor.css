@@ -7,13 +7,16 @@
 
 .generic-node-description {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 72%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.68rem;
     font-weight: 680;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.2;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .generic-node-meta {
@@ -126,24 +129,30 @@
 .generic-node-editor-row > strong,
 .generic-node-editor-port-row > strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.82rem;
     font-weight: 720;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.15;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .generic-node-editor-note {
     color: var(--flux-text-muted);
+    display: -webkit-box;
     font-size: 0.76rem;
     font-weight: 650;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .generic-node-editor-note.type {
