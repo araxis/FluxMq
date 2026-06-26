@@ -43,18 +43,16 @@
     </Body>
     <Editor>
         <div class="generic-node-editor" aria-label="Generic component details">
-            <div class="generic-node-editor-meta-row" aria-label="Generic component summary">
-                <div class="generic-node-editor-meta-cell">
-                    <span>Type</span>
+            <div class="generic-node-editor-table" aria-label="Generic component summary">
+                <div class="generic-node-editor-row">
+                    <span class="generic-node-editor-label">Type</span>
                     <strong title="@Node.NodeType">@Node.NodeType</strong>
+                    <span class="generic-node-editor-note" title="@Node.Category">@Node.Category</span>
                 </div>
-                <div class="generic-node-editor-meta-cell">
-                    <span>Category</span>
-                    <strong>@Node.Category</strong>
-                </div>
-                <div class="generic-node-editor-meta-cell">
-                    <span>Ports</span>
-                    <strong>@InputCount in / @OutputCount out</strong>
+                <div class="generic-node-editor-row">
+                    <span class="generic-node-editor-label">Summary</span>
+                    <strong title="@SummaryCaption">@SummaryCaption</strong>
+                    <span class="generic-node-editor-note">@PortCountCaption</span>
                 </div>
             </div>
 
@@ -64,21 +62,15 @@
                     @foreach (var port in SortedPortDescriptors)
                     {
                         <div class="generic-node-editor-port-row">
-                            <div class="generic-node-editor-port-main">
-                                <span>Name</span>
-                                <strong title="@port.Name">@port.Name</strong>
-                            </div>
                             <span class="generic-node-token @PortDirectionClass(port)">@PortDirection(port)</span>
-                            <div class="generic-node-editor-port-main type">
-                                <span>Value type</span>
-                                <strong title="@port.ValueType">@port.ValueType</strong>
-                            </div>
+                            <strong title="@port.Name">@port.Name</strong>
+                            <span class="generic-node-editor-note type" title="@port.ValueType">@port.ValueType</span>
                         </div>
                     }
                 }
                 else
                 {
-                    <div class="generic-node-editor-empty">No declared ports.</div>
+                    <div class="generic-node-editor-empty" role="status">No declared ports.</div>
                 }
             </div>
         </div>
@@ -93,6 +85,7 @@
         : Node.Summary.Trim();
     private int InputCount => Node.PortDescriptors.Count(static port => port.IsInput);
     private int OutputCount => Node.PortDescriptors.Count(static port => !port.IsInput);
+    private string PortCountCaption => $"{InputCount} in / {OutputCount} out";
     private IReadOnlyList<ComponentPortDescriptor> OutputPortPreview
         => Node.PortDescriptors
             .Where(static port => !port.IsInput)

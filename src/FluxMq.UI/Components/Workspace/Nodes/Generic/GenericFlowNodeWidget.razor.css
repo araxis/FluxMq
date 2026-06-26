@@ -56,8 +56,7 @@
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     display: grid;
     gap: 4px 3px;
-    grid-template-columns: repeat(3, minmax(0, auto));
-    justify-content: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     min-width: 0;
     padding: 5px 2px 0;
 }
@@ -90,27 +89,31 @@
 
 .generic-node-editor {
     display: grid;
-    gap: 8px;
-    min-width: 0;
-}
-
-.generic-node-editor-meta-row {
-    display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(110px, 0.35fr) minmax(120px, 0.35fr);
     min-width: 0;
 }
 
-.generic-node-editor-meta-cell {
-    align-content: center;
+.generic-node-editor-table {
     display: grid;
-    gap: 3px;
-    min-height: 34px;
+    gap: 0;
     min-width: 0;
 }
 
-.generic-node-editor-meta-cell span,
-.generic-node-editor-port-main span {
+.generic-node-editor-row {
+    align-items: center;
+    display: grid;
+    gap: 7px 10px;
+    grid-template-columns: 84px minmax(0, 1fr) minmax(120px, 0.45fr);
+    min-height: 38px;
+    min-width: 0;
+    padding: 7px 2px;
+}
+
+.generic-node-editor-row + .generic-node-editor-row {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
+}
+
+.generic-node-editor-label {
     color: var(--flux-text-muted);
     font-size: 0.62rem;
     font-weight: 760;
@@ -120,7 +123,8 @@
     text-transform: uppercase;
 }
 
-.generic-node-editor-meta-cell strong {
+.generic-node-editor-row > strong,
+.generic-node-editor-port-row > strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
     font-size: 0.82rem;
     font-weight: 720;
@@ -131,51 +135,41 @@
     white-space: nowrap;
 }
 
-.generic-node-editor-port-list {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
-    display: grid;
-    gap: 0;
-    min-width: 0;
-    padding-top: 6px;
-}
-
-.generic-node-editor-port-row {
-    align-items: center;
-    display: grid;
-    gap: 7px;
-    grid-template-columns: minmax(130px, 0.9fr) 82px minmax(160px, 1.1fr);
-    min-width: 0;
-    padding: 7px 2px;
-}
-
-.generic-node-editor-port-row + .generic-node-editor-port-row {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
-}
-
-.generic-node-editor-port-main {
-    align-content: center;
-    display: grid;
-    gap: 3px;
-    min-height: 34px;
-    min-width: 0;
-}
-
-.generic-node-editor-port-main strong {
-    color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));
-    font-size: 0.82rem;
-    font-weight: 720;
-    line-height: 1.1;
+.generic-node-editor-note {
+    color: var(--flux-text-muted);
+    font-size: 0.76rem;
+    font-weight: 650;
+    line-height: 1.12;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.generic-node-editor-port-main.type strong {
-    color: var(--flux-text-muted);
-    font-size: 0.78rem;
-    font-weight: 640;
-    line-height: 1.1;
+.generic-node-editor-note.type {
+    font-family: var(--mud-typography-default-family);
+}
+
+.generic-node-editor-port-list {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
+    display: grid;
+    gap: 0;
+    min-width: 0;
+    padding-top: 3px;
+}
+
+.generic-node-editor-port-row {
+    align-items: center;
+    display: grid;
+    gap: 7px 10px;
+    grid-template-columns: 82px minmax(0, 1fr) minmax(160px, 0.7fr);
+    min-height: 38px;
+    min-width: 0;
+    padding: 7px 2px;
+}
+
+.generic-node-editor-port-row + .generic-node-editor-port-row {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
 }
 
 .generic-node-editor-empty {
@@ -191,11 +185,12 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .generic-node-editor-meta-row,
+    .generic-node-editor-row,
     .generic-node-editor-port-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
+    .generic-node-editor-row,
     .generic-node-editor-port-row {
         align-items: start;
         gap: 6px;
