@@ -9609,6 +9609,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Select or enter a replay session before saving.");
         markup.ShouldContain("replay-source-summary");
         markup.ShouldContain("replay-source-meta");
         markup.ShouldContain("SessionCaption");
@@ -9758,6 +9761,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Select a stored session before saving.");
         markup.ShouldContain("stored-session-source-summary");
         markup.ShouldContain("stored-session-source-meta");
         markup.ShouldContain("SessionCaption");

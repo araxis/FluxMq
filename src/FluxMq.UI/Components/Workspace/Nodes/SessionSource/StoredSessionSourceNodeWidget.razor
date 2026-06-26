@@ -9,6 +9,7 @@
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
+                 EditorValidationError="@ValidateEditor"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
@@ -158,6 +159,11 @@
         _speed = SessionSourceNodeModel.NormalizeSpeed(Model.Speed);
         _boundedCapacity = SessionSourceNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity);
     }
+
+    private string? ValidateEditor()
+        => string.IsNullOrWhiteSpace(_sessionId)
+            ? "Select a stored session before saving."
+            : null;
 
     private Task SaveAsync()
     {

@@ -9,6 +9,7 @@
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
+                 EditorValidationError="@ValidateEditor"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
@@ -150,6 +151,11 @@
         _speed = Model.Speed > 0 && double.IsFinite(Model.Speed) ? Model.Speed : 1;
         _boundedCapacity = SourceNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
     }
+
+    private string? ValidateEditor()
+        => string.IsNullOrWhiteSpace(_sessionId)
+            ? "Select or enter a replay session before saving."
+            : null;
 
     private Task SaveAsync()
     {
