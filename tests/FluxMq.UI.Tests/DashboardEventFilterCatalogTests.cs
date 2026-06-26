@@ -7250,6 +7250,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".condition-router-meta");
         css.ShouldContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.58fr) minmax(0, 0.62fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 76px 82px;");
+        css.ShouldContain("display: -webkit-box;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".condition-router-expression");
         css.ShouldContain(".condition-router-variables");
         css.ShouldContain("flex-wrap: wrap;");

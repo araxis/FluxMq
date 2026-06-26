@@ -37,14 +37,17 @@
 .condition-router-meta-item strong,
 .condition-router-expression strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .condition-router-expression,
@@ -60,7 +63,6 @@
 }
 
 .condition-router-expression strong {
-    overflow-wrap: anywhere;
     white-space: normal;
 }
 
