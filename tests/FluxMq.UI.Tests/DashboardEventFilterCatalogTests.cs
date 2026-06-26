@@ -6982,6 +6982,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".mqtt-publisher-contract-label");
         css.ShouldContain("flex: 0 0 100%;");
         css.ShouldContain("white-space: normal;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".mqtt-publisher-token");
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
@@ -6990,7 +6992,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".mqtt-publisher-field-note");
         css.ShouldContain("gap: 7px;");
         css.ShouldNotContain("gap: 8px;");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.36fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.36fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.36fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 160px;");
         css.ShouldContain(".mqtt-publisher-editor ::deep(.mud-input-control)");
         css.ShouldContain("min-height: 34px;");
@@ -7059,13 +7062,16 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".mqtt-recorder-contract-label");
         css.ShouldContain("flex: 0 0 100%;");
         css.ShouldContain("white-space: normal;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".mqtt-recorder-token");
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".mqtt-recorder-editor");
         css.ShouldContain("gap: 7px;");
         css.ShouldNotContain("gap: 8px;");
-        css.ShouldContain("grid-template-columns: minmax(10rem, 0.36fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 0.36fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(10rem, 0.36fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 180px);");
         css.ShouldContain(".mqtt-recorder-editor ::deep(.mud-input-control)");
         css.ShouldContain("min-height: 34px;");
@@ -7136,6 +7142,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".file-writer-contract-label");
         css.ShouldContain("flex: 0 0 100%;");
         css.ShouldContain("white-space: normal;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".file-writer-token");
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
@@ -7143,7 +7151,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".file-writer-editor");
         css.ShouldContain("gap: 7px;");
         css.ShouldNotContain("gap: 8px;");
-        css.ShouldContain("grid-template-columns: minmax(10rem, 0.36fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 0.36fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(10rem, 0.36fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 180px);");
         css.ShouldContain(".file-writer-editor ::deep(.mud-input-control)");
         css.ShouldContain("min-height: 34px;");
