@@ -8329,7 +8329,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".payload-inspector-node-summary");
         css.ShouldContain(".payload-inspector-node-meta");
-        css.ShouldContain("grid-template-columns: 76px minmax(0, 1fr) 98px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.38fr) minmax(0, 0.9fr);");
+        css.ShouldNotContain("grid-template-columns: 76px minmax(0, 1fr) 98px;");
         css.ShouldContain(".payload-inspector-node-contracts");
         css.ShouldContain(".payload-inspector-node-contract");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
@@ -8346,7 +8347,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("padding: 12px;");
         css.ShouldContain(".payload-inspector-node-editor-table");
         css.ShouldContain(".payload-inspector-node-editor-row");
-        css.ShouldContain("grid-template-columns: 84px minmax(150px, 0.42fr) minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 0.56fr) minmax(0, 0.84fr) minmax(0, 1.6fr);");
+        css.ShouldNotContain("grid-template-columns: 84px minmax(150px, 0.42fr) minmax(0, 1fr);");
         css.ShouldContain("min-height: 42px;");
         css.ShouldContain("padding: 8px 2px;");
         css.ShouldNotContain("padding: 9px 2px;");
