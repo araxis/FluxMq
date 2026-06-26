@@ -90,7 +90,7 @@
 
 .metric-source-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -131,7 +131,7 @@
     grid-template-columns: 72px minmax(0, 1fr);
     line-height: 1.35;
     min-width: 0;
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .metric-source-description-row span,
@@ -157,7 +157,7 @@
     align-items: stretch;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 32%, transparent);
     gap: 7px;
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .metric-source-parameter-heading {
@@ -226,7 +226,7 @@
 }
 
 .metric-source-start-row ::deep(.mud-checkbox .mud-button-root) {
-    padding: 4px;
+    padding: 3px;
 }
 
 .metric-source-start-row ::deep(.mud-checkbox .mud-typography) {
