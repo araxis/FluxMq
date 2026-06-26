@@ -8,7 +8,7 @@
 .routing-switch-meta {
     display: grid;
     gap: 2px;
-    grid-template-columns: minmax(0, 1fr) 62px 68px 64px;
+    grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.58fr) minmax(0, 0.64fr) minmax(0, 0.6fr);
     min-width: 0;
 }
 
@@ -60,23 +60,27 @@
 }
 
 .routing-switch-routes {
-    display: grid;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px 3px;
-    grid-template-columns: repeat(4, minmax(0, auto));
     justify-content: start;
 }
 
 .routing-switch-contract-label {
-    grid-column: 1 / -1;
-    white-space: nowrap;
+    flex: 0 0 100%;
+    white-space: normal;
 }
 
 .routing-switch-token {
+    align-items: center;
     border: 1px solid color-mix(in srgb, var(--mud-palette-secondary) 28%, var(--flux-border-soft));
     border-radius: 4px;
     color: color-mix(in srgb, var(--mud-palette-secondary) 78%, var(--mud-palette-text-primary));
+    display: inline-flex;
     font-size: 0.52rem;
     font-weight: 760;
+    justify-content: center;
     line-height: 1;
     max-width: 100%;
     min-width: 0;
@@ -148,9 +152,9 @@
 }
 
 .routing-switch-variable-list {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px;
-    grid-template-columns: repeat(3, minmax(0, auto));
     justify-content: start;
     min-width: 0;
 }
@@ -304,10 +308,6 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .routing-switch-variable-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     .routing-switch-route-header {
         grid-template-columns: minmax(0, 1fr) 28px;
     }
@@ -322,10 +322,6 @@
     }
 
     .routing-switch-routes {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .routing-switch-contract-label {
-        grid-column: 1 / -1;
+        align-items: flex-start;
     }
 }

@@ -7356,11 +7356,14 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".routing-switch-summary");
         css.ShouldContain(".routing-switch-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 62px 68px 64px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.58fr) minmax(0, 0.64fr) minmax(0, 0.6fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 62px 68px 64px;");
         css.ShouldContain(".routing-switch-expression");
         css.ShouldContain(".routing-switch-routes");
-        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain("display: flex;");
+        css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         css.ShouldContain(".routing-switch-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".routing-switch-editor");
@@ -7402,7 +7405,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".routing-switch-variable-token");
         css.ShouldNotContain("border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);");
         css.ShouldContain("flex-wrap: wrap;");
-        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, auto));");
+        css.ShouldNotContain("grid-template-columns: repeat(3, minmax(0, auto));");
         css.ShouldNotContain(".routing-switch-expression-cell");
         css.ShouldNotContain(".routing-switch-route-editor");
         css.ShouldContain(".routing-switch-route-list");
@@ -7542,10 +7545,14 @@ public sealed class DashboardEventFilterCatalogTests
 
         forkCss.ShouldContain(".routing-fork-summary");
         forkCss.ShouldContain(".routing-fork-meta");
-        forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 72px 64px;");
+        forkCss.ShouldContain("grid-template-columns: minmax(0, 1.36fr) minmax(0, 0.72fr) minmax(0, 0.64fr);");
+        forkCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 72px 64px;");
         forkCss.ShouldContain(".routing-fork-ports");
-        forkCss.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        forkCss.ShouldContain("display: flex;");
+        forkCss.ShouldContain("flex-wrap: wrap;");
+        forkCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         forkCss.ShouldContain(".routing-fork-token");
+        forkCss.ShouldContain("display: inline-flex;");
         forkCss.ShouldContain("overflow-wrap: anywhere;");
         forkCss.ShouldContain("white-space: normal;");
         forkCss.ShouldContain(".routing-fork-editor");
@@ -7671,10 +7678,14 @@ public sealed class DashboardEventFilterCatalogTests
 
         mergeCss.ShouldContain(".routing-merge-summary");
         mergeCss.ShouldContain(".routing-merge-meta");
-        mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 66px 94px 64px;");
+        mergeCss.ShouldContain("grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.62fr) minmax(0, 0.86fr) minmax(0, 0.62fr);");
+        mergeCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 66px 94px 64px;");
         mergeCss.ShouldContain(".routing-merge-ports");
-        mergeCss.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        mergeCss.ShouldContain("display: flex;");
+        mergeCss.ShouldContain("flex-wrap: wrap;");
+        mergeCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         mergeCss.ShouldContain(".routing-merge-token");
+        mergeCss.ShouldContain("display: inline-flex;");
         mergeCss.ShouldContain("overflow-wrap: anywhere;");
         mergeCss.ShouldContain("white-space: normal;");
         mergeCss.ShouldContain(".routing-merge-editor");
@@ -8097,10 +8108,14 @@ public sealed class DashboardEventFilterCatalogTests
 
         joinCss.ShouldContain(".routing-join-summary");
         joinCss.ShouldContain(".routing-join-meta");
-        joinCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 96px 64px;");
+        joinCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.74fr) minmax(0, 0.56fr);");
+        joinCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 96px 64px;");
         joinCss.ShouldContain(".routing-join-rules");
-        joinCss.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        joinCss.ShouldContain("display: flex;");
+        joinCss.ShouldContain("flex-wrap: wrap;");
+        joinCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         joinCss.ShouldContain(".routing-join-token");
+        joinCss.ShouldContain("display: inline-flex;");
         joinCss.ShouldContain("overflow-wrap: anywhere;");
         joinCss.ShouldContain("white-space: normal;");
         joinCss.ShouldContain(".routing-join-editor");
