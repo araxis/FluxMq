@@ -11,28 +11,17 @@
     <Body>
         <div class="payload-inspector-node-summary">
             <div class="payload-inspector-node-meta">
-                <div class="payload-inspector-node-meta-item input">
-                    <span>Input</span>
-                    <strong>MqttEnvelope</strong>
-                </div>
-                <div class="payload-inspector-node-meta-item output">
-                    <span>Output</span>
-                    <strong>InspectedMqttMessage</strong>
+                <div class="payload-inspector-node-meta-item route">
+                    <span>Contract</span>
+                    <strong title="MqttEnvelope to InspectedMqttMessage">MqttEnvelope to InspectedMqttMessage</strong>
                 </div>
                 <div class="payload-inspector-node-meta-item">
-                    <span>Formats</span>
+                    <span>Mode</span>
                     <strong>Auto detect</strong>
                 </div>
             </div>
 
             <div class="payload-inspector-node-contracts">
-                <div class="payload-inspector-node-contract" aria-label="Payload inspector input fields">
-                    <span class="payload-inspector-node-contract-label">Input fields</span>
-                    <span class="payload-inspector-node-token">topic</span>
-                    <span class="payload-inspector-node-token">payload</span>
-                    <span class="payload-inspector-node-token">qos</span>
-                    <span class="payload-inspector-node-token">retain</span>
-                </div>
                 <div class="payload-inspector-node-contract" aria-label="Payload inspector result fields">
                     <span class="payload-inspector-node-contract-label">Result fields</span>
                     <span class="payload-inspector-node-token">kind</span>
@@ -45,20 +34,20 @@
     </Body>
     <Editor>
         <div class="payload-inspector-node-editor" aria-label="Payload inspector details">
-            <div class="payload-inspector-node-editor-table" aria-label="Payload inspector contract details">
-                <div class="payload-inspector-node-editor-row">
-                    <span class="payload-inspector-node-editor-label">Detection</span>
-                    <strong>Auto detect</strong>
-                    <div class="payload-inspector-node-editor-tokens" aria-label="Payload inspector detection modes">
-                        <span class="payload-inspector-node-token">json</span>
-                        <span class="payload-inspector-node-token">xml</span>
-                        <span class="payload-inspector-node-token">text</span>
-                        <span class="payload-inspector-node-token">base64</span>
-                        <span class="payload-inspector-node-token">binary</span>
-                    </div>
+            <div class="payload-inspector-node-capability" aria-label="Payload inspector decode behavior">
+                <span class="payload-inspector-node-editor-label">Detection</span>
+                <strong>Auto detect payload</strong>
+                <div class="payload-inspector-node-editor-tokens" aria-label="Payload inspector detection modes">
+                    <span class="payload-inspector-node-token">json</span>
+                    <span class="payload-inspector-node-token">xml</span>
+                    <span class="payload-inspector-node-token">text</span>
+                    <span class="payload-inspector-node-token">base64</span>
+                    <span class="payload-inspector-node-token">binary</span>
                 </div>
+            </div>
 
-                <div class="payload-inspector-node-editor-row">
+            <div class="payload-inspector-node-contract-grid" aria-label="Payload inspector contracts">
+                <section class="payload-inspector-node-contract-card" aria-label="Payload inspector input contract">
                     <span class="payload-inspector-node-editor-label">Input</span>
                     <strong>MqttEnvelope</strong>
                     <div class="payload-inspector-node-editor-tokens" aria-label="Payload inspector input contract">
@@ -67,9 +56,9 @@
                         <span class="payload-inspector-node-token">qos</span>
                         <span class="payload-inspector-node-token">retain</span>
                     </div>
-                </div>
+                </section>
 
-                <div class="payload-inspector-node-editor-row">
+                <section class="payload-inspector-node-contract-card" aria-label="Payload inspector output contract">
                     <span class="payload-inspector-node-editor-label">Output</span>
                     <strong>InspectedMqttMessage</strong>
                     <div class="payload-inspector-node-editor-tokens" aria-label="Payload inspector output contract">
@@ -78,7 +67,7 @@
                         <span class="payload-inspector-node-token">formatted</span>
                         <span class="payload-inspector-node-token">hexDump</span>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     </Editor>
