@@ -9329,7 +9329,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".stored-session-source-timing-row");
         css.ShouldNotContain(".stored-session-source-playback-row");
         css.ShouldNotContain(".stored-session-source-config-grid");
+        css.ShouldContain(".stored-session-source-timing-option");
+        css.ShouldContain("align-self: end;");
+        css.ShouldContain("justify-content: flex-start;");
         css.ShouldContain("min-height: 36px;");
+        css.ShouldContain(".stored-session-source-timing-option ::deep(.mud-checkbox)");
+        css.ShouldContain("display: inline-flex;");
+        css.ShouldContain(".stored-session-source-timing-option ::deep(.mud-checkbox .mud-button-root)");
+        css.ShouldContain("padding: 4px;");
         css.ShouldNotContain(".stored-session-source-main-grid");
         css.ShouldNotContain(".stored-session-source-timing-grid");
         css.ShouldNotContain(".stored-session-source-speed-cell");
