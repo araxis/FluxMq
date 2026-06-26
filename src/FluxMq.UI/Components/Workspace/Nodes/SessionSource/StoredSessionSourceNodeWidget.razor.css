@@ -36,14 +36,18 @@
 
 .stored-session-source-meta-item strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .stored-session-source-contract {
@@ -108,7 +112,7 @@
     align-items: center;
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(2rem, max-content);
     min-width: 0;
     width: 100%;
 }
@@ -116,8 +120,9 @@
 .stored-session-source-session-option span {
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .stored-session-source-session-option small {
@@ -126,8 +131,9 @@
     font-weight: 700;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .stored-session-source-empty {

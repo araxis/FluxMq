@@ -36,14 +36,18 @@
 
 .generated-source-meta-item strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .generated-source-previews {
@@ -64,13 +68,17 @@
 
 .generated-source-preview-topic {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 78%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.62rem;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.1;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .generated-source-more {
@@ -141,7 +149,7 @@
     align-items: center;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(24px, 0.18fr) minmax(0, 0.96fr) minmax(0, 1.54fr) minmax(0, 0.58fr) minmax(0, 0.48fr) minmax(0, 0.9fr) minmax(24px, 0.18fr);
+    grid-template-columns: minmax(1.75rem, max-content) minmax(0, 0.96fr) minmax(0, 1.54fr) minmax(0, 0.58fr) minmax(0, 0.48fr) minmax(0, 0.9fr) minmax(1.75rem, max-content);
     min-width: 0;
 }
 
@@ -157,8 +165,9 @@
     line-height: 1;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .generated-source-column-header.number,
@@ -174,11 +183,11 @@
 
 .generated-source-column-header.action ::deep(.generated-source-add-button.mud-icon-button) {
     color: var(--mud-palette-primary);
-    height: 28px;
-    min-height: 28px;
-    min-width: 28px;
+    height: 1.75rem;
+    min-height: 1.75rem;
+    min-width: 1.75rem;
     padding: 0;
-    width: 28px;
+    width: 1.75rem;
 }
 
 .generated-source-message-row {
@@ -263,12 +272,12 @@
 
 .generated-source-message-row ::deep(.generated-source-remove-button.mud-icon-button) {
     color: var(--flux-text-muted);
-    height: 28px;
+    height: 1.75rem;
     justify-self: end;
-    min-height: 28px;
-    min-width: 28px;
+    min-height: 1.75rem;
+    min-width: 1.75rem;
     padding: 0;
-    width: 28px;
+    width: 1.75rem;
 }
 
 .generated-source-buffer-field,
@@ -292,7 +301,7 @@
     }
 
     .generated-source-table-header {
-        grid-template-columns: minmax(0, 1fr) 28px;
+        grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);
     }
 
     .generated-source-table-header .generated-source-column-header:not(.action):not(:nth-child(2)) {
@@ -308,7 +317,7 @@
     }
 
     .generated-source-message-row {
-        grid-template-columns: 26px minmax(0, 1fr);
+        grid-template-columns: minmax(1.625rem, max-content) minmax(0, 1fr);
     }
 
     .generated-source-message-row > :not(.generated-source-message-index) {
