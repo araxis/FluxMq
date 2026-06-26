@@ -6317,6 +6317,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".flow-assertion-summary");
         css.ShouldContain(".flow-assertion-meta");
         css.ShouldContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.6fr) minmax(0, 0.42fr);");
+        css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".flow-assertion-contracts");
         css.ShouldContain(".flow-assertion-contract");
         css.ShouldContain(".flow-assertion-contract-label");
@@ -6338,6 +6339,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".flow-assertion-expression-preview");
         css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".flow-assertion-editor");
         css.ShouldNotContain("gap: 10px;");
         css.ShouldNotContain("gap: 9px;");
@@ -6386,6 +6388,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".flow-assertion-variable-strip");
         css.ShouldContain(".flow-assertion-variable-label");
         css.ShouldContain(".flow-assertion-variable-list");
+        css.ShouldContain("grid-template-columns: minmax(4.5rem, max-content) minmax(0, 1fr);");
+        css.ShouldNotContain("grid-template-columns: 72px minmax(0, 1fr);");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 24%, transparent);");
         css.ShouldNotContain("border-radius: 5px;");
