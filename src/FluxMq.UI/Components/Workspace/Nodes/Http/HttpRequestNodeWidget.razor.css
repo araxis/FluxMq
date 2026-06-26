@@ -84,13 +84,13 @@
 
 .http-client-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
 .http-client-number-grid {
     display: grid;
-    gap: 7px;
+    gap: 6px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     min-width: 0;
 }
@@ -99,8 +99,8 @@
     align-items: center;
     display: flex;
     flex-wrap: wrap;
-    gap: 7px 18px;
-    min-height: 36px;
+    gap: 6px 16px;
+    min-height: 34px;
     min-width: 0;
 }
 
@@ -113,17 +113,21 @@
     align-items: center;
     display: inline-flex;
     margin: 0;
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .http-client-options ::deep(.mud-checkbox .mud-button-root) {
-    padding: 4px;
+    padding: 3px;
 }
 
 .http-client-options ::deep(.mud-checkbox .mud-typography) {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
     font-size: 0.82rem;
     line-height: 1.2;
+}
+
+.http-client-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
+    min-height: 34px;
 }
 
 .http-client-base-url-field,
