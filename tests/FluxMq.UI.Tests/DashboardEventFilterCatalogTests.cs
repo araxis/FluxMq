@@ -7149,11 +7149,16 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".condition-router-summary");
         css.ShouldContain(".condition-router-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 76px 82px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.58fr) minmax(0, 0.62fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 76px 82px;");
         css.ShouldContain(".condition-router-expression");
         css.ShouldContain(".condition-router-variables");
-        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain("flex: 0 0 100%;");
+        css.ShouldNotContain("grid-column: 1 / -1;");
         css.ShouldContain(".condition-router-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".condition-router-editor");
@@ -7180,8 +7185,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("padding: 12px;");
         css.ShouldNotContain("padding: 14px;");
         css.ShouldNotContain(".condition-router-source-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 240px);");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(160px, 0.34fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.42fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 240px);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(160px, 0.34fr);");
         css.ShouldNotContain("grid-template-columns: minmax(180px, 240px);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(172px, 220px);");
         css.ShouldNotContain("grid-template-columns: minmax(180px, 1fr) minmax(230px, 0.72fr);");
