@@ -82,14 +82,14 @@
 
 .routing-fork-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
 .routing-fork-config-row {
     align-items: end;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) 150px;
     min-width: 0;
 }
@@ -100,7 +100,7 @@
 }
 
 .routing-fork-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .routing-fork-editor ::deep(.mud-input > input.mud-input-root),
@@ -121,9 +121,9 @@
 .routing-fork-port-composer {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .routing-fork-port-header {
@@ -131,7 +131,7 @@
     color: color-mix(in srgb, var(--mud-palette-text-primary) 70%, var(--mud-palette-text-secondary));
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) 30px;
+    grid-template-columns: minmax(0, 1fr) 28px;
     min-height: 28px;
     min-width: 0;
     padding: 0 0 4px;
@@ -159,10 +159,10 @@
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 32%, transparent);
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) 30px;
-    min-height: 36px;
+    grid-template-columns: minmax(0, 1fr) 28px;
+    min-height: 34px;
     min-width: 0;
-    padding: 5px 0;
+    padding: 4px 0;
 }
 
 .routing-fork-port-header ::deep(.routing-fork-add-port.mud-icon-button),
@@ -191,7 +191,7 @@
 
 .routing-fork-port-header ::deep(.routing-fork-add-port .mud-icon-root),
 .routing-fork-port-composer ::deep(.routing-fork-remove-port .mud-icon-root) {
-    font-size: 1.04rem;
+    font-size: 0.98rem;
 }
 
 .routing-fork-port-composer ::deep(.routing-fork-remove-port.mud-disabled),
@@ -208,7 +208,7 @@
     }
 
     .routing-fork-port-header {
-        grid-template-columns: minmax(0, 1fr) 30px;
+        grid-template-columns: minmax(0, 1fr) 28px;
     }
 
     .routing-fork-ports {
