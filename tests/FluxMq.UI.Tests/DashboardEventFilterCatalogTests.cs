@@ -5873,12 +5873,20 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldNotContain(".mqtt-trigger-section-title");
         css.ShouldNotContain(".mqtt-trigger-subscription-head");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
+        css.ShouldContain(".mqtt-trigger-meta-item.broker");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.7fr) minmax(0, 0.85fr);");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(1.65rem, max-content) minmax(2.15rem, max-content) minmax(2.35rem, max-content);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 26px 34px 38px;");
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.36fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.36fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.36fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 190px;");
         css.ShouldContain(".mqtt-trigger-editor-grid ::deep(.mud-input-label)");
         css.ShouldContain("font-size: 0.72rem;");
@@ -8376,7 +8384,13 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".http-client-summary");
         css.ShouldContain(".http-client-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.26fr) minmax(0, 0.62fr) minmax(0, 0.72fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
+        css.ShouldContain(".http-client-meta-item.target");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.26fr) minmax(0, 0.62fr) minmax(0, 0.72fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 70px 84px;");
         css.ShouldContain(".http-client-contracts");
         css.ShouldContain(".http-client-contract");
@@ -9085,7 +9099,13 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".payload-inspect-summary");
         css.ShouldContain(".payload-inspect-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.64fr) minmax(0, 0.7fr) minmax(0, 0.76fr);");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain(".payload-inspect-meta-item.input");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.64fr) minmax(0, 0.7fr) minmax(0, 0.76fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 72px 78px 84px;");
         css.ShouldContain(".payload-inspect-contracts");
         css.ShouldContain(".payload-inspect-contract");

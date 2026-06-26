@@ -8,7 +8,7 @@
 .mqtt-trigger-meta {
     display: grid;
     gap: 2px;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.7fr) minmax(0, 0.85fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     min-width: 0;
 }
 
@@ -23,6 +23,10 @@
     padding: 4px 5px;
 }
 
+.mqtt-trigger-meta-item.broker {
+    grid-column: 1 / -1;
+}
+
 .mqtt-trigger-meta-item span {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
@@ -35,14 +39,17 @@
 
 .mqtt-trigger-meta-item strong {
     color: var(--mud-palette-text-primary);
+    display: -webkit-box;
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .mqtt-trigger-subscription-list {
@@ -65,14 +72,17 @@
 
 .mqtt-trigger-topic {
     color: var(--mud-palette-text-primary);
+    display: -webkit-box;
     font-family: Consolas, "Courier New", monospace;
     font-size: 0.65rem;
     font-weight: 650;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.15;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .mqtt-trigger-topic.system {
@@ -145,7 +155,7 @@
     align-items: start;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.36fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.36fr);
     min-width: 0;
 }
 
