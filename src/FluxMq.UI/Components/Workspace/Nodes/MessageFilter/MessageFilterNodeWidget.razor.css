@@ -8,7 +8,7 @@
 .message-filter-meta {
     display: grid;
     gap: 3px;
-    grid-template-columns: minmax(0, 1fr) 88px;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
     min-width: 0;
 }
 
@@ -47,27 +47,31 @@
 }
 
 .message-filter-patterns {
+    align-items: center;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px 3px;
-    grid-template-columns: repeat(3, minmax(0, auto));
     justify-content: start;
     min-width: 0;
     padding: 5px 2px 0;
 }
 
 .message-filter-pattern-label {
-    grid-column: 1 / -1;
-    white-space: nowrap;
+    flex: 0 0 100%;
+    white-space: normal;
 }
 
 .message-filter-token,
 .message-filter-variable {
+    align-items: center;
     border: 1px solid color-mix(in srgb, var(--mud-palette-secondary) 28%, var(--flux-border-soft));
     border-radius: 4px;
     color: color-mix(in srgb, var(--mud-palette-secondary) 80%, var(--mud-palette-text-primary));
+    display: inline-flex;
     font-size: 0.52rem;
     font-weight: 760;
+    justify-content: center;
     line-height: 1;
     max-width: 100%;
     min-width: 0;
@@ -261,10 +265,6 @@
     }
 
     .message-filter-patterns {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .message-filter-pattern-label {
-        grid-column: 1 / -1;
+        align-items: flex-start;
     }
 }

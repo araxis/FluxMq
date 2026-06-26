@@ -5981,12 +5981,15 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".connection-state-trigger-summary");
         css.ShouldContain(".connection-state-trigger-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 86px 92px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.72fr) minmax(0, 0.78fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 86px 92px;");
         css.ShouldContain(".connection-state-trigger-contracts");
         css.ShouldContain(".connection-state-trigger-contract");
         css.ShouldContain(".connection-state-trigger-contract-label");
-        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("flex: 0 0 100%;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".connection-state-trigger-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".connection-state-trigger-editor");
         css.ShouldContain("gap: 7px;");
@@ -6483,9 +6486,14 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".message-filter-summary");
         css.ShouldContain(".message-filter-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 88px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 88px;");
         css.ShouldContain(".message-filter-patterns");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldNotContain("grid-template-columns: repeat(3, minmax(0, auto));");
         css.ShouldContain(".message-filter-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain(".message-filter-token.system");
         css.ShouldContain("color-mix(in srgb, var(--mud-palette-info) 72%, var(--mud-palette-text-primary));");
         css.ShouldNotContain("color-mix(in srgb, var(--mud-palette-warning) 76%, var(--mud-palette-text-primary));");
@@ -6507,7 +6515,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".message-filter-expression-row");
         css.ShouldContain(".message-filter-pattern-table");
         css.ShouldContain(".message-filter-pattern-table-header");
-        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldNotContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
         css.ShouldNotContain("border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 36%, transparent);");
         css.ShouldContain(".message-filter-pattern-list");
         css.ShouldContain(".message-filter-pattern-table-header ::deep(.message-filter-add.mud-icon-button)");
@@ -6644,9 +6652,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".json-schema-validator-contracts");
         css.ShouldContain(".json-schema-validator-contract");
         css.ShouldContain(".json-schema-validator-contract-label");
-        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("flex: 0 0 100%;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldNotContain("grid-template-columns: repeat(3, minmax(0, auto));");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".json-schema-validator-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain(".json-schema-validator-editor");
         css.ShouldNotContain("gap: 10px;");
         css.ShouldNotContain("gap: 8px;");

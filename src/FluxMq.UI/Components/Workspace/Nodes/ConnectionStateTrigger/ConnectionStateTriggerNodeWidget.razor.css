@@ -8,7 +8,7 @@
 .connection-state-trigger-meta {
     display: grid;
     gap: 2px;
-    grid-template-columns: minmax(0, 1fr) 86px 92px;
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.72fr) minmax(0, 0.78fr);
     min-width: 0;
 }
 
@@ -54,24 +54,28 @@
 }
 
 .connection-state-trigger-contract {
-    display: grid;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px 3px;
-    grid-template-columns: repeat(3, minmax(0, auto));
     justify-content: start;
     min-width: 0;
 }
 
 .connection-state-trigger-contract-label {
-    grid-column: 1 / -1;
-    white-space: nowrap;
+    flex: 0 0 100%;
+    white-space: normal;
 }
 
 .connection-state-trigger-token {
+    align-items: center;
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 28%, var(--flux-border-soft));
     border-radius: 4px;
     color: color-mix(in srgb, var(--mud-palette-primary) 78%, var(--mud-palette-text-primary));
+    display: inline-flex;
     font-size: 0.52rem;
     font-weight: 760;
+    justify-content: center;
     line-height: 1;
     max-width: 100%;
     min-width: 0;
@@ -116,11 +120,7 @@
     }
 
     .connection-state-trigger-contract {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .connection-state-trigger-contract-label {
-        grid-column: 1 / -1;
+        align-items: flex-start;
     }
 
 }
