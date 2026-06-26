@@ -9234,6 +9234,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".replay-source-session-option");
         css.ShouldContain("text-overflow: ellipsis;");
         css.ShouldContain(".replay-source-editor ::deep(.mud-input-control)");
+        css.ShouldContain("min-height: 34px;");
+        css.ShouldNotContain("min-height: 36px;");
+        css.ShouldContain(".replay-source-editor ::deep(.mud-input-label)");
+        css.ShouldContain("font-size: 0.72rem;");
         css.ShouldContain("@media (max-width: 640px)");
         css.ShouldNotContain(".replay-source-number-grid");
         css.ShouldNotContain(".flow-node-filters");
