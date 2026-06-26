@@ -8717,8 +8717,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("metrics-summary");
         markup.ShouldContain("metrics-status-line");
+        markup.ShouldContain("metrics-status-item");
         markup.ShouldContain("RateWindowCaption");
         markup.ShouldContain("ReadoutLayoutCaption");
         markup.ShouldContain("metrics-readout-strip");
@@ -8801,11 +8803,15 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".metrics-summary");
         css.ShouldContain(".metrics-status-line");
+        css.ShouldContain(".metrics-status-item");
+        css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldNotContain("grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);");
         css.ShouldContain(".metrics-readout-strip");
         css.ShouldContain("grid-template-columns: repeat(var(--metric-readout-columns), minmax(0, 1fr));");
         css.ShouldContain(".metrics-readout-token");
         css.ShouldContain(".metrics-readout-value");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("justify-content: space-between;");
         css.ShouldContain("background: color-mix(in srgb, var(--flux-surface-2) 20%, transparent);");
         css.ShouldNotContain("border-left: 1px solid");
         css.ShouldContain(".metrics-readout-retained");
@@ -8816,6 +8822,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metrics-topic-list-header");
         css.ShouldContain(".metrics-section-label");
         css.ShouldContain(".metrics-topic-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(36px, 0.34fr) minmax(22px, 0.18fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 64px 28px;");
         css.ShouldContain("background: color-mix(in srgb, var(--mud-palette-tertiary) 76%, var(--mud-palette-primary));");
         css.ShouldNotContain("linear-gradient");
         css.ShouldContain(".metrics-last-line");
@@ -8827,7 +8835,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metrics-config-row");
         css.ShouldNotContain(".metrics-field-label");
         css.ShouldContain(".metrics-readout-selector");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(112px, 150px);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.72fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(112px, 150px);");
         css.ShouldContain(".metrics-readout-selector-header");
         css.ShouldContain(".metrics-readout-selector-header > div");
         css.ShouldContain(".metrics-readout-options");

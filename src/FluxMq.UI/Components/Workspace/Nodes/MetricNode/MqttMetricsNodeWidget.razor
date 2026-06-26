@@ -10,6 +10,7 @@
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Insights"
                  CategoryColor="@Color.Tertiary"
+                 EditDialogMaxWidth="MaxWidth.Medium"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
@@ -22,10 +23,14 @@
         }
         <div class="metrics-summary">
             <div class="metrics-status-line" aria-label="MQTT metrics status">
-                <span>Window</span>
-                <strong>@RateWindowCaption</strong>
-                <span>Readouts</span>
-                <strong>@ReadoutLayoutCaption</strong>
+                <div class="metrics-status-item">
+                    <span>Window</span>
+                    <strong>@RateWindowCaption</strong>
+                </div>
+                <div class="metrics-status-item">
+                    <span>Readouts</span>
+                    <strong>@ReadoutLayoutCaption</strong>
+                </div>
             </div>
 
             <div class="metrics-readout-strip"
