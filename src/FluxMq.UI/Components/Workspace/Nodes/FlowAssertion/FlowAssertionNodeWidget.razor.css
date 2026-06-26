@@ -112,7 +112,7 @@
 
 .flow-assertion-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -131,7 +131,7 @@
     gap: 7px;
     grid-template-columns: minmax(0, 1fr);
     min-width: 0;
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .flow-assertion-variable-strip {

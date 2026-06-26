@@ -84,7 +84,7 @@
 
 .json-schema-validator-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -128,7 +128,7 @@
     align-items: center;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) 30px;
+    grid-template-columns: minmax(0, 1fr) 28px;
     min-width: 0;
 }
 
@@ -156,12 +156,12 @@
 .json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button) {
     border-radius: 4px;
     color: color-mix(in srgb, var(--mud-palette-info) 82%, var(--mud-palette-text-primary));
-    height: 30px;
+    height: 28px;
     justify-self: end;
-    min-height: 30px;
-    min-width: 30px;
+    min-height: 28px;
+    min-width: 28px;
     padding: 0;
-    width: 30px;
+    width: 28px;
 }
 
 .json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button:hover:not(.mud-disabled)) {
@@ -169,7 +169,7 @@
 }
 
 .json-schema-validator-file-row ::deep(.schema-file-picker-button .mud-icon-root) {
-    font-size: 1.04rem;
+    font-size: 0.98rem;
 }
 
 .json-schema-validator-inline-source ::deep(.schema-monaco-editor) {
