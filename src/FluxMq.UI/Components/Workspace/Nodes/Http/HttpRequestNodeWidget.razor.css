@@ -8,7 +8,7 @@
 .http-client-meta {
     display: grid;
     gap: 3px;
-    grid-template-columns: minmax(0, 1fr) 70px 84px;
+    grid-template-columns: minmax(0, 1.26fr) minmax(0, 0.62fr) minmax(0, 0.72fr);
     min-width: 0;
 }
 
@@ -55,24 +55,28 @@
 }
 
 .http-client-contract {
-    display: grid;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px 3px;
-    grid-template-columns: repeat(4, minmax(0, auto));
     justify-content: start;
     min-width: 0;
 }
 
 .http-client-contract-label {
-    grid-column: 1 / -1;
-    white-space: nowrap;
+    flex: 0 0 100%;
+    white-space: normal;
 }
 
 .http-client-token {
+    align-items: center;
     border: 1px solid color-mix(in srgb, var(--mud-palette-tertiary) 28%, var(--flux-border-soft));
     border-radius: 4px;
     color: color-mix(in srgb, var(--mud-palette-tertiary) 82%, var(--mud-palette-text-primary));
+    display: inline-flex;
     font-size: 0.52rem;
     font-weight: 760;
+    justify-content: center;
     line-height: 1;
     max-width: 100%;
     min-width: 0;
@@ -145,10 +149,6 @@
     }
 
     .http-client-contract {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .http-client-contract-label {
-        grid-column: 1 / -1;
+        align-items: flex-start;
     }
 }

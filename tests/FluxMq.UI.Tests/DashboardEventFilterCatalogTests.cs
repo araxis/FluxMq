@@ -7058,12 +7058,17 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".file-writer-summary");
         css.ShouldContain(".file-writer-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.34fr) minmax(0, 0.66fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 84px;");
         css.ShouldContain(".file-writer-contract");
-        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         css.ShouldContain(".file-writer-contract-label");
-        css.ShouldContain("grid-column: 1 / -1;");
-        css.ShouldContain("white-space: nowrap;");
+        css.ShouldContain("flex: 0 0 100%;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".file-writer-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".file-writer-editor");
@@ -8251,14 +8256,18 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".http-client-summary");
         css.ShouldContain(".http-client-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 70px 84px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.26fr) minmax(0, 0.62fr) minmax(0, 0.72fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 70px 84px;");
         css.ShouldContain(".http-client-contracts");
         css.ShouldContain(".http-client-contract");
-        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         css.ShouldContain(".http-client-contract-label");
-        css.ShouldContain("grid-column: 1 / -1;");
-        css.ShouldContain("white-space: nowrap;");
+        css.ShouldContain("flex: 0 0 100%;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".http-client-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".http-client-editor");
@@ -8939,14 +8948,18 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".payload-inspect-summary");
         css.ShouldContain(".payload-inspect-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 72px 78px 84px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.64fr) minmax(0, 0.7fr) minmax(0, 0.76fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 72px 78px 84px;");
         css.ShouldContain(".payload-inspect-contracts");
         css.ShouldContain(".payload-inspect-contract");
-        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         css.ShouldContain(".payload-inspect-contract-label");
-        css.ShouldContain("grid-column: 1 / -1;");
-        css.ShouldContain("white-space: nowrap;");
+        css.ShouldContain("flex: 0 0 100%;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".payload-inspect-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".payload-inspect-editor");
