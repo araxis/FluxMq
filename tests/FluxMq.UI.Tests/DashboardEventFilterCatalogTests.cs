@@ -7190,6 +7190,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".condition-router-expression");
         css.ShouldContain(".condition-router-variables");
         css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldContain(".condition-router-expression strong");
         css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         css.ShouldContain("flex: 0 0 100%;");
         css.ShouldNotContain("grid-column: 1 / -1;");
@@ -7237,6 +7238,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".condition-router-variable-strip");
         css.ShouldContain(".condition-router-variable-label");
         css.ShouldContain(".condition-router-variable-token");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.46fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldNotContain("grid-template-columns: 74px minmax(0, 1fr);");
         css.ShouldContain(".condition-router-editor ::deep(.condition-router-expression-field textarea.mud-input-root)");
         css.ShouldContain("min-height: 168px;");

@@ -59,6 +59,11 @@
     gap: 3px;
 }
 
+.condition-router-expression strong {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
 .condition-router-variables {
     align-items: center;
     display: flex;
@@ -150,7 +155,7 @@
     border-radius: 4px;
     display: grid;
     gap: 4px;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.46fr);
     max-width: 100%;
     min-width: 0;
     padding: 4px 6px;
@@ -163,8 +168,9 @@
     line-height: 1;
     overflow: hidden;
     min-width: 0;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .condition-router-variable-token small {
