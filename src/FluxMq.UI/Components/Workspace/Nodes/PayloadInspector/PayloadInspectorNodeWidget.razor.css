@@ -57,8 +57,7 @@
 .payload-inspector-node-contract {
     display: grid;
     gap: 4px 3px;
-    grid-template-columns: repeat(4, minmax(0, auto));
-    justify-content: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     min-width: 0;
 }
 
@@ -84,27 +83,31 @@
 
 .payload-inspector-node-editor {
     display: grid;
-    gap: 8px;
-    min-width: 0;
-}
-
-.payload-inspector-node-editor-summary {
-    display: grid;
     gap: 7px;
-    grid-template-columns: minmax(132px, 0.7fr) minmax(0, 1.2fr) minmax(110px, 0.45fr);
     min-width: 0;
 }
 
-.payload-inspector-node-editor-cell {
-    align-content: center;
+.payload-inspector-node-editor-table {
     display: grid;
-    gap: 3px;
-    min-height: 34px;
+    gap: 0;
     min-width: 0;
 }
 
-.payload-inspector-node-editor-cell span,
-.payload-inspector-node-editor-contract-label {
+.payload-inspector-node-editor-row {
+    align-items: center;
+    display: grid;
+    gap: 7px 10px;
+    grid-template-columns: 84px minmax(150px, 0.42fr) minmax(0, 1fr);
+    min-height: 42px;
+    min-width: 0;
+    padding: 8px 2px;
+}
+
+.payload-inspector-node-editor-row + .payload-inspector-node-editor-row {
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
+}
+
+.payload-inspector-node-editor-label {
     color: var(--flux-text-muted);
     font-size: 0.62rem;
     font-weight: 760;
@@ -114,7 +117,7 @@
     text-transform: uppercase;
 }
 
-.payload-inspector-node-editor-cell strong {
+.payload-inspector-node-editor-row > strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
     font-size: 0.82rem;
     font-weight: 720;
@@ -123,27 +126,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.payload-inspector-node-editor-contract-list {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
-    display: grid;
-    gap: 0;
-    min-width: 0;
-    padding-top: 6px;
-}
-
-.payload-inspector-node-editor-contract-item {
-    align-items: center;
-    display: grid;
-    gap: 7px;
-    grid-template-columns: 84px minmax(0, 1fr);
-    min-width: 0;
-    padding: 7px 2px;
-}
-
-.payload-inspector-node-editor-contract-item + .payload-inspector-node-editor-contract-item {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
 }
 
 .payload-inspector-node-editor-tokens {
@@ -166,12 +148,11 @@
         grid-column: 1 / -1;
     }
 
-    .payload-inspector-node-editor-summary,
-    .payload-inspector-node-editor-contract-item {
+    .payload-inspector-node-editor-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .payload-inspector-node-editor-contract-item {
+    .payload-inspector-node-editor-row {
         align-items: start;
         gap: 6px;
     }
