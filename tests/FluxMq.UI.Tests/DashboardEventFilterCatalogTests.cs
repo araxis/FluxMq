@@ -5981,7 +5981,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".connection-state-trigger-token");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".connection-state-trigger-editor");
-        css.ShouldContain("gap: 8px;");
+        css.ShouldContain("gap: 7px;");
+        css.ShouldNotContain("gap: 8px;");
+        css.ShouldContain("min-height: 34px;");
+        css.ShouldNotContain("min-height: 36px;");
+        css.ShouldContain(".connection-state-trigger-editor ::deep(.mud-input-label)");
+        css.ShouldContain("font-size: 0.72rem;");
         css.ShouldNotContain(".connection-state-trigger-editor-surface");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");

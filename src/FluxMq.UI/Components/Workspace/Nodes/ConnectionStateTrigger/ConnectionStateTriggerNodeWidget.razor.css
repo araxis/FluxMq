@@ -83,7 +83,7 @@
 
 .connection-state-trigger-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr);
     min-width: 0;
 }
@@ -94,7 +94,11 @@
 }
 
 .connection-state-trigger-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
+}
+
+.connection-state-trigger-editor ::deep(.mud-input-label) {
+    font-size: 0.72rem;
 }
 
 .connection-state-trigger-editor ::deep(.mud-input > input.mud-input-root),
