@@ -9439,13 +9439,16 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".generated-source-summary");
         css.ShouldContain(".generated-source-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 0.74fr) minmax(0, 1.32fr) minmax(0, 0.7fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
+        css.ShouldContain(".generated-source-meta-item.topic");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 0.74fr) minmax(0, 1.32fr) minmax(0, 0.7fr);");
         css.ShouldNotContain("grid-template-columns: 74px minmax(0, 1fr) 70px;");
         css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".generated-source-previews");
         css.ShouldContain(".generated-source-preview-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto;");
-        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain(".generated-source-contract");
         css.ShouldContain("display: flex;");
         css.ShouldContain("flex-wrap: wrap;");
@@ -9606,7 +9609,10 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".replay-source-summary");
         css.ShouldContain(".replay-source-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.56fr) minmax(0, 0.56fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
+        css.ShouldContain(".replay-source-meta-item.session");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.56fr) minmax(0, 0.56fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 70px 70px;");
         css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".replay-source-contract");
@@ -9639,7 +9645,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".replay-source-playback-row");
         css.ShouldNotContain(".replay-source-source-row");
         css.ShouldNotContain(".replay-source-config-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.58fr) minmax(0, 0.58fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
+        css.ShouldContain(".replay-source-session-field");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.58fr) minmax(0, 0.58fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(120px, 154px) minmax(120px, 154px);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 132px minmax(120px, 154px) minmax(120px, 154px);");
         css.ShouldNotContain(".replay-source-config-grid");
@@ -9650,7 +9659,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".replay-source-session-option");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(2rem, max-content);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) auto;");
-        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".replay-source-editor ::deep(.mud-input-control)");
@@ -9758,7 +9767,10 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".stored-session-source-summary");
         css.ShouldContain(".stored-session-source-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.28fr) minmax(0, 0.62fr) minmax(0, 0.52fr) minmax(0, 0.52fr);");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain(".stored-session-source-meta-item.session");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.28fr) minmax(0, 0.62fr) minmax(0, 0.52fr) minmax(0, 0.52fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 76px 64px 64px;");
         css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".stored-session-source-contract");
@@ -9789,7 +9801,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".stored-session-source-playback-panel");
         css.ShouldNotContain(".stored-session-source-source-row");
         css.ShouldNotContain(".stored-session-source-config-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.66fr) minmax(0, 0.58fr) minmax(0, 0.58fr);");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain(".stored-session-source-session-field");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.66fr) minmax(0, 0.58fr) minmax(0, 0.58fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 142px minmax(120px, 148px) minmax(120px, 148px);");
         css.ShouldNotContain(".stored-session-source-session-row");
         css.ShouldNotContain(".stored-session-source-timing-row");
@@ -9812,7 +9827,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(2rem, max-content);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain(".stored-session-source-empty");
-        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".stored-session-source-editor ::deep(.mud-input-control)");
