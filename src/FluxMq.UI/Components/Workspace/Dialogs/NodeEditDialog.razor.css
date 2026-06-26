@@ -149,6 +149,39 @@
     min-height: 0;
 }
 
+.node-edit-dialog-content.json-schema-validator-dialog {
+    gap: 8px;
+    grid-template-areas:
+        "identity config"
+        "schema schema";
+    grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    height: min(80vh, 760px);
+    max-height: min(80vh, 760px);
+    overflow: hidden;
+    padding: 10px;
+}
+
+.node-edit-dialog-content.json-schema-validator-dialog .node-edit-dialog-identity {
+    align-self: start;
+    grid-area: identity;
+    margin-bottom: 0;
+}
+
+.node-edit-dialog-content.json-schema-validator-dialog ::deep(.json-schema-validator-editor) {
+    display: contents;
+}
+
+.node-edit-dialog-content.json-schema-validator-dialog ::deep(.json-schema-validator-config-row) {
+    align-self: start;
+    grid-area: config;
+}
+
+.node-edit-dialog-content.json-schema-validator-dialog ::deep(.json-schema-validator-schema-area) {
+    grid-area: schema;
+    min-height: 0;
+}
+
 .node-edit-dialog-editor ::deep(.mud-grid) {
     margin: 0;
 }
@@ -251,6 +284,17 @@
             "identity"
             "config"
             "workbench";
+        grid-template-columns: minmax(0, 1fr);
+        height: auto;
+        max-height: min(72vh, 560px);
+        overflow-y: auto;
+    }
+
+    .node-edit-dialog-content.json-schema-validator-dialog {
+        grid-template-areas:
+            "identity"
+            "config"
+            "schema";
         grid-template-columns: minmax(0, 1fr);
         height: auto;
         max-height: min(72vh, 560px);

@@ -99,7 +99,11 @@
 .json-schema-validator-schema-area {
     display: grid;
     gap: 7px;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
     min-width: 0;
+    overflow: hidden;
 }
 
 .json-schema-validator-file-source,
@@ -108,12 +112,15 @@
 }
 
 .json-schema-validator-file-source {
+    align-self: start;
     display: grid;
     min-width: 0;
 }
 
 .json-schema-validator-inline-source {
     display: grid;
+    height: 100%;
+    min-height: 0;
     min-width: 0;
 }
 
@@ -158,8 +165,8 @@
     background: var(--flux-surface);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 64%, transparent);
     border-radius: 4px;
-    height: clamp(520px, 68vh, 760px);
-    min-height: 520px;
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
 }
 
@@ -191,5 +198,11 @@
 
     .json-schema-validator-contract-label {
         grid-column: 1 / -1;
+    }
+
+    .json-schema-validator-schema-area,
+    .json-schema-validator-inline-source ::deep(.schema-monaco-editor) {
+        height: auto;
+        min-height: 360px;
     }
 }
