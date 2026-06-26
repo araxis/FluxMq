@@ -5995,7 +5995,12 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".connection-state-trigger-summary");
         css.ShouldContain(".connection-state-trigger-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.72fr) minmax(0, 0.78fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.78fr);");
+        css.ShouldContain(".connection-state-trigger-meta-item.broker");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.72fr) minmax(0, 0.78fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 86px 92px;");
         css.ShouldContain(".connection-state-trigger-contracts");
         css.ShouldContain(".connection-state-trigger-contract");
