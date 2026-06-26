@@ -6341,7 +6341,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("padding: 14px;");
         css.ShouldNotContain("padding-bottom: 12px;");
         css.ShouldNotContain(".flow-assertion-source-row");
-        css.ShouldContain("grid-template-columns: minmax(220px, 1.24fr) minmax(180px, 1fr) 138px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.24fr) minmax(0, 1fr) minmax(0, 0.54fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(220px, 1.24fr) minmax(180px, 1fr) 138px;");
         css.ShouldNotContain(".flow-assertion-expression-row");
         css.ShouldNotContain(".flow-assertion-expression-cell");
         css.ShouldNotContain(".flow-assertion-message-cell");

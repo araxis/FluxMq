@@ -120,7 +120,7 @@
     align-items: end;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(220px, 1.24fr) minmax(180px, 1fr) 138px;
+    grid-template-columns: minmax(0, 1.24fr) minmax(0, 1fr) minmax(0, 0.54fr);
     min-width: 0;
 }
 
