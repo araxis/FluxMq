@@ -5885,6 +5885,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("white-space: nowrap;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.36fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.36fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 190px;");
@@ -6545,7 +6547,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("display: -webkit-box;");
         css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain("white-space: normal;");
-        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain(".message-filter-editor");
         css.ShouldNotContain(".message-filter-rules-surface");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
@@ -7290,6 +7292,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain(".condition-router-editor");
         css.ShouldNotContain("gap: 10px;");
         css.ShouldContain("gap: 7px;");
@@ -7486,6 +7489,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain(".routing-switch-editor");
         css.ShouldNotContain("gap: 8px;");
         css.ShouldContain("gap: 7px;");
@@ -7718,6 +7722,7 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);");
         forkCss.ShouldContain("overflow-wrap: anywhere;");
         forkCss.ShouldContain("white-space: normal;");
+        forkCss.ShouldNotContain("text-overflow: ellipsis;");
         forkCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 28px;");
         forkCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 30px;");
         forkCss.ShouldContain("min-height: 34px;");
@@ -7858,6 +7863,7 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);");
         mergeCss.ShouldContain("overflow-wrap: anywhere;");
         mergeCss.ShouldContain("white-space: normal;");
+        mergeCss.ShouldNotContain("text-overflow: ellipsis;");
         mergeCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 28px;");
         mergeCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 30px;");
         mergeCss.ShouldContain("min-height: 34px;");
@@ -8960,6 +8966,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("color-mix(in srgb, var(--mud-palette-tertiary) 76%, var(--mud-palette-text-primary));");
         css.ShouldNotContain("color-mix(in srgb, var(--mud-palette-warning) 76%, var(--flux-border-soft));");
         css.ShouldNotContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("white-space: nowrap;");
         css.ShouldContain(".metrics-topic-list");
         css.ShouldContain(".metrics-topic-list-header");
         css.ShouldContain(".metrics-section-label");

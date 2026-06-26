@@ -117,7 +117,6 @@
     border-color: color-mix(in srgb, var(--mud-palette-primary) 22%, var(--flux-border-soft));
     color: color-mix(in srgb, var(--mud-palette-primary) 84%, var(--mud-palette-text-primary));
     overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .mqtt-trigger-token.muted {
@@ -251,7 +250,7 @@
     padding: 0 10px 7px 0;
     text-align: left;
     text-transform: uppercase;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-head .mud-table-cell:last-child) {

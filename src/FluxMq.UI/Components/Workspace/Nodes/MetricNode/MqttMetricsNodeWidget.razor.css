@@ -226,7 +226,10 @@
 
 .metrics-last-time {
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: right;
+    white-space: normal;
 }
 
 .metrics-editor {

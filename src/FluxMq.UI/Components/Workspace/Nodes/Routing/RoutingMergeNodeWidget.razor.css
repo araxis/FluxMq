@@ -151,7 +151,6 @@
     line-height: 1;
     overflow: hidden;
     overflow-wrap: anywhere;
-    text-overflow: ellipsis;
     text-transform: uppercase;
     white-space: normal;
 }

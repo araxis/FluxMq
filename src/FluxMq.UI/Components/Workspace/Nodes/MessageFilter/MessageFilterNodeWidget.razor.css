@@ -107,7 +107,6 @@
     overflow: hidden;
     overflow-wrap: anywhere;
     padding: 6px 2px 0;
-    text-overflow: ellipsis;
     white-space: normal;
 }
 
