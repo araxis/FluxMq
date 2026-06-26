@@ -57,18 +57,18 @@
     @if (!Node.IsCollapsed)
     {
         <div class="flow-node-divider" aria-hidden="true"></div>
+        @Body
         @if (!string.IsNullOrWhiteSpace(Node.ActivityText))
         {
             <div class="flow-node-activity" role="status" aria-live="polite">
-                <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Class="flow-node-activity-icon" />
+                <span class="flow-node-activity-dot" aria-hidden="true"></span>
                 <span>@Node.ActivityText</span>
             </div>
         }
-        @Body
     }
     else if (!string.IsNullOrWhiteSpace(Node.ActivityText))
     {
-        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="flow-node-collapsed-activity">@Node.ActivityText</MudText>
+        <MudText Typo="Typo.caption" Class="flow-node-collapsed-activity">@Node.ActivityText</MudText>
     }
 
     @if (Node.PortDescriptors.Count > 0)

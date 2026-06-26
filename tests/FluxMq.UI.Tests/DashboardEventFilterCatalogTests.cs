@@ -9518,10 +9518,14 @@ public sealed class DashboardEventFilterCatalogTests
         shellMarkup.ShouldContain("flow-node-category-token");
         shellMarkup.ShouldContain("flow-node-divider");
         shellMarkup.ShouldContain("flow-node-activity");
-        shellMarkup.ShouldContain("flow-node-activity-icon");
+        shellMarkup.ShouldContain("flow-node-activity-dot");
         shellMarkup.ShouldContain("role=\"status\"");
         shellMarkup.ShouldContain("aria-live=\"polite\"");
+        shellMarkup.IndexOf("@Body", StringComparison.Ordinal).ShouldBeLessThan(
+            shellMarkup.IndexOf("flow-node-activity", StringComparison.Ordinal));
         shellMarkup.ShouldContain("flow-node-collapsed-activity");
+        shellMarkup.ShouldNotContain("Color=\"Color.Secondary\" Class=\"flow-node-collapsed-activity\"");
+        shellMarkup.ShouldNotContain("flow-node-activity-icon");
         shellMarkup.ShouldNotContain("<MudChip");
         shellMarkup.ShouldNotContain("<MudAlert");
         shellMarkup.ShouldNotContain("<MudDivider");
@@ -9538,9 +9542,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("height: 1px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-activity");
         css.ShouldContain("align-items: center;");
-        css.ShouldContain("grid-template-columns: 16px minmax(0, 1fr);");
-        css.ShouldContain("min-height: 30px;");
-        css.ShouldContain("margin: 6px -8px -6px;");
+        css.ShouldContain("grid-template-columns: 7px minmax(0, 1fr);");
+        css.ShouldContain("min-height: 18px;");
+        css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);");
+        css.ShouldContain(".flow-designer-root ::deep .flow-node-activity-dot");
+        css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-secondary) 76%, var(--mud-palette-text-disabled));");
+        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("grid-template-columns: 16px minmax(0, 1fr);");
+        css.ShouldNotContain(".flow-designer-root ::deep .flow-node-activity-icon");
         css.ShouldNotContain(".flow-node-category-chip");
         css.ShouldNotContain(".mud-alert-message");
         css.ShouldNotContain(".mud-alert-icon");
