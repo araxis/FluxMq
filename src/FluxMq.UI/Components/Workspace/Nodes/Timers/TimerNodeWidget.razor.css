@@ -121,7 +121,7 @@
 }
 
 .timer-node-settings-row.interval {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(170px, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .timer-node-settings-row.schedule {

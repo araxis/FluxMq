@@ -9671,7 +9671,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".timer-node-limit-workspace");
         css.ShouldNotContain(".timer-node-option-workspace");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(170px, 1fr);");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(170px, 1fr);");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(180px, 1fr);");
         css.ShouldNotContain("grid-template-columns: minmax(118px, 150px) minmax(130px, 170px) minmax(170px, 1fr);");
