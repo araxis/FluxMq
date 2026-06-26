@@ -8111,6 +8111,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-column: 1 / -1;");
         css.ShouldContain("white-space: nowrap;");
         css.ShouldContain(".http-client-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".http-client-editor");
         css.ShouldNotContain("gap: 10px;");
         css.ShouldContain("gap: 8px;");
@@ -8122,6 +8124,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".http-client-number-grid");
         css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
         css.ShouldContain(".http-client-options");
+        css.ShouldContain(".http-client-options ::deep(.mud-checkbox)");
+        css.ShouldContain("display: inline-flex;");
+        css.ShouldContain(".http-client-options ::deep(.mud-checkbox .mud-button-root)");
+        css.ShouldContain("padding: 4px;");
+        css.ShouldContain(".http-client-options ::deep(.mud-checkbox .mud-typography)");
         css.ShouldContain(".http-client-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 640px)");
         css.ShouldNotContain(".flow-node-filters");

@@ -74,9 +74,12 @@
     font-size: 0.52rem;
     font-weight: 760;
     line-height: 1;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
     padding: 3px 4px;
     text-align: center;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .http-client-editor {
@@ -107,7 +110,20 @@
 }
 
 .http-client-options ::deep(.mud-checkbox) {
+    align-items: center;
+    display: inline-flex;
     margin: 0;
+    min-height: 36px;
+}
+
+.http-client-options ::deep(.mud-checkbox .mud-button-root) {
+    padding: 4px;
+}
+
+.http-client-options ::deep(.mud-checkbox .mud-typography) {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    font-size: 0.82rem;
+    line-height: 1.2;
 }
 
 .http-client-base-url-field,
