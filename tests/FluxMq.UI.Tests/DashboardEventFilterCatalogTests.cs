@@ -7957,10 +7957,15 @@ public sealed class DashboardEventFilterCatalogTests
 
         correlationCss.ShouldContain(".routing-correlation-summary");
         correlationCss.ShouldContain(".routing-correlation-meta");
-        correlationCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 112px 76px 64px;");
+        correlationCss.ShouldContain("grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.68fr) minmax(0, 0.58fr) minmax(0, 0.52fr);");
+        correlationCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 112px 76px 64px;");
         correlationCss.ShouldContain(".routing-correlation-rules");
-        correlationCss.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        correlationCss.ShouldContain("flex-wrap: wrap;");
+        correlationCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        correlationCss.ShouldContain("flex: 0 0 100%;");
+        correlationCss.ShouldNotContain("grid-column: 1 / -1;");
         correlationCss.ShouldContain(".routing-correlation-token");
+        correlationCss.ShouldContain("display: inline-flex;");
         correlationCss.ShouldContain("overflow-wrap: anywhere;");
         correlationCss.ShouldContain("white-space: normal;");
         correlationCss.ShouldContain(".routing-correlation-editor");
@@ -7979,7 +7984,8 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldNotContain(".routing-correlation-panel-token");
         correlationCss.ShouldNotContain(".routing-correlation-rule-panel");
         correlationCss.ShouldNotContain(".routing-correlation-source-grid");
-        correlationCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px 150px 150px;");
+        correlationCss.ShouldContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.58fr) minmax(0, 0.58fr) minmax(0, 0.58fr);");
+        correlationCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 150px 150px 150px;");
         correlationCss.ShouldContain(".routing-correlation-expression-row");
         correlationCss.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
         correlationCss.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);");
@@ -7987,7 +7993,8 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldNotContain("padding: 7px;");
         correlationCss.ShouldNotContain(".routing-correlation-expression-grid");
         correlationCss.ShouldContain(".routing-correlation-side-map-row");
-        correlationCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(132px, 0.72fr);");
+        correlationCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.72fr);");
+        correlationCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(132px, 0.72fr);");
         correlationCss.ShouldNotContain("padding-top: 10px;");
         correlationCss.ShouldContain("padding-top: 7px;");
         correlationCss.ShouldNotContain("padding-top: 8px;");
@@ -7995,7 +8002,8 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldNotContain(".routing-correlation-limit-row");
         correlationCss.ShouldContain(".routing-correlation-case-option");
         correlationCss.ShouldContain("align-items: center;");
-        correlationCss.ShouldContain("align-self: end;");
+        correlationCss.ShouldContain("align-self: center;");
+        correlationCss.ShouldNotContain("align-self: end;");
         correlationCss.ShouldContain("justify-content: flex-start;");
         correlationCss.ShouldContain("min-height: 34px;");
         correlationCss.ShouldContain(".routing-correlation-case-option ::deep(.mud-checkbox .mud-button-root)");
