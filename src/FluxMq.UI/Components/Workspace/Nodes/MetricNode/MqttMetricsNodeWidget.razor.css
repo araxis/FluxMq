@@ -145,13 +145,17 @@
 
 .metrics-topic-list-header strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 62%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.58rem;
     font-weight: 720;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .metrics-topic-row {
@@ -159,7 +163,7 @@
     display: grid;
     font-size: 0.68rem;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) minmax(36px, 0.34fr) minmax(22px, 0.18fr);
+    grid-template-columns: minmax(0, 1fr) minmax(2.25rem, 0.34fr) minmax(1.375rem, 0.18fr);
     min-width: 0;
 }
 
@@ -167,8 +171,9 @@
     color: color-mix(in srgb, var(--mud-palette-text-primary) 74%, var(--mud-palette-text-secondary));
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .metrics-topic-bar {
@@ -274,7 +279,8 @@
     font-size: 0.7rem;
     font-weight: 700;
     line-height: 1;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .metrics-readout-options {
@@ -290,7 +296,7 @@
     border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 26%, transparent);
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) 28px;
+    grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);
     min-height: 32px;
     min-width: 0;
     padding: 4px 2px;
@@ -345,7 +351,7 @@
     display: inline-flex;
     justify-self: end;
     margin: 0;
-    min-height: 28px;
+    min-height: 1.75rem;
 }
 
 .metrics-readout-selector ::deep(.mud-checkbox .mud-button-root) {
@@ -371,6 +377,6 @@
     }
 
     .metrics-topic-row {
-        grid-template-columns: minmax(0, 1fr) 44px 28px;
+        grid-template-columns: minmax(0, 1fr) minmax(2.75rem, max-content) minmax(1.75rem, max-content);
     }
 }
