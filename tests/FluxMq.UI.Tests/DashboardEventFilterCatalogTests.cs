@@ -6993,9 +6993,15 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-column: 1 / -1;");
         css.ShouldContain("white-space: nowrap;");
         css.ShouldContain(".file-writer-token");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".file-writer-editor");
         css.ShouldContain("grid-template-columns: minmax(0, 180px);");
         css.ShouldContain(".file-writer-editor ::deep(.mud-input-control)");
+        css.ShouldContain("min-height: 34px;");
+        css.ShouldNotContain("min-height: 36px;");
+        css.ShouldContain(".file-writer-editor ::deep(.mud-input-label)");
+        css.ShouldContain("font-size: 0.72rem;");
         css.ShouldContain("@media (max-width: 640px)");
         css.ShouldNotContain(".flow-node-filters");
         css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
