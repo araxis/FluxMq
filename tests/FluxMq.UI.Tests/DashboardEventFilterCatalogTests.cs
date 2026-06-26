@@ -6802,11 +6802,20 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".dynamic-mapper-summary");
         css.ShouldContain(".dynamic-mapper-meta");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.58fr) minmax(0, 0.54fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 76px 72px;");
         css.ShouldContain(".dynamic-mapper-contracts");
         css.ShouldContain(".dynamic-mapper-token");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain("flex: 0 0 100%;");
+        css.ShouldNotContain("grid-column: 1 / -1;");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".dynamic-mapper-editor");
         css.ShouldContain(".dynamic-mapper-control-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 0.74fr) minmax(0, 0.56fr) minmax(0, 0.64fr) minmax(0, 0.9fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(128px, 0.74fr) minmax(108px, 0.56fr) minmax(128px, 0.64fr) minmax(160px, 0.9fr);");
         css.ShouldContain(".dynamic-mapper-workspace");
         css.ShouldContain("grid-template-rows: minmax(0, 1fr);");
         css.ShouldNotContain(".dynamic-mapper-workspace.has-sample");
