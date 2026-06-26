@@ -6675,6 +6675,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".json-schema-validator-meta");
         css.ShouldContain("grid-template-columns: minmax(0, 1.34fr) minmax(0, 0.66fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 90px;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".json-schema-validator-contracts");
         css.ShouldContain(".json-schema-validator-contract");
         css.ShouldContain(".json-schema-validator-contract-label");
@@ -6705,15 +6706,17 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("grid-template-columns: minmax(160px, 210px) minmax(0, 1fr);");
         css.ShouldContain(".json-schema-validator-file-source");
         css.ShouldContain(".json-schema-validator-file-row");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);");
         css.ShouldContain(".json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button)");
         css.ShouldContain("justify-self: end;");
         css.ShouldContain("border-radius: 4px;");
         css.ShouldContain(".json-schema-validator-file-row ::deep(.schema-file-picker-button .mud-icon-root)");
-        css.ShouldContain("height: 28px;");
-        css.ShouldContain("min-height: 28px;");
-        css.ShouldContain("min-width: 28px;");
-        css.ShouldContain("width: 28px;");
+        css.ShouldContain("height: 1.75rem;");
+        css.ShouldContain("min-height: 1.75rem;");
+        css.ShouldContain("min-width: 1.75rem;");
+        css.ShouldContain("width: 1.75rem;");
         css.ShouldContain("font-size: 0.98rem;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 28px;");
         css.ShouldNotContain("height: 30px;");
         css.ShouldNotContain("min-height: 30px;");
         css.ShouldNotContain("min-width: 30px;");
@@ -6722,7 +6725,6 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".json-schema-validator-field-note");
         css.ShouldContain(".json-schema-validator-inline-source");
         css.ShouldContain(".json-schema-validator-inline-source ::deep(.schema-monaco-editor)");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 28px;");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 30px;");
         css.ShouldContain("min-height: 34px;");
         css.ShouldNotContain("height: clamp(520px, 68vh, 760px);");

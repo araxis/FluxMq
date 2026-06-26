@@ -36,14 +36,18 @@
 
 .json-schema-validator-meta-item strong {
     color: var(--mud-palette-text-primary);
+    display: -webkit-box;
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .json-schema-validator-contracts {
@@ -132,7 +136,7 @@
     align-items: center;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) 28px;
+    grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);
     min-width: 0;
 }
 
@@ -160,12 +164,12 @@
 .json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button) {
     border-radius: 4px;
     color: color-mix(in srgb, var(--mud-palette-info) 82%, var(--mud-palette-text-primary));
-    height: 28px;
+    height: 1.75rem;
     justify-self: end;
-    min-height: 28px;
-    min-width: 28px;
+    min-height: 1.75rem;
+    min-width: 1.75rem;
     padding: 0;
-    width: 28px;
+    width: 1.75rem;
 }
 
 .json-schema-validator-file-row ::deep(.schema-file-picker-button.mud-icon-button:hover:not(.mud-disabled)) {
