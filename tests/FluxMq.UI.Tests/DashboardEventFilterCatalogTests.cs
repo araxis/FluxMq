@@ -7736,7 +7736,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(120px, 1fr) minmax(150px, 1fr) minmax(124px, 0.6fr);");
         css.ShouldContain(".routing-window-partial-option");
         css.ShouldContain("align-items: center;");
+        css.ShouldContain("align-self: end;");
+        css.ShouldContain("justify-content: flex-start;");
         css.ShouldContain("min-height: 34px;");
+        css.ShouldContain(".routing-window-partial-option ::deep(.mud-checkbox .mud-button-root)");
         css.ShouldContain(".routing-window-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldNotContain(".routing-window-panel-title");
@@ -7892,7 +7895,10 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldNotContain(".routing-correlation-limit-row");
         correlationCss.ShouldContain(".routing-correlation-case-option");
         correlationCss.ShouldContain("align-items: center;");
+        correlationCss.ShouldContain("align-self: end;");
+        correlationCss.ShouldContain("justify-content: flex-start;");
         correlationCss.ShouldContain("min-height: 34px;");
+        correlationCss.ShouldContain(".routing-correlation-case-option ::deep(.mud-checkbox .mud-button-root)");
         correlationCss.ShouldContain("@media (max-width: 840px)");
         correlationCss.ShouldNotContain(".routing-correlation-case-option > span");
         correlationCss.ShouldNotContain(".routing-correlation-config-grid");
@@ -7998,7 +8004,10 @@ public sealed class DashboardEventFilterCatalogTests
         joinCss.ShouldContain("padding-top: 8px;");
         joinCss.ShouldContain(".routing-join-case-option");
         joinCss.ShouldContain("align-items: center;");
+        joinCss.ShouldContain("align-self: end;");
+        joinCss.ShouldContain("justify-content: flex-start;");
         joinCss.ShouldContain("min-height: 34px;");
+        joinCss.ShouldContain(".routing-join-case-option ::deep(.mud-checkbox .mud-button-root)");
         joinCss.ShouldContain("@media (max-width: 840px)");
         joinCss.ShouldNotContain(".routing-join-case-option > span");
         joinCss.ShouldNotContain(".routing-join-type-grid");
