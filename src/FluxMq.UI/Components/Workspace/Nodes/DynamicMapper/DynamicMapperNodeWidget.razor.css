@@ -47,7 +47,6 @@
     min-width: 0;
     overflow: hidden;
     overflow-wrap: anywhere;
-    text-overflow: ellipsis;
     white-space: normal;
 }
 
@@ -198,7 +197,6 @@
     min-width: 0;
     overflow: hidden;
     overflow-wrap: anywhere;
-    text-overflow: ellipsis;
     white-space: normal;
 }
 

@@ -6353,7 +6353,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".flow-assertion-token.fail");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".flow-assertion-expression-preview");
-        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".flow-assertion-editor");
         css.ShouldNotContain("gap: 10px;");
@@ -6705,6 +6705,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("white-space: normal;");
         css.ShouldNotContain("grid-template-columns: repeat(3, minmax(0, auto));");
         css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain(".json-schema-validator-token");
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain(".json-schema-validator-editor");
@@ -6878,6 +6879,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("grid-column: 1 / -1;");
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain(".dynamic-mapper-editor");
         css.ShouldContain(".dynamic-mapper-control-row");
         css.ShouldContain("grid-template-columns: minmax(0, 0.74fr) minmax(0, 0.56fr) minmax(0, 0.64fr) minmax(0, 0.9fr);");
