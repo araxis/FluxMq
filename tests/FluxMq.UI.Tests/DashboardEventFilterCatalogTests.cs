@@ -7426,6 +7426,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldContain(".routing-switch-variable-reference");
         css.ShouldContain(".routing-switch-variable-token");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.44fr);");
         css.ShouldNotContain("border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);");
         css.ShouldContain("flex-wrap: wrap;");
         css.ShouldNotContain("grid-template-columns: repeat(3, minmax(0, auto));");
@@ -7434,8 +7435,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".routing-switch-route-list");
         css.ShouldContain(".routing-switch-route-row");
         css.ShouldNotContain(".routing-switch-route-index");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 28px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(1.75rem, max-content);");
+        css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 28px;");
         css.ShouldContain("min-height: 40px;");
         css.ShouldNotContain("min-height: 42px;");
         css.ShouldContain("align-items: center;");
