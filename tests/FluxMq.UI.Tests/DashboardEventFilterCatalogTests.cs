@@ -7595,7 +7595,8 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldNotContain(".routing-fork-panel-token");
         forkCss.ShouldNotContain(".routing-fork-port-panel");
         forkCss.ShouldNotContain(".routing-fork-source-row");
-        forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
+        forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.54fr);");
+        forkCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 150px;");
         forkCss.ShouldNotContain(".routing-fork-port-editor");
         forkCss.ShouldNotContain("padding-top: 10px;");
         forkCss.ShouldContain("padding-top: 7px;");
@@ -7609,7 +7610,10 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldContain(".routing-fork-port-row");
         forkCss.ShouldNotContain(".routing-fork-port-index");
         forkCss.ShouldContain("align-items: center;");
-        forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 28px;");
+        forkCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);");
+        forkCss.ShouldContain("overflow-wrap: anywhere;");
+        forkCss.ShouldContain("white-space: normal;");
+        forkCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 28px;");
         forkCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 30px;");
         forkCss.ShouldContain("min-height: 34px;");
         forkCss.ShouldNotContain("min-height: 36px;");
@@ -7728,7 +7732,8 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldNotContain(".routing-merge-panel-token");
         mergeCss.ShouldNotContain(".routing-merge-port-panel");
         mergeCss.ShouldNotContain(".routing-merge-source-row");
-        mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
+        mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.54fr);");
+        mergeCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 150px;");
         mergeCss.ShouldNotContain(".routing-merge-port-editor");
         mergeCss.ShouldNotContain("padding-top: 10px;");
         mergeCss.ShouldContain("padding-top: 7px;");
@@ -7742,7 +7747,10 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldContain(".routing-merge-port-row");
         mergeCss.ShouldNotContain(".routing-merge-port-index");
         mergeCss.ShouldContain("align-items: center;");
-        mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) 28px;");
+        mergeCss.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);");
+        mergeCss.ShouldContain("overflow-wrap: anywhere;");
+        mergeCss.ShouldContain("white-space: normal;");
+        mergeCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 28px;");
         mergeCss.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 30px;");
         mergeCss.ShouldContain("min-height: 34px;");
         mergeCss.ShouldNotContain("min-height: 36px;");

@@ -94,7 +94,7 @@
     align-items: end;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) 150px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.54fr);
     min-width: 0;
 }
 
@@ -135,7 +135,7 @@
     color: color-mix(in srgb, var(--mud-palette-text-primary) 70%, var(--mud-palette-text-secondary));
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) 28px;
+    grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);
     min-height: 28px;
     min-width: 0;
     padding: 0 0 4px;
@@ -147,9 +147,10 @@
     letter-spacing: 0;
     line-height: 1;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
     text-transform: uppercase;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .routing-merge-port-list {
@@ -163,7 +164,7 @@
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 32%, transparent);
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) 28px;
+    grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);
     min-height: 34px;
     min-width: 0;
     padding: 4px 0;
@@ -212,7 +213,7 @@
     }
 
     .routing-merge-port-header {
-        grid-template-columns: minmax(0, 1fr) 28px;
+        grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);
     }
 
     .routing-merge-ports {
