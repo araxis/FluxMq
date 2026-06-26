@@ -25,17 +25,33 @@
             @if (Node.PortDescriptors.Count > 0)
             {
                 <div class="generic-node-ports" aria-label="Generic node ports">
-                    @foreach (var output in OutputPortPreview)
+                    @if (OutputPortPreview.Count > 0)
                     {
-                        <span class="generic-node-token output" title="@output.ValueType">@output.Name</span>
+                        <div class="generic-node-port-group output">
+                            <span class="generic-node-port-label">Outputs</span>
+                            <span class="generic-node-port-token-list">
+                                @foreach (var output in OutputPortPreview)
+                                {
+                                    <span class="generic-node-token output" title="@output.ValueType">@output.Name</span>
+                                }
+                            </span>
+                        </div>
                     }
-                    @foreach (var input in InputPortPreview)
+                    @if (InputPortPreview.Count > 0)
                     {
-                        <span class="generic-node-token input" title="@input.ValueType">@input.Name</span>
+                        <div class="generic-node-port-group input">
+                            <span class="generic-node-port-label">Inputs</span>
+                            <span class="generic-node-port-token-list">
+                                @foreach (var input in InputPortPreview)
+                                {
+                                    <span class="generic-node-token input" title="@input.ValueType">@input.Name</span>
+                                }
+                            </span>
+                        </div>
                     }
                     @if (PortPreviewOverflow > 0)
                     {
-                        <span class="generic-node-token overflow">+@PortPreviewOverflow</span>
+                        <span class="generic-node-token overflow">+@PortPreviewOverflow more</span>
                     }
                 </div>
             }
@@ -59,6 +75,11 @@
             <div class="generic-node-editor-port-list" aria-label="Generic component port contracts">
                 @if (SortedPortDescriptors.Count > 0)
                 {
+                    <div class="generic-node-editor-port-header" aria-hidden="true">
+                        <span>Direction</span>
+                        <span>Port</span>
+                        <span>Contract</span>
+                    </div>
                     @foreach (var port in SortedPortDescriptors)
                     {
                         <div class="generic-node-editor-port-row">

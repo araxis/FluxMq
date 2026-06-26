@@ -58,10 +58,38 @@
 .generic-node-ports {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     display: grid;
-    gap: 4px 3px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
     padding: 5px 2px 0;
+}
+
+.generic-node-port-group {
+    align-items: start;
+    display: grid;
+    gap: 4px;
+    grid-template-columns: minmax(3.5rem, max-content) minmax(0, 1fr);
+    min-width: 0;
+}
+
+.generic-node-port-label {
+    color: var(--flux-text-muted);
+    font-size: 0.52rem;
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding-top: 4px;
+    text-transform: uppercase;
+    white-space: normal;
+}
+
+.generic-node-port-token-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    min-width: 0;
 }
 
 .generic-node-token {
@@ -167,13 +195,34 @@
     padding-top: 3px;
 }
 
+.generic-node-editor-port-header,
 .generic-node-editor-port-row {
     align-items: center;
     display: grid;
     gap: 7px 10px;
     grid-template-columns: minmax(0, 0.58fr) minmax(0, 1fr) minmax(0, 0.82fr);
-    min-height: 38px;
     min-width: 0;
+}
+
+.generic-node-editor-port-header {
+    color: var(--flux-text-muted);
+    font-size: 0.6rem;
+    font-weight: 760;
+    letter-spacing: 0;
+    line-height: 1;
+    min-height: 28px;
+    padding: 5px 2px 4px;
+    text-transform: uppercase;
+}
+
+.generic-node-editor-port-header span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.generic-node-editor-port-row {
+    min-height: 38px;
     padding: 7px 2px;
 }
 
@@ -190,16 +239,18 @@
 
 @media (max-width: 640px) {
     .generic-node-meta,
-    .generic-node-ports {
+    .generic-node-port-group {
         grid-template-columns: minmax(0, 1fr);
     }
 
     .generic-node-editor-row,
+    .generic-node-editor-port-header,
     .generic-node-editor-port-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
     .generic-node-editor-row,
+    .generic-node-editor-port-header,
     .generic-node-editor-port-row {
         align-items: start;
         gap: 6px;

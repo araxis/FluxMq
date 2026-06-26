@@ -8744,9 +8744,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("OutputCount");
         markup.ShouldContain("generic-node-ports");
         markup.ShouldContain("aria-label=\"Generic node ports\"");
+        markup.ShouldContain("generic-node-port-group output");
+        markup.ShouldContain("generic-node-port-group input");
+        markup.ShouldContain("generic-node-port-label");
+        markup.ShouldContain("generic-node-port-token-list");
         markup.ShouldContain("OutputPortPreview");
         markup.ShouldContain("InputPortPreview");
         markup.ShouldContain("PortPreviewOverflow");
+        markup.ShouldContain("+@PortPreviewOverflow more");
         markup.ShouldContain("generic-node-token");
         markup.ShouldContain("generic-node-editor");
         markup.ShouldContain("aria-label=\"Generic component details\"");
@@ -8766,7 +8771,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("generic-node-editor-port-list");
         markup.ShouldNotContain("generic-node-editor-port-table");
         markup.ShouldContain("aria-label=\"Generic component port contracts\"");
-        markup.ShouldNotContain("generic-node-editor-port-header");
+        markup.ShouldContain("generic-node-editor-port-header");
+        markup.ShouldContain("<span>Direction</span>");
+        markup.ShouldContain("<span>Port</span>");
+        markup.ShouldContain("<span>Contract</span>");
         markup.ShouldContain("SortedPortDescriptors");
         markup.ShouldContain("generic-node-editor-port-row");
         markup.ShouldNotContain("generic-node-editor-port-main");
@@ -8787,6 +8795,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".generic-node-meta");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
         css.ShouldContain(".generic-node-ports");
+        css.ShouldContain(".generic-node-port-group");
+        css.ShouldContain(".generic-node-port-label");
+        css.ShouldContain(".generic-node-port-token-list");
+        css.ShouldContain("grid-template-columns: minmax(3.5rem, max-content) minmax(0, 1fr);");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("flex-wrap: wrap;");
         css.ShouldNotContain("grid-template-columns: repeat(3, minmax(0, auto));");
         css.ShouldNotContain("justify-content: start;");
         css.ShouldContain(".generic-node-token");
@@ -8819,7 +8833,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(110px, 0.35fr) minmax(120px, 0.35fr);");
         css.ShouldContain(".generic-node-editor-port-list");
         css.ShouldNotContain(".generic-node-editor-port-table");
-        css.ShouldNotContain(".generic-node-editor-port-header");
+        css.ShouldContain(".generic-node-editor-port-header");
         css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);");
         css.ShouldContain(".generic-node-editor-port-row");
         css.ShouldNotContain(".generic-node-editor-port-main");
