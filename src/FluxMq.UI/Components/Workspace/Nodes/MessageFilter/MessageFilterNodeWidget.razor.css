@@ -93,15 +93,19 @@
 .message-filter-expression-preview {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
     color: color-mix(in srgb, var(--mud-palette-text-primary) 74%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-family: var(--mud-typography-default-family);
     font-size: 0.66rem;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.2;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     padding: 6px 2px 0;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .message-filter-editor {
@@ -113,7 +117,7 @@
     align-items: start;
     display: grid;
     gap: 10px;
-    grid-template-columns: minmax(0, 1fr) 310px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(14rem, 0.9fr);
     min-width: 0;
 }
 
@@ -144,9 +148,15 @@
     align-items: center;
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) 28px;
+    grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);
     min-height: 28px;
     padding: 0 0 5px;
+}
+
+.message-filter-pattern-table-header > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .message-filter-pattern-list {
@@ -160,7 +170,7 @@
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) 28px;
+    grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);
     min-height: 34px;
     min-width: 0;
     padding: 5px 0;
@@ -198,6 +208,8 @@
 
 .message-filter-reference-label {
     margin-right: 3px;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .message-filter-editor ::deep(.mud-input-control) {

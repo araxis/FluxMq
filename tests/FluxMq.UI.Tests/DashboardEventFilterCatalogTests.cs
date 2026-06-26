@@ -6506,6 +6506,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("color-mix(in srgb, var(--mud-palette-warning) 76%, var(--mud-palette-text-primary));");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".message-filter-expression-preview");
+        css.ShouldContain("display: -webkit-box;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain("text-overflow: ellipsis;");
         css.ShouldContain(".message-filter-editor");
         css.ShouldNotContain(".message-filter-rules-surface");
@@ -6517,7 +6520,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".message-filter-editor-status > div");
         css.ShouldNotContain(".message-filter-rule-composer");
         css.ShouldContain(".message-filter-rule-layout");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 310px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.1fr) minmax(14rem, 0.9fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 310px;");
         css.ShouldNotContain(".message-filter-rule-grid");
         css.ShouldContain(".message-filter-expression-row");
         css.ShouldContain(".message-filter-pattern-table");
@@ -6537,7 +6541,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-height: 34px;");
         css.ShouldNotContain("min-height: 36px;");
         css.ShouldNotContain("min-height: 40px;");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 28px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(1.75rem, max-content);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 28px;");
         css.ShouldContain("align-items: center;");
         css.ShouldContain(".message-filter-reference");
         css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);");
