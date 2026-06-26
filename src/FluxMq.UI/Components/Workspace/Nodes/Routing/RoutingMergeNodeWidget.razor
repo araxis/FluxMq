@@ -121,6 +121,8 @@
     private string _inputType = RoutingMergeNodeModel.DefaultInputType;
     private List<PortDraft> _inputDrafts = [];
     private int _boundedCapacity = RoutingMergeNodeModel.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private IReadOnlyList<string> NormalizedInputs => RoutingNodeConfiguration.NormalizePortList(
         Model.Inputs,
@@ -134,10 +136,18 @@
     private IReadOnlyList<string> InputPreview => NormalizedInputs.Take(4).ToArray();
     private int InputPreviewOverflow => Math.Max(0, NormalizedInputs.Count - 4);
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
         _inputDrafts = RoutingNodeConfiguration.SplitLines(Model.FormatInputs())
             .Select(static input => new PortDraft(input))

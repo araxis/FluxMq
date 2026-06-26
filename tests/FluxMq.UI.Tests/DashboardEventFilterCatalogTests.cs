@@ -7443,6 +7443,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Class=\"routing-switch-route-output-field\"");
         markup.ShouldContain("RemoveRoute(route)");
         markup.ShouldContain("FormatRouteDrafts");
+        markup.ShouldContain("private string? _loadedNodeName;");
+        markup.ShouldContain("private FlowDiagramNodeModel? _loadedNode;");
+        markup.ShouldContain("ReferenceEquals(_loadedNode, Node)");
+        markup.ShouldContain("_loadedNode = Node;");
         markup.ShouldNotContain("routing-switch-panel-header");
         markup.ShouldNotContain("routing-switch-panel-kicker");
         markup.ShouldNotContain("routing-switch-panel-token");
@@ -7648,6 +7652,10 @@ public sealed class DashboardEventFilterCatalogTests
         forkMarkup.ShouldContain("aria-label=\"@($\"Output port {index + 1}\")\"");
         forkMarkup.ShouldContain("aria-label=\"@($\"Remove output port {output.Name}\")\"");
         forkMarkup.ShouldContain("Class=\"routing-fork-output-name-field\"");
+        forkMarkup.ShouldContain("private string? _loadedNodeName;");
+        forkMarkup.ShouldContain("private FlowDiagramNodeModel? _loadedNode;");
+        forkMarkup.ShouldContain("ReferenceEquals(_loadedNode, Node)");
+        forkMarkup.ShouldContain("_loadedNode = Node;");
         forkMarkup.ShouldNotContain("routing-fork-panel-header");
         forkMarkup.ShouldNotContain("routing-fork-panel-kicker");
         forkMarkup.ShouldNotContain("routing-fork-panel-token");
@@ -7789,6 +7797,10 @@ public sealed class DashboardEventFilterCatalogTests
         mergeMarkup.ShouldContain("aria-label=\"@($\"Input port {index + 1}\")\"");
         mergeMarkup.ShouldContain("aria-label=\"@($\"Remove input port {input.Name}\")\"");
         mergeMarkup.ShouldContain("Class=\"routing-merge-input-name-field\"");
+        mergeMarkup.ShouldContain("private string? _loadedNodeName;");
+        mergeMarkup.ShouldContain("private FlowDiagramNodeModel? _loadedNode;");
+        mergeMarkup.ShouldContain("ReferenceEquals(_loadedNode, Node)");
+        mergeMarkup.ShouldContain("_loadedNode = Node;");
         mergeMarkup.ShouldNotContain("routing-merge-panel-header");
         mergeMarkup.ShouldNotContain("routing-merge-panel-kicker");
         mergeMarkup.ShouldNotContain("routing-merge-panel-token");
@@ -7952,6 +7964,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Emit partial window on completion\"");
         markup.ShouldContain("@bind-Value=\"_emitPartialOnCompletion\"");
         markup.ShouldContain("Class=\"routing-window-partial-check\"");
+        markup.ShouldContain("private string? _loadedNodeName;");
+        markup.ShouldContain("private FlowDiagramNodeModel? _loadedNode;");
+        markup.ShouldContain("ReferenceEquals(_loadedNode, Node)");
+        markup.ShouldContain("_loadedNode = Node;");
         markup.ShouldNotContain("routing-window-panel-header");
         markup.ShouldNotContain("routing-window-panel-kicker");
         markup.ShouldNotContain("routing-window-panel-token");
@@ -8111,6 +8127,10 @@ public sealed class DashboardEventFilterCatalogTests
         correlationMarkup.ShouldContain("@bind-Value=\"_timeoutMilliseconds\"");
         correlationMarkup.ShouldContain("@bind-Value=\"_maxPending\"");
         correlationMarkup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        correlationMarkup.ShouldContain("private string? _loadedNodeName;");
+        correlationMarkup.ShouldContain("private FlowDiagramNodeModel? _loadedNode;");
+        correlationMarkup.ShouldContain("ReferenceEquals(_loadedNode, Node)");
+        correlationMarkup.ShouldContain("_loadedNode = Node;");
         correlationMarkup.ShouldNotContain("routing-correlation-panel-header");
         correlationMarkup.ShouldNotContain("routing-correlation-panel-kicker");
         correlationMarkup.ShouldNotContain("routing-correlation-panel-token");
@@ -8234,6 +8254,10 @@ public sealed class DashboardEventFilterCatalogTests
         joinMarkup.ShouldContain("@bind-Value=\"_timeoutMilliseconds\"");
         joinMarkup.ShouldContain("@bind-Value=\"_maxPending\"");
         joinMarkup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        joinMarkup.ShouldContain("private string? _loadedNodeName;");
+        joinMarkup.ShouldContain("private FlowDiagramNodeModel? _loadedNode;");
+        joinMarkup.ShouldContain("ReferenceEquals(_loadedNode, Node)");
+        joinMarkup.ShouldContain("_loadedNode = Node;");
         joinMarkup.ShouldNotContain("routing-join-panel-header");
         joinMarkup.ShouldNotContain("routing-join-panel-kicker");
         joinMarkup.ShouldNotContain("routing-join-panel-token");

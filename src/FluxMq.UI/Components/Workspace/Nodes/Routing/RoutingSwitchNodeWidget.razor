@@ -171,6 +171,8 @@
     private bool _emitRouteEnvelope;
     private int _boundedCapacity = RoutingSwitchNodeModel.DefaultBoundedCapacity;
     private List<RouteDraft> _routeDrafts = [];
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private string InputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
     private string RouteCountCaption => $"{Model.Routes.Count} routes";
@@ -193,10 +195,18 @@
         new("payloadJson", "json")
     ];
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
         _expression = Model.Expression;
         _routeDrafts = Model.Routes

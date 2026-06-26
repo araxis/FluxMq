@@ -109,6 +109,8 @@
     private int _timeMilliseconds = RoutingWindowNodeModel.DefaultTimeMilliseconds;
     private bool _emitPartialOnCompletion = RoutingWindowNodeModel.DefaultEmitPartialOnCompletion;
     private int _boundedCapacity = RoutingWindowNodeModel.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private string InputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
     private int NormalizedMaxItems => RoutingNodeConfiguration.NormalizeNonNegativeInt(
@@ -131,10 +133,18 @@
         Model.BoundedCapacity,
         RoutingWindowNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
         _maxItems = RoutingNodeConfiguration.NormalizeNonNegativeInt(
             Model.MaxItems,

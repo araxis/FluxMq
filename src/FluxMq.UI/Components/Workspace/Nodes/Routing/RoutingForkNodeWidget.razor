@@ -117,6 +117,8 @@
     private string _inputType = RoutingForkNodeModel.DefaultInputType;
     private List<PortDraft> _outputDrafts = [];
     private int _boundedCapacity = RoutingForkNodeModel.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private IReadOnlyList<string> NormalizedOutputs => RoutingNodeConfiguration.NormalizePortList(
         Model.Outputs,
@@ -130,10 +132,18 @@
     private IReadOnlyList<string> OutputPreview => NormalizedOutputs.Take(4).ToArray();
     private int OutputPreviewOverflow => Math.Max(0, NormalizedOutputs.Count - 4);
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _inputType = RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
         _outputDrafts = RoutingNodeConfiguration.SplitLines(Model.FormatOutputs())
             .Select(static output => new PortDraft(output))

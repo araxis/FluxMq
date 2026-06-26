@@ -145,6 +145,8 @@
     private int _timeoutMilliseconds = RoutingJoinNodeModel.DefaultTimeoutMilliseconds;
     private int _maxPending = RoutingJoinNodeModel.DefaultMaxPending;
     private int _boundedCapacity = RoutingJoinNodeModel.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private string LeftInputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.LeftInputType);
     private string RightInputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.RightInputType);
@@ -162,10 +164,18 @@
         Model.BoundedCapacity,
         RoutingJoinNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _leftInputType = RoutingNodeConfiguration.NormalizeInputType(Model.LeftInputType);
         _rightInputType = RoutingNodeConfiguration.NormalizeInputType(Model.RightInputType);
         _leftKeyExpression = RoutingNodeConfiguration.NormalizeText(
