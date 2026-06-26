@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.FactCheck"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="flow-assertion-summary">
             <div class="flow-assertion-meta">
@@ -75,10 +77,12 @@
 
             <div class="flow-assertion-rule-stack" aria-label="Flow assertion rule">
                 <MudTextField T="string"
-                              Label="Assertion"
-                              @bind-Value="_expression"
+                              Label="Pass condition"
+                              Value="@_expression"
+                              ValueChanged="@SetExpression"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
+                              Immediate="true"
                               Lines="12"
                               Class="flow-assertion-expression-field"
                               Placeholder='topic.StartsWith("factory/") && qos >= 1' />
@@ -180,4 +184,15 @@
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
     }
+
+    private async Task SetExpression(string value)
+    {
+        _expression = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+        => string.IsNullOrWhiteSpace(_expression)
+            ? "Enter an assertion condition before saving."
+            : null;
 }

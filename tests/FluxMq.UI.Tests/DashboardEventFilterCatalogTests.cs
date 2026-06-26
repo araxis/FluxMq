@@ -6258,6 +6258,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("flow-assertion-summary");
         markup.ShouldContain("flow-assertion-meta");
         markup.ShouldContain("AssertionCaption");
@@ -6298,9 +6300,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("aria-label=\"Assertion expression\"");
         markup.ShouldNotContain("flow-assertion-message-cell");
         markup.ShouldNotContain("aria-label=\"Assertion failure output\"");
-        markup.ShouldContain("Label=\"Assertion\"");
+        markup.ShouldContain("Label=\"Pass condition\"");
+        markup.ShouldNotContain("Label=\"Assertion\"");
         markup.ShouldNotContain("Label=\"Expression\"");
-        markup.ShouldContain("@bind-Value=\"_expression\"");
+        markup.ShouldContain("Value=\"@_expression\"");
+        markup.ShouldContain("ValueChanged=\"@SetExpression\"");
+        markup.ShouldContain("Immediate=\"true\"");
+        markup.ShouldNotContain("@bind-Value=\"_expression\"");
         markup.ShouldContain("Lines=\"12\"");
         markup.ShouldContain("Label=\"Failure message\"");
         markup.ShouldContain("@bind-Value=\"_failureMessage\"");
@@ -6331,6 +6337,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("flow-assertion-panel-header");
         markup.ShouldNotContain("flow-assertion-panel-kicker");
         markup.ShouldNotContain("flow-assertion-panel-token");
+        markup.ShouldContain("private async Task SetExpression(string value)");
+        markup.ShouldContain("await DialogRefresh.RefreshAsync(Node.NodeName);");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Enter an assertion condition before saving.");
 
         css.ShouldContain(".flow-assertion-summary");
         css.ShouldContain(".flow-assertion-meta");
