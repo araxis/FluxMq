@@ -10120,12 +10120,16 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".flow-designer-root ::deep .flow-node-action");
         css.ShouldContain("flex: 0 0 24px;");
+        css.ShouldContain(".flow-designer-root ::deep .flow-node-action:focus-visible");
+        css.ShouldContain("outline-offset: 2px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-category-token");
         css.ShouldContain("max-width: 74px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-display-name");
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-secondary) 72%, var(--mud-palette-text-disabled));");
         css.ShouldContain("font-weight: 620;");
         css.ShouldContain("opacity: 0.9;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-divider");
         css.ShouldContain("height: 1px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-activity");
@@ -10136,6 +10140,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".flow-designer-root ::deep .flow-node-activity-dot");
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-secondary) 76%, var(--mud-palette-text-disabled));");
         css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain(".flow-designer-root ::deep .flow-port-name");
+        css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldNotContain("grid-template-columns: 16px minmax(0, 1fr);");
         css.ShouldNotContain(".flow-designer-root ::deep .flow-node-activity-icon");
         css.ShouldNotContain(".flow-node-category-chip");
@@ -10321,6 +10327,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".node-edit-dialog-section");
         css.ShouldContain("padding: 0;");
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-primary) 78%, var(--mud-palette-text-secondary));");
+        css.ShouldContain(".node-edit-dialog-heading");
+        css.ShouldContain("display: -webkit-box;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".node-edit-dialog-editor");
         css.ShouldContain("display: contents;");
         css.ShouldContain(".node-edit-dialog-content.dynamic-mapper-dialog");
@@ -10349,6 +10360,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".node-edit-dialog-action-status");
         css.ShouldNotContain(".node-edit-dialog-action-status.ready");
         css.ShouldContain("min-height: 28px;");
+        css.ShouldNotContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("white-space: nowrap;");
         css.ShouldContain(".node-edit-dialog-actions");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 72%, var(--flux-surface));");
         css.ShouldNotContain("padding: 8px 10px;");

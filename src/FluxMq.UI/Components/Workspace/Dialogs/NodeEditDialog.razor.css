@@ -25,13 +25,16 @@
 
 .node-edit-dialog-heading {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 78%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 14px;
     font-weight: 800;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.2;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .node-edit-dialog-content {
@@ -236,6 +239,8 @@
     line-height: 1.2;
     min-height: 28px;
     min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .node-edit-dialog-action-spacer {
