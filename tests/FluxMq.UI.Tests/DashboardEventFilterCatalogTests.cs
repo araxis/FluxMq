@@ -6149,7 +6149,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".state-reducer-expression-preview");
-        css.ShouldContain("text-overflow: ellipsis;");
+        css.ShouldContain("display: -webkit-box;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".state-reducer-editor");
         css.ShouldNotContain("gap: 10px;");
         css.ShouldNotContain("gap: 8px;");
