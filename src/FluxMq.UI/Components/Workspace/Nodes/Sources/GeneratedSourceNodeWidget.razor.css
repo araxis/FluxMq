@@ -8,7 +8,7 @@
 .generated-source-meta {
     display: grid;
     gap: 2px;
-    grid-template-columns: 74px minmax(0, 1fr) 70px;
+    grid-template-columns: minmax(0, 0.74fr) minmax(0, 1.32fr) minmax(0, 0.7fr);
     min-width: 0;
 }
 
@@ -120,8 +120,7 @@
     align-items: center;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(180px, 220px);
-    justify-content: end;
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
     width: 100%;
 }
@@ -138,7 +137,7 @@
     align-items: center;
     display: grid;
     gap: 7px;
-    grid-template-columns: 28px minmax(150px, 0.9fr) minmax(240px, 1.4fr) 104px 84px minmax(132px, 0.72fr) 28px;
+    grid-template-columns: minmax(24px, 0.18fr) minmax(0, 0.96fr) minmax(0, 1.54fr) minmax(0, 0.58fr) minmax(0, 0.48fr) minmax(0, 0.9fr) minmax(24px, 0.18fr);
     min-width: 0;
 }
 
@@ -274,6 +273,12 @@
 .generated-source-payload-field,
 .generated-source-received-field {
     min-width: 0;
+}
+
+.generated-source-buffer-field {
+    justify-self: end;
+    max-width: 220px;
+    width: 100%;
 }
 
 @media (max-width: 720px) {
