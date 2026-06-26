@@ -87,13 +87,13 @@
 
 .timer-node-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
 .timer-node-mode {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
@@ -115,24 +115,25 @@
 }
 
 .timer-node-settings-row {
+    align-items: center;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .timer-node-settings-row.interval {
-    grid-template-columns: minmax(118px, 150px) minmax(130px, 170px) minmax(170px, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(170px, 1fr);
 }
 
 .timer-node-settings-row.schedule {
-    grid-template-columns: minmax(118px, 150px) minmax(130px, 170px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .timer-node-settings-row.passthrough {
-    grid-template-columns: minmax(130px, 170px);
+    grid-template-columns: minmax(0, 1fr);
 }
 
 .timer-node-settings-row.option {
-    grid-template-columns: minmax(130px, 170px) minmax(180px, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 1fr);
 }
 
 .timer-node-settings-row.option {
@@ -142,7 +143,7 @@
 
 .timer-node-option-cell {
     align-items: center;
-    align-self: end;
+    align-self: center;
     display: flex;
     justify-content: flex-start;
     min-height: 34px;
