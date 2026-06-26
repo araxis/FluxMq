@@ -7240,11 +7240,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("condition-router-summary");
         markup.ShouldContain("condition-router-meta");
         markup.ShouldContain("InputTypeCaption");
         markup.ShouldContain("condition-router-expression");
         markup.ShouldContain("aria-label=\"Condition router expression\"");
+        markup.ShouldContain("Route condition");
+        markup.ShouldContain("When true");
+        markup.ShouldContain("When false");
         markup.ShouldContain("ExpressionPreview");
         markup.ShouldContain("condition-router-variables");
         markup.ShouldContain("SummaryVariables");
@@ -7269,9 +7274,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ValueChanged=\"@SetInputType\"");
         markup.ShouldContain("Class=\"condition-router-input-field\"");
         markup.ShouldNotContain("condition-router-output-map");
-        markup.ShouldContain("Label=\"Condition\"");
+        markup.ShouldContain("Label=\"Route condition\"");
         markup.ShouldContain("aria-label=\"Condition expression\"");
-        markup.ShouldContain("@bind-Value=\"_expression\"");
+        markup.ShouldContain("Value=\"@_expression\"");
+        markup.ShouldContain("ValueChanged=\"@SetExpression\"");
+        markup.ShouldContain("Immediate=\"true\"");
+        markup.ShouldNotContain("@bind-Value=\"_expression\"");
         markup.ShouldContain("Lines=\"8\"");
         markup.ShouldContain("Class=\"condition-router-expression-field\"");
         markup.ShouldNotContain("condition-router-expression-cell");
@@ -7303,6 +7311,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("condition-router-panel-header");
         markup.ShouldNotContain("condition-router-panel-kicker");
         markup.ShouldNotContain("condition-router-panel-token");
+        markup.ShouldContain("private async Task SetInputType(string value)");
+        markup.ShouldContain("private async Task SetExpression(string value)");
+        markup.ShouldContain("await DialogRefresh.RefreshAsync(Node.NodeName);");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Enter a route condition before saving.");
 
         css.ShouldContain(".condition-router-summary");
         css.ShouldContain(".condition-router-meta");

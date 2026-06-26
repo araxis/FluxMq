@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.CallSplit"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="condition-router-summary">
             <div class="condition-router-meta">
@@ -18,17 +20,17 @@
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
                 <div class="condition-router-meta-item">
-                    <span>True</span>
+                    <span>When true</span>
                     <strong>WhenTrue</strong>
                 </div>
                 <div class="condition-router-meta-item">
-                    <span>False</span>
+                    <span>When false</span>
                     <strong>WhenFalse</strong>
                 </div>
             </div>
 
             <div class="condition-router-expression" aria-label="Condition router expression">
-                <span class="condition-router-section-label">Condition</span>
+                <span class="condition-router-section-label">Route condition</span>
                 <strong title="@ExpressionPreview">@ExpressionPreview</strong>
             </div>
 
@@ -66,10 +68,12 @@
 
             <div class="condition-router-rule-grid" aria-label="Condition router rule">
                 <MudTextField T="string"
-                              @bind-Value="_expression"
-                              Label="Condition"
+                              Value="@_expression"
+                              ValueChanged="@SetExpression"
+                              Label="Route condition"
                               aria-label="Condition expression"
                               Variant="Variant.Outlined"
+                              Immediate="true"
                               Lines="8"
                               Class="condition-router-expression-field"
                               Placeholder="@ExpressionPlaceholder" />
@@ -154,7 +158,7 @@
         return Task.CompletedTask;
     }
 
-    private Task SetInputType(string value)
+    private async Task SetInputType(string value)
     {
         var normalized = ConditionRouterNodeModel.NormalizeInputType(value);
         if (!string.Equals(_inputType, normalized, StringComparison.Ordinal))
@@ -163,8 +167,19 @@
             _expression = ConditionRouterNodeModel.DefaultExpression(_inputType);
         }
 
-        return Task.CompletedTask;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
     }
+
+    private async Task SetExpression(string value)
+    {
+        _expression = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+        => string.IsNullOrWhiteSpace(_expression)
+            ? "Enter a route condition before saving."
+            : null;
 
     private static string InputTypeLabel(string inputType)
         => string.Equals(inputType, "NumberMetricReading", StringComparison.Ordinal)
