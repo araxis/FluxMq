@@ -55,25 +55,29 @@
 }
 
 .state-reducer-contract {
-    display: grid;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px 3px;
-    grid-template-columns: repeat(2, minmax(0, auto));
     justify-content: start;
     min-width: 0;
 }
 
 .state-reducer-contract-label {
-    grid-column: 1 / -1;
-    white-space: nowrap;
+    flex: 0 0 100%;
+    white-space: normal;
 }
 
 .state-reducer-token,
 .state-reducer-variable {
+    align-items: center;
     border: 1px solid color-mix(in srgb, var(--mud-palette-info) 28%, var(--flux-border-soft));
     border-radius: 4px;
     color: color-mix(in srgb, var(--mud-palette-info) 78%, var(--mud-palette-text-primary));
+    display: inline-flex;
     font-size: 0.52rem;
     font-weight: 760;
+    justify-content: center;
     line-height: 1;
     max-width: 100%;
     min-width: 0;
@@ -130,9 +134,9 @@
 .state-reducer-reference {
     align-items: start;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
-    display: grid;
-    gap: 6px;
-    grid-template-columns: 72px minmax(0, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 8px;
     min-width: 0;
     padding: 7px 2px 0;
 }
@@ -149,6 +153,7 @@
 
 .state-reducer-variable-list {
     display: flex;
+    flex: 1 1 180px;
     flex-wrap: wrap;
     gap: 4px;
     min-width: 0;
@@ -198,16 +203,11 @@
 @media (max-width: 760px) {
     .state-reducer-meta,
     .state-reducer-config-row,
-    .state-reducer-rule-row,
-    .state-reducer-reference {
+    .state-reducer-rule-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
     .state-reducer-contract {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .state-reducer-contract-label {
-        grid-column: 1 / -1;
+        align-items: flex-start;
     }
 }

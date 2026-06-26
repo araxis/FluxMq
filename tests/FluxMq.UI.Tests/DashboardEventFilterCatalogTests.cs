@@ -6126,8 +6126,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".state-reducer-contracts");
         css.ShouldContain(".state-reducer-contract");
         css.ShouldContain(".state-reducer-contract-label");
-        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("flex: 0 0 100%;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".state-reducer-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".state-reducer-expression-preview");
         css.ShouldContain("text-overflow: ellipsis;");
@@ -6180,7 +6182,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 24%, transparent);");
         css.ShouldNotContain("border-radius: 5px;");
-        css.ShouldContain("grid-template-columns: 72px minmax(0, 1fr);");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldContain("flex: 1 1 180px;");
+        css.ShouldNotContain("grid-template-columns: 72px minmax(0, 1fr);");
         css.ShouldContain("padding: 7px 2px 0;");
         css.ShouldContain(".state-reducer-editor ::deep(.state-reducer-reducer-field textarea.mud-input-root)");
         css.ShouldContain("min-height: 268px;");
@@ -9045,14 +9049,16 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".metric-source-summary");
         css.ShouldContain(".metric-source-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 64px 56px 64px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.42fr) minmax(0, 0.72fr) minmax(0, 0.62fr) minmax(0, 0.72fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 64px 56px 64px;");
         css.ShouldContain(".metric-source-parameters");
-        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, auto));");
         css.ShouldContain(".metric-source-contract");
-        css.ShouldContain("grid-template-columns: repeat(4, minmax(0, auto));");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("flex-wrap: wrap;");
         css.ShouldContain(".metric-source-contract-label");
-        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("flex: 0 0 100%;");
         css.ShouldContain(".metric-source-token");
+        css.ShouldContain("display: inline-flex;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".metric-source-editor");
@@ -9064,8 +9070,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metric-source-config-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
         css.ShouldContain(".metric-source-description-row");
-        css.ShouldContain("grid-template-columns: 72px minmax(0, 1fr);");
-        css.ShouldContain("display: grid;");
+        css.ShouldNotContain("grid-template-columns: 72px minmax(0, 1fr);");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("flex: 1 1 180px;");
         css.ShouldContain("min-width: 0;");
         css.ShouldContain("padding-top: 7px;");
         css.ShouldNotContain("padding-top: 8px;");
