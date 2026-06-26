@@ -8,7 +8,7 @@
 .payload-inspector-node-meta {
     display: grid;
     gap: 2px;
-    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.38fr) minmax(0, 0.9fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     min-width: 0;
 }
 
@@ -21,6 +21,10 @@
     min-height: 28px;
     min-width: 0;
     padding: 4px 5px;
+}
+
+.payload-inspector-node-meta-item.output {
+    grid-column: 1 / -1;
 }
 
 .payload-inspector-node-meta-item span,
@@ -36,14 +40,17 @@
 
 .payload-inspector-node-meta-item strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .payload-inspector-node-contracts {
@@ -55,15 +62,16 @@
 }
 
 .payload-inspector-node-contract {
-    display: grid;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px 3px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     min-width: 0;
 }
 
 .payload-inspector-node-contract-label {
-    grid-column: 1 / -1;
-    white-space: nowrap;
+    flex: 0 0 100%;
+    white-space: normal;
 }
 
 .payload-inspector-node-token {
@@ -119,13 +127,16 @@
 
 .payload-inspector-node-editor-row > strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.82rem;
     font-weight: 720;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.15;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .payload-inspector-node-editor-tokens {
@@ -141,11 +152,11 @@
     }
 
     .payload-inspector-node-contract {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: flex-start;
     }
 
     .payload-inspector-node-contract-label {
-        grid-column: 1 / -1;
+        flex: 0 0 100%;
     }
 
     .payload-inspector-node-editor-row {

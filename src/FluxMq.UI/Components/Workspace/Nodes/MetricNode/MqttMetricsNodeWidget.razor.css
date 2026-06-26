@@ -28,8 +28,7 @@
     font-size: 0.52rem;
     font-weight: 760;
     line-height: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
     text-transform: uppercase;
     white-space: normal;
 }
@@ -42,7 +41,7 @@
     line-height: 1.1;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
     white-space: normal;
 }
 
@@ -54,12 +53,12 @@
 }
 
 .metrics-readout-token {
-    align-items: center;
+    align-items: start;
     background: color-mix(in srgb, var(--flux-surface-2) 20%, transparent);
     border-radius: 4px;
-    display: flex;
+    display: grid;
     gap: 3px;
-    justify-content: space-between;
+    grid-template-columns: minmax(0, 1fr) minmax(2.4rem, max-content);
     min-height: 28px;
     min-width: 0;
     padding: 4px 6px;
@@ -98,9 +97,9 @@
     max-width: 100%;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
     text-align: right;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .metrics-readout-label {
@@ -113,7 +112,6 @@
     min-width: 0;
     overflow: hidden;
     overflow-wrap: anywhere;
-    text-overflow: ellipsis;
     text-transform: uppercase;
     white-space: normal;
 }
@@ -154,7 +152,6 @@
     min-width: 0;
     overflow: hidden;
     overflow-wrap: anywhere;
-    text-overflow: ellipsis;
     white-space: normal;
 }
 
@@ -172,7 +169,6 @@
     min-width: 0;
     overflow: hidden;
     overflow-wrap: anywhere;
-    text-overflow: ellipsis;
     white-space: normal;
 }
 
@@ -218,11 +214,14 @@
 
 .metrics-last-topic {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 70%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     flex: 1;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .metrics-last-time {
@@ -318,7 +317,6 @@
     min-width: 0;
     overflow: hidden;
     overflow-wrap: anywhere;
-    text-overflow: ellipsis;
     white-space: normal;
 }
 
