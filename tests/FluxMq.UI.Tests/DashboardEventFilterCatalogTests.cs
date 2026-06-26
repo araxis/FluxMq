@@ -9507,7 +9507,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("padding: 14px;");
         css.ShouldContain(".timer-node-option-cell");
         css.ShouldContain("align-items: center;");
+        css.ShouldContain("align-self: end;");
+        css.ShouldContain("justify-content: flex-start;");
         css.ShouldContain("min-height: 34px;");
+        css.ShouldContain(".timer-node-option-cell ::deep(.mud-checkbox)");
+        css.ShouldContain("display: inline-flex;");
+        css.ShouldContain(".timer-node-option-cell ::deep(.mud-checkbox .mud-button-root)");
+        css.ShouldContain("padding: 4px;");
         css.ShouldNotContain("min-height: 36px;");
         css.ShouldNotContain("min-height: 40px;");
         css.ShouldContain(".timer-node-editor ::deep(.mud-input-control)");

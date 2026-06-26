@@ -142,10 +142,12 @@
 
 .timer-node-option-cell {
     align-items: center;
+    align-self: end;
     display: flex;
+    justify-content: flex-start;
     min-height: 34px;
     min-width: 0;
-    padding: 0 2px;
+    padding: 0;
 }
 
 .timer-node-editor ::deep(.mud-input-control) {
@@ -167,7 +169,14 @@
 }
 
 .timer-node-option-cell ::deep(.mud-checkbox) {
+    align-items: center;
+    display: inline-flex;
     margin: 0;
+    min-height: 34px;
+}
+
+.timer-node-option-cell ::deep(.mud-checkbox .mud-button-root) {
+    padding: 4px;
 }
 
 .timer-node-option-cell ::deep(.mud-checkbox .mud-typography) {
