@@ -57,7 +57,7 @@
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
     display: grid;
     gap: 3px;
-    grid-template-columns: minmax(0, 1fr) 26px 34px 38px;
+    grid-template-columns: minmax(0, 1fr) minmax(1.65rem, max-content) minmax(2.15rem, max-content) minmax(2.35rem, max-content);
     min-height: 25px;
     min-width: 0;
     padding: 4px 2px 3px;
@@ -80,19 +80,25 @@
 }
 
 .mqtt-trigger-token {
+    align-items: center;
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 30%, var(--flux-border-soft));
     border-radius: 4px;
     color: var(--mud-palette-primary);
+    display: inline-flex;
     font-size: 0.52rem;
     font-weight: 760;
+    justify-content: center;
     line-height: 1;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
     padding: 3px 4px;
     text-align: center;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .mqtt-trigger-token.qos {
-    min-width: 26px;
+    min-width: 1.65rem;
     padding-inline: 0;
 }
 
@@ -139,7 +145,7 @@
     align-items: start;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) 190px;
+    grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.36fr);
     min-width: 0;
 }
 
@@ -153,6 +159,21 @@
 .mqtt-trigger-subscription-editor ::deep(.mud-input-control) {
     margin-bottom: 0;
     margin-top: 0;
+}
+
+.mqtt-trigger-editor-grid ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input),
+.mqtt-trigger-subscription-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
+    min-height: 34px;
+}
+
+.mqtt-trigger-editor-grid ::deep(.mud-input-label),
+.mqtt-trigger-subscription-editor ::deep(.mud-input-label) {
+    font-size: 0.72rem;
+}
+
+.mqtt-trigger-editor-grid ::deep(.mud-input > input.mud-input-root),
+.mqtt-trigger-subscription-editor ::deep(.mud-input > input.mud-input-root) {
+    font-size: 0.82rem;
 }
 
 .mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-add-cell) {
@@ -200,15 +221,15 @@
 }
 
 .mqtt-trigger-col-qos {
-    width: 128px;
+    width: 18%;
 }
 
 .mqtt-trigger-col-flag {
-    width: 104px;
+    width: 14%;
 }
 
 .mqtt-trigger-col-action {
-    width: 34px;
+    width: 2.125rem;
 }
 
 .mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-head .mud-table-cell) {
