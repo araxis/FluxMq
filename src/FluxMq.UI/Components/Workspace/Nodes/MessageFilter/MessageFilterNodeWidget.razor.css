@@ -108,8 +108,8 @@
 .message-filter-rule-layout {
     align-items: start;
     display: grid;
-    gap: 12px;
-    grid-template-columns: minmax(0, 1.28fr) minmax(260px, 0.72fr);
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) 310px;
     min-width: 0;
 }
 
@@ -139,9 +139,9 @@
 .message-filter-pattern-table-header {
     align-items: center;
     display: grid;
-    gap: 8px;
-    grid-template-columns: minmax(0, 1fr) 30px;
-    min-height: 30px;
+    gap: 6px;
+    grid-template-columns: minmax(0, 1fr) 28px;
+    min-height: 28px;
     padding: 0 0 5px;
 }
 
@@ -156,10 +156,10 @@
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 34%, transparent);
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(0, 1fr) 30px;
-    min-height: 36px;
+    grid-template-columns: minmax(0, 1fr) 28px;
+    min-height: 34px;
     min-width: 0;
-    padding: 6px 0;
+    padding: 5px 0;
 }
 
 .message-filter-pattern-row:last-of-type {
@@ -173,8 +173,8 @@
     display: flex;
     font-size: 0.78rem;
     font-weight: 650;
-    min-height: 36px;
-    padding: 8px 2px 0;
+    min-height: 34px;
+    padding: 7px 2px 0;
 }
 
 .message-filter-variable {
@@ -202,7 +202,7 @@
 }
 
 .message-filter-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .message-filter-editor ::deep(.mud-input > input.mud-input-root),
@@ -217,12 +217,12 @@
 .message-filter-pattern-row ::deep(.message-filter-remove.mud-icon-button),
 .message-filter-pattern-table-header ::deep(.message-filter-add.mud-icon-button) {
     border-radius: 4px;
-    height: 30px;
+    height: 28px;
     justify-self: end;
-    min-height: 30px;
-    min-width: 30px;
+    min-height: 28px;
+    min-width: 28px;
     padding: 0;
-    width: 30px;
+    width: 28px;
 }
 
 .message-filter-pattern-table-header ::deep(.message-filter-add.mud-icon-button) {
@@ -240,7 +240,7 @@
 
 .message-filter-pattern-table-header ::deep(.message-filter-add .mud-icon-root),
 .message-filter-pattern-row ::deep(.message-filter-remove .mud-icon-root) {
-    font-size: 1.04rem;
+    font-size: 0.98rem;
 }
 
 .message-filter-pattern-field,

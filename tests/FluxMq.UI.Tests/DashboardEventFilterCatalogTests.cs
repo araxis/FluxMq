@@ -6483,7 +6483,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".message-filter-editor-status > div");
         css.ShouldNotContain(".message-filter-rule-composer");
         css.ShouldContain(".message-filter-rule-layout");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.28fr) minmax(260px, 0.72fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 310px;");
         css.ShouldNotContain(".message-filter-rule-grid");
         css.ShouldContain(".message-filter-expression-row");
         css.ShouldContain(".message-filter-pattern-table");
@@ -6500,9 +6500,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".message-filter-pattern-header");
         css.ShouldNotContain(".message-filter-expression-area");
         css.ShouldContain(".message-filter-pattern-row");
-        css.ShouldContain("min-height: 36px;");
+        css.ShouldContain("min-height: 34px;");
+        css.ShouldNotContain("min-height: 36px;");
         css.ShouldNotContain("min-height: 40px;");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 30px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 28px;");
         css.ShouldContain("align-items: center;");
         css.ShouldContain(".message-filter-reference");
         css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);");
