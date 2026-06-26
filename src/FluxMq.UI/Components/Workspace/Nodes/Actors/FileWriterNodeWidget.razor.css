@@ -84,7 +84,7 @@
     align-items: start;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 180px);
+    grid-template-columns: minmax(10rem, 0.36fr);
     min-width: 0;
 }
 
