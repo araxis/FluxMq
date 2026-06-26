@@ -8756,6 +8756,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".payload-inspect-number-grid");
         css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
         css.ShouldContain(".payload-inspect-options");
+        css.ShouldContain(".payload-inspect-options ::deep(.mud-checkbox)");
+        css.ShouldContain("display: inline-flex;");
+        css.ShouldContain(".payload-inspect-options ::deep(.mud-checkbox .mud-button-root)");
+        css.ShouldContain("padding: 4px;");
+        css.ShouldContain(".payload-inspect-options ::deep(.mud-checkbox .mud-typography)");
         css.ShouldContain(".payload-inspect-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 640px)");
         css.ShouldNotContain(".flow-node-filters");
