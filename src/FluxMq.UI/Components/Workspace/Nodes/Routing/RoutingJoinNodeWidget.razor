@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Hub"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="routing-join-summary">
             <div class="routing-join-meta">
@@ -84,17 +86,21 @@
                 <div class="routing-join-key-row" aria-label="Routing join key expressions">
                     <MudTextField T="string"
                                   Label="Left key expression"
-                                  @bind-Value="_leftKeyExpression"
+                                  Value="@_leftKeyExpression"
+                                  ValueChanged="@SetLeftKeyExpression"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Immediate="true"
                                   Class="routing-join-left-key-field"
                                   Placeholder="topic" />
 
                     <MudTextField T="string"
                                   Label="Right key expression"
-                                  @bind-Value="_rightKeyExpression"
+                                  Value="@_rightKeyExpression"
+                                  ValueChanged="@SetRightKeyExpression"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Immediate="true"
                                   Class="routing-join-right-key-field"
                                   Placeholder="topic" />
                 </div>
@@ -196,6 +202,18 @@
             RoutingJoinNodeModel.DefaultBoundedCapacity);
     }
 
+    private async Task SetLeftKeyExpression(string value)
+    {
+        _leftKeyExpression = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetRightKeyExpression(string value)
+    {
+        _rightKeyExpression = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
     private Task SaveAsync()
     {
         Model.LeftInputType = RoutingNodeConfiguration.NormalizeInputType(_leftInputType);
@@ -219,5 +237,17 @@
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private string? ValidateEditor()
+    {
+        if (string.IsNullOrWhiteSpace(_leftKeyExpression))
+        {
+            return "Enter a left key expression before saving.";
+        }
+
+        return string.IsNullOrWhiteSpace(_rightKeyExpression)
+            ? "Enter a right key expression before saving."
+            : null;
     }
 }

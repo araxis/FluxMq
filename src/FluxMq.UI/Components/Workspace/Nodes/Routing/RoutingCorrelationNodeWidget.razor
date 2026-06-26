@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.SyncAlt"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="routing-correlation-summary">
             <div class="routing-correlation-meta">
@@ -92,17 +94,21 @@
                 <div class="routing-correlation-expression-row" aria-label="Routing correlation expressions">
                     <MudTextField T="string"
                                   Label="Key expression"
-                                  @bind-Value="_keyExpression"
+                                  Value="@_keyExpression"
+                                  ValueChanged="@SetKeyExpression"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Immediate="true"
                                   Class="routing-correlation-key-field"
                                   Placeholder="topic" />
 
                     <MudTextField T="string"
                                   Label="Side expression"
-                                  @bind-Value="_sideExpression"
+                                  Value="@_sideExpression"
+                                  ValueChanged="@SetSideExpression"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Immediate="true"
                                   Class="routing-correlation-side-field"
                                   Placeholder="payloadText" />
                 </div>
@@ -110,22 +116,27 @@
                 <div class="routing-correlation-side-map-row" aria-label="Routing correlation side mapping">
                     <MudTextField T="string"
                                   Label="Request side"
-                                  @bind-Value="_requestSide"
+                                  Value="@_requestSide"
+                                  ValueChanged="@SetRequestSide"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Immediate="true"
                                   Class="routing-correlation-request-field" />
 
                     <MudTextField T="string"
                                   Label="Response side"
-                                  @bind-Value="_responseSide"
+                                  Value="@_responseSide"
+                                  ValueChanged="@SetResponseSide"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
+                                  Immediate="true"
                                   Class="routing-correlation-response-field" />
 
                     <div class="routing-correlation-case-option">
                         <MudCheckBox T="bool"
                                      Label="Case sensitive"
-                                     @bind-Value="_caseSensitive"
+                                     Value="@_caseSensitive"
+                                     ValueChanged="@SetCaseSensitive"
                                      Class="routing-correlation-case-check" />
                     </div>
                 </div>
@@ -211,6 +222,36 @@
             RoutingCorrelationNodeModel.DefaultBoundedCapacity);
     }
 
+    private async Task SetKeyExpression(string value)
+    {
+        _keyExpression = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetSideExpression(string value)
+    {
+        _sideExpression = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetRequestSide(string value)
+    {
+        _requestSide = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetResponseSide(string value)
+    {
+        _responseSide = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetCaseSensitive(bool value)
+    {
+        _caseSensitive = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
     private Task SaveAsync()
     {
         Model.InputType = RoutingNodeConfiguration.NormalizeInputType(_inputType);
@@ -240,5 +281,33 @@
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private string? ValidateEditor()
+    {
+        if (string.IsNullOrWhiteSpace(_keyExpression))
+        {
+            return "Enter a correlation key expression before saving.";
+        }
+
+        if (string.IsNullOrWhiteSpace(_sideExpression))
+        {
+            return "Enter a correlation side expression before saving.";
+        }
+
+        if (string.IsNullOrWhiteSpace(_requestSide))
+        {
+            return "Enter a request side name before saving.";
+        }
+
+        if (string.IsNullOrWhiteSpace(_responseSide))
+        {
+            return "Enter a response side name before saving.";
+        }
+
+        var comparer = _caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+        return comparer.Equals(_requestSide.Trim(), _responseSide.Trim())
+            ? "Request and response side names must be different."
+            : null;
     }
 }
