@@ -9156,7 +9156,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".generated-source-editor");
         css.ShouldNotContain("gap: 10px;");
-        css.ShouldContain("gap: 8px;");
+        css.ShouldNotContain("gap: 8px;");
         css.ShouldContain("gap: 7px;");
         css.ShouldNotContain(".generated-source-editor-surface");
         css.ShouldNotContain(".generated-source-message-panel");
@@ -9184,7 +9184,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".generated-source-message-index");
         css.ShouldNotContain(".generated-source-message-fields");
         css.ShouldNotContain(".generated-source-message-detail");
-        css.ShouldContain("grid-template-columns: 30px minmax(150px, 0.9fr) minmax(240px, 1.4fr) 104px 84px minmax(132px, 0.72fr) 30px;");
+        css.ShouldContain("grid-template-columns: 28px minmax(150px, 0.9fr) minmax(240px, 1.4fr) 104px 84px minmax(132px, 0.72fr) 28px;");
+        css.ShouldNotContain("grid-template-columns: 30px minmax(150px, 0.9fr) minmax(240px, 1.4fr) 104px 84px minmax(132px, 0.72fr) 30px;");
         css.ShouldContain("padding: 6px 0;");
         css.ShouldNotContain("padding: 8px 0;");
         css.ShouldContain(".generated-source-retain-toggle");
@@ -9194,7 +9195,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".generated-source-retain-toggle ::deep(.mud-checkbox)");
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain(".generated-source-retain-toggle ::deep(.mud-checkbox .mud-button-root)");
-        css.ShouldContain("padding: 4px;");
+        css.ShouldContain("padding: 3px;");
+        css.ShouldNotContain("padding: 4px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 28px;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 30px;");
         css.ShouldNotContain("min-height: 36px;");
         css.ShouldContain(".generated-source-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
@@ -9298,6 +9302,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".replay-source-editor");
+        css.ShouldContain("gap: 7px;");
+        css.ShouldNotContain("gap: 8px;");
         css.ShouldNotContain(".replay-source-editor-surface");
         css.ShouldContain(".replay-source-editor-grid");
         css.ShouldNotContain(".replay-source-field-label");
