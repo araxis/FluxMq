@@ -78,14 +78,14 @@
 
 .stored-session-source-editor {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     min-width: 0;
 }
 
 .stored-session-source-editor-grid {
     align-items: end;
     display: grid;
-    gap: 8px;
+    gap: 7px;
     grid-template-columns: minmax(0, 1fr) 142px minmax(120px, 148px) minmax(120px, 148px);
     min-width: 0;
 }
@@ -95,7 +95,7 @@
     align-self: end;
     display: flex;
     justify-content: flex-start;
-    min-height: 36px;
+    min-height: 34px;
     min-width: 0;
     padding: 0;
 }
@@ -134,7 +134,7 @@
     display: flex;
     font-size: 0.78rem;
     font-weight: 650;
-    min-height: 36px;
+    min-height: 34px;
     min-width: 0;
     padding: 0 10px;
 }
@@ -145,7 +145,11 @@
 }
 
 .stored-session-source-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 36px;
+    min-height: 34px;
+}
+
+.stored-session-source-editor ::deep(.mud-input-label) {
+    font-size: 0.72rem;
 }
 
 .stored-session-source-editor ::deep(.mud-input > input.mud-input-root),
@@ -161,7 +165,7 @@
     align-items: center;
     display: inline-flex;
     margin: 0;
-    min-height: 36px;
+    min-height: 34px;
 }
 
 .stored-session-source-timing-option ::deep(.mud-checkbox .mud-button-root) {

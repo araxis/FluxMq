@@ -9358,6 +9358,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".stored-session-source-editor");
+        css.ShouldContain("gap: 7px;");
+        css.ShouldNotContain("gap: 8px;");
         css.ShouldNotContain(".stored-session-source-editor-surface");
         css.ShouldContain(".stored-session-source-editor-grid");
         css.ShouldNotContain(".stored-session-source-field-label");
@@ -9380,7 +9382,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".stored-session-source-timing-option");
         css.ShouldContain("align-self: end;");
         css.ShouldContain("justify-content: flex-start;");
-        css.ShouldContain("min-height: 36px;");
+        css.ShouldContain("min-height: 34px;");
+        css.ShouldNotContain("min-height: 36px;");
         css.ShouldContain(".stored-session-source-timing-option ::deep(.mud-checkbox)");
         css.ShouldContain("display: inline-flex;");
         css.ShouldContain(".stored-session-source-timing-option ::deep(.mud-checkbox .mud-button-root)");
@@ -9393,6 +9396,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".stored-session-source-empty");
         css.ShouldContain("text-overflow: ellipsis;");
         css.ShouldContain(".stored-session-source-editor ::deep(.mud-input-control)");
+        css.ShouldContain(".stored-session-source-editor ::deep(.mud-input-label)");
+        css.ShouldContain("font-size: 0.72rem;");
         css.ShouldContain("@media (max-width: 720px)");
         css.ShouldNotContain(".flow-node-filters");
         css.ShouldNotContain("border-radius: 999px;");
