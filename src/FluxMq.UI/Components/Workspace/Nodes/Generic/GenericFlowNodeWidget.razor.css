@@ -103,7 +103,7 @@
     align-items: center;
     display: grid;
     gap: 7px 10px;
-    grid-template-columns: 84px minmax(0, 1fr) minmax(120px, 0.45fr);
+    grid-template-columns: minmax(0, 0.5fr) minmax(0, 1fr) minmax(0, 0.62fr);
     min-height: 38px;
     min-width: 0;
     padding: 7px 2px;
@@ -162,7 +162,7 @@
     align-items: center;
     display: grid;
     gap: 7px 10px;
-    grid-template-columns: 82px minmax(0, 1fr) minmax(160px, 0.7fr);
+    grid-template-columns: minmax(0, 0.58fr) minmax(0, 1fr) minmax(0, 0.82fr);
     min-height: 38px;
     min-width: 0;
     padding: 7px 2px;
