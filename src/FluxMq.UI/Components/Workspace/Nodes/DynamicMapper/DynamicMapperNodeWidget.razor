@@ -161,18 +161,11 @@
                             <strong>@EngineCaption expression</strong>
                         </div>
                         <div class="dynamic-mapper-workspace-actions">
-                            <span class="dynamic-mapper-heading-token">@OutputShapeLabel</span>
                             <MudTooltip Text="@SampleToggleText">
                                 <MudIconButton Icon="@SampleToggleIcon"
                                                Size="Size.Small"
                                                Class="dynamic-mapper-toolbar-action"
                                                OnClick="@ToggleSampleEditorAsync" />
-                            </MudTooltip>
-                            <MudTooltip Text="Reload sample input">
-                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                               Size="Size.Small"
-                                               Class="dynamic-mapper-toolbar-action"
-                                               OnClick="@ReloadWorkspaceSample" />
                             </MudTooltip>
                         </div>
                     </div>
@@ -192,7 +185,21 @@
                                     <span class="dynamic-mapper-kicker">Input</span>
                                     <strong>Sample JSON</strong>
                                 </div>
-                                <span class="dynamic-mapper-heading-token">@_sampleSource</span>
+                                <div class="dynamic-mapper-sample-popover-actions">
+                                    <span class="dynamic-mapper-heading-token">@_sampleSource</span>
+                                    <MudTooltip Text="Reload sample input">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                                       Size="Size.Small"
+                                                       Class="dynamic-mapper-toolbar-action"
+                                                       OnClick="@ReloadWorkspaceSample" />
+                                    </MudTooltip>
+                                    <MudTooltip Text="Hide sample JSON">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                       Size="Size.Small"
+                                                       Class="dynamic-mapper-toolbar-action"
+                                                       OnClick="@ToggleSampleEditorAsync" />
+                                    </MudTooltip>
+                                </div>
                             </div>
 
                             @if (_sampleEditorOpen)
@@ -263,9 +270,6 @@
     private string OutputFieldsKey => IsTypedOutputContract
         ? _outputType
         : IsJsonSchemaFileContract ? "JsonSchema" : "Any";
-    private string OutputShapeLabel => IsTypedOutputContract
-        ? _outputType
-        : IsJsonSchemaFileContract ? "JSON Schema" : "Any JSON";
     private string OutputContractLabel => IsTypedOutputContract
         ? "typed"
         : IsJsonSchemaFileContract ? "json schema" : "any";

@@ -6736,6 +6736,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dynamic-mapper-workspace-actions");
         markup.ShouldContain("dynamic-mapper-sample-popover-header");
         markup.ShouldContain("dynamic-mapper-heading-token");
+        markup.ShouldContain("dynamic-mapper-sample-popover-actions");
+        markup.ShouldNotContain("OutputShapeLabel");
         markup.ShouldContain("SampleToggleText");
         markup.ShouldContain("SampleToggleIcon");
         markup.ShouldContain("ToggleSampleEditorAsync");
@@ -6790,7 +6792,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("top: 44px;");
         css.ShouldContain("width: min(460px, calc(100% - 16px));");
         css.ShouldContain(".dynamic-mapper-sample-popover-header");
+        css.ShouldContain(".dynamic-mapper-sample-popover-actions");
         css.ShouldContain(".dynamic-mapper-workspace-actions");
+        css.ShouldContain("height: 24px;");
+        css.ShouldContain("min-height: 24px;");
+        css.ShouldContain("min-width: 24px;");
+        css.ShouldNotContain("height: 26px;");
+        css.ShouldNotContain("min-height: 26px;");
+        css.ShouldNotContain("min-width: 26px;");
         css.ShouldContain(".dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor)");
         css.ShouldContain(".dynamic-mapper-workspace ::deep(.dynamic-mapper-input-editor)");
         css.ShouldContain(".dynamic-mapper-input-error");
