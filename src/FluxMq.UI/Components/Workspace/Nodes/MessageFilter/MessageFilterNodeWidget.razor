@@ -13,63 +13,43 @@
     <Body>
         <div class="message-filter-summary">
             <div class="message-filter-meta">
-                <div class="message-filter-meta-item mode">
-                    <span>Mode</span>
-                    <strong>@ModeCaption</strong>
+                <div class="message-filter-meta-item scope">
+                    <span>Topic scope</span>
+                    <strong>@PatternCountCaption</strong>
                 </div>
                 <div class="message-filter-meta-item">
-                    <span>Rules</span>
-                    <strong>@RuleCountCaption</strong>
+                    <span>Condition</span>
+                    <strong>@ConditionCaption</strong>
                 </div>
+            </div>
+
+            <div class="message-filter-patterns" aria-label="Topic filter patterns">
+                <span class="message-filter-pattern-label">Patterns</span>
+                @foreach (var pattern in SummaryPatterns)
+                {
+                    <span class="@PatternTokenClass(pattern)">@pattern</span>
+                }
+                @if (PatternOverflow > 0)
+                {
+                    <span class="message-filter-token overflow">+@PatternOverflow</span>
+                }
             </div>
 
             @if (HasExpression)
             {
                 <div class="message-filter-expression-preview" title="@ExpressionCaption">
-                    @ExpressionCaption
-                </div>
-            }
-            else
-            {
-                <div class="message-filter-patterns" aria-label="Topic filter patterns">
-                    <span class="message-filter-pattern-label">Patterns</span>
-                    @foreach (var pattern in SummaryPatterns)
-                    {
-                        <span class="@PatternTokenClass(pattern)">@pattern</span>
-                    }
-                    @if (PatternOverflow > 0)
-                    {
-                        <span class="message-filter-token overflow">+@PatternOverflow</span>
-                    }
+                    <span class="message-filter-expression-label">Condition</span>
+                    <span class="message-filter-expression-text">@ExpressionCaption</span>
                 </div>
             }
         </div>
     </Body>
     <Editor>
         <div class="message-filter-editor" aria-label="Flow filter settings">
-            <div class="message-filter-rule-layout" aria-label="Filter rules">
-                <div class="message-filter-expression-row" aria-label="Expression filter">
-                    <MudTextField T="string"
-                                  @bind-Value="_expression"
-                                  Label="Filter expression"
-                                  aria-label="Filter expression"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Lines="6"
-                                  Class="message-filter-expression-field"
-                                  Placeholder='topic.StartsWith("sensors/") && payload.Length < 1024' />
-                    <div class="message-filter-reference" aria-label="Filter expression variables">
-                        <span class="message-filter-reference-label">Variables</span>
-                        @foreach (var variable in ExpressionVariables)
-                        {
-                            <span class="message-filter-variable">@variable</span>
-                        }
-                    </div>
-                </div>
-
-                <div class="message-filter-pattern-table" aria-label="Topic pattern filters">
-                    <div class="message-filter-pattern-table-header">
-                        <span>Topic patterns</span>
+            <div class="message-filter-editor-grid" aria-label="Filter rules">
+                <section class="message-filter-scope-editor" aria-label="Topic pattern filters">
+                    <div class="message-filter-section-bar">
+                        <span>Topic scope</span>
                         <MudTooltip Text="Add pattern">
                             <MudIconButton Size="Size.Small"
                                            Icon="@Icons.Material.Filled.Add"
@@ -108,7 +88,30 @@
                             <div class="message-filter-empty" role="status">No topic patterns</div>
                         }
                     </div>
-                </div>
+                </section>
+
+                <section class="message-filter-condition-editor" aria-label="Condition expression">
+                    <div class="message-filter-section-bar text-only">
+                        <span>Optional condition</span>
+                    </div>
+
+                    <MudTextField T="string"
+                                  @bind-Value="_expression"
+                                  Label="Condition expression"
+                                  aria-label="Condition expression"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Lines="7"
+                                  Class="message-filter-expression-field"
+                                  Placeholder='payload.Length < 1024 && retain == false' />
+                    <div class="message-filter-reference" aria-label="Condition expression variables">
+                        <span class="message-filter-reference-label">Variables</span>
+                        @foreach (var variable in ExpressionVariables)
+                        {
+                            <span class="message-filter-variable">@variable</span>
+                        }
+                    </div>
+                </section>
             </div>
         </div>
     </Editor>
@@ -125,10 +128,9 @@
     private FlowDiagramNodeModel? _loadedNode;
 
     private bool HasExpression => !string.IsNullOrWhiteSpace(Model.Expression);
-    private string ModeCaption => HasExpression ? "Expression" : "Topic patterns";
-    private string RuleCountCaption => HasExpression
-        ? "override"
-        : $"{Model.Patterns.Length} {(Model.Patterns.Length == 1 ? "pattern" : "patterns")}";
+    private int PatternCount => Model.Patterns.Count(static pattern => !string.IsNullOrWhiteSpace(pattern));
+    private string PatternCountCaption => $"{PatternCount} {PatternLabel(PatternCount)}";
+    private string ConditionCaption => HasExpression ? "Expression" : "None";
     private string ExpressionCaption => Model.Expression.Trim();
     private IReadOnlyList<string> SummaryPatterns
         => Model.Patterns.Where(static pattern => !string.IsNullOrWhiteSpace(pattern)).Take(MaxSummaryPatterns).ToArray();
@@ -189,4 +191,6 @@
         => pattern.StartsWith('$')
             ? "message-filter-token system"
             : "message-filter-token";
+
+    private static string PatternLabel(int count) => count == 1 ? "pattern" : "patterns";
 }
