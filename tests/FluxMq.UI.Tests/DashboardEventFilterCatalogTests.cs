@@ -7152,10 +7152,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".condition-router-editor");
         css.ShouldNotContain("gap: 10px;");
-        css.ShouldContain("gap: 8px;");
         css.ShouldContain("gap: 7px;");
+        css.ShouldNotContain("gap: 8px;");
         css.ShouldContain("gap: 4px;");
-        css.ShouldContain("padding-left: 8px;");
+        css.ShouldContain("padding-left: 7px;");
+        css.ShouldNotContain("padding-left: 8px;");
         css.ShouldNotContain("padding-left: 10px;");
         css.ShouldContain("min-height: 34px;");
         css.ShouldNotContain("min-height: 36px;");
@@ -7173,8 +7174,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("padding: 12px;");
         css.ShouldNotContain("padding: 14px;");
         css.ShouldNotContain(".condition-router-source-row");
-        css.ShouldContain("grid-template-columns: minmax(180px, 240px);");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(172px, 220px);");
+        css.ShouldContain("grid-template-columns: minmax(0, 240px);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(160px, 0.34fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(180px, 240px);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(172px, 220px);");
         css.ShouldNotContain("grid-template-columns: minmax(180px, 1fr) minmax(230px, 0.72fr);");
         css.ShouldNotContain(".condition-router-output-map");
         css.ShouldNotContain("border-left: 2px solid");
@@ -7190,6 +7193,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-height: 168px;");
         css.ShouldContain(".condition-router-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
+        css.ShouldContain("padding-top: 7px;");
+        css.ShouldNotContain("padding-top: 8px;");
         css.ShouldNotContain(".flow-node-filters");
         css.ShouldNotContain(".condition-router-route-strip");
         css.ShouldNotContain(".condition-router-variable-panel");
