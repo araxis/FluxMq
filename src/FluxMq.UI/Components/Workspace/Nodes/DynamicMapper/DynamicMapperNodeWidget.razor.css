@@ -37,14 +37,18 @@
 
 .dynamic-mapper-meta-item strong {
     color: var(--mud-palette-text-primary);
+    display: -webkit-box;
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .dynamic-mapper-contracts {
@@ -116,7 +120,7 @@
     align-items: center;
     display: grid;
     gap: 5px;
-    grid-template-columns: minmax(0, 1fr) 28px;
+    grid-template-columns: minmax(0, 1fr) minmax(1.5rem, max-content);
 }
 
 .dynamic-mapper-workspace {
@@ -185,13 +189,17 @@
 .dynamic-mapper-workspace-header strong,
 .dynamic-mapper-sample-popover-header strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 72%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.8rem;
     font-weight: 780;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.1;
     min-width: 0;
     overflow: hidden;
+    overflow-wrap: anywhere;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .dynamic-mapper-workspace-actions {
@@ -233,11 +241,11 @@
 
 .dynamic-mapper-schema-file ::deep(.dynamic-mapper-file-picker-button.mud-icon-button),
 .dynamic-mapper-workspace ::deep(.dynamic-mapper-toolbar-action.mud-icon-button) {
-    height: 24px;
-    min-height: 24px;
-    min-width: 24px;
+    height: 1.5rem;
+    min-height: 1.5rem;
+    min-width: 1.5rem;
     padding: 0;
-    width: 24px;
+    width: 1.5rem;
 }
 
 .dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor) {

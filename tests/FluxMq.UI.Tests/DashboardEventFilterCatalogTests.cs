@@ -6847,6 +6847,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dynamic-mapper-meta");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.58fr) minmax(0, 0.54fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 76px 72px;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".dynamic-mapper-contracts");
         css.ShouldContain(".dynamic-mapper-token");
         css.ShouldContain("flex-wrap: wrap;");
@@ -6859,6 +6860,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dynamic-mapper-control-row");
         css.ShouldContain("grid-template-columns: minmax(0, 0.74fr) minmax(0, 0.56fr) minmax(0, 0.64fr) minmax(0, 0.9fr);");
         css.ShouldNotContain("grid-template-columns: minmax(128px, 0.74fr) minmax(108px, 0.56fr) minmax(128px, 0.64fr) minmax(160px, 0.9fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(1.5rem, max-content);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 28px;");
         css.ShouldContain(".dynamic-mapper-workspace");
         css.ShouldContain("grid-template-rows: minmax(0, 1fr);");
         css.ShouldNotContain(".dynamic-mapper-workspace.has-sample");
@@ -6875,9 +6878,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dynamic-mapper-sample-popover-header");
         css.ShouldContain(".dynamic-mapper-sample-popover-actions");
         css.ShouldContain(".dynamic-mapper-workspace-actions");
-        css.ShouldContain("height: 24px;");
-        css.ShouldContain("min-height: 24px;");
-        css.ShouldContain("min-width: 24px;");
+        css.ShouldContain("height: 1.5rem;");
+        css.ShouldContain("min-height: 1.5rem;");
+        css.ShouldContain("min-width: 1.5rem;");
+        css.ShouldContain("width: 1.5rem;");
+        css.ShouldNotContain("height: 24px;");
+        css.ShouldNotContain("min-height: 24px;");
+        css.ShouldNotContain("min-width: 24px;");
         css.ShouldNotContain("height: 26px;");
         css.ShouldNotContain("min-height: 26px;");
         css.ShouldNotContain("min-width: 26px;");
