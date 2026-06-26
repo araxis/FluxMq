@@ -262,6 +262,16 @@
     margin-inline-start: 0;
 }
 
+.routing-switch-envelope-option ::deep(.mud-checkbox) {
+    margin: 0;
+}
+
+.routing-switch-envelope-option ::deep(.mud-checkbox .mud-typography) {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    font-size: 0.82rem;
+    line-height: 1.2;
+}
+
 .routing-switch-route-header ::deep(.routing-switch-route-add.mud-icon-button),
 .routing-switch-route-composer ::deep(.routing-switch-route-remove.mud-icon-button) {
     height: 28px;
