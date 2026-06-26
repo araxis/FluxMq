@@ -8,7 +8,7 @@
 .metric-source-meta {
     display: grid;
     gap: 3px;
-    grid-template-columns: minmax(0, 1.42fr) minmax(0, 0.72fr) minmax(0, 0.62fr) minmax(0, 0.72fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     min-width: 0;
 }
 
@@ -21,6 +21,10 @@
     min-height: 30px;
     min-width: 0;
     padding: 4px 5px;
+}
+
+.metric-source-meta-item.metric {
+    grid-column: 1 / -1;
 }
 
 .metric-source-meta-item span,
@@ -36,14 +40,17 @@
 
 .metric-source-meta-item strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .metric-source-parameters,

@@ -8,7 +8,7 @@
 .timer-node-meta {
     display: grid;
     gap: 3px;
-    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.08fr) minmax(0, 0.9fr) minmax(0, 0.62fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     min-width: 0;
 }
 
@@ -36,14 +36,17 @@
 
 .timer-node-meta-item strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 84%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.12;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .timer-node-contract {

@@ -6520,6 +6520,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".message-filter-meta");
         css.ShouldContain("grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 88px;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldContain(".message-filter-patterns");
         css.ShouldContain("display: flex;");
         css.ShouldContain("flex-wrap: wrap;");
@@ -9222,7 +9225,13 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".metric-source-summary");
         css.ShouldContain(".metric-source-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.42fr) minmax(0, 0.72fr) minmax(0, 0.62fr) minmax(0, 0.72fr);");
+        css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
+        css.ShouldContain(".metric-source-meta-item.metric");
+        css.ShouldContain("grid-column: 1 / -1;");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.42fr) minmax(0, 0.72fr) minmax(0, 0.62fr) minmax(0, 0.72fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 64px 56px 64px;");
         css.ShouldContain(".metric-source-parameters");
         css.ShouldContain(".metric-source-contract");
@@ -9915,7 +9924,11 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".timer-node-summary");
         css.ShouldContain(".timer-node-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.08fr) minmax(0, 0.9fr) minmax(0, 0.62fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
+        css.ShouldContain("-webkit-line-clamp: 2;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.08fr) minmax(0, 0.9fr) minmax(0, 0.62fr);");
         css.ShouldNotContain("grid-template-columns: 72px minmax(0, 1fr) minmax(0, 0.82fr) 64px;");
         css.ShouldContain(".timer-node-contract");
         css.ShouldContain("flex-wrap: wrap;");
