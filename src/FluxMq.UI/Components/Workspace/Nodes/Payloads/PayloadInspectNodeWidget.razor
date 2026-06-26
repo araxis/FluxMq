@@ -110,6 +110,8 @@
     private bool _formatJson = true;
     private bool _formatXml = true;
     private int _boundedCapacity = PayloadInspectNodeModel.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private string PreviewCaption => $"{PayloadInspectNodeModel.NormalizePositiveInt(Model.MaxPreviewBytes, PayloadInspectNodeModel.DefaultMaxPreviewBytes)} bytes";
     private string FormatCapCaption => $"{PayloadInspectNodeModel.NormalizePositiveInt(Model.MaxFormattedChars, PayloadInspectNodeModel.DefaultMaxFormattedChars)} chars";
@@ -117,10 +119,18 @@
         .NormalizePositiveInt(Model.BoundedCapacity, PayloadInspectNodeModel.DefaultBoundedCapacity)
         .ToString();
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _maxPreviewBytes = PayloadInspectNodeModel.NormalizePositiveInt(Model.MaxPreviewBytes, PayloadInspectNodeModel.DefaultMaxPreviewBytes);
         _maxFormattedChars = PayloadInspectNodeModel.NormalizePositiveInt(Model.MaxFormattedChars, PayloadInspectNodeModel.DefaultMaxFormattedChars);
         _detectBase64 = Model.DetectBase64;

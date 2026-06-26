@@ -212,8 +212,16 @@
     private bool _emitFirstImmediately = true;
     private int _maxTicks;
     private int _boundedCapacity = TimerIntervalNodeModel.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private string ModeCaption => Node switch
     {
@@ -309,6 +317,8 @@
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         switch (Node)
         {
             case TimerIntervalNodeModel interval:

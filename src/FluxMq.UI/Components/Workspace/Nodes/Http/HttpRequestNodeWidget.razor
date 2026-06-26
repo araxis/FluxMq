@@ -119,6 +119,8 @@
     private bool _followRedirects = true;
     private bool _treatNonSuccessStatusAsError;
     private int _boundedCapacity = HttpRequestNodeModel.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private string TargetCaption => string.IsNullOrWhiteSpace(_baseUrl) ? "Per request" : _baseUrl.Trim();
     private string TimeoutCaption => $"{HttpRequestNodeModel.NormalizePositiveInt(_defaultTimeoutMilliseconds, HttpRequestNodeModel.DefaultTimeoutMilliseconds)} ms";
@@ -126,10 +128,18 @@
         .NormalizePositiveInt(_boundedCapacity, HttpRequestNodeModel.DefaultBoundedCapacity)
         .ToString();
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _baseUrl = Model.BaseUrl;
         _defaultHeadersText = Model.DefaultHeadersText;
         _defaultTimeoutMilliseconds = HttpRequestNodeModel.NormalizePositiveInt(Model.DefaultTimeoutMillisecondsValue, HttpRequestNodeModel.DefaultTimeoutMilliseconds);

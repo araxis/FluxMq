@@ -98,6 +98,8 @@
 
     private string _expression = string.Empty;
     private string _inputType = "MqttEnvelope";
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
     private bool IsMetricInput => string.Equals(_inputType, "NumberMetricReading", StringComparison.Ordinal);
     private string InputTypeCaption => InputTypeLabel(ConditionRouterNodeModel.NormalizeInputType(Model.InputType));
     private string ExpressionPreview => string.IsNullOrWhiteSpace(Model.Expression)
@@ -126,10 +128,18 @@
         new("reading", "FluxMetricReading<double>", "reading.Value > 10")
     ];
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _inputType = ConditionRouterNodeModel.NormalizeInputType(Model.InputType);
         _expression = string.IsNullOrWhiteSpace(Model.Expression)
             ? ConditionRouterNodeModel.DefaultExpression(_inputType)

@@ -10097,6 +10097,37 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void NodeWidgets_PreserveEditorDraftsAcrossParentRenders()
+    {
+        var root = FindRepositoryRoot();
+        var nodeDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes");
+        var nodeWidgets = Directory.GetFiles(nodeDirectory, "*NodeWidget.razor", SearchOption.AllDirectories);
+
+        foreach (var file in nodeWidgets)
+        {
+            var markup = File.ReadAllText(file);
+            if (!markup.Contains("OnCancel=\"@LoadDraft\"", StringComparison.Ordinal) ||
+                !markup.Contains("protected override void OnParametersSet()", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            markup.ShouldNotContain("protected override void OnParametersSet() => LoadDraft();");
+            markup.ShouldContain("private string? _loadedNodeName;");
+            markup.ShouldContain("private FlowDiagramNodeModel? _loadedNode;");
+            markup.ShouldContain("ReferenceEquals(_loadedNode, Node)");
+            markup.ShouldContain("_loadedNode = Node;");
+            markup.ShouldContain("_loadedNodeName = Node.NodeName;");
+        }
+    }
+
+    [Fact]
     public void NodeWidgetShell_UsesCompactNodeChrome()
     {
         var root = FindRepositoryRoot();

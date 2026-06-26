@@ -211,7 +211,8 @@
     private string _connection = string.Empty;
     private int _boundedCapacity = MqttTriggerNodeModel.DefaultBoundedCapacity;
     private readonly List<MqttTriggerSubscriptionDraft> _draftSubscriptions = [];
-    private MqttTriggerNodeModel? _loadedModel;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private string BrokerDisplay => string.IsNullOrWhiteSpace(Model.Connection) ? "—" : Model.Connection.Trim();
 
@@ -269,17 +270,16 @@
 
     protected override void OnParametersSet()
     {
-        if (ReferenceEquals(_loadedModel, Model))
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
         {
-            return;
+            LoadDraft();
         }
-
-        LoadDraft();
     }
 
     private void LoadDraft()
     {
-        _loadedModel = Model;
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _connection = Model.Connection;
         _boundedCapacity = MqttTriggerNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity);
         _draftSubscriptions.Clear();

@@ -84,6 +84,8 @@
 
     private string _connection = string.Empty;
     private int _boundedCapacity = ActorNodeConfiguration.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private string DisplayConnection => ResolveConnectionName(Model.Connection);
 
@@ -130,10 +132,18 @@
         }
     }
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _connection = ResolveConnectionName(Model.Connection);
         _boundedCapacity = ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
     }

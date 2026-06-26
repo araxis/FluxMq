@@ -133,18 +133,26 @@
     private bool _preserveTiming;
     private double _speed = SessionSourceNodeModel.DefaultSpeed;
     private int _boundedCapacity = SessionSourceNodeModel.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private string SessionCaption => ResolvedSessionName ?? "No session";
     private string TimingCaption => Model.PreserveTiming ? "Original" : "Immediate";
     private string SpeedCaption => Model.PreserveTiming ? $"{SessionSourceNodeModel.NormalizeSpeed(Model.Speed):0.##}x" : "off";
     private string BufferCaption => SessionSourceNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity).ToString();
+
     protected override void OnParametersSet()
     {
-        LoadDraft();
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
     }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _sessionId = Model.SessionId;
         _preserveTiming = Model.PreserveTiming;
         _speed = SessionSourceNodeModel.NormalizeSpeed(Model.Speed);

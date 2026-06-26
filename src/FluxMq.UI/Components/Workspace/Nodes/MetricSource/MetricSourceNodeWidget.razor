@@ -139,6 +139,8 @@
     private bool _emitLatestOnStart = true;
     private int _boundedCapacity = 1000;
     private readonly Dictionary<string, string> _parameters = new(StringComparer.Ordinal);
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private const string TrueValue = "true";
     private const string FalseValue = "false";
@@ -182,10 +184,18 @@
             ? reading.Value.ToString(reading.Value >= 100 ? "0" : "0.##", System.Globalization.CultureInfo.InvariantCulture)
             : "waiting";
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            _ = LoadDraft();
+        }
+    }
 
     private Task LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _metricId = Model.MetricId;
         _emitLatestOnStart = Model.EmitLatestOnStart;
         _boundedCapacity = Math.Max(1, Model.BoundedCapacity);

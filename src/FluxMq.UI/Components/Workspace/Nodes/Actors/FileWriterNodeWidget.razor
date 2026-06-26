@@ -52,11 +52,23 @@
     private FileWriterNodeModel Model => (FileWriterNodeModel)Node;
 
     private int _boundedCapacity = ActorNodeConfiguration.DefaultBoundedCapacity;
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
-        => _boundedCapacity = ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
+    {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
+        _boundedCapacity = ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
+    }
 
     private Task SaveAsync()
     {

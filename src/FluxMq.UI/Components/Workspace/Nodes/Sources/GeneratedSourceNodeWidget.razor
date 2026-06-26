@@ -169,6 +169,8 @@
 
     private int _boundedCapacity = SourceNodeConfiguration.DefaultBoundedCapacity;
     private readonly List<GeneratedMessageDraft> _messages = [];
+    private string? _loadedNodeName;
+    private FlowDiagramNodeModel? _loadedNode;
 
     private string MessageCountCaption => Model.Messages.Count.ToString();
     private string FirstTopicCaption => Model.Messages.FirstOrDefault()?.Topic ?? "No topic";
@@ -176,10 +178,18 @@
     private IReadOnlyList<GeneratedMessageDraft> MessagePreview => Model.Messages.Take(3).ToArray();
     private int MessagePreviewOverflow => Math.Max(0, Model.Messages.Count - 3);
 
-    protected override void OnParametersSet() => LoadDraft();
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
+        {
+            LoadDraft();
+        }
+    }
 
     private void LoadDraft()
     {
+        _loadedNode = Node;
+        _loadedNodeName = Node.NodeName;
         _boundedCapacity = SourceNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity);
         _messages.Clear();
         _messages.AddRange(Model.Messages.Select(message => new GeneratedMessageDraft
