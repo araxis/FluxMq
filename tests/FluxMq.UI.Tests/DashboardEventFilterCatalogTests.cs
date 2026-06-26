@@ -6826,6 +6826,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("dynamic-mapper-summary");
         markup.ShouldContain("dynamic-mapper-meta");
         markup.ShouldContain("dynamic-mapper-meta-item input");
@@ -6870,6 +6871,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ReloadWorkspaceSample");
         markup.ShouldContain("dynamic-mapper-input-error");
         markup.ShouldContain("role=\"alert\"");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Enter a mapping expression before saving.");
         markup.ShouldContain("Id=\"@InputEditorId\"");
         markup.ShouldContain("Id=\"@EditorId\"");
         markup.ShouldContain("ConstructionOptions=\"@InputEditorConstructionOptions\"");
@@ -6913,7 +6916,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldContain(".dynamic-mapper-editor");
         css.ShouldContain(".dynamic-mapper-control-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 0.74fr) minmax(0, 0.56fr) minmax(0, 0.64fr) minmax(0, 0.9fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 0.66fr) minmax(0, 0.48fr) minmax(0, 0.56fr) minmax(0, 0.78fr);");
         css.ShouldNotContain("grid-template-columns: minmax(128px, 0.74fr) minmax(108px, 0.56fr) minmax(128px, 0.64fr) minmax(160px, 0.9fr);");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(1.5rem, max-content);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 28px;");
@@ -6928,11 +6931,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dynamic-mapper-sample-popover");
         css.ShouldContain(".dynamic-mapper-sample-popover.has-editor");
         css.ShouldContain("position: absolute;");
-        css.ShouldContain("top: 44px;");
+        css.ShouldContain("top: 38px;");
         css.ShouldContain("width: min(460px, calc(100% - 16px));");
         css.ShouldContain(".dynamic-mapper-sample-popover-header");
         css.ShouldContain(".dynamic-mapper-sample-popover-actions");
         css.ShouldContain(".dynamic-mapper-workspace-actions");
+        css.ShouldContain("min-height: 27px;");
+        css.ShouldContain("min-height: 25px;");
+        css.ShouldContain("font-size: 0.58rem;");
         css.ShouldContain("height: 1.5rem;");
         css.ShouldContain("min-height: 1.5rem;");
         css.ShouldContain("min-width: 1.5rem;");

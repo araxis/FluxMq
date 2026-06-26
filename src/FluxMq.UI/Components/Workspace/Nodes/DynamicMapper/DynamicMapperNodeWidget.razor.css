@@ -97,15 +97,15 @@
 .dynamic-mapper-editor,
 .dynamic-mapper-workspace {
     display: grid;
-    gap: 6px;
+    gap: 4px;
     min-width: 0;
 }
 
 .dynamic-mapper-control-row {
     align-items: center;
     display: grid;
-    gap: 5px;
-    grid-template-columns: minmax(0, 0.74fr) minmax(0, 0.56fr) minmax(0, 0.64fr) minmax(0, 0.9fr);
+    gap: 4px;
+    grid-template-columns: minmax(0, 0.66fr) minmax(0, 0.48fr) minmax(0, 0.56fr) minmax(0, 0.78fr);
     min-width: 0;
     width: 100%;
 }
@@ -118,7 +118,7 @@
 .dynamic-mapper-schema-file {
     align-items: center;
     display: grid;
-    gap: 5px;
+    gap: 4px;
     grid-template-columns: minmax(0, 1fr) minmax(1.5rem, max-content);
 }
 
@@ -139,7 +139,7 @@
     min-height: 0;
     min-width: 0;
     overflow: hidden;
-    padding: 6px;
+    padding: 5px;
     position: relative;
 }
 
@@ -158,7 +158,7 @@
     padding: 7px;
     position: absolute;
     right: 8px;
-    top: 44px;
+    top: 38px;
     width: min(460px, calc(100% - 16px));
     z-index: 2;
 }
@@ -172,9 +172,9 @@
 .dynamic-mapper-sample-popover-header {
     align-items: center;
     display: grid;
-    gap: 6px;
+    gap: 5px;
     grid-template-columns: minmax(0, 1fr) auto;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     min-width: 0;
 }
 
@@ -222,19 +222,19 @@
 }
 
 .dynamic-mapper-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 30px;
+    min-height: 27px;
 }
 
 .dynamic-mapper-editor ::deep(.mud-input > input.mud-input-root),
 .dynamic-mapper-editor ::deep(.mud-input > .mud-select-input) {
-    font-size: 0.76rem;
-    min-height: 28px;
-    padding-bottom: 4px;
-    padding-top: 7px;
+    font-size: 0.72rem;
+    min-height: 25px;
+    padding-bottom: 3px;
+    padding-top: 6px;
 }
 
 .dynamic-mapper-editor ::deep(.mud-input-label) {
-    font-size: 0.64rem;
+    font-size: 0.58rem;
 }
 
 .dynamic-mapper-schema-file ::deep(.dynamic-mapper-file-picker-button.mud-icon-button),

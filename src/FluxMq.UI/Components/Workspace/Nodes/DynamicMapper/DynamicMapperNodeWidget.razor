@@ -16,7 +16,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="dynamic-mapper-summary">
             <div class="dynamic-mapper-meta">
@@ -659,6 +660,11 @@
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
     }
+
+    private string? ValidateEditor()
+        => string.IsNullOrWhiteSpace(_expression)
+            ? "Enter a mapping expression before saving."
+            : null;
 
     private static string NormalizeExpression(string expression)
         => string.Join('\n', expression.Split(["\r\n", "\n"], StringSplitOptions.None).Select(line => line.TrimEnd())).Trim();
