@@ -6121,7 +6121,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".state-reducer-summary");
         css.ShouldContain(".state-reducer-meta");
-        css.ShouldContain("grid-template-columns: 70px minmax(0, 1fr) 62px 54px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.36fr) minmax(0, 0.68fr) minmax(0, 0.58fr);");
+        css.ShouldNotContain("grid-template-columns: 70px minmax(0, 1fr) 62px 54px;");
         css.ShouldContain(".state-reducer-contracts");
         css.ShouldContain(".state-reducer-contract");
         css.ShouldContain(".state-reducer-contract-label");
@@ -6143,7 +6144,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".state-reducer-rule-surface");
         css.ShouldNotContain(".state-reducer-rule-title");
         css.ShouldContain(".state-reducer-rule-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1.52fr) minmax(240px, 0.48fr);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.5fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1.52fr) minmax(240px, 0.48fr);");
         css.ShouldContain(".state-reducer-rule-sidecar");
         css.ShouldNotContain(".state-reducer-rule-grid");
         css.ShouldNotContain(".state-reducer-rule-aside");
@@ -6159,7 +6161,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".state-reducer-panel-kicker");
         css.ShouldNotContain(".state-reducer-panel-token");
         css.ShouldNotContain(".state-reducer-source-row");
-        css.ShouldContain("grid-template-columns: minmax(150px, 0.78fr) minmax(190px, 1.22fr) 118px 138px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr) minmax(0, 0.72fr) minmax(0, 0.78fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(150px, 0.78fr) minmax(190px, 1.22fr) 118px 138px;");
         css.ShouldNotContain(".state-reducer-expression-row");
         css.ShouldNotContain("grid-template-columns: minmax(220px, 0.58fr) minmax(0, 1.42fr);");
         css.ShouldNotContain(".state-reducer-key-cell");
