@@ -5867,6 +5867,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".mqtt-trigger-broker-cell");
         css.ShouldNotContain(".mqtt-trigger-field-note");
         css.ShouldContain("padding: 0;");
+        css.ShouldContain("gap: 7px;");
+        css.ShouldNotContain("gap: 8px;");
         css.ShouldNotContain("background: var(--flux-surface);");
         css.ShouldNotContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldNotContain(".mqtt-trigger-section-title");
@@ -5876,6 +5878,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-root)");
         css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-head .mud-table-cell)");
         css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-body .mud-table-cell)");
+        css.ShouldContain("padding: 0 10px 7px 0;");
+        css.ShouldContain("padding: 7px 10px 7px 0;");
+        css.ShouldNotContain("padding: 0 10px 8px 0;");
+        css.ShouldNotContain("padding: 8px 10px 8px 0;");
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));");
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-secondary) 88%, var(--mud-palette-text-primary));");
         css.ShouldContain(".mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-add-cell)");
@@ -5884,6 +5890,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".mqtt-trigger-empty");
         css.ShouldContain("min-height: 36px;");
         css.ShouldNotContain("min-height: 40px;");
+        css.ShouldContain("padding: 7px 0;");
+        css.ShouldNotContain("padding: 8px 0;");
         css.ShouldContain("min-width: 640px;");
         css.ShouldNotContain(".mqtt-trigger-hero");
         css.ShouldNotContain(".mqtt-trigger-status");
