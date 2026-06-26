@@ -6162,7 +6162,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 7%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 24%, transparent);");
         css.ShouldNotContain("border-radius: 5px;");
-        css.ShouldContain("padding: 8px 1px 0;");
+        css.ShouldContain("grid-template-columns: 72px minmax(0, 1fr);");
+        css.ShouldContain("padding: 7px 2px 0;");
         css.ShouldContain(".state-reducer-editor ::deep(.state-reducer-reducer-field textarea.mud-input-root)");
         css.ShouldContain("min-height: 268px;");
         css.ShouldContain(".state-reducer-editor ::deep(.state-reducer-key-field textarea.mud-input-root)");

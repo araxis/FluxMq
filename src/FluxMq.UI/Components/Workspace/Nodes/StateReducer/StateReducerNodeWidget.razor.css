@@ -128,12 +128,13 @@
 }
 
 .state-reducer-reference {
-    align-content: start;
+    align-items: start;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
     gap: 6px;
+    grid-template-columns: 72px minmax(0, 1fr);
     min-width: 0;
-    padding: 8px 1px 0;
+    padding: 7px 2px 0;
 }
 
 .state-reducer-reference-label {
@@ -197,7 +198,8 @@
 @media (max-width: 760px) {
     .state-reducer-meta,
     .state-reducer-config-row,
-    .state-reducer-rule-row {
+    .state-reducer-rule-row,
+    .state-reducer-reference {
         grid-template-columns: minmax(0, 1fr);
     }
 
