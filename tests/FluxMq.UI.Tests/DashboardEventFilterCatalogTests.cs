@@ -9048,6 +9048,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".generated-source-options-cell");
         css.ShouldNotContain(".generated-source-retain-cell");
         css.ShouldContain("min-height: 34px;");
+        css.ShouldContain(".generated-source-retain-toggle ::deep(.mud-checkbox)");
+        css.ShouldContain("display: inline-flex;");
+        css.ShouldContain(".generated-source-retain-toggle ::deep(.mud-checkbox .mud-button-root)");
+        css.ShouldContain("padding: 4px;");
         css.ShouldNotContain("min-height: 36px;");
         css.ShouldContain(".generated-source-editor ::deep(.mud-input-control)");
         css.ShouldContain("@media (max-width: 720px)");
