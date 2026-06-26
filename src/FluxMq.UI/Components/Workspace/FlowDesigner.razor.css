@@ -42,7 +42,7 @@
 }
 
 .flow-canvas-title {
-    align-items: center;
+    align-items: flex-start;
     display: flex;
     gap: 8px;
     min-width: 0;
@@ -56,15 +56,18 @@
 
 .flow-canvas-title h2 {
     color: var(--mud-palette-text-primary);
+    display: -webkit-box;
     font-size: 0.92rem;
     font-weight: 750;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     letter-spacing: 0;
     line-height: 1.1;
     margin: 0;
-    max-width: min(34vw, 360px);
+    max-width: min(42vw, 420px);
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .flow-canvas-title-icon {
@@ -83,21 +86,19 @@
 .flow-canvas-meta-strip {
     align-items: center;
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 4px;
     min-width: 0;
-    overflow: hidden;
 }
 
 .flow-canvas-actions {
     align-items: center;
     display: flex;
     flex: 0 1 auto;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 4px;
     justify-content: flex-end;
     min-width: 0;
-    overflow: hidden;
 }
 
 .flow-canvas-metrics,
@@ -105,10 +106,9 @@
     align-items: center;
     display: flex;
     flex: 0 1 auto;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 4px;
     min-width: 0;
-    overflow: hidden;
 }
 
 .flow-canvas-meta-strip span,
@@ -122,30 +122,28 @@
     font-size: 0.7rem;
     font-weight: 650;
     gap: 5px;
-    height: 24px;
-    line-height: 1;
-    padding: 0 7px;
-    white-space: nowrap;
+    line-height: 1.15;
+    min-height: 24px;
+    padding: 3px 7px;
+    white-space: normal;
 }
 
 .flow-canvas-meta-strip span {
     background: color-mix(in srgb, var(--flux-surface-2) 54%, transparent);
     color: var(--mud-palette-text-secondary);
     font-size: 0.66rem;
-    height: 21px;
+    min-height: 21px;
     max-width: 132px;
     min-width: 0;
-    overflow: hidden;
-    padding: 0 6px;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+    padding: 3px 6px;
 }
 
 .flow-state {
     flex: 0 1 auto;
     max-width: 132px;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
 }
 
 .flow-canvas-stat {
@@ -156,11 +154,11 @@
     font-size: 0.68rem;
     font-weight: 650;
     gap: 4px;
-    line-height: 1;
+    line-height: 1.15;
     max-width: 116px;
     min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .flow-canvas-stat:not(:last-child)::after {
@@ -174,8 +172,7 @@
 
 .flow-canvas-stat span {
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
 }
 
 .flow-state-dot {
@@ -360,13 +357,16 @@
 
 .flow-link-condition-title strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
     font-family: Consolas, "Courier New", monospace;
     font-size: 0.69rem;
     font-weight: 650;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.1;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .flow-link-condition-panel ::deep .flow-link-condition-input {
@@ -795,18 +795,20 @@
     border: 1px solid color-mix(in srgb, var(--flux-accent) 48%, transparent);
     border-radius: 5px;
     color: color-mix(in srgb, var(--flux-accent) 84%, var(--mud-palette-text-primary));
-    display: inline-block;
+    display: -webkit-box;
     font-family: monospace;
     font-size: 10px;
     font-weight: 650;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     line-height: 1.2;
     max-width: 260px;
     overflow: hidden;
+    overflow-wrap: anywhere;
     padding: 3px 7px;
-    text-overflow: ellipsis;
     transform: translate(-50%, -50%);
     user-select: none;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .flow-designer-root ::deep .diagram-link:has(.flow-link-selected) div.default-link-label {

@@ -5724,8 +5724,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".flow-canvas-stat:not(:last-child)::after");
         css.ShouldContain(".flow-canvas-command-group");
         css.ShouldContain("min-height: 46px;");
-        css.ShouldContain("flex-wrap: nowrap;");
-        css.ShouldContain("height: 24px;");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldContain("min-height: 24px;");
         css.ShouldContain("height: 26px;");
         css.ShouldContain("min-width: 238px;");
         css.ShouldContain("min-height: 22px;");
@@ -5743,6 +5743,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("#A78BFA");
         css.ShouldNotContain("#DDD6FE");
         css.ShouldNotContain(".flow-link-condition-meta");
+        css.ShouldNotContain("flex-wrap: nowrap;");
         css.ShouldContain("max-width: min(100%, 340px);");
         css.ShouldContain("grid-row: auto;");
         css.ShouldContain("@media (max-width: 720px)");
@@ -10139,7 +10140,6 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-activity-dot");
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-secondary) 76%, var(--mud-palette-text-disabled));");
-        css.ShouldContain("text-overflow: ellipsis;");
         css.ShouldContain(".flow-designer-root ::deep .flow-port-name");
         css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldNotContain("grid-template-columns: 16px minmax(0, 1fr);");
@@ -10191,6 +10191,15 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".flow-canvas-stat-button");
         css.ShouldContain("text-underline-offset: 2px;");
+        css.ShouldContain(".flow-canvas-title h2");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain(".flow-canvas-meta-strip");
+        css.ShouldContain("flex-wrap: wrap;");
+        css.ShouldContain(".flow-link-condition-title strong");
+        css.ShouldContain(".flow-designer-root ::deep .diagram-link div.default-link-label");
+        css.ShouldNotContain("text-overflow: ellipsis;");
+        css.ShouldNotContain("white-space: nowrap;");
+        css.ShouldNotContain("flex-wrap: nowrap;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-diagnostic-error::before");
         css.ShouldContain("width: 3px;");
         css.ShouldNotContain(".flow-diagnostic-panel");
