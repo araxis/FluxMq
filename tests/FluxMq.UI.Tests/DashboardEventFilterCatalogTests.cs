@@ -8628,7 +8628,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metrics-readout-option-tile.locked");
         css.ShouldContain(".metrics-readout-option-name");
         css.ShouldContain("min-height: 34px;");
+        css.ShouldContain("align-self: center;");
         css.ShouldContain("justify-self: end;");
+        css.ShouldContain(".metrics-readout-selector ::deep(.mud-checkbox)");
+        css.ShouldContain("display: inline-flex;");
+        css.ShouldContain("min-height: 30px;");
+        css.ShouldContain(".metrics-readout-selector ::deep(.mud-checkbox .mud-button-root)");
+        css.ShouldContain("padding: 3px;");
         css.ShouldNotContain(".metrics-panel-header");
         css.ShouldNotContain(".metrics-panel-kicker");
         css.ShouldNotContain(".metrics-panel-token");
