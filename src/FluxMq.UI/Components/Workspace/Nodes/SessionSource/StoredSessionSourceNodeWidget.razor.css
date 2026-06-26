@@ -8,7 +8,7 @@
 .stored-session-source-meta {
     display: grid;
     gap: 2px;
-    grid-template-columns: minmax(0, 1fr) 76px 64px 64px;
+    grid-template-columns: minmax(0, 1.28fr) minmax(0, 0.62fr) minmax(0, 0.52fr) minmax(0, 0.52fr);
     min-width: 0;
 }
 
@@ -86,7 +86,7 @@
     align-items: end;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) 142px minmax(120px, 148px) minmax(120px, 148px);
+    grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.66fr) minmax(0, 0.58fr) minmax(0, 0.58fr);
     min-width: 0;
 }
 

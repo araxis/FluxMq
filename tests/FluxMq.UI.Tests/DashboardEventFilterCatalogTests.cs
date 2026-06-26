@@ -9342,7 +9342,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".replay-source-summary");
         css.ShouldContain(".replay-source-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 70px 70px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.56fr) minmax(0, 0.56fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 70px 70px;");
         css.ShouldContain(".replay-source-contract");
         css.ShouldContain("grid-template-columns: repeat(5, minmax(0, auto));");
         css.ShouldContain(".replay-source-contract-label");
@@ -9369,7 +9370,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".replay-source-playback-row");
         css.ShouldNotContain(".replay-source-source-row");
         css.ShouldNotContain(".replay-source-config-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(120px, 154px) minmax(120px, 154px);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.58fr) minmax(0, 0.58fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(120px, 154px) minmax(120px, 154px);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 132px minmax(120px, 154px) minmax(120px, 154px);");
         css.ShouldNotContain(".replay-source-config-grid");
         css.ShouldNotContain(".replay-source-main-grid");
@@ -9483,7 +9485,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".stored-session-source-summary");
         css.ShouldContain(".stored-session-source-meta");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 76px 64px 64px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.28fr) minmax(0, 0.62fr) minmax(0, 0.52fr) minmax(0, 0.52fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 76px 64px 64px;");
         css.ShouldContain(".stored-session-source-contract");
         css.ShouldContain("grid-template-columns: repeat(5, minmax(0, auto));");
         css.ShouldContain(".stored-session-source-contract-label");
@@ -9508,7 +9511,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".stored-session-source-playback-panel");
         css.ShouldNotContain(".stored-session-source-source-row");
         css.ShouldNotContain(".stored-session-source-config-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 142px minmax(120px, 148px) minmax(120px, 148px);");
+        css.ShouldContain("grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.66fr) minmax(0, 0.58fr) minmax(0, 0.58fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 142px minmax(120px, 148px) minmax(120px, 148px);");
         css.ShouldNotContain(".stored-session-source-session-row");
         css.ShouldNotContain(".stored-session-source-timing-row");
         css.ShouldNotContain(".stored-session-source-playback-row");
