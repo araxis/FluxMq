@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.AccountTree"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="routing-switch-summary">
             <div class="routing-switch-meta">
@@ -90,9 +92,11 @@
                 <div class="routing-switch-expression-stack">
                     <MudTextField T="string"
                                   Label="Expression"
-                                  @bind-Value="_expression"
+                                  Value="@_expression"
+                                  ValueChanged="@SetExpression"
                                   aria-label="Routing switch expression"
                                   Variant="Variant.Outlined"
+                                  Immediate="true"
                                   Lines="5"
                                   Class="routing-switch-expression-field"
                                   Placeholder="qos >= 1" />
@@ -133,16 +137,20 @@
                         <div class="routing-switch-route-row" @key="route">
                             <MudTextField T="string"
                                           aria-label="@($"Route match key {index + 1}")"
-                                          @bind-Value="route.Key"
+                                          Value="@route.Key"
+                                          ValueChanged="@(value => SetRouteKeyAsync(route, value))"
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
+                                          Immediate="true"
                                           Placeholder="Match key"
                                           Class="routing-switch-route-key-field" />
                             <MudTextField T="string"
                                           aria-label="@($"Route output port {index + 1}")"
-                                          @bind-Value="route.OutputPort"
+                                          Value="@route.OutputPort"
+                                          ValueChanged="@(value => SetRouteOutputAsync(route, value))"
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
+                                          Immediate="true"
                                           Placeholder="Output port"
                                           Class="routing-switch-route-output-field" />
                             <MudTooltip Text="Remove route">
@@ -242,7 +250,7 @@
         return Task.CompletedTask;
     }
 
-    private void AddRoute()
+    private async Task AddRoute()
     {
         var ordinal = _routeDrafts.Count + 1;
         var key = $"Route{ordinal}";
@@ -253,9 +261,10 @@
         }
 
         _routeDrafts.Add(new RouteDraft(key, key));
+        await DialogRefresh.RefreshAsync(Node.NodeName);
     }
 
-    private void RemoveRoute(RouteDraft route)
+    private async Task RemoveRoute(RouteDraft route)
     {
         if (_routeDrafts.Count <= 1)
         {
@@ -263,7 +272,59 @@
         }
 
         _routeDrafts.Remove(route);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
     }
+
+    private async Task SetExpression(string value)
+    {
+        _expression = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetRouteKeyAsync(RouteDraft route, string value)
+    {
+        route.Key = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetRouteOutputAsync(RouteDraft route, string value)
+    {
+        route.OutputPort = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+    {
+        if (string.IsNullOrWhiteSpace(_expression))
+        {
+            return "Enter a routing expression before saving.";
+        }
+
+        if (_routeDrafts.Count == 0 || !_routeDrafts.Any(IsCompleteRoute))
+        {
+            return "Add at least one complete route before saving.";
+        }
+
+        if (_routeDrafts.Any(route => string.IsNullOrWhiteSpace(route.Key)))
+        {
+            return "Each route needs a match key.";
+        }
+
+        if (_routeDrafts.Any(route => string.IsNullOrWhiteSpace(route.OutputPort)))
+        {
+            return "Each route needs an output port.";
+        }
+
+        return _routeDrafts
+            .GroupBy(route => route.Key.Trim(), StringComparer.Ordinal)
+            .Any(group => group.Count() > 1)
+            ? "Route match keys must be unique."
+            : null;
+    }
+
+    private static bool IsCompleteRoute(RouteDraft route)
+        => !string.IsNullOrWhiteSpace(route.Key) &&
+           !string.IsNullOrWhiteSpace(route.OutputPort);
 
     private string FormatRouteDrafts()
         => string.Join(
