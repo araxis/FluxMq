@@ -99,7 +99,7 @@
     align-items: center;
     display: grid;
     gap: 5px;
-    grid-template-columns: minmax(132px, 0.78fr) minmax(112px, 0.62fr) minmax(126px, 0.7fr) minmax(160px, 0.92fr);
+    grid-template-columns: minmax(128px, 0.74fr) minmax(108px, 0.56fr) minmax(128px, 0.64fr) minmax(160px, 0.9fr);
     min-width: 0;
     width: 100%;
 }
@@ -118,7 +118,8 @@
 
 .dynamic-mapper-workspace {
     grid-template-rows: minmax(0, 1fr);
-    height: clamp(760px, 82vh, 980px);
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
     width: 100%;
 }
@@ -132,7 +133,7 @@
     min-height: 0;
     min-width: 0;
     overflow: hidden;
-    padding: 8px;
+    padding: 6px;
     position: relative;
 }
 
@@ -140,24 +141,25 @@
     background: color-mix(in srgb, var(--flux-surface) 94%, var(--flux-surface-2));
     border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
     border-radius: 6px;
-    bottom: 10px;
+    bottom: 8px;
     box-shadow: 0 16px 38px rgba(0, 0, 0, 0.32);
     display: grid;
     gap: 6px;
-    max-height: min(330px, calc(100% - 58px));
+    max-height: none;
     min-height: 0;
     min-width: 0;
     overflow: hidden;
     padding: 7px;
     position: absolute;
-    right: 10px;
-    width: min(520px, calc(100% - 20px));
+    right: 8px;
+    top: 44px;
+    width: min(460px, calc(100% - 16px));
     z-index: 2;
 }
 
 .dynamic-mapper-sample-popover.has-editor {
     grid-template-rows: auto minmax(0, 1fr) auto;
-    height: min(300px, calc(100% - 58px));
+    height: auto;
 }
 
 .dynamic-mapper-workspace-header,
@@ -203,19 +205,19 @@
 }
 
 .dynamic-mapper-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
-    min-height: 32px;
+    min-height: 30px;
 }
 
 .dynamic-mapper-editor ::deep(.mud-input > input.mud-input-root),
 .dynamic-mapper-editor ::deep(.mud-input > .mud-select-input) {
     font-size: 0.76rem;
-    min-height: 30px;
+    min-height: 28px;
     padding-bottom: 4px;
-    padding-top: 8px;
+    padding-top: 7px;
 }
 
 .dynamic-mapper-editor ::deep(.mud-input-label) {
-    font-size: 0.66rem;
+    font-size: 0.64rem;
 }
 
 .dynamic-mapper-schema-file ::deep(.dynamic-mapper-file-picker-button.mud-icon-button),

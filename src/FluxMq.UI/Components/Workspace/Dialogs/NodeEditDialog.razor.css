@@ -123,7 +123,10 @@
         "identity config"
         "workbench workbench";
     grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    height: min(84vh, 820px);
     max-height: min(84vh, 820px);
+    overflow: hidden;
     padding: 10px;
 }
 
@@ -137,12 +140,13 @@
     display: contents;
 }
 
-.node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-config-grid) {
+.node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-control-row) {
     grid-area: config;
 }
 
 .node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-workspace) {
     grid-area: workbench;
+    min-height: 0;
 }
 
 .node-edit-dialog-editor ::deep(.mud-grid) {
@@ -248,5 +252,8 @@
             "config"
             "workbench";
         grid-template-columns: minmax(0, 1fr);
+        height: auto;
+        max-height: min(72vh, 560px);
+        overflow-y: auto;
     }
 }
