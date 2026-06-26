@@ -92,7 +92,7 @@
 }
 
 .routing-join-config-row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 150px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.55fr);
 }
 
 .routing-join-match-composer {
@@ -108,12 +108,12 @@
 }
 
 .routing-join-control-row {
-    grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) minmax(132px, 0.72fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.72fr);
 }
 
 .routing-join-case-option {
     align-items: center;
-    align-self: end;
+    align-self: center;
     display: flex;
     justify-content: flex-start;
     min-height: 34px;
