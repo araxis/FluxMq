@@ -7291,6 +7291,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-height: 34px;");
         css.ShouldNotContain("min-height: 36px;");
         css.ShouldContain(".routing-switch-envelope-option ::deep(.mud-checkbox)");
+        css.ShouldContain("display: inline-flex;");
+        css.ShouldContain(".routing-switch-envelope-option ::deep(.mud-checkbox .mud-button-root)");
+        css.ShouldContain("padding: 4px;");
         css.ShouldContain(".routing-switch-envelope-option ::deep(.mud-checkbox .mud-typography)");
         css.ShouldContain("margin: 0;");
         css.ShouldContain(".routing-switch-config-row");
