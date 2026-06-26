@@ -216,11 +216,31 @@
 
 .message-filter-pattern-row ::deep(.message-filter-remove.mud-icon-button),
 .message-filter-pattern-table-header ::deep(.message-filter-add.mud-icon-button) {
+    border-radius: 4px;
     height: 30px;
+    justify-self: end;
     min-height: 30px;
     min-width: 30px;
     padding: 0;
     width: 30px;
+}
+
+.message-filter-pattern-table-header ::deep(.message-filter-add.mud-icon-button) {
+    color: color-mix(in srgb, var(--mud-palette-secondary) 82%, var(--mud-palette-text-primary));
+}
+
+.message-filter-pattern-row ::deep(.message-filter-remove.mud-icon-button) {
+    color: color-mix(in srgb, var(--mud-palette-text-secondary) 78%, transparent);
+}
+
+.message-filter-pattern-table-header ::deep(.message-filter-add.mud-icon-button:hover:not(.mud-disabled)),
+.message-filter-pattern-row ::deep(.message-filter-remove.mud-icon-button:hover:not(.mud-disabled)) {
+    background-color: color-mix(in srgb, var(--flux-surface-2) 44%, transparent);
+}
+
+.message-filter-pattern-table-header ::deep(.message-filter-add .mud-icon-root),
+.message-filter-pattern-row ::deep(.message-filter-remove .mud-icon-root) {
+    font-size: 1.04rem;
 }
 
 .message-filter-pattern-field,

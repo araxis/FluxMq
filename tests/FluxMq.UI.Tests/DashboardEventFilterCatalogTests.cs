@@ -6486,6 +6486,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 36%, transparent);");
         css.ShouldContain(".message-filter-pattern-list");
         css.ShouldContain(".message-filter-pattern-table-header ::deep(.message-filter-add.mud-icon-button)");
+        css.ShouldContain("justify-self: end;");
+        css.ShouldContain("border-radius: 4px;");
+        css.ShouldContain(".message-filter-pattern-table-header ::deep(.message-filter-add .mud-icon-root)");
+        css.ShouldContain(".message-filter-pattern-row ::deep(.message-filter-remove .mud-icon-root)");
         css.ShouldNotContain(".message-filter-rules-panel");
         css.ShouldNotContain(".message-filter-pattern-header");
         css.ShouldNotContain(".message-filter-expression-area");
