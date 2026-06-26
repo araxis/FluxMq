@@ -114,7 +114,7 @@
 }
 
 .metric-source-config-row {
-    grid-template-columns: minmax(0, 1fr) 150px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.54fr);
 }
 
 .metric-source-description-row {
@@ -162,7 +162,7 @@
     align-items: center;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.34fr);
     min-width: 0;
     padding: 0 2px;
 }
@@ -172,7 +172,10 @@
     font-size: 0.7rem;
     font-weight: 700;
     line-height: 1;
-    white-space: nowrap;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-align: right;
+    white-space: normal;
 }
 
 .metric-source-parameter-composer {

@@ -9123,7 +9123,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".metric-source-settings-surface");
         css.ShouldNotContain(".metric-source-settings-title");
         css.ShouldContain(".metric-source-config-row");
-        css.ShouldContain("grid-template-columns: minmax(0, 1fr) 150px;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.54fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 150px;");
         css.ShouldContain(".metric-source-description-row");
         css.ShouldNotContain("grid-template-columns: 72px minmax(0, 1fr);");
         css.ShouldContain("display: flex;");
@@ -9135,6 +9136,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".metric-source-parameter-summary");
         css.ShouldContain(".metric-source-parameter-group");
         css.ShouldContain(".metric-source-parameter-heading");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 0.34fr);");
+        css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) auto;");
+        css.ShouldContain("overflow-wrap: anywhere;");
+        css.ShouldContain("white-space: normal;");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
         css.ShouldNotContain("border: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);");
         css.ShouldNotContain("padding: 12px;");
