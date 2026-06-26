@@ -8906,6 +8906,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-height: 34px;");
         css.ShouldNotContain("min-height: 38px;");
         css.ShouldContain(".metric-source-start-row ::deep(.mud-checkbox)");
+        css.ShouldContain("display: inline-flex;");
+        css.ShouldContain(".metric-source-start-row ::deep(.mud-checkbox .mud-button-root)");
+        css.ShouldContain("padding: 4px;");
         css.ShouldContain(".metric-source-start-row ::deep(.mud-checkbox .mud-typography)");
         css.ShouldContain("margin: 0;");
         css.ShouldContain(".metric-source-editor ::deep(.mud-input-control)");
