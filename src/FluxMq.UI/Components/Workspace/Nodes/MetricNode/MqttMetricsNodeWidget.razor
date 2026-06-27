@@ -6,6 +6,7 @@
 @using FluxMq.Components.MqttMetrics
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Insights"
@@ -15,7 +16,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         @{
             var metricReadouts = MetricReadouts;
@@ -87,7 +89,8 @@
             <div class="metrics-config-row" aria-label="MQTT metrics configuration">
                 <MudNumericField T="int"
                                  Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
+                                 Value="@_boundedCapacity"
+                                 ValueChanged="@SetBoundedCapacity"
                                  Min="1"
                                  Max="100000"
                                  Step="100"
@@ -96,7 +99,8 @@
                                  Class="metrics-buffer-field" />
                 <MudNumericField T="double"
                                  Label="Rate window seconds"
-                                 @bind-Value="_rateWindowSeconds"
+                                 Value="@_rateWindowSeconds"
+                                 ValueChanged="@SetRateWindowSeconds"
                                  Min="1"
                                  Step="1"
                                  Variant="Variant.Outlined"
@@ -104,7 +108,8 @@
                                  Class="metrics-rate-window-field" />
                 <MudNumericField T="int"
                                  Label="Readout columns"
-                                 @bind-Value="_metricCardColumns"
+                                 Value="@_metricCardColumns"
+                                 ValueChanged="@SetMetricCardColumns"
                                  Min="@MqttMetricsNodeModel.MinMetricCardColumns"
                                  Max="@MqttMetricsNodeModel.MaxMetricCardColumns"
                                  Step="1"
@@ -215,6 +220,48 @@
         Model.DisplayMetrics = [.. displayMetrics];
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private async Task SetBoundedCapacity(int value)
+    {
+        _boundedCapacity = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetRateWindowSeconds(double value)
+    {
+        _rateWindowSeconds = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetMetricCardColumns(int value)
+    {
+        _metricCardColumns = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+    {
+        if (_boundedCapacity is < 1 or > 100000)
+        {
+            return "Input buffer must be between 1 and 100000.";
+        }
+
+        if (_rateWindowSeconds <= 0 || !double.IsFinite(_rateWindowSeconds))
+        {
+            return "Rate window seconds must be greater than 0.";
+        }
+
+        return _metricCardColumns < MqttMetricsNodeModel.MinMetricCardColumns ||
+            _metricCardColumns > MqttMetricsNodeModel.MaxMetricCardColumns
+            ? "Readout columns must be between 1 and 4."
+            : null;
     }
 
     private bool IsDisplayMetricSelected(string id)
