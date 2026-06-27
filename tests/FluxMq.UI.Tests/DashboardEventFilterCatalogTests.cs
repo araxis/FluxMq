@@ -6923,6 +6923,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ConstructionOptions=\"@EditorConstructionOptions\"");
         markup.ShouldContain("CssClass=\"dynamic-mapper-monaco-editor dynamic-mapper-input-editor\"");
         markup.ShouldContain("CssClass=\"dynamic-mapper-monaco-editor dynamic-mapper-expression-editor\"");
+        markup.ShouldContain("private StandaloneCodeEditor? _initializedEditor;");
+        markup.ShouldContain("private StandaloneCodeEditor? _initializedInputEditor;");
+        markup.ShouldContain("!ReferenceEquals(_initializedEditor, _editor)");
+        markup.ShouldContain("!ReferenceEquals(_initializedInputEditor, _inputEditor)");
+        markup.ShouldContain("private async Task SyncEditorAsync()");
+        markup.ShouldContain("ScrollBeyondLastLine = false");
+        markup.ShouldContain("IsNonCriticalEditorException");
         markup.ShouldNotContain("dynamic-mapper-drawer-grid");
         markup.ShouldNotContain("dynamic-mapper-config-grid");
         markup.ShouldNotContain("dynamic-mapper-source-drawer");
@@ -6969,10 +6976,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".dynamic-mapper-workspace.has-sample");
         css.ShouldNotContain("grid-template-rows: minmax(0, 1fr) minmax(128px, 0.2fr);");
         css.ShouldContain("height: 100%;");
+        css.ShouldContain("min-height: 420px;");
         css.ShouldNotContain("height: clamp(760px, 82vh, 980px);");
         css.ShouldContain("overflow: hidden;");
         css.ShouldContain(".dynamic-mapper-expression-workspace");
+        css.ShouldContain(".dynamic-mapper-expression-workspace ::deep(.dynamic-mapper-expression-editor.dynamic-mapper-monaco-editor)");
         css.ShouldContain(".dynamic-mapper-sample-popover");
+        css.ShouldContain(".dynamic-mapper-sample-popover ::deep(.dynamic-mapper-input-editor.dynamic-mapper-monaco-editor)");
         css.ShouldContain(".dynamic-mapper-sample-popover.has-editor");
         css.ShouldContain("position: absolute;");
         css.ShouldContain("top: 38px;");
@@ -6994,6 +7004,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("min-height: 26px;");
         css.ShouldNotContain("min-width: 26px;");
         css.ShouldContain(".dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor)");
+        css.ShouldContain(".dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor > div)");
+        css.ShouldContain("box-sizing: border-box;");
+        css.ShouldContain("display: block;");
         css.ShouldContain(".dynamic-mapper-workspace ::deep(.dynamic-mapper-input-editor)");
         css.ShouldContain(".dynamic-mapper-input-error");
         css.ShouldNotContain(".dynamic-mapper-workspace ::deep(.dynamic-mapper-result-editor)");

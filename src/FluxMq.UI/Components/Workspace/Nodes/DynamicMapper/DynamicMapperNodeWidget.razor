@@ -241,6 +241,8 @@
     private string _expression = string.Empty;
     private StandaloneCodeEditor? _editor;
     private StandaloneCodeEditor? _inputEditor;
+    private StandaloneCodeEditor? _initializedEditor;
+    private StandaloneCodeEditor? _initializedInputEditor;
     private int _editorVersion;
     private int _inputEditorVersion;
     private int _schemaControlVersion;
@@ -253,6 +255,7 @@
     private bool _sampleEdited;
     private string _inputJsonText = string.Empty;
     private string? _inputJsonError;
+    private bool _syncingEditor;
     private bool _syncingInputEditor;
     private string? _loadedNodeName;
     private FlowDiagramNodeModel? _loadedNode;
@@ -312,9 +315,33 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        var syncExpression = false;
+        var syncInput = false;
+
+        if (_editor is not null && !ReferenceEquals(_initializedEditor, _editor))
+        {
+            _initializedEditor = _editor;
+            syncExpression = true;
+        }
+
+        if (_inputEditor is not null && !ReferenceEquals(_initializedInputEditor, _inputEditor))
+        {
+            _initializedInputEditor = _inputEditor;
+            syncInput = true;
+        }
+
+        if (syncExpression || syncInput)
         {
             await ConfigureMonacoAsync();
+        }
+
+        if (syncExpression)
+        {
+            await SyncEditorAsync();
+        }
+
+        if (syncInput)
+        {
             await SyncInputEditorAsync();
         }
 
@@ -572,6 +599,7 @@
             Language = "json",
             Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
             ReadOnly = !IsMqttInput,
+            ScrollBeyondLastLine = false,
             Value = _inputJsonText
         };
 
@@ -580,12 +608,22 @@
         {
             AutomaticLayout = true,
             Language = string.Equals(_engine, "jsonata", StringComparison.OrdinalIgnoreCase) ? "jsonata" : "csharp",
+            ScrollBeyondLastLine = false,
             Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
             Value = _expression
         };
 
     private async Task ConfigureMonacoAsync()
-        => await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Dynamic Mapper Monaco configuration failed: {exception.Message}");
+        }
+    }
 
     private async Task OnInputEditorContentChanged()
     {
@@ -610,6 +648,11 @@
 
     private async Task OnEditorContentChanged()
     {
+        if (_syncingEditor)
+        {
+            return;
+        }
+
         if (_editor is not null)
         {
             _expression = await _editor.GetValue();
@@ -629,6 +672,31 @@
         await DialogRefresh.RefreshAsync(Node.NodeName);
     }
 
+    private async Task SyncEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _syncingEditor = true;
+        try
+        {
+            try
+            {
+                await _editor.SetValue(_expression);
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Dynamic Mapper expression editor sync failed: {exception.Message}");
+            }
+        }
+        finally
+        {
+            _syncingEditor = false;
+        }
+    }
+
     private async Task SyncInputEditorAsync()
     {
         if (_inputEditor is null)
@@ -639,7 +707,14 @@
         _syncingInputEditor = true;
         try
         {
-            await _inputEditor.SetValue(_inputJsonText);
+            try
+            {
+                await _inputEditor.SetValue(_inputJsonText);
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Dynamic Mapper sample editor sync failed: {exception.Message}");
+            }
         }
         finally
         {
@@ -647,8 +722,13 @@
         }
     }
 
-    private Task SaveAsync()
+    private async Task SaveAsync()
     {
+        if (_editor is not null)
+        {
+            _expression = await _editor.GetValue();
+        }
+
         Model.Engine = string.IsNullOrWhiteSpace(_engine) ? "jsonata" : _engine.Trim();
         Model.InputType = DynamicMapperNodeModel.NormalizeInputType(_inputType);
         Model.OutputType = string.IsNullOrWhiteSpace(_outputType) ? "MqttPublishRequest" : _outputType.Trim();
@@ -658,7 +738,6 @@
             ? DynamicMapperNodeModel.DefaultExpression(Model.OutputType, Model.Engine, Model.InputType)
             : _expression.Trim();
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
-        return Task.CompletedTask;
     }
 
     private string? ValidateEditor()
@@ -679,5 +758,8 @@
                 { DevicePlatform.macOS, ["json", "public.json"] }
             })
         };
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
 
 }
