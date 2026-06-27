@@ -6687,6 +6687,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("json-schema-validator-summary");
         markup.ShouldContain("json-schema-validator-meta");
         markup.ShouldContain("SchemaTargetCaption");
@@ -6713,9 +6715,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@bind-Value=\"_schemaId\"");
         markup.ShouldContain("Label=\"JSON Schema file\"");
         markup.ShouldContain("aria-label=\"JSON Schema file\"");
-        markup.ShouldContain("@bind-Value=\"_schemaPath\"");
+        markup.ShouldContain("Value=\"@_schemaPath\"");
+        markup.ShouldContain("ValueChanged=\"@SetSchemaPath\"");
         markup.ShouldContain("aria-label=\"Select JSON Schema file\"");
         markup.ShouldContain("PickSchemaFileAsync");
+        markup.ShouldContain("DialogRefresh.RefreshAsync(Node.NodeName)");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Select a JSON Schema file before saving.");
+        markup.ShouldNotContain("@bind-Value=\"_schemaPath\"");
         markup.ShouldContain("json-schema-validator-file-source");
         markup.ShouldContain("aria-label=\"JSON schema file source\"");
         markup.ShouldNotContain("json-schema-validator-field-label");

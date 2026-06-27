@@ -3,6 +3,7 @@
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject AppThemeService ThemeService
 @inject IJSRuntime JsRuntime
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.FactCheck"
@@ -13,7 +14,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="json-schema-validator-summary">
             <div class="json-schema-validator-meta">
@@ -72,7 +74,8 @@
                         <div class="json-schema-validator-file-row">
                             <MudTextField T="string"
                                           Label="JSON Schema file"
-                                          @bind-Value="_schemaPath"
+                                          Value="@_schemaPath"
+                                          ValueChanged="@SetSchemaPath"
                                           aria-label="JSON Schema file"
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
@@ -224,6 +227,14 @@
         _schemaSource = normalized;
         _editorVersion++;
         await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetSchemaPath(string? value)
+    {
+        _schemaPath = value ?? string.Empty;
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
     }
 
     private async Task PickSchemaFileAsync()
@@ -232,8 +243,15 @@
         if (result is not null)
         {
             _schemaPath = result.FullPath;
+            await InvokeAsync(StateHasChanged);
+            await DialogRefresh.RefreshAsync(Node.NodeName);
         }
     }
+
+    private string? ValidateEditor()
+        => IsFileSchema && string.IsNullOrWhiteSpace(_schemaPath)
+            ? "Select a JSON Schema file before saving."
+            : null;
 
     private async Task SaveAsync()
     {
