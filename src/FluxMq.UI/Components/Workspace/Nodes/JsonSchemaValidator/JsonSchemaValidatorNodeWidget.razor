@@ -17,35 +17,35 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="json-schema-validator-summary">
-            <div class="json-schema-validator-meta">
-                <div class="json-schema-validator-meta-item source">
+        <div class="json-schema-validator-summary node-ui-summary">
+            <div class="json-schema-validator-meta node-ui-facts">
+                <div class="json-schema-validator-meta-item source node-ui-fact">
                     <span>Schema</span>
                     <strong title="@SchemaTargetCaption">@SchemaTargetCaption</strong>
                 </div>
-                <div class="json-schema-validator-meta-item">
+                <div class="json-schema-validator-meta-item node-ui-fact">
                     <span>ID</span>
                     <strong title="@SchemaIdCaption">@SchemaIdCaption</strong>
                 </div>
             </div>
 
-            <div class="json-schema-validator-contracts">
-                <div class="json-schema-validator-contract" aria-label="Validator input fields">
-                    <span class="json-schema-validator-contract-label">Input</span>
-                    <span class="json-schema-validator-token">MqttEnvelope</span>
+            <div class="json-schema-validator-contracts node-ui-token-group">
+                <div class="json-schema-validator-contract node-ui-token-row" aria-label="Validator input fields">
+                    <span class="json-schema-validator-contract-label node-ui-fact-label">Input</span>
+                    <span class="json-schema-validator-token node-ui-token">MqttEnvelope</span>
                 </div>
-                <div class="json-schema-validator-contract" aria-label="Validator output fields">
-                    <span class="json-schema-validator-contract-label">Outputs</span>
-                    <span class="json-schema-validator-token">result</span>
-                    <span class="json-schema-validator-token">valid</span>
-                    <span class="json-schema-validator-token">invalid</span>
+                <div class="json-schema-validator-contract node-ui-token-row" aria-label="Validator output fields">
+                    <span class="json-schema-validator-contract-label node-ui-fact-label">Outputs</span>
+                    <span class="json-schema-validator-token node-ui-token">result</span>
+                    <span class="json-schema-validator-token node-ui-token">valid</span>
+                    <span class="json-schema-validator-token node-ui-token">invalid</span>
                 </div>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="json-schema-validator-editor" aria-label="JSON schema validator settings">
-            <div class="json-schema-validator-config-row" aria-label="JSON schema configuration">
+        <div class="json-schema-validator-editor node-ui-editor" aria-label="JSON schema validator settings">
+            <div class="json-schema-validator-config-row node-ui-form-grid" aria-label="JSON schema configuration">
                 <MudSelect T="string"
                            Label="Schema source"
                            Value="@_schemaSource"
@@ -67,7 +67,7 @@
                               Class="json-schema-validator-id-field" />
             </div>
 
-            <div class="json-schema-validator-schema-area">
+            <div class="json-schema-validator-schema-area node-ui-code-surface">
                 @if (IsFileSchema)
                 {
                     <div class="json-schema-validator-file-source" aria-label="JSON schema file source">

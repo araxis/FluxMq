@@ -13,28 +13,28 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="flow-assertion-summary">
-            <div class="flow-assertion-meta">
-                <div class="flow-assertion-meta-item assertion">
+        <div class="flow-assertion-summary node-ui-summary">
+            <div class="flow-assertion-meta node-ui-facts">
+                <div class="flow-assertion-meta-item assertion node-ui-fact">
                     <span>Assertion</span>
                     <strong title="@AssertionCaption">@AssertionCaption</strong>
                 </div>
-                <div class="flow-assertion-meta-item">
+                <div class="flow-assertion-meta-item node-ui-fact">
                     <span>Input</span>
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
-                <div class="flow-assertion-meta-item">
+                <div class="flow-assertion-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
-            <div class="flow-assertion-contracts">
-                <div class="flow-assertion-contract" aria-label="Assertion output fields">
-                    <span class="flow-assertion-contract-label">Outputs</span>
-                    <span class="flow-assertion-token">result</span>
-                    <span class="flow-assertion-token pass">passed</span>
-                    <span class="flow-assertion-token fail">failed</span>
+            <div class="flow-assertion-contracts node-ui-token-group">
+                <div class="flow-assertion-contract node-ui-token-row" aria-label="Assertion output fields">
+                    <span class="flow-assertion-contract-label node-ui-fact-label">Outputs</span>
+                    <span class="flow-assertion-token node-ui-token">result</span>
+                    <span class="flow-assertion-token pass node-ui-token">passed</span>
+                    <span class="flow-assertion-token fail node-ui-token">failed</span>
                 </div>
             </div>
 
@@ -44,8 +44,8 @@
         </div>
     </Body>
     <Editor>
-        <div class="flow-assertion-editor" aria-label="Flow assertion settings">
-            <div class="flow-assertion-config-row" aria-label="Flow assertion configuration">
+        <div class="flow-assertion-editor node-ui-editor" aria-label="Flow assertion settings">
+            <div class="flow-assertion-config-row node-ui-form-grid" aria-label="Flow assertion configuration">
                 <MudTextField T="string"
                               Label="Assertion name"
                               @bind-Value="_assertionName"
@@ -75,7 +75,7 @@
                                  Class="flow-assertion-buffer-field" />
             </div>
 
-            <div class="flow-assertion-rule-stack" aria-label="Flow assertion rule">
+            <div class="flow-assertion-rule-stack node-ui-stack" aria-label="Flow assertion rule">
                 <MudTextField T="string"
                               Label="Pass condition"
                               Value="@_expression"

@@ -13,17 +13,17 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="routing-window-summary">
-            <div class="routing-window-meta">
-                <div class="routing-window-meta-item input">
+        <div class="routing-window-summary node-ui-summary">
+            <div class="routing-window-meta node-ui-facts">
+                <div class="routing-window-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
-                <div class="routing-window-meta-item">
+                <div class="routing-window-meta-item node-ui-fact">
                     <span>Output</span>
                     <strong>FlowWindow</strong>
                 </div>
-                <div class="routing-window-meta-item">
+                <div class="routing-window-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
@@ -31,14 +31,14 @@
 
             <div class="routing-window-boundary" aria-label="Routing window boundary">
                 <span class="routing-window-boundary-label">Boundary</span>
-                <span class="routing-window-token">@MaxItemsCaption</span>
-                <span class="routing-window-token">@TimeCaption</span>
-                <span class="routing-window-token">@PartialCaption</span>
+                <span class="routing-window-token node-ui-token">@MaxItemsCaption</span>
+                <span class="routing-window-token node-ui-token">@TimeCaption</span>
+                <span class="routing-window-token node-ui-token">@PartialCaption</span>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="routing-window-editor" aria-label="Routing window settings">
+        <div class="routing-window-editor node-ui-editor" aria-label="Routing window settings">
             <div class="routing-window-primary-row" aria-label="Routing window input settings">
                 <MudSelect T="string"
                            Label="Input type"

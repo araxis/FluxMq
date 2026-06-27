@@ -14,42 +14,42 @@
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <div class="stored-session-source-summary">
-            <div class="stored-session-source-meta">
-                <div class="stored-session-source-meta-item session">
+        <div class="stored-session-source-summary node-ui-summary">
+            <div class="stored-session-source-meta node-ui-facts">
+                <div class="stored-session-source-meta-item session node-ui-fact">
                     <span>Session</span>
                     <strong title="@SessionCaption">@SessionCaption</strong>
                 </div>
-                <div class="stored-session-source-meta-item">
+                <div class="stored-session-source-meta-item node-ui-fact">
                     <span>Timing</span>
                     <strong>@TimingCaption</strong>
                 </div>
-                <div class="stored-session-source-meta-item">
+                <div class="stored-session-source-meta-item node-ui-fact">
                     <span>Speed</span>
                     <strong>@SpeedCaption</strong>
                 </div>
-                <div class="stored-session-source-meta-item">
+                <div class="stored-session-source-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
-            <div class="stored-session-source-contract" aria-label="Stored session source output fields">
-                <span class="stored-session-source-contract-label">Output fields</span>
-                <span class="stored-session-source-token">MqttEnvelope</span>
-                <span class="stored-session-source-token">topic</span>
-                <span class="stored-session-source-token">payload</span>
-                <span class="stored-session-source-token">qos</span>
-                <span class="stored-session-source-token">receivedAt</span>
+            <div class="stored-session-source-contract node-ui-token-row" aria-label="Stored session source output fields">
+                <span class="stored-session-source-contract-label node-ui-fact-label">Output fields</span>
+                <span class="stored-session-source-token node-ui-token">MqttEnvelope</span>
+                <span class="stored-session-source-token node-ui-token">topic</span>
+                <span class="stored-session-source-token node-ui-token">payload</span>
+                <span class="stored-session-source-token node-ui-token">qos</span>
+                <span class="stored-session-source-token node-ui-token">receivedAt</span>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="stored-session-source-editor" aria-label="Stored session source settings">
+        <div class="stored-session-source-editor node-ui-editor" aria-label="Stored session source settings">
             @{
                 var sessions = Live.StoredSessions;
             }
-            <div class="stored-session-source-editor-grid" aria-label="Stored session source configuration fields">
+            <div class="stored-session-source-editor-grid node-ui-form-grid" aria-label="Stored session source configuration fields">
                 @if (sessions.Count > 0)
                 {
                     <MudSelect T="string"

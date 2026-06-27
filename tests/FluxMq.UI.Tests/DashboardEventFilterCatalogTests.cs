@@ -5966,7 +5966,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("connection-state-trigger-contracts");
         markup.ShouldContain("aria-label=\"Connection state trigger output fields\"");
         markup.ShouldContain("connection-state-trigger-token");
-        markup.ShouldContain("<span class=\"connection-state-trigger-contract-label\">Fields</span>");
+        markup.ShouldContain("<span class=\"connection-state-trigger-contract-label node-ui-fact-label\">Fields</span>");
         markup.ShouldContain("profileId");
         markup.ShouldContain("state");
         markup.ShouldContain("errors");
@@ -10530,6 +10530,14 @@ public sealed class DashboardEventFilterCatalogTests
         shellMarkup.ShouldNotContain("<MudDivider");
 
         css.ShouldContain(".flow-designer-root ::deep .flow-node-action");
+        css.ShouldContain(".flow-designer-root ::deep .flow-node :is(");
+        css.ShouldContain(".node-ui-summary");
+        css.ShouldContain(".node-ui-facts");
+        css.ShouldContain(".node-ui-fact");
+        css.ShouldContain(".node-ui-token-group");
+        css.ShouldContain(".node-ui-token-row");
+        css.ShouldContain(".node-ui-token");
+        css.ShouldContain(".node-ui-preview");
         css.ShouldContain("flex: 0 0 24px;");
         css.ShouldContain(".flow-designer-root ::deep .flow-node-action:focus-visible");
         css.ShouldContain("outline-offset: 2px;");
@@ -10559,6 +10567,44 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".mud-alert-icon");
         css.ShouldNotContain(".node-stat");
         css.ShouldNotContain(".node-stat-icon");
+    }
+
+    [Fact]
+    public void PipelineNodeWidgets_UseSharedNodeUiPrimitives()
+    {
+        var root = FindRepositoryRoot();
+        var nodeDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "Nodes");
+        var nodeWidgets = Directory.GetFiles(nodeDirectory, "*NodeWidget.razor", SearchOption.AllDirectories);
+
+        nodeWidgets.ShouldNotBeEmpty();
+
+        foreach (var file in nodeWidgets)
+        {
+            var markup = File.ReadAllText(file);
+
+            markup.ShouldNotContain("<MudChip");
+            markup.ShouldNotContain("<Stat");
+            markup.ShouldNotContain("flow-node-filters");
+            markup.ShouldNotContain("d-flex flex-wrap gap-1");
+            markup.ShouldNotContain("ShowHeaderIcon=\"true\"");
+            markup.ShouldNotContain("ShowCategoryChip=\"true\"");
+
+            if (markup.Contains("<Body>", StringComparison.Ordinal))
+            {
+                markup.Contains("node-ui-summary", StringComparison.Ordinal).ShouldBeTrue(file);
+            }
+
+            if (markup.Contains("<Editor>", StringComparison.Ordinal))
+            {
+                markup.Contains("node-ui-editor", StringComparison.Ordinal).ShouldBeTrue(file);
+            }
+        }
     }
 
     [Fact]
@@ -10703,7 +10749,6 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("node-edit-dialog-section node-edit-dialog-identity");
         markup.ShouldContain("aria-label=\"Node identity\"");
         markup.ShouldContain("node-edit-dialog-editor");
-        markup.ShouldContain("Icons.Material.Filled.Settings");
         markup.ShouldContain("aria-describedby=\"@StatusElementId\"");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("aria-live=\"polite\"");
@@ -10735,6 +10780,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("node-edit-dialog-section-head");
         markup.ShouldNotContain("node-edit-dialog-section node-edit-dialog-editor");
         markup.ShouldNotContain("Icons.Material.Filled.Badge");
+        markup.ShouldNotContain("Icons.Material.Filled.Settings");
+        markup.ShouldNotContain("node-edit-dialog-title-icon");
         markup.ShouldNotContain("Must be unique within the workflow.");
         markup.ShouldNotContain("@key=\"SubmitStatusKey\"");
 
@@ -10753,6 +10800,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".node-edit-dialog-editor");
         css.ShouldContain("display: contents;");
+        css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        css.ShouldContain(".node-edit-dialog-content ::deep(:is(");
+        css.ShouldContain(".node-ui-editor");
+        css.ShouldContain(".node-ui-form-grid");
+        css.ShouldContain(".node-ui-stack");
+        css.ShouldContain(".node-ui-checkbox-row");
+        css.ShouldContain(".node-ui-table-wrap");
+        css.ShouldContain(".node-ui-code-surface");
         css.ShouldContain(".node-edit-dialog-content.dynamic-mapper-dialog");
         css.ShouldContain("grid-template-areas:");
         css.ShouldContain("\"identity config\"");
@@ -10788,6 +10843,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".node-edit-dialog-status");
         css.ShouldNotContain(".node-edit-dialog-section-title");
         css.ShouldNotContain(".node-edit-dialog-section-head");
+        css.ShouldNotContain(".node-edit-dialog-title-icon");
         css.ShouldNotContain(".node-edit-dialog-title-meta");
         css.ShouldNotContain(".node-edit-dialog-content ::deep(.mud-input-slot)");
         css.ShouldNotContain(".node-edit-dialog-meta-strip");

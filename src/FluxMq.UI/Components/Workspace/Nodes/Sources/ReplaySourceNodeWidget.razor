@@ -14,38 +14,38 @@
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <div class="replay-source-summary">
-            <div class="replay-source-meta">
-                <div class="replay-source-meta-item session">
+        <div class="replay-source-summary node-ui-summary">
+            <div class="replay-source-meta node-ui-facts">
+                <div class="replay-source-meta-item session node-ui-fact">
                     <span>Session</span>
                     <strong title="@SessionCaption">@SessionCaption</strong>
                 </div>
-                <div class="replay-source-meta-item">
+                <div class="replay-source-meta-item node-ui-fact">
                     <span>Speed</span>
                     <strong>@SpeedCaption</strong>
                 </div>
-                <div class="replay-source-meta-item">
+                <div class="replay-source-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
-            <div class="replay-source-contract" aria-label="Replay source output fields">
-                <span class="replay-source-contract-label">Output fields</span>
-                <span class="replay-source-token">MqttEnvelope</span>
-                <span class="replay-source-token">topic</span>
-                <span class="replay-source-token">payload</span>
-                <span class="replay-source-token">qos</span>
-                <span class="replay-source-token">receivedAt</span>
+            <div class="replay-source-contract node-ui-token-row" aria-label="Replay source output fields">
+                <span class="replay-source-contract-label node-ui-fact-label">Output fields</span>
+                <span class="replay-source-token node-ui-token">MqttEnvelope</span>
+                <span class="replay-source-token node-ui-token">topic</span>
+                <span class="replay-source-token node-ui-token">payload</span>
+                <span class="replay-source-token node-ui-token">qos</span>
+                <span class="replay-source-token node-ui-token">receivedAt</span>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="replay-source-editor" aria-label="Replay source settings">
+        <div class="replay-source-editor node-ui-editor" aria-label="Replay source settings">
             @{
                 var sessions = Live.StoredSessions;
             }
-            <div class="replay-source-editor-grid" aria-label="Replay source configuration fields">
+            <div class="replay-source-editor-grid node-ui-form-grid" aria-label="Replay source configuration fields">
                 @if (sessions.Count > 0)
                 {
                     <MudSelect T="string"

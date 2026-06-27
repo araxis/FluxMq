@@ -13,42 +13,42 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="state-reducer-summary">
-            <div class="state-reducer-meta">
-                <div class="state-reducer-meta-item engine">
+        <div class="state-reducer-summary node-ui-summary">
+            <div class="state-reducer-meta node-ui-facts">
+                <div class="state-reducer-meta-item engine node-ui-fact">
                     <span>Engine</span>
                     <strong>@EngineCaption</strong>
                 </div>
-                <div class="state-reducer-meta-item">
+                <div class="state-reducer-meta-item node-ui-fact">
                     <span>Key</span>
                     <strong title="@KeyCaption">@KeyCaption</strong>
                 </div>
-                <div class="state-reducer-meta-item">
+                <div class="state-reducer-meta-item node-ui-fact">
                     <span>Max keys</span>
                     <strong>@MaxKeysCaption</strong>
                 </div>
-                <div class="state-reducer-meta-item">
+                <div class="state-reducer-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
-            <div class="state-reducer-contracts">
-                <div class="state-reducer-contract" aria-label="State reducer contract fields">
-                    <span class="state-reducer-contract-label">Contract</span>
-                    <span class="state-reducer-token">StateReducerInput</span>
-                    <span class="state-reducer-token">StateReducerResult</span>
+            <div class="state-reducer-contracts node-ui-token-group">
+                <div class="state-reducer-contract node-ui-token-row" aria-label="State reducer contract fields">
+                    <span class="state-reducer-contract-label node-ui-fact-label">Contract</span>
+                    <span class="state-reducer-token node-ui-token">StateReducerInput</span>
+                    <span class="state-reducer-token node-ui-token">StateReducerResult</span>
                 </div>
             </div>
 
-            <div class="state-reducer-expression-preview" title="@ReducerCaption">
+            <div class="state-reducer-expression-preview node-ui-preview" title="@ReducerCaption">
                 @ReducerCaption
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="state-reducer-editor" aria-label="State reducer settings">
-            <div class="state-reducer-config-row" aria-label="State reducer configuration">
+        <div class="state-reducer-editor node-ui-editor" aria-label="State reducer settings">
+            <div class="state-reducer-config-row node-ui-form-grid" aria-label="State reducer configuration">
                 <MudSelect T="string"
                            Label="Engine"
                            @bind-Value="_engine"

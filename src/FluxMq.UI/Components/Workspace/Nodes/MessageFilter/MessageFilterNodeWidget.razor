@@ -13,13 +13,13 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="message-filter-summary">
-            <div class="message-filter-meta">
-                <div class="message-filter-meta-item scope">
+        <div class="message-filter-summary node-ui-summary">
+            <div class="message-filter-meta node-ui-facts">
+                <div class="message-filter-meta-item scope node-ui-fact">
                     <span>Topic scope</span>
                     <strong>@PatternCountCaption</strong>
                 </div>
-                <div class="message-filter-meta-item">
+                <div class="message-filter-meta-item node-ui-fact">
                     <span>Condition</span>
                     <strong>@ConditionCaption</strong>
                 </div>
@@ -33,13 +33,13 @@
                 }
                 @if (PatternOverflow > 0)
                 {
-                    <span class="message-filter-token overflow">+@PatternOverflow</span>
+                    <span class="message-filter-token overflow node-ui-token">+@PatternOverflow</span>
                 }
             </div>
 
             @if (HasExpression)
             {
-                <div class="message-filter-expression-preview" title="@ExpressionCaption">
+                <div class="message-filter-expression-preview node-ui-preview" title="@ExpressionCaption">
                     <span class="message-filter-expression-label">Condition</span>
                     <span class="message-filter-expression-text">@ExpressionCaption</span>
                 </div>
@@ -47,8 +47,8 @@
         </div>
     </Body>
     <Editor>
-        <div class="message-filter-editor" aria-label="Flow filter settings">
-            <div class="message-filter-editor-grid" aria-label="Filter rules">
+        <div class="message-filter-editor node-ui-editor" aria-label="Flow filter settings">
+            <div class="message-filter-editor-grid node-ui-form-grid" aria-label="Filter rules">
                 <section class="message-filter-scope-editor" aria-label="Topic pattern filters">
                     <div class="message-filter-section-bar">
                         <span>Topic scope</span>

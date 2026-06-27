@@ -15,21 +15,21 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="metric-source-summary">
-            <div class="metric-source-meta">
-                <div class="metric-source-meta-item metric">
+        <div class="metric-source-summary node-ui-summary">
+            <div class="metric-source-meta node-ui-facts">
+                <div class="metric-source-meta-item metric node-ui-fact">
                     <span>Metric</span>
                     <strong title="@MetricCaption">@MetricCaption</strong>
                 </div>
-                <div class="metric-source-meta-item">
+                <div class="metric-source-meta-item node-ui-fact">
                     <span>Latest</span>
                     <strong>@LatestValue</strong>
                 </div>
-                <div class="metric-source-meta-item">
+                <div class="metric-source-meta-item node-ui-fact">
                     <span>Start</span>
                     <strong>@StartModeCaption</strong>
                 </div>
-                <div class="metric-source-meta-item">
+                <div class="metric-source-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
@@ -38,30 +38,30 @@
             @if (Model.Parameters.Count > 0)
             {
                 <div class="metric-source-parameters" aria-label="Metric source parameters">
-                    <span class="metric-source-contract-label">Parameters</span>
+                    <span class="metric-source-contract-label node-ui-fact-label">Parameters</span>
                     @foreach (var parameter in ParameterPreview)
                     {
-                        <span class="metric-source-token" title="@($"{parameter.Key}: {parameter.Value}")">@parameter.Key</span>
+                        <span class="metric-source-token node-ui-token" title="@($"{parameter.Key}: {parameter.Value}")">@parameter.Key</span>
                     }
                     @if (ParameterPreviewOverflow > 0)
                     {
-                        <span class="metric-source-token overflow">+@ParameterPreviewOverflow</span>
+                        <span class="metric-source-token overflow node-ui-token">+@ParameterPreviewOverflow</span>
                     }
                 </div>
             }
 
-            <div class="metric-source-contract" aria-label="Metric source output fields">
-                <span class="metric-source-contract-label">Output fields</span>
-                <span class="metric-source-token">NumberMetricReading</span>
-                <span class="metric-source-token">metricId</span>
-                <span class="metric-source-token">timestamp</span>
-                <span class="metric-source-token">value</span>
+            <div class="metric-source-contract node-ui-token-row" aria-label="Metric source output fields">
+                <span class="metric-source-contract-label node-ui-fact-label">Output fields</span>
+                <span class="metric-source-token node-ui-token">NumberMetricReading</span>
+                <span class="metric-source-token node-ui-token">metricId</span>
+                <span class="metric-source-token node-ui-token">timestamp</span>
+                <span class="metric-source-token node-ui-token">value</span>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="metric-source-editor" aria-label="Metric source settings">
-            <div class="metric-source-config-row" aria-label="Metric source configuration">
+        <div class="metric-source-editor node-ui-editor" aria-label="Metric source settings">
+            <div class="metric-source-config-row node-ui-form-grid" aria-label="Metric source configuration">
                 @if (MetricOptions.Count > 0)
                 {
                     <MudSelect T="string"

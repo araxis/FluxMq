@@ -13,17 +13,17 @@
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft">
     <Body>
-        <div class="generated-source-summary">
-            <div class="generated-source-meta">
-                <div class="generated-source-meta-item">
+        <div class="generated-source-summary node-ui-summary">
+            <div class="generated-source-meta node-ui-facts">
+                <div class="generated-source-meta-item node-ui-fact">
                     <span>Messages</span>
                     <strong>@MessageCountCaption</strong>
                 </div>
-                <div class="generated-source-meta-item topic">
+                <div class="generated-source-meta-item topic node-ui-fact">
                     <span>First topic</span>
                     <strong title="@FirstTopicCaption">@FirstTopicCaption</strong>
                 </div>
-                <div class="generated-source-meta-item">
+                <div class="generated-source-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
@@ -34,10 +34,10 @@
                 {
                     <div class="generated-source-preview-row">
                         <span class="generated-source-preview-topic" title="@message.Topic">@message.Topic</span>
-                        <span class="generated-source-token">QoS @SourceNodeConfiguration.NormalizeQualityOfService(message.QualityOfService)</span>
+                        <span class="generated-source-token node-ui-token">QoS @SourceNodeConfiguration.NormalizeQualityOfService(message.QualityOfService)</span>
                         @if (message.Retain)
                         {
-                            <span class="generated-source-token">retain</span>
+                            <span class="generated-source-token node-ui-token">retain</span>
                         }
                     </div>
                 }
@@ -47,17 +47,17 @@
                 }
             </div>
 
-            <div class="generated-source-contract" aria-label="Generated source output fields">
-                <span class="generated-source-contract-label">Output fields</span>
-                <span class="generated-source-token">MqttEnvelope</span>
-                <span class="generated-source-token">topic</span>
-                <span class="generated-source-token">payload</span>
-                <span class="generated-source-token">qos</span>
+            <div class="generated-source-contract node-ui-token-row" aria-label="Generated source output fields">
+                <span class="generated-source-contract-label node-ui-fact-label">Output fields</span>
+                <span class="generated-source-token node-ui-token">MqttEnvelope</span>
+                <span class="generated-source-token node-ui-token">topic</span>
+                <span class="generated-source-token node-ui-token">payload</span>
+                <span class="generated-source-token node-ui-token">qos</span>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="generated-source-editor" aria-label="Generated source settings">
+        <div class="generated-source-editor node-ui-editor" aria-label="Generated source settings">
             <div class="generated-source-settings-row" aria-label="Generated source configuration">
                 <MudNumericField T="int"
                                  Label="Output buffer"

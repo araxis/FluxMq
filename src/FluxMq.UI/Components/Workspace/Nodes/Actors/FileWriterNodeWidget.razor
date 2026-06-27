@@ -12,29 +12,29 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="file-writer-summary">
-            <div class="file-writer-meta">
-                <div class="file-writer-meta-item target">
+        <div class="file-writer-summary node-ui-summary">
+            <div class="file-writer-meta node-ui-facts">
+                <div class="file-writer-meta-item target node-ui-fact">
                     <span>Target</span>
                     <strong>Input path</strong>
                 </div>
-                <div class="file-writer-meta-item">
+                <div class="file-writer-meta-item node-ui-fact">
                     <span>Input buffer</span>
                     <strong>@ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity)</strong>
                 </div>
             </div>
 
-            <div class="file-writer-contract" aria-label="File write request fields">
-                <span class="file-writer-contract-label">Request fields</span>
-                <span class="file-writer-token">path</span>
-                <span class="file-writer-token">content</span>
-                <span class="file-writer-token">mode</span>
-                <span class="file-writer-token">createDirectory</span>
+            <div class="file-writer-contract node-ui-token-row" aria-label="File write request fields">
+                <span class="file-writer-contract-label node-ui-fact-label">Request fields</span>
+                <span class="file-writer-token node-ui-token">path</span>
+                <span class="file-writer-token node-ui-token">content</span>
+                <span class="file-writer-token node-ui-token">mode</span>
+                <span class="file-writer-token node-ui-token">createDirectory</span>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="file-writer-editor" aria-label="File writer settings">
+        <div class="file-writer-editor node-ui-editor" aria-label="File writer settings">
             <MudNumericField T="int"
                              Label="Input buffer"
                              Value="@_boundedCapacity"

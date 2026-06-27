@@ -13,42 +13,42 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="routing-merge-summary">
-            <div class="routing-merge-meta">
-                <div class="routing-merge-meta-item input">
+        <div class="routing-merge-summary node-ui-summary">
+            <div class="routing-merge-meta node-ui-facts">
+                <div class="routing-merge-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
-                <div class="routing-merge-meta-item">
+                <div class="routing-merge-meta-item node-ui-fact">
                     <span>Inputs</span>
                     <strong>@InputCountCaption</strong>
                 </div>
-                <div class="routing-merge-meta-item output">
+                <div class="routing-merge-meta-item output node-ui-fact">
                     <span>Output</span>
                     <strong>Merged item</strong>
                 </div>
-                <div class="routing-merge-meta-item">
+                <div class="routing-merge-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
             <div class="routing-merge-ports" aria-label="Routing merge inputs">
-                <span class="routing-merge-contract-label">Input ports</span>
+                <span class="routing-merge-contract-label node-ui-fact-label">Input ports</span>
                 @foreach (var input in InputPreview)
                 {
-                    <span class="routing-merge-token" title="@input">@input</span>
+                    <span class="routing-merge-token node-ui-token" title="@input">@input</span>
                 }
                 @if (InputPreviewOverflow > 0)
                 {
-                    <span class="routing-merge-token overflow">+@InputPreviewOverflow</span>
+                    <span class="routing-merge-token overflow node-ui-token">+@InputPreviewOverflow</span>
                 }
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="routing-merge-editor" aria-label="Routing merge settings">
-            <div class="routing-merge-config-row">
+        <div class="routing-merge-editor node-ui-editor" aria-label="Routing merge settings">
+            <div class="routing-merge-config-row node-ui-form-grid">
                 <MudSelect T="string"
                            Label="Input type"
                            @bind-Value="_inputType"

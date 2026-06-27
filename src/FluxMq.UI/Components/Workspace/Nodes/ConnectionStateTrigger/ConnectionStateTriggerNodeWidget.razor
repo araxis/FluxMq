@@ -15,28 +15,28 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="connection-state-trigger-summary">
-            <div class="connection-state-trigger-meta">
-                <div class="connection-state-trigger-meta-item broker">
+        <div class="connection-state-trigger-summary node-ui-summary">
+            <div class="connection-state-trigger-meta node-ui-facts">
+                <div class="connection-state-trigger-meta-item broker node-ui-fact">
                     <span>Broker</span>
                     <strong title="@ConnectionCaption">@ConnectionCaption</strong>
                 </div>
-                <div class="connection-state-trigger-meta-item">
+                <div class="connection-state-trigger-meta-item node-ui-fact">
                     <span>Output</span>
                     <strong>Client state</strong>
                 </div>
-                <div class="connection-state-trigger-meta-item">
+                <div class="connection-state-trigger-meta-item node-ui-fact">
                     <span>Mode</span>
                     <strong>State changes</strong>
                 </div>
             </div>
 
-            <div class="connection-state-trigger-contracts">
-                <div class="connection-state-trigger-contract" aria-label="Connection state trigger output fields">
-                    <span class="connection-state-trigger-contract-label">Fields</span>
-                    <span class="connection-state-trigger-token">profileId</span>
-                    <span class="connection-state-trigger-token">state</span>
-                    <span class="connection-state-trigger-token">errors</span>
+            <div class="connection-state-trigger-contracts node-ui-token-group">
+                <div class="connection-state-trigger-contract node-ui-token-row" aria-label="Connection state trigger output fields">
+                    <span class="connection-state-trigger-contract-label node-ui-fact-label">Fields</span>
+                    <span class="connection-state-trigger-token node-ui-token">profileId</span>
+                    <span class="connection-state-trigger-token node-ui-token">state</span>
+                    <span class="connection-state-trigger-token node-ui-token">errors</span>
                 </div>
             </div>
         </div>
@@ -45,7 +45,7 @@
         @{
             var brokerOptions = BrokerOptions;
         }
-        <div class="connection-state-trigger-editor" aria-label="Connection state trigger settings">
+        <div class="connection-state-trigger-editor node-ui-editor" aria-label="Connection state trigger settings">
             @if (brokerOptions.Count > 0)
             {
                 <MudSelect T="string"

@@ -13,17 +13,17 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="condition-router-summary">
-            <div class="condition-router-meta">
-                <div class="condition-router-meta-item input">
+        <div class="condition-router-summary node-ui-summary">
+            <div class="condition-router-meta node-ui-facts">
+                <div class="condition-router-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
-                <div class="condition-router-meta-item">
+                <div class="condition-router-meta-item node-ui-fact">
                     <span>When true</span>
                     <strong>WhenTrue</strong>
                 </div>
-                <div class="condition-router-meta-item">
+                <div class="condition-router-meta-item node-ui-fact">
                     <span>When false</span>
                     <strong>WhenFalse</strong>
                 </div>
@@ -38,18 +38,18 @@
                 <span class="condition-router-section-label">Variables</span>
                 @foreach (var variable in SummaryVariables)
                 {
-                    <span class="condition-router-token" title="@($"{variable.Name}: {variable.Type}")">@variable.Name</span>
+                    <span class="condition-router-token node-ui-token" title="@($"{variable.Name}: {variable.Type}")">@variable.Name</span>
                 }
                 @if (VariableOverflow > 0)
                 {
-                    <span class="condition-router-token overflow">+@VariableOverflow</span>
+                    <span class="condition-router-token overflow node-ui-token">+@VariableOverflow</span>
                 }
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="condition-router-editor" aria-label="Condition router settings">
-            <div class="condition-router-config-row">
+        <div class="condition-router-editor node-ui-editor" aria-label="Condition router settings">
+            <div class="condition-router-config-row node-ui-form-grid">
                 <MudSelect T="string"
                            Value="@_inputType"
                            ValueChanged="@SetInputType"
@@ -83,7 +83,7 @@
                     <span class="condition-router-variable-list">
                         @foreach (var variable in Variables)
                         {
-                            <span class="condition-router-variable-token" title="@($"{variable.Type}: {variable.Example}")">
+                            <span class="condition-router-variable-token node-ui-token" title="@($"{variable.Type}: {variable.Example}")">
                                 <code>@variable.Name</code>
                                 <small>@variable.Type</small>
                             </span>

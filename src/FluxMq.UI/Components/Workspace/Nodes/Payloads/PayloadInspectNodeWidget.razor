@@ -13,47 +13,47 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="payload-inspect-summary">
-            <div class="payload-inspect-meta">
-                <div class="payload-inspect-meta-item input">
+        <div class="payload-inspect-summary node-ui-summary">
+            <div class="payload-inspect-meta node-ui-facts">
+                <div class="payload-inspect-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong>Payload request</strong>
                 </div>
-                <div class="payload-inspect-meta-item">
+                <div class="payload-inspect-meta-item node-ui-fact">
                     <span>Preview</span>
                     <strong>@PreviewCaption</strong>
                 </div>
-                <div class="payload-inspect-meta-item">
+                <div class="payload-inspect-meta-item node-ui-fact">
                     <span>Format cap</span>
                     <strong>@FormatCapCaption</strong>
                 </div>
-                <div class="payload-inspect-meta-item">
+                <div class="payload-inspect-meta-item node-ui-fact">
                     <span>Input buffer</span>
                     <strong>@InputBufferCaption</strong>
                 </div>
             </div>
 
-            <div class="payload-inspect-contracts">
-                <div class="payload-inspect-contract" aria-label="Payload inspection request fields">
-                    <span class="payload-inspect-contract-label">Request fields</span>
-                    <span class="payload-inspect-token">text</span>
-                    <span class="payload-inspect-token">bytes</span>
-                    <span class="payload-inspect-token">contentType</span>
-                    <span class="payload-inspect-token">encodingHint</span>
+            <div class="payload-inspect-contracts node-ui-token-group">
+                <div class="payload-inspect-contract node-ui-token-row" aria-label="Payload inspection request fields">
+                    <span class="payload-inspect-contract-label node-ui-fact-label">Request fields</span>
+                    <span class="payload-inspect-token node-ui-token">text</span>
+                    <span class="payload-inspect-token node-ui-token">bytes</span>
+                    <span class="payload-inspect-token node-ui-token">contentType</span>
+                    <span class="payload-inspect-token node-ui-token">encodingHint</span>
                 </div>
-                <div class="payload-inspect-contract" aria-label="Payload inspection result fields">
-                    <span class="payload-inspect-contract-label">Result fields</span>
-                    <span class="payload-inspect-token">kind</span>
-                    <span class="payload-inspect-token">contentType</span>
-                    <span class="payload-inspect-token">byteCount</span>
-                    <span class="payload-inspect-token">preview</span>
+                <div class="payload-inspect-contract node-ui-token-row" aria-label="Payload inspection result fields">
+                    <span class="payload-inspect-contract-label node-ui-fact-label">Result fields</span>
+                    <span class="payload-inspect-token node-ui-token">kind</span>
+                    <span class="payload-inspect-token node-ui-token">contentType</span>
+                    <span class="payload-inspect-token node-ui-token">byteCount</span>
+                    <span class="payload-inspect-token node-ui-token">preview</span>
                 </div>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="payload-inspect-editor" aria-label="Payload inspection settings">
-            <div class="payload-inspect-number-grid">
+        <div class="payload-inspect-editor node-ui-editor" aria-label="Payload inspection settings">
+            <div class="payload-inspect-number-grid node-ui-form-grid">
                 <MudNumericField T="int"
                                  Label="Preview bytes"
                                  Value="@_maxPreviewBytes"
@@ -86,7 +86,7 @@
                                  Class="payload-inspect-buffer-field" />
             </div>
 
-            <div class="payload-inspect-options" aria-label="Payload inspection options">
+            <div class="payload-inspect-options node-ui-checkbox-row" aria-label="Payload inspection options">
                 <MudCheckBox T="bool"
                              Label="Detect Base64"
                              @bind-Value="_detectBase64"

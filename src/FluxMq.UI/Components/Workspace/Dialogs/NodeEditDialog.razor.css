@@ -1,26 +1,9 @@
 .node-edit-dialog-title {
     align-items: center;
     display: grid;
-    gap: 8px;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
     width: 100%;
-}
-
-.node-edit-dialog-title-icon {
-    align-items: center;
-    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--flux-accent) 30%, var(--flux-border));
-    border-radius: 5px;
-    color: var(--flux-accent);
-    display: inline-flex;
-    height: 24px;
-    justify-content: center;
-    width: 24px;
-}
-
-.node-edit-dialog-title-icon ::deep(.mud-icon-root) {
-    font-size: 16px;
 }
 
 .node-edit-dialog-heading {
@@ -110,6 +93,29 @@
     color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));
 }
 
+.node-edit-dialog-content ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
+    min-height: 36px;
+}
+
+.node-edit-dialog-content ::deep(.mud-input > input.mud-input-root),
+.node-edit-dialog-content ::deep(.mud-input > .mud-select-input) {
+    align-items: center;
+    font-size: 0.84rem;
+    line-height: 1.2;
+    min-height: 34px;
+    padding-bottom: 6px;
+    padding-top: 10px;
+}
+
+.node-edit-dialog-content ::deep(.mud-input > textarea.mud-input-root) {
+    font-size: 0.84rem;
+    line-height: 1.35;
+}
+
+.node-edit-dialog-content ::deep(.mud-input-label) {
+    font-size: 0.72rem;
+}
+
 .node-edit-dialog-content ::deep(.mud-input-helper-text) {
     color: var(--mud-palette-text-secondary);
     font-size: 10.5px;
@@ -118,6 +124,107 @@
 
 .node-edit-dialog-editor {
     display: contents;
+}
+
+.node-edit-dialog-content ::deep(:is(
+    .node-ui-editor)) {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.node-edit-dialog-content ::deep(:is(
+    .node-ui-form-grid,
+    [class$="-config-row"],
+    [class$="-editor-grid"],
+    [class$="-number-grid"])) {
+    align-items: end;
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.node-edit-dialog-content ::deep(.node-ui-form-grid.two) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.node-edit-dialog-content ::deep(.node-ui-form-grid.three) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.node-edit-dialog-content ::deep(.node-ui-form-grid.four) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.node-edit-dialog-content ::deep(:is(
+    .node-ui-stack,
+    [class$="-rule-stack"],
+    [class$="-field-stack"])) {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.node-edit-dialog-content ::deep(:is(
+    .node-ui-checkbox-row,
+    [class$="-options"])) {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    min-height: 34px;
+    min-width: 0;
+}
+
+.node-edit-dialog-content ::deep(:is(
+    .node-ui-table-wrap,
+    [class$="-subscription-editor"],
+    [class$="-route-editor"])) {
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.node-edit-dialog-content ::deep(:is(
+    .node-ui-code-surface,
+    [class$="-schema-area"],
+    [class$="-expression-workspace"])) {
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 56%, transparent);
+    border-radius: 6px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.node-edit-dialog-content ::deep(:is(
+    .node-ui-table-wrap,
+    [class$="-subscription-editor"],
+    [class$="-route-editor"]) .mud-table-root) {
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.node-edit-dialog-content ::deep(:is(
+    .node-ui-table-wrap,
+    [class$="-subscription-editor"],
+    [class$="-route-editor"]) .mud-table-head .mud-table-cell) {
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 78%, transparent);
+    color: color-mix(in srgb, var(--mud-palette-text-secondary) 88%, var(--mud-palette-text-primary));
+    font-size: 10px;
+    font-weight: 760;
+    line-height: 1;
+    padding-bottom: 7px;
+    text-transform: uppercase;
+    white-space: normal;
+}
+
+.node-edit-dialog-content ::deep(:is(
+    .node-ui-table-wrap,
+    [class$="-subscription-editor"],
+    [class$="-route-editor"]) .mud-table-body .mud-table-cell) {
+    border-bottom: 1px solid color-mix(in srgb, var(--flux-border-soft) 52%, transparent);
+    vertical-align: middle;
 }
 
 .node-edit-dialog-content.dynamic-mapper-dialog {
@@ -260,7 +367,7 @@
 
 @media (max-width: 700px) {
     .node-edit-dialog-title {
-        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .node-edit-dialog-content {
@@ -304,5 +411,11 @@
         height: auto;
         max-height: min(72vh, 560px);
         overflow-y: auto;
+    }
+
+    .node-edit-dialog-content ::deep(.node-ui-form-grid.two),
+    .node-edit-dialog-content ::deep(.node-ui-form-grid.three),
+    .node-edit-dialog-content ::deep(.node-ui-form-grid.four) {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

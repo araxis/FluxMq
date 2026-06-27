@@ -15,17 +15,17 @@
                  EditorValidationError="@ValidateEditor"
                  OnCancel="@LoadDraft">
     <Body>
-        <div class="mqtt-trigger-summary">
-            <div class="mqtt-trigger-meta">
-                <div class="mqtt-trigger-meta-item broker">
+        <div class="mqtt-trigger-summary node-ui-summary">
+            <div class="mqtt-trigger-meta node-ui-facts">
+                <div class="mqtt-trigger-meta-item broker node-ui-fact">
                     <span>Broker</span>
                     <strong title="@BrokerDisplay">@BrokerDisplay</strong>
                 </div>
-                <div class="mqtt-trigger-meta-item">
+                <div class="mqtt-trigger-meta-item node-ui-fact">
                     <span>Filters</span>
                     <strong>@SubscriptionCountLabel</strong>
                 </div>
-                <div class="mqtt-trigger-meta-item">
+                <div class="mqtt-trigger-meta-item node-ui-fact">
                     <span>Output buffer</span>
                     <strong>@MqttTriggerNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity)</strong>
                 </div>
@@ -36,7 +36,7 @@
                 {
                     <div class="mqtt-trigger-subscription-row">
                         <span class="@TopicClass(subscription)" title="@SubscriptionTopic(subscription)">@SubscriptionTopic(subscription)</span>
-                        <span class="mqtt-trigger-token qos">Q@(subscription.QualityOfService)</span>
+                        <span class="mqtt-trigger-token qos node-ui-token">Q@(subscription.QualityOfService)</span>
                         <span class="@FlagTokenClass(subscription.ReceiveRetainedMessages, "retained")"
                               title="@ReceiveRetainedTitle(subscription)">@ReceiveRetainedLabel(subscription)</span>
                         <span class="@FlagTokenClass(subscription.RetainAsPublished, "retain-flag")"
@@ -51,9 +51,9 @@
         </div>
     </Body>
     <Editor>
-        <div class="mqtt-trigger-editor">
+        <div class="mqtt-trigger-editor node-ui-editor">
             <section class="mqtt-trigger-editor-section" aria-label="Broker settings">
-                <div class="mqtt-trigger-editor-grid">
+                <div class="mqtt-trigger-editor-grid node-ui-form-grid">
                     @{
                         var brokerOptions = BrokerOptions;
                     }
@@ -96,7 +96,7 @@
             </section>
 
             <section class="mqtt-trigger-editor-section compact" aria-label="Subscriptions">
-                <div class="mqtt-trigger-subscription-editor">
+                <div class="mqtt-trigger-subscription-editor node-ui-table-wrap">
                     <MudTable T="MqttTriggerSubscriptionEditorRow"
                               Items="@SubscriptionEditorRows"
                               Dense="true"

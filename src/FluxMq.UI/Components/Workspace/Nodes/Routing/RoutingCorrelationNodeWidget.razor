@@ -13,39 +13,39 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="routing-correlation-summary">
-            <div class="routing-correlation-meta">
-                <div class="routing-correlation-meta-item input">
+        <div class="routing-correlation-summary node-ui-summary">
+            <div class="routing-correlation-meta node-ui-facts">
+                <div class="routing-correlation-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
-                <div class="routing-correlation-meta-item">
+                <div class="routing-correlation-meta-item node-ui-fact">
                     <span>Outputs</span>
                     <strong>2 outputs</strong>
                 </div>
-                <div class="routing-correlation-meta-item">
+                <div class="routing-correlation-meta-item node-ui-fact">
                     <span>Timeout</span>
                     <strong>@TimeoutCaption</strong>
                 </div>
-                <div class="routing-correlation-meta-item">
+                <div class="routing-correlation-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
             <div class="routing-correlation-rules" aria-label="Routing correlation rules">
-                <span class="routing-correlation-contract-label">Correlation</span>
-                <span class="routing-correlation-token" title="@KeyExpressionCaption">key @KeyExpressionCaption</span>
-                <span class="routing-correlation-token" title="@SideExpressionCaption">side @SideExpressionCaption</span>
-                <span class="routing-correlation-token" title="@SideFlowCaption">@SideFlowCaption</span>
-                <span class="routing-correlation-token">@CaseCaption</span>
-                <span class="routing-correlation-token">@PendingCaption</span>
+                <span class="routing-correlation-contract-label node-ui-fact-label">Correlation</span>
+                <span class="routing-correlation-token node-ui-token" title="@KeyExpressionCaption">key @KeyExpressionCaption</span>
+                <span class="routing-correlation-token node-ui-token" title="@SideExpressionCaption">side @SideExpressionCaption</span>
+                <span class="routing-correlation-token node-ui-token" title="@SideFlowCaption">@SideFlowCaption</span>
+                <span class="routing-correlation-token node-ui-token">@CaseCaption</span>
+                <span class="routing-correlation-token node-ui-token">@PendingCaption</span>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="routing-correlation-editor" aria-label="Routing correlation settings">
-            <div class="routing-correlation-config-row" aria-label="Routing correlation input settings">
+        <div class="routing-correlation-editor node-ui-editor" aria-label="Routing correlation settings">
+            <div class="routing-correlation-config-row node-ui-form-grid" aria-label="Routing correlation input settings">
                 <MudSelect T="string"
                            Label="Input type"
                            @bind-Value="_inputType"

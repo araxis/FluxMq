@@ -23,7 +23,7 @@
             var metricReadouts = MetricReadouts;
             var readoutColumns = MqttMetricsNodeModel.NormalizeMetricCardColumns(Model.MetricCardColumns);
         }
-        <div class="metrics-summary">
+        <div class="metrics-summary node-ui-summary">
             <div class="metrics-status-line" aria-label="MQTT metrics status">
                 <div class="metrics-status-item">
                     <span>Window</span>
@@ -40,7 +40,7 @@
                  aria-label="MQTT metrics readouts">
                 @foreach (var readout in metricReadouts)
                 {
-                    <div class="metrics-readout-token @readout.CssClass" aria-label="@($"{readout.Label}: {readout.Value}")">
+                    <div class="metrics-readout-token @readout.CssClass node-ui-token" aria-label="@($"{readout.Label}: {readout.Value}")">
                         <span class="metrics-readout-label">@readout.Label</span>
                         <strong class="metrics-readout-value">@readout.Value</strong>
                     </div>
@@ -85,8 +85,8 @@
         </div>
     </Body>
     <Editor>
-        <div class="metrics-editor" aria-label="MQTT metrics settings">
-            <div class="metrics-config-row" aria-label="MQTT metrics configuration">
+        <div class="metrics-editor node-ui-editor" aria-label="MQTT metrics settings">
+            <div class="metrics-config-row node-ui-form-grid" aria-label="MQTT metrics configuration">
                 <MudNumericField T="int"
                                  Label="Input buffer"
                                  Value="@_boundedCapacity"
@@ -125,7 +125,7 @@
                     </div>
                     <strong>@SelectedReadoutCaption</strong>
                 </div>
-                <div class="metrics-readout-options">
+                <div class="metrics-readout-options node-ui-checkbox-row">
                     @foreach (var option in DisplayOptions)
                     {
                         var selected = IsDisplayMetricSelected(option.Id);

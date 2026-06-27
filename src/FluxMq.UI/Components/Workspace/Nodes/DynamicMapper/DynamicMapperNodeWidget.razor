@@ -19,54 +19,54 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="dynamic-mapper-summary">
-            <div class="dynamic-mapper-meta">
-                <div class="dynamic-mapper-meta-item input">
+        <div class="dynamic-mapper-summary node-ui-summary">
+            <div class="dynamic-mapper-meta node-ui-facts">
+                <div class="dynamic-mapper-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@_inputType">@_inputType</strong>
                 </div>
-                <div class="dynamic-mapper-meta-item output">
+                <div class="dynamic-mapper-meta-item output node-ui-fact">
                     <span>Output</span>
                     <strong title="@OutputContractCaption">@OutputContractCaption</strong>
                 </div>
-                <div class="dynamic-mapper-meta-item">
+                <div class="dynamic-mapper-meta-item node-ui-fact">
                     <span>Engine</span>
                     <strong>@EngineCaption</strong>
                 </div>
-                <div class="dynamic-mapper-meta-item">
+                <div class="dynamic-mapper-meta-item node-ui-fact">
                     <span>Mode</span>
                     <strong>@OutputContractLabel</strong>
                 </div>
             </div>
 
-            <div class="dynamic-mapper-contracts">
-                <div class="dynamic-mapper-contract" aria-label="Mapper input variables">
-                    <span class="dynamic-mapper-contract-label">Input variables</span>
+            <div class="dynamic-mapper-contracts node-ui-token-group">
+                <div class="dynamic-mapper-contract node-ui-token-row" aria-label="Mapper input variables">
+                    <span class="dynamic-mapper-contract-label node-ui-fact-label">Input variables</span>
                     @foreach (var variable in SummaryVariables)
                     {
-                        <span class="dynamic-mapper-token">@variable.Label</span>
+                        <span class="dynamic-mapper-token node-ui-token">@variable.Label</span>
                     }
                     @if (SummaryVariableOverflow > 0)
                     {
-                        <span class="dynamic-mapper-token overflow">+@SummaryVariableOverflow</span>
+                        <span class="dynamic-mapper-token overflow node-ui-token">+@SummaryVariableOverflow</span>
                     }
                 </div>
-                <div class="dynamic-mapper-contract" aria-label="Mapper output fields">
-                    <span class="dynamic-mapper-contract-label">Output fields</span>
+                <div class="dynamic-mapper-contract node-ui-token-row" aria-label="Mapper output fields">
+                    <span class="dynamic-mapper-contract-label node-ui-fact-label">Output fields</span>
                     @foreach (var field in SummaryOutputFields)
                     {
-                        <span class="dynamic-mapper-token">@field.Name</span>
+                        <span class="dynamic-mapper-token node-ui-token">@field.Name</span>
                     }
                     @if (SummaryOutputOverflow > 0)
                     {
-                        <span class="dynamic-mapper-token overflow">+@SummaryOutputOverflow</span>
+                        <span class="dynamic-mapper-token overflow node-ui-token">+@SummaryOutputOverflow</span>
                     }
                 </div>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="dynamic-mapper-editor" aria-label="Dynamic mapper settings">
+        <div class="dynamic-mapper-editor node-ui-editor" aria-label="Dynamic mapper settings">
             <div class="dynamic-mapper-control-row" aria-label="Mapper configuration">
                 <MudSelect T="string"
                            Label="Input schema"
@@ -155,7 +155,7 @@
             </div>
 
             <div class="dynamic-mapper-workspace">
-                <section class="dynamic-mapper-expression-workspace" aria-label="Mapping expression">
+                <section class="dynamic-mapper-expression-workspace node-ui-code-surface" aria-label="Mapping expression">
                     <div class="dynamic-mapper-workspace-header">
                         <div>
                             <span class="dynamic-mapper-kicker">Mapping</span>
@@ -187,7 +187,7 @@
                                     <strong>Sample JSON</strong>
                                 </div>
                                 <div class="dynamic-mapper-sample-popover-actions">
-                                    <span class="dynamic-mapper-heading-token">@_sampleSource</span>
+                                    <span class="dynamic-mapper-heading-token node-ui-token">@_sampleSource</span>
                                     <MudTooltip Text="Reload sample input">
                                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                        Size="Size.Small"

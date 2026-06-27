@@ -13,47 +13,47 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="routing-switch-summary">
-            <div class="routing-switch-meta">
-                <div class="routing-switch-meta-item input">
+        <div class="routing-switch-summary node-ui-summary">
+            <div class="routing-switch-meta node-ui-facts">
+                <div class="routing-switch-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
-                <div class="routing-switch-meta-item">
+                <div class="routing-switch-meta-item node-ui-fact">
                     <span>Routes</span>
                     <strong>@RouteCountCaption</strong>
                 </div>
-                <div class="routing-switch-meta-item">
+                <div class="routing-switch-meta-item node-ui-fact">
                     <span>Envelope</span>
                     <strong>@EnvelopeCaption</strong>
                 </div>
-                <div class="routing-switch-meta-item">
+                <div class="routing-switch-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
             <div class="routing-switch-expression" aria-label="Routing switch expression">
-                <span class="routing-switch-contract-label">Expression</span>
+                <span class="routing-switch-contract-label node-ui-fact-label">Expression</span>
                 <strong title="@ExpressionPreview">@ExpressionPreview</strong>
             </div>
 
             <div class="routing-switch-routes" aria-label="Routing switch routes">
-                <span class="routing-switch-contract-label">Route outputs</span>
+                <span class="routing-switch-contract-label node-ui-fact-label">Route outputs</span>
                 @foreach (var route in RoutePreview)
                 {
-                    <span class="routing-switch-token" title="@($"{route.Key} => {route.OutputPort}")">@route.OutputPort</span>
+                    <span class="routing-switch-token node-ui-token" title="@($"{route.Key} => {route.OutputPort}")">@route.OutputPort</span>
                 }
                 @if (RoutePreviewOverflow > 0)
                 {
-                    <span class="routing-switch-token overflow">+@RoutePreviewOverflow</span>
+                    <span class="routing-switch-token overflow node-ui-token">+@RoutePreviewOverflow</span>
                 }
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="routing-switch-editor" aria-label="Routing switch settings">
-            <div class="routing-switch-config-row">
+        <div class="routing-switch-editor node-ui-editor" aria-label="Routing switch settings">
+            <div class="routing-switch-config-row node-ui-form-grid">
                 <MudSelect T="string"
                            Label="Input type"
                            @bind-Value="_inputType"
@@ -106,7 +106,7 @@
                         <div class="routing-switch-variable-list">
                             @foreach (var variable in ExpressionVariables)
                             {
-                                <span class="routing-switch-variable-token">
+                                <span class="routing-switch-variable-token node-ui-token">
                                     <code>@variable.Name</code>
                                     <small>@variable.Type</small>
                                 </span>

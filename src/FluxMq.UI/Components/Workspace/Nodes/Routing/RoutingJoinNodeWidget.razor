@@ -13,38 +13,38 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="routing-join-summary">
-            <div class="routing-join-meta">
-                <div class="routing-join-meta-item input">
+        <div class="routing-join-summary node-ui-summary">
+            <div class="routing-join-meta node-ui-facts">
+                <div class="routing-join-meta-item input node-ui-fact">
                     <span>Left</span>
                     <strong title="@LeftInputTypeCaption">@LeftInputTypeCaption</strong>
                 </div>
-                <div class="routing-join-meta-item input">
+                <div class="routing-join-meta-item input node-ui-fact">
                     <span>Right</span>
                     <strong title="@RightInputTypeCaption">@RightInputTypeCaption</strong>
                 </div>
-                <div class="routing-join-meta-item">
+                <div class="routing-join-meta-item node-ui-fact">
                     <span>Output</span>
                     <strong>FlowJoinResult</strong>
                 </div>
-                <div class="routing-join-meta-item">
+                <div class="routing-join-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
             <div class="routing-join-rules" aria-label="Routing join rules">
-                <span class="routing-join-contract-label">Join</span>
-                <span class="routing-join-token" title="@JoinExpressionCaption">@JoinExpressionCaption</span>
-                <span class="routing-join-token">@TimeoutCaption</span>
-                <span class="routing-join-token">@PendingCaption</span>
-                <span class="routing-join-token">@CaseCaption</span>
+                <span class="routing-join-contract-label node-ui-fact-label">Join</span>
+                <span class="routing-join-token node-ui-token" title="@JoinExpressionCaption">@JoinExpressionCaption</span>
+                <span class="routing-join-token node-ui-token">@TimeoutCaption</span>
+                <span class="routing-join-token node-ui-token">@PendingCaption</span>
+                <span class="routing-join-token node-ui-token">@CaseCaption</span>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="routing-join-editor" aria-label="Routing join settings">
-            <div class="routing-join-config-row" aria-label="Routing join input contracts">
+        <div class="routing-join-editor node-ui-editor" aria-label="Routing join settings">
+            <div class="routing-join-config-row node-ui-form-grid" aria-label="Routing join input contracts">
                 <MudSelect T="string"
                            Label="Left input type"
                            @bind-Value="_leftInputType"
