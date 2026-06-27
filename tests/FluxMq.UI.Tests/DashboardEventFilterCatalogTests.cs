@@ -6483,6 +6483,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("message-filter-summary");
         markup.ShouldContain("message-filter-meta");
         markup.ShouldContain("<span>Topic scope</span>");
@@ -6520,11 +6522,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Condition expression\"");
         markup.ShouldContain("message-filter-pattern-row");
         markup.ShouldContain("aria-label=\"@($\"Topic pattern {index + 1}\")\"");
-        markup.ShouldContain("ValueChanged=\"@(v => _draftPatterns[index] = v ?? string.Empty)\"");
+        markup.ShouldContain("ValueChanged=\"@(value => SetPattern(index, value))\"");
         markup.ShouldContain("aria-label=\"Add topic pattern\"");
         markup.ShouldContain("AddPattern");
         markup.ShouldContain("aria-label=\"@($\"Remove topic pattern {index + 1}\")\"");
         markup.ShouldContain("RemovePattern(index)");
+        markup.ShouldContain("RefreshDialogAsync");
+        markup.ShouldContain("DialogRefresh.RefreshAsync(Node.NodeName)");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Add at least one topic pattern before saving.");
+        markup.ShouldNotContain("ValueChanged=\"@(v => _draftPatterns[index] = v ?? string.Empty)\"");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldNotContain("message-filter-rules-panel");
         markup.ShouldNotContain("message-filter-pattern-header");

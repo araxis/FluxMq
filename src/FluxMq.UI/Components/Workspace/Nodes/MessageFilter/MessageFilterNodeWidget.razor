@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.FilterAlt"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="message-filter-summary">
             <div class="message-filter-meta">
@@ -68,7 +70,7 @@
                                 <MudTextField T="string"
                                               aria-label="@($"Topic pattern {index + 1}")"
                                               Value="@_draftPatterns[index]"
-                                              ValueChanged="@(v => _draftPatterns[index] = v ?? string.Empty)"
+                                              ValueChanged="@(value => SetPattern(index, value))"
                                               Placeholder="sensors/#"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
@@ -165,15 +167,40 @@
         _expression = Model.Expression;
     }
 
-    private void AddPattern() => _draftPatterns.Add(string.Empty);
+    private async Task AddPattern()
+    {
+        _draftPatterns.Add(string.Empty);
+        await RefreshDialogAsync();
+    }
 
-    private void RemovePattern(int index)
+    private async Task RemovePattern(int index)
     {
         if (index >= 0 && index < _draftPatterns.Count)
         {
             _draftPatterns.RemoveAt(index);
+            await RefreshDialogAsync();
         }
     }
+
+    private async Task SetPattern(int index, string? value)
+    {
+        if (index >= 0 && index < _draftPatterns.Count)
+        {
+            _draftPatterns[index] = value ?? string.Empty;
+            await RefreshDialogAsync();
+        }
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+        => _draftPatterns.Any(static pattern => !string.IsNullOrWhiteSpace(pattern))
+            ? null
+            : "Add at least one topic pattern before saving.";
 
     private Task SaveAsync()
     {
