@@ -5955,6 +5955,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("connection-state-trigger-summary");
         markup.ShouldContain("connection-state-trigger-meta");
         markup.ShouldContain("ConnectionCaption");
@@ -5971,10 +5973,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("connection-state-trigger-editor");
         markup.ShouldContain("aria-label=\"Connection state trigger settings\"");
         markup.ShouldContain("Label=\"Broker connection\"");
-        markup.ShouldContain("@bind-Value=\"_connection\"");
+        markup.ShouldContain("Value=\"@_connection\"");
+        markup.ShouldContain("ValueChanged=\"@SetConnection\"");
         markup.ShouldContain("Label=\"Connection name\"");
         markup.ShouldContain("Class=\"connection-state-trigger-broker-field\"");
         markup.ShouldContain("Flow.SyncConnectionAndUpdateNode");
+        markup.ShouldContain("DialogRefresh.RefreshAsync(Node.NodeName)");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Select a broker connection before saving.");
+        markup.ShouldNotContain("@bind-Value=\"_connection\"");
         markup.ShouldNotContain("MqttClientStateChanged");
         markup.ShouldNotContain("connection-state-trigger-editor-surface");
         markup.ShouldNotContain("aria-label=\"Broker state source\"");
