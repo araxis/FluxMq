@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.ViewColumn"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="routing-window-summary">
             <div class="routing-window-meta">
@@ -54,7 +56,8 @@
 
                 <MudNumericField T="int"
                                  Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
+                                 Value="@_boundedCapacity"
+                                 ValueChanged="@SetBoundedCapacity"
                                  aria-label="Routing window input buffer"
                                  Min="1"
                                  Max="100000"
@@ -67,7 +70,8 @@
             <div class="routing-window-boundary-editor" aria-label="Routing window boundary settings">
                 <MudNumericField T="int"
                                  Label="Max items"
-                                 @bind-Value="_maxItems"
+                                 Value="@_maxItems"
+                                 ValueChanged="@SetMaxItems"
                                  aria-label="Routing window max items"
                                  Min="0"
                                  Max="100000"
@@ -78,7 +82,8 @@
 
                 <MudNumericField T="int"
                                  Label="Time window ms"
-                                 @bind-Value="_timeMilliseconds"
+                                 Value="@_timeMilliseconds"
+                                 ValueChanged="@SetTimeMilliseconds"
                                  aria-label="Routing window time in milliseconds"
                                  Min="0"
                                  Max="86400000"
@@ -184,5 +189,51 @@
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private async Task SetBoundedCapacity(int value)
+    {
+        _boundedCapacity = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetMaxItems(int value)
+    {
+        _maxItems = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetTimeMilliseconds(int value)
+    {
+        _timeMilliseconds = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+    {
+        if (_boundedCapacity is < 1 or > 100000)
+        {
+            return "Input buffer must be between 1 and 100000.";
+        }
+
+        if (_maxItems is < 0 or > 100000)
+        {
+            return "Max items must be between 0 and 100000.";
+        }
+
+        if (_timeMilliseconds is < 0 or > 86400000)
+        {
+            return "Time window must be between 0 and 86400000 ms.";
+        }
+
+        return _maxItems == 0 && _timeMilliseconds == 0
+            ? "Set max items or time window before saving."
+            : null;
     }
 }
