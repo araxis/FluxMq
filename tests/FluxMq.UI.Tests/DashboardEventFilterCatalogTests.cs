@@ -9476,6 +9476,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("metric-source-summary");
         markup.ShouldContain("metric-source-meta");
         markup.ShouldContain("MetricCaption");
@@ -9521,7 +9523,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Label=\"Emit latest reading on start\"");
         markup.ShouldContain("Label=\"Output buffer\"");
         markup.ShouldNotContain("Label=\"Input buffer\"");
+        markup.ShouldContain("Value=\"@_boundedCapacity\"");
+        markup.ShouldContain("ValueChanged=\"@SetBoundedCapacity\"");
         markup.ShouldContain("Class=\"metric-source-buffer-field\"");
+        markup.ShouldContain("RefreshDialogAsync");
+        markup.ShouldContain("DialogRefresh.RefreshAsync(Node.NodeName)");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Output buffer must be between 1 and 100000.");
+        markup.ShouldNotContain("ValueChanged=\"@(value => _boundedCapacity = Math.Max(1, value))\"");
         markup.ShouldNotContain("metric-source-main-grid");
         markup.ShouldNotContain("metric-source-start-panel");
         markup.ShouldNotContain("metric-source-start-option");
