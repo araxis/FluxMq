@@ -1,6 +1,7 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject LiveMqttWorkspaceService Live
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.FolderOpen"
@@ -53,7 +54,8 @@
                 {
                     <MudSelect T="string"
                                Label="Session"
-                               @bind-Value="_sessionId"
+                               Value="@_sessionId"
+                               ValueChanged="@SetSessionId"
                                aria-label="Stored session"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
@@ -82,7 +84,8 @@
                 }
                 <div class="stored-session-source-timing-option">
                     <MudCheckBox T="bool"
-                                 @bind-Value="_preserveTiming"
+                                 Value="@_preserveTiming"
+                                 ValueChanged="@SetPreserveTiming"
                                  Label="Preserve timing"
                                  aria-label="Preserve original session timing"
                                  Dense="true"
@@ -91,7 +94,8 @@
 
                 <MudNumericField T="double"
                                  Label="Playback speed"
-                                 @bind-Value="_speed"
+                                 Value="@_speed"
+                                 ValueChanged="@SetSpeed"
                                  aria-label="Stored session playback speed"
                                  Min="0.1"
                                  Max="100"
@@ -103,7 +107,8 @@
 
                 <MudNumericField T="int"
                                  Label="Output buffer"
-                                 @bind-Value="_boundedCapacity"
+                                 Value="@_boundedCapacity"
+                                 ValueChanged="@SetBoundedCapacity"
                                  aria-label="Stored session output buffer"
                                  Min="1"
                                  Max="100000"
@@ -160,10 +165,46 @@
         _boundedCapacity = SessionSourceNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity);
     }
 
+    private async Task SetSessionId(string value)
+    {
+        _sessionId = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetPreserveTiming(bool value)
+    {
+        _preserveTiming = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetSpeed(double value)
+    {
+        _speed = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetBoundedCapacity(int value)
+    {
+        _boundedCapacity = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
     private string? ValidateEditor()
-        => string.IsNullOrWhiteSpace(_sessionId)
-            ? "Select a stored session before saving."
+    {
+        if (string.IsNullOrWhiteSpace(_sessionId))
+        {
+            return "Select a stored session before saving.";
+        }
+
+        if (_preserveTiming && (_speed is < 0.1 or > 100 || !double.IsFinite(_speed)))
+        {
+            return "Playback speed must be between 0.1 and 100.";
+        }
+
+        return _boundedCapacity is < 1 or > 100000
+            ? "Output buffer must be between 1 and 100000."
             : null;
+    }
 
     private Task SaveAsync()
     {
