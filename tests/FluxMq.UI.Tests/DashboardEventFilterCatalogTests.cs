@@ -6744,6 +6744,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Inline JSON schema\"");
         markup.ShouldContain("CssClass=\"schema-monaco-editor\"");
         markup.ShouldContain("ConstructionOptions=\"@EditorConstructionOptions\"");
+        markup.ShouldContain("private StandaloneCodeEditor? _initializedEditor;");
+        markup.ShouldContain("!ReferenceEquals(_initializedEditor, _editor)");
+        markup.ShouldContain("ScrollBeyondLastLine = false");
+        markup.ShouldContain("IsNonCriticalEditorException");
         markup.ShouldNotContain("json-schema-validator-panel-title");
         markup.ShouldNotContain("json-schema-validator-config-grid");
         markup.ShouldNotContain("json-schema-validator-file-panel");
@@ -6784,10 +6788,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".json-schema-validator-config-row");
         css.ShouldNotContain(".json-schema-validator-field-label");
         css.ShouldContain(".json-schema-validator-schema-area");
-        css.ShouldContain("display: flex;");
+        css.ShouldContain("display: grid;");
         css.ShouldContain("flex: 1 1 auto;");
+        css.ShouldContain("grid-template-rows: minmax(0, 1fr);");
         css.ShouldContain("height: clamp(360px, 56vh, 620px);");
-        css.ShouldContain("min-height: 0;");
+        css.ShouldContain("min-height: 360px;");
         css.ShouldContain("overflow: hidden;");
         css.ShouldNotContain(".json-schema-validator-schema-workspace");
         css.ShouldNotContain("background: color-mix(in srgb, var(--flux-surface-2) 4%, transparent);");
@@ -6817,6 +6822,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".json-schema-validator-field-note");
         css.ShouldContain(".json-schema-validator-inline-source");
         css.ShouldContain(".json-schema-validator-inline-source ::deep(.schema-monaco-editor)");
+        css.ShouldContain(".json-schema-validator-inline-source ::deep(.schema-monaco-editor > div)");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 30px;");
         css.ShouldContain("min-height: 34px;");
         css.ShouldNotContain("height: clamp(520px, 68vh, 760px);");

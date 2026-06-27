@@ -117,6 +117,7 @@
     private string _schema = JsonSchemaValidatorNodeModel.DefaultSchema;
     private string _schemaPath = string.Empty;
     private StandaloneCodeEditor? _editor;
+    private StandaloneCodeEditor? _initializedEditor;
     private int _editorVersion;
     private bool _syncingEditor;
     private string? _loadedNodeName;
@@ -145,8 +146,9 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (_editor is not null && !ReferenceEquals(_initializedEditor, _editor))
         {
+            _initializedEditor = _editor;
             await ConfigureMonacoAsync();
             await SyncEditorAsync();
         }
@@ -181,12 +183,22 @@
         {
             AutomaticLayout = true,
             Language = "json",
+            ScrollBeyondLastLine = false,
             Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
             Value = _schema
         };
 
     private async Task ConfigureMonacoAsync()
-        => await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"JSON Schema Validator Monaco configuration failed: {exception.Message}");
+        }
+    }
 
     private async Task OnEditorContentChanged()
     {
@@ -208,7 +220,14 @@
         _syncingEditor = true;
         try
         {
-            await _editor.SetValue(_schema);
+            try
+            {
+                await _editor.SetValue(_schema);
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"JSON Schema Validator Monaco sync failed: {exception.Message}");
+            }
         }
         finally
         {
@@ -277,4 +296,7 @@
                 { DevicePlatform.macOS, ["json", "public.json"] }
             })
         };
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
 }
