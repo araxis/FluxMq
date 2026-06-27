@@ -234,8 +234,8 @@
         "workbench workbench";
     grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
-    height: min(84vh, 820px);
-    max-height: min(84vh, 820px);
+    height: calc(100vh - 112px);
+    max-height: calc(100vh - 112px);
     overflow: hidden;
     padding: 10px;
 }
@@ -255,7 +255,26 @@
 }
 
 .node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-workspace) {
+    align-self: stretch;
     grid-area: workbench;
+    height: calc(100vh - 168px);
+    max-height: calc(100vh - 168px);
+    min-height: calc(100vh - 168px);
+}
+
+.node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-workspace .dynamic-mapper-monaco-editor),
+.node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-workspace .dynamic-mapper-monaco-editor > div),
+.node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-workspace .dynamic-mapper-monaco-editor .monaco-editor),
+.node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-workspace .dynamic-mapper-monaco-editor .overflow-guard) {
+    height: 100% !important;
+    min-height: 0;
+}
+
+.node-edit-dialog-content.dynamic-mapper-dialog ::deep(:is(
+    .dynamic-mapper-input-workspace,
+    .dynamic-mapper-expression-workspace,
+    .dynamic-mapper-result-workspace)) {
+    height: 100%;
     min-height: 0;
 }
 

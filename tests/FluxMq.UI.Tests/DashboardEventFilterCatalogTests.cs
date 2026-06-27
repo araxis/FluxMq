@@ -6973,10 +6973,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 28px;");
         css.ShouldContain(".dynamic-mapper-workspace");
         css.ShouldContain("grid-template-columns: minmax(240px, 0.72fr) minmax(420px, 1.48fr) minmax(260px, 0.8fr);");
+        css.ShouldContain("grid-template-rows: minmax(0, 1fr);");
         css.ShouldNotContain(".dynamic-mapper-workspace.has-sample");
         css.ShouldNotContain("grid-template-rows: minmax(0, 1fr) minmax(128px, 0.2fr);");
         css.ShouldContain("height: 100%;");
-        css.ShouldContain("min-height: 420px;");
+        css.ShouldContain("min-height: 0;");
         css.ShouldNotContain("height: clamp(760px, 82vh, 980px);");
         css.ShouldContain("overflow: hidden;");
         css.ShouldContain(".dynamic-mapper-input-workspace");
@@ -6984,6 +6985,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dynamic-mapper-expression-workspace ::deep(.dynamic-mapper-expression-editor.dynamic-mapper-monaco-editor)");
         css.ShouldContain(".dynamic-mapper-result-workspace");
         css.ShouldContain(".dynamic-mapper-result-workspace ::deep(.dynamic-mapper-result-editor.dynamic-mapper-monaco-editor)");
+        css.ShouldContain("height: 100%;");
+        css.ShouldContain("min-height: 0;");
         css.ShouldContain(".dynamic-mapper-workspace-actions");
         css.ShouldContain(".dynamic-mapper-result-status");
         css.ShouldContain("min-height: 27px;");
@@ -10827,7 +10830,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-areas:");
         css.ShouldContain("\"identity config\"");
         css.ShouldContain("\"workbench workbench\"");
-        css.ShouldContain("height: min(84vh, 820px);");
+        css.ShouldContain("height: calc(100vh - 112px);");
+        css.ShouldContain("height: calc(100vh - 168px);");
+        css.ShouldContain("height: 100% !important;");
         css.ShouldContain("overflow-x: hidden;");
         css.ShouldContain(".node-edit-dialog-content ::deep(.mud-input-control)");
         css.ShouldContain(".node-edit-dialog-content ::deep(.mud-input-label)");
@@ -10835,6 +10840,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("color: color-mix(in srgb, var(--mud-palette-text-primary) 80%, var(--mud-palette-text-secondary));");
         css.ShouldContain(".node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-workspace)");
         css.ShouldContain(".node-edit-dialog-content.dynamic-mapper-dialog ::deep(.dynamic-mapper-control-row)");
+        css.ShouldContain("align-self: stretch;");
+        css.ShouldContain(".node-edit-dialog-content.dynamic-mapper-dialog ::deep(:is(");
+        css.ShouldContain(".dynamic-mapper-input-workspace,");
+        css.ShouldContain(".dynamic-mapper-result-workspace))");
         css.ShouldContain(".node-edit-dialog-editor ::deep(.dynamic-mapper-workspace .dynamic-mapper-monaco-editor)");
         css.ShouldContain(".node-edit-dialog-content.json-schema-validator-dialog");
         css.ShouldContain("\"schema schema\"");

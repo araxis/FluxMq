@@ -124,8 +124,9 @@
 
 .dynamic-mapper-workspace {
     grid-template-columns: minmax(240px, 0.72fr) minmax(420px, 1.48fr) minmax(260px, 0.8fr);
+    grid-template-rows: minmax(0, 1fr);
     height: 100%;
-    min-height: 420px;
+    min-height: 0;
     overflow: hidden;
     width: 100%;
 }
@@ -138,7 +139,8 @@
     border-radius: 6px;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
-    min-height: 420px;
+    height: 100%;
+    min-height: 0;
     min-width: 0;
     overflow: hidden;
     padding: 5px;
@@ -254,7 +256,8 @@
 .dynamic-mapper-expression-workspace ::deep(.dynamic-mapper-expression-editor.dynamic-mapper-monaco-editor),
 .dynamic-mapper-input-workspace ::deep(.dynamic-mapper-input-editor.dynamic-mapper-monaco-editor),
 .dynamic-mapper-result-workspace ::deep(.dynamic-mapper-result-editor.dynamic-mapper-monaco-editor) {
-    min-height: 360px;
+    height: 100%;
+    min-height: 0;
 }
 
 .dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor > div) {
