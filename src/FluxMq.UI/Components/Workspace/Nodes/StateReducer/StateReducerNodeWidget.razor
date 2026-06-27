@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Storage"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="state-reducer-summary">
             <div class="state-reducer-meta">
@@ -67,7 +69,8 @@
                               Class="state-reducer-name-field" />
                 <MudNumericField T="int"
                                  Label="Max keys"
-                                 @bind-Value="_maxKeys"
+                                 Value="@_maxKeys"
+                                 ValueChanged="@SetMaxKeys"
                                  Min="0"
                                  Max="1000000"
                                  Step="128"
@@ -76,7 +79,8 @@
                                  Class="state-reducer-max-keys-field" />
                 <MudNumericField T="int"
                                  Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
+                                 Value="@_boundedCapacity"
+                                 ValueChanged="@SetBoundedCapacity"
                                  Min="1"
                                  Max="100000"
                                  Step="64"
@@ -88,9 +92,11 @@
             <div class="state-reducer-rule-row" aria-label="State reducer rule">
                 <MudTextField T="string"
                               Label="Reducer"
-                              @bind-Value="_reducer"
+                              Value="@_reducer"
+                              ValueChanged="@SetReducer"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
+                              Immediate="true"
                               Lines="12"
                               Class="state-reducer-reducer-field"
                               Placeholder="input" />
@@ -188,6 +194,47 @@
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private async Task SetMaxKeys(int value)
+    {
+        _maxKeys = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetBoundedCapacity(int value)
+    {
+        _boundedCapacity = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetReducer(string value)
+    {
+        _reducer = value ?? string.Empty;
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+    {
+        if (string.IsNullOrWhiteSpace(_reducer))
+        {
+            return "Enter a reducer expression before saving.";
+        }
+
+        if (_boundedCapacity is < 1 or > 100000)
+        {
+            return "Input buffer must be between 1 and 100000.";
+        }
+
+        return _maxKeys is < 0 or > 1000000
+            ? "Max keys must be between 0 and 1000000."
+            : null;
     }
 
     private static string EngineOptionLabel(string engine)

@@ -6078,6 +6078,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("CategoryColor=\"@Color.Info\"");
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
@@ -6118,9 +6120,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Label=\"Expression name\"");
         markup.ShouldContain("@bind-Value=\"_expressionName\"");
         markup.ShouldContain("Label=\"Input buffer\"");
-        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Value=\"@_boundedCapacity\"");
+        markup.ShouldContain("ValueChanged=\"@SetBoundedCapacity\"");
+        markup.ShouldNotContain("@bind-Value=\"_boundedCapacity\"");
         markup.ShouldContain("Label=\"Max keys\"");
-        markup.ShouldContain("@bind-Value=\"_maxKeys\"");
+        markup.ShouldContain("Value=\"@_maxKeys\"");
+        markup.ShouldContain("ValueChanged=\"@SetMaxKeys\"");
+        markup.ShouldNotContain("@bind-Value=\"_maxKeys\"");
         markup.ShouldNotContain("state-reducer-expression-row");
         markup.ShouldNotContain("state-reducer-key-cell");
         markup.ShouldNotContain("aria-label=\"State key expression\"");
@@ -6136,7 +6142,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@bind-Value=\"_keyExpression\"");
         markup.ShouldContain("Placeholder=\"topic or blank\"");
         markup.ShouldContain("Label=\"Reducer\"");
-        markup.ShouldContain("@bind-Value=\"_reducer\"");
+        markup.ShouldContain("Value=\"@_reducer\"");
+        markup.ShouldContain("ValueChanged=\"@SetReducer\"");
+        markup.ShouldContain("Immediate=\"true\"");
+        markup.ShouldNotContain("@bind-Value=\"_reducer\"");
         markup.ShouldContain("Lines=\"4\"");
         markup.ShouldContain("Lines=\"12\"");
         markup.ShouldNotContain("state-reducer-field-note");
@@ -6145,6 +6154,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("state-reducer-reference-label");
         markup.ShouldContain("state-reducer-variable-list");
         markup.ShouldContain("ExpressionVariables");
+        markup.ShouldContain("private async Task SetMaxKeys(int value)");
+        markup.ShouldContain("private async Task SetBoundedCapacity(int value)");
+        markup.ShouldContain("private async Task SetReducer(string value)");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Enter a reducer expression before saving.");
+        markup.ShouldContain("Input buffer must be between 1 and 100000.");
+        markup.ShouldContain("Max keys must be between 0 and 1000000.");
         markup.ShouldNotContain("CategoryColor=\"@Color.Warning\"");
         markup.ShouldNotContain("<MudChip");
         markup.ShouldNotContain("<MudGrid");
