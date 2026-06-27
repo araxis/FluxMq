@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Timer"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="timer-node-summary">
             <div class="timer-node-meta">
@@ -52,7 +54,8 @@
                     <div class="timer-node-primary-row interval">
                         <MudNumericField T="int"
                                           Label="Interval ms"
-                                          @bind-Value="_intervalMilliseconds"
+                                          Value="@_intervalMilliseconds"
+                                          ValueChanged="@SetIntervalMilliseconds"
                                           Min="1"
                                           Max="86400000"
                                           Step="100"
@@ -61,7 +64,8 @@
                                           Class="timer-node-field" />
                         <MudNumericField T="int"
                                           Label="Initial delay ms"
-                                          @bind-Value="_initialDelayMilliseconds"
+                                          Value="@_initialDelayMilliseconds"
+                                          ValueChanged="@SetInitialDelayMilliseconds"
                                           Min="0"
                                           Max="86400000"
                                           Step="100"
@@ -73,7 +77,8 @@
                     <div class="timer-node-settings-row interval" aria-label="Interval timer limits">
                         <MudNumericField T="int"
                                          Label="Max ticks"
-                                         @bind-Value="_maxTicks"
+                                         Value="@_maxTicks"
+                                         ValueChanged="@SetMaxTicks"
                                          Min="0"
                                          Max="1000000"
                                          Step="1"
@@ -97,22 +102,27 @@
                     <div class="timer-node-primary-row schedule">
                         <MudTextField T="string"
                                       Label="Cron"
-                                      @bind-Value="_cron"
+                                      Value="@_cron"
+                                      ValueChanged="@SetCron"
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
+                                      Immediate="true"
                                       Class="timer-node-field" />
                         <MudTextField T="string"
                                       Label="Time zone"
-                                      @bind-Value="_timeZoneId"
+                                      Value="@_timeZoneId"
+                                      ValueChanged="@SetTimeZoneId"
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
+                                      Immediate="true"
                                       Class="timer-node-field" />
                     </div>
 
                     <div class="timer-node-settings-row schedule" aria-label="Scheduled timer limits">
                         <MudNumericField T="int"
                                          Label="Max ticks"
-                                         @bind-Value="_maxTicks"
+                                         Value="@_maxTicks"
+                                         ValueChanged="@SetMaxTicks"
                                          Min="0"
                                          Max="1000000"
                                          Step="1"
@@ -130,7 +140,8 @@
                         @InputTypeSelect()
                         <MudNumericField T="int"
                                          Label="Delay ms"
-                                         @bind-Value="_delayMilliseconds"
+                                         Value="@_delayMilliseconds"
+                                         ValueChanged="@SetDelayMilliseconds"
                                          Min="0"
                                          Max="86400000"
                                          Step="100"
@@ -151,7 +162,8 @@
                         @InputTypeSelect()
                         <MudNumericField T="int"
                                          Label="Quiet period ms"
-                                         @bind-Value="_quietPeriodMilliseconds"
+                                         Value="@_quietPeriodMilliseconds"
+                                         ValueChanged="@SetQuietPeriodMilliseconds"
                                          Min="1"
                                          Max="86400000"
                                          Step="100"
@@ -172,7 +184,8 @@
                         @InputTypeSelect()
                         <MudNumericField T="int"
                                          Label="Interval ms"
-                                         @bind-Value="_throttleIntervalMilliseconds"
+                                         Value="@_throttleIntervalMilliseconds"
+                                         ValueChanged="@SetThrottleIntervalMilliseconds"
                                          Min="1"
                                          Max="86400000"
                                          Step="100"
@@ -412,6 +425,158 @@
         return Task.CompletedTask;
     }
 
+    private async Task SetIntervalMilliseconds(int value)
+    {
+        _intervalMilliseconds = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetInitialDelayMilliseconds(int value)
+    {
+        _initialDelayMilliseconds = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetMaxTicks(int value)
+    {
+        _maxTicks = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetCron(string value)
+    {
+        _cron = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetTimeZoneId(string value)
+    {
+        _timeZoneId = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetDelayMilliseconds(int value)
+    {
+        _delayMilliseconds = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetQuietPeriodMilliseconds(int value)
+    {
+        _quietPeriodMilliseconds = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetThrottleIntervalMilliseconds(int value)
+    {
+        _throttleIntervalMilliseconds = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetBoundedCapacity(int value)
+    {
+        _boundedCapacity = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+    {
+        var nodeError = Node switch
+        {
+            TimerIntervalNodeModel => ValidateIntervalTimer(),
+            TimerScheduleNodeModel => ValidateScheduledTimer(),
+            TimerDelayNodeModel => ValidateDelayTimer(),
+            TimerDebounceNodeModel => ValidateDebounceTimer(),
+            TimerThrottleNodeModel => ValidateThrottleTimer(),
+            _ => null
+        };
+
+        return nodeError ?? ValidateBuffer();
+    }
+
+    private string? ValidateIntervalTimer()
+    {
+        if (_intervalMilliseconds <= 0)
+        {
+            return "Interval must be greater than 0 ms.";
+        }
+
+        if (_initialDelayMilliseconds < 0)
+        {
+            return "Initial delay cannot be negative.";
+        }
+
+        return _maxTicks < 0
+            ? "Max ticks cannot be negative."
+            : null;
+    }
+
+    private string? ValidateScheduledTimer()
+    {
+        if (string.IsNullOrWhiteSpace(_cron))
+        {
+            return "Enter a cron expression before saving.";
+        }
+
+        if (string.IsNullOrWhiteSpace(_timeZoneId))
+        {
+            return "Enter a time zone before saving.";
+        }
+
+        return _maxTicks < 0
+            ? "Max ticks cannot be negative."
+            : null;
+    }
+
+    private string? ValidateDelayTimer()
+    {
+        var inputTypeError = ValidateInputType();
+        if (inputTypeError is not null)
+        {
+            return inputTypeError;
+        }
+
+        return _delayMilliseconds < 0
+            ? "Delay cannot be negative."
+            : null;
+    }
+
+    private string? ValidateDebounceTimer()
+    {
+        var inputTypeError = ValidateInputType();
+        if (inputTypeError is not null)
+        {
+            return inputTypeError;
+        }
+
+        return _quietPeriodMilliseconds <= 0
+            ? "Quiet period must be greater than 0 ms."
+            : null;
+    }
+
+    private string? ValidateThrottleTimer()
+    {
+        var inputTypeError = ValidateInputType();
+        if (inputTypeError is not null)
+        {
+            return inputTypeError;
+        }
+
+        return _throttleIntervalMilliseconds <= 0
+            ? "Throttle interval must be greater than 0 ms."
+            : null;
+    }
+
+    private string? ValidateInputType()
+        => TimerDelayNodeModel.InputTypes.Contains(_inputType, StringComparer.Ordinal)
+            ? null
+            : "Choose an input type before saving.";
+
+    private string? ValidateBuffer()
+        => _boundedCapacity <= 0
+            ? "Buffer must be greater than 0."
+            : null;
+
     private static string MaxTicksText(int maxTicks)
         => maxTicks > 0 ? maxTicks.ToString() : "unlimited";
 
@@ -432,7 +597,8 @@
 
     private RenderFragment OutputBufferField() => @<MudNumericField T="int"
                                                                     Label="Output buffer"
-                                                                    @bind-Value="_boundedCapacity"
+                                                                    Value="@_boundedCapacity"
+                                                                    ValueChanged="@SetBoundedCapacity"
                                                                     Min="1"
                                                                     Max="100000"
                                                                     Step="100"
@@ -442,7 +608,8 @@
 
     private RenderFragment InputBufferField() => @<MudNumericField T="int"
                                                                    Label="Input buffer"
-                                                                   @bind-Value="_boundedCapacity"
+                                                                   Value="@_boundedCapacity"
+                                                                   ValueChanged="@SetBoundedCapacity"
                                                                    Min="1"
                                                                    Max="100000"
                                                                    Step="100"
