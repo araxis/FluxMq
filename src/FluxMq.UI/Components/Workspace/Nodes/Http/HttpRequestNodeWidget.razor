@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Public"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="http-client-summary">
             <div class="http-client-meta">
@@ -57,7 +59,8 @@
             <div class="http-client-number-grid">
                 <MudNumericField T="int"
                                  Label="Timeout ms"
-                                 @bind-Value="_defaultTimeoutMilliseconds"
+                                 Value="@_defaultTimeoutMilliseconds"
+                                 ValueChanged="@SetDefaultTimeoutMilliseconds"
                                  Min="1"
                                  Max="600000"
                                  Step="1000"
@@ -66,7 +69,8 @@
                                  Class="http-client-timeout-field" />
                 <MudNumericField T="int"
                                  Label="Max body bytes"
-                                 @bind-Value="_maxResponseBodyBytes"
+                                 Value="@_maxResponseBodyBytes"
+                                 ValueChanged="@SetMaxResponseBodyBytes"
                                  Min="1"
                                  Max="104857600"
                                  Step="1024"
@@ -75,7 +79,8 @@
                                  Class="http-client-body-limit-field" />
                 <MudNumericField T="int"
                                  Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
+                                 Value="@_boundedCapacity"
+                                 ValueChanged="@SetBoundedCapacity"
                                  Min="1"
                                  Max="100000"
                                  Step="64"
@@ -160,5 +165,46 @@
         Model.BoundedCapacity = HttpRequestNodeModel.NormalizePositiveInt(_boundedCapacity, HttpRequestNodeModel.DefaultBoundedCapacity);
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private async Task SetDefaultTimeoutMilliseconds(int value)
+    {
+        _defaultTimeoutMilliseconds = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetMaxResponseBodyBytes(int value)
+    {
+        _maxResponseBodyBytes = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetBoundedCapacity(int value)
+    {
+        _boundedCapacity = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+    {
+        if (_defaultTimeoutMilliseconds is < 1 or > 600000)
+        {
+            return "Timeout must be between 1 and 600000 ms.";
+        }
+
+        if (_maxResponseBodyBytes is < 1 or > 104857600)
+        {
+            return "Max body bytes must be between 1 and 104857600.";
+        }
+
+        return _boundedCapacity is < 1 or > 100000
+            ? "Input buffer must be between 1 and 100000."
+            : null;
     }
 }

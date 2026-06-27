@@ -8548,6 +8548,8 @@ public sealed class DashboardEventFilterCatalogTests
             "HttpRequestNodeWidget.razor.css"));
 
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
@@ -8572,11 +8574,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Label=\"Base URL\"");
         markup.ShouldContain("@bind-Value=\"_baseUrl\"");
         markup.ShouldContain("Label=\"Timeout ms\"");
-        markup.ShouldContain("@bind-Value=\"_defaultTimeoutMilliseconds\"");
+        markup.ShouldContain("Value=\"@_defaultTimeoutMilliseconds\"");
+        markup.ShouldContain("ValueChanged=\"@SetDefaultTimeoutMilliseconds\"");
+        markup.ShouldNotContain("@bind-Value=\"_defaultTimeoutMilliseconds\"");
         markup.ShouldContain("Label=\"Max body bytes\"");
-        markup.ShouldContain("@bind-Value=\"_maxResponseBodyBytes\"");
+        markup.ShouldContain("Value=\"@_maxResponseBodyBytes\"");
+        markup.ShouldContain("ValueChanged=\"@SetMaxResponseBodyBytes\"");
+        markup.ShouldNotContain("@bind-Value=\"_maxResponseBodyBytes\"");
         markup.ShouldContain("Label=\"Input buffer\"");
-        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Value=\"@_boundedCapacity\"");
+        markup.ShouldContain("ValueChanged=\"@SetBoundedCapacity\"");
+        markup.ShouldNotContain("@bind-Value=\"_boundedCapacity\"");
         markup.ShouldContain("Label=\"Follow redirects\"");
         markup.ShouldContain("@bind-Value=\"_followRedirects\"");
         markup.ShouldContain("Label=\"Non-success status emits error\"");
@@ -8585,6 +8593,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@bind-Value=\"_defaultHeadersText\"");
         markup.ShouldContain("Class=\"http-client-base-url-field\"");
         markup.ShouldContain("Class=\"http-client-buffer-field\"");
+        markup.ShouldContain("private async Task SetDefaultTimeoutMilliseconds(int value)");
+        markup.ShouldContain("private async Task SetMaxResponseBodyBytes(int value)");
+        markup.ShouldContain("private async Task SetBoundedCapacity(int value)");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Timeout must be between 1 and 600000 ms.");
+        markup.ShouldContain("Max body bytes must be between 1 and 104857600.");
+        markup.ShouldContain("Input buffer must be between 1 and 100000.");
         markup.ShouldNotContain("<Stat ");
         markup.ShouldNotContain("<MudChip");
         markup.ShouldNotContain("d-flex flex-wrap gap-1");
