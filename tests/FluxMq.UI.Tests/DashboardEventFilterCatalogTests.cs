@@ -6784,8 +6784,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".json-schema-validator-config-row");
         css.ShouldNotContain(".json-schema-validator-field-label");
         css.ShouldContain(".json-schema-validator-schema-area");
-        css.ShouldContain("grid-template-rows: minmax(0, 1fr);");
-        css.ShouldContain("height: 100%;");
+        css.ShouldContain("display: flex;");
+        css.ShouldContain("flex: 1 1 auto;");
+        css.ShouldContain("height: clamp(360px, 56vh, 620px);");
         css.ShouldContain("min-height: 0;");
         css.ShouldContain("overflow: hidden;");
         css.ShouldNotContain(".json-schema-validator-schema-workspace");
@@ -6820,7 +6821,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("min-height: 34px;");
         css.ShouldNotContain("height: clamp(520px, 68vh, 760px);");
         css.ShouldNotContain("min-height: 520px;");
-        css.ShouldContain("min-height: 360px;");
+        css.ShouldContain("height: clamp(360px, 58vh, 560px);");
         css.ShouldContain("@media (max-width: 640px)");
         css.ShouldNotContain(".json-schema-validator-schema-panel");
         css.ShouldNotContain(".json-schema-validator-source-row");
