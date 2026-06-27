@@ -9583,7 +9583,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("generated-source-editor");
         markup.ShouldContain("aria-label=\"Generated source settings\"");
         markup.ShouldContain("Label=\"Output buffer\"");
-        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Value=\"@_boundedCapacity\"");
+        markup.ShouldContain("ValueChanged=\"@SetBoundedCapacity\"");
+        markup.ShouldNotContain("@bind-Value=\"_boundedCapacity\"");
         markup.ShouldNotContain("generated-source-editor-surface");
         markup.ShouldNotContain("generated-source-message-panel");
         markup.ShouldNotContain("generated-source-panel-header");
@@ -9611,6 +9613,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("generated-source-message-fields");
         markup.ShouldContain("generated-source-topic-field");
         markup.ShouldContain("UpdateMessageTopicAsync(index, value)");
+        markup.ShouldContain("Immediate=\"true\"");
         markup.ShouldNotContain("Label=\"Topic\"");
         markup.ShouldContain("Placeholder=\"@($\"Topic {index + 1}\")\"");
         markup.ShouldContain("aria-label=\"@($\"Generated message {index + 1} topic\")\"");
@@ -9632,6 +9635,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@($\"Remove generated message {index + 1}\")\"");
         markup.ShouldContain("ValidateEditor");
         markup.ShouldContain("Add at least one generated message before saving.");
+        markup.ShouldContain("Each generated message needs a topic.");
+        markup.ShouldContain("Output buffer must be between 1 and 100000.");
+        markup.ShouldContain("private async Task SetBoundedCapacity(int value)");
         markup.ShouldNotContain("generated-source-message-list");
         markup.ShouldNotContain("generated-source-message-header");
         markup.ShouldNotContain("generated-source-table-title");
