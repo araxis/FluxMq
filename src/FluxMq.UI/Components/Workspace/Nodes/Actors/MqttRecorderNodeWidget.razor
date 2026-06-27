@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Save"
@@ -8,7 +9,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="mqtt-recorder-summary">
             <div class="mqtt-recorder-meta">
@@ -33,7 +35,8 @@
         <div class="mqtt-recorder-editor" aria-label="Recorder settings">
             <MudNumericField T="int"
                              Label="Input buffer"
-                             @bind-Value="_boundedCapacity"
+                             Value="@_boundedCapacity"
+                             ValueChanged="@SetBoundedCapacity"
                              Min="1"
                              Max="100000"
                              Step="100"
@@ -74,4 +77,21 @@
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
     }
+
+    private async Task SetBoundedCapacity(int value)
+    {
+        _boundedCapacity = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+        => _boundedCapacity is < 1 or > 100000
+            ? "Input buffer must be between 1 and 100000."
+            : null;
 }
