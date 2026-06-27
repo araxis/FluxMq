@@ -7259,11 +7259,11 @@ public sealed class DashboardEventFilterCatalogTests
             "ConditionRouterNodeWidget.razor.css"));
 
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
-        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
-        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("condition-router-summary");
         markup.ShouldContain("condition-router-meta");
         markup.ShouldContain("InputTypeCaption");
@@ -9277,6 +9277,8 @@ public sealed class DashboardEventFilterCatalogTests
             "PayloadInspectNodeWidget.razor.css"));
 
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
+        markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
+        markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryChip=\"false\"");
@@ -9302,11 +9304,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Payload inspection settings\"");
         markup.ShouldContain("payload-inspect-number-grid");
         markup.ShouldContain("Label=\"Preview bytes\"");
-        markup.ShouldContain("@bind-Value=\"_maxPreviewBytes\"");
+        markup.ShouldContain("Value=\"@_maxPreviewBytes\"");
+        markup.ShouldContain("ValueChanged=\"@SetMaxPreviewBytes\"");
+        markup.ShouldNotContain("@bind-Value=\"_maxPreviewBytes\"");
         markup.ShouldContain("Label=\"Formatted chars\"");
-        markup.ShouldContain("@bind-Value=\"_maxFormattedChars\"");
+        markup.ShouldContain("Value=\"@_maxFormattedChars\"");
+        markup.ShouldContain("ValueChanged=\"@SetMaxFormattedChars\"");
+        markup.ShouldNotContain("@bind-Value=\"_maxFormattedChars\"");
         markup.ShouldContain("Label=\"Input buffer\"");
-        markup.ShouldContain("@bind-Value=\"_boundedCapacity\"");
+        markup.ShouldContain("Value=\"@_boundedCapacity\"");
+        markup.ShouldContain("ValueChanged=\"@SetBoundedCapacity\"");
+        markup.ShouldNotContain("@bind-Value=\"_boundedCapacity\"");
         markup.ShouldContain("Label=\"Detect Base64\"");
         markup.ShouldContain("@bind-Value=\"_detectBase64\"");
         markup.ShouldContain("Label=\"Format JSON\"");
@@ -9315,6 +9323,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@bind-Value=\"_formatXml\"");
         markup.ShouldContain("Class=\"payload-inspect-preview-field\"");
         markup.ShouldContain("Class=\"payload-inspect-buffer-field\"");
+        markup.ShouldContain("private async Task SetMaxPreviewBytes(int value)");
+        markup.ShouldContain("private async Task SetMaxFormattedChars(int value)");
+        markup.ShouldContain("private async Task SetBoundedCapacity(int value)");
+        markup.ShouldContain("private string? ValidateEditor()");
+        markup.ShouldContain("Preview bytes must be between 1 and 1048576.");
+        markup.ShouldContain("Formatted chars must be between 1 and 1048576.");
+        markup.ShouldContain("Input buffer must be between 1 and 100000.");
         markup.ShouldNotContain("<Stat ");
         markup.ShouldNotContain("<MudChip");
         markup.ShouldNotContain("d-flex flex-wrap gap-1");

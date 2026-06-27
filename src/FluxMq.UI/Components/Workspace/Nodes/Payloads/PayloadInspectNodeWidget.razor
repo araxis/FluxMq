@@ -1,5 +1,6 @@
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Plagiarism"
@@ -9,7 +10,8 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
                  OnSave="@SaveAsync"
-                 OnCancel="@LoadDraft">
+                 OnCancel="@LoadDraft"
+                 EditorValidationError="@ValidateEditor">
     <Body>
         <div class="payload-inspect-summary">
             <div class="payload-inspect-meta">
@@ -54,7 +56,8 @@
             <div class="payload-inspect-number-grid">
                 <MudNumericField T="int"
                                  Label="Preview bytes"
-                                 @bind-Value="_maxPreviewBytes"
+                                 Value="@_maxPreviewBytes"
+                                 ValueChanged="@SetMaxPreviewBytes"
                                  Min="1"
                                  Max="1048576"
                                  Step="128"
@@ -63,7 +66,8 @@
                                  Class="payload-inspect-preview-field" />
                 <MudNumericField T="int"
                                  Label="Formatted chars"
-                                 @bind-Value="_maxFormattedChars"
+                                 Value="@_maxFormattedChars"
+                                 ValueChanged="@SetMaxFormattedChars"
                                  Min="1"
                                  Max="1048576"
                                  Step="512"
@@ -72,7 +76,8 @@
                                  Class="payload-inspect-formatted-field" />
                 <MudNumericField T="int"
                                  Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
+                                 Value="@_boundedCapacity"
+                                 ValueChanged="@SetBoundedCapacity"
                                  Min="1"
                                  Max="100000"
                                  Step="64"
@@ -149,5 +154,46 @@
         Model.BoundedCapacity = PayloadInspectNodeModel.NormalizePositiveInt(_boundedCapacity, PayloadInspectNodeModel.DefaultBoundedCapacity);
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
         return Task.CompletedTask;
+    }
+
+    private async Task SetMaxPreviewBytes(int value)
+    {
+        _maxPreviewBytes = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetMaxFormattedChars(int value)
+    {
+        _maxFormattedChars = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetBoundedCapacity(int value)
+    {
+        _boundedCapacity = value;
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private string? ValidateEditor()
+    {
+        if (_maxPreviewBytes is < 1 or > 1048576)
+        {
+            return "Preview bytes must be between 1 and 1048576.";
+        }
+
+        if (_maxFormattedChars is < 1 or > 1048576)
+        {
+            return "Formatted chars must be between 1 and 1048576.";
+        }
+
+        return _boundedCapacity is < 1 or > 100000
+            ? "Input buffer must be between 1 and 100000."
+            : null;
     }
 }
