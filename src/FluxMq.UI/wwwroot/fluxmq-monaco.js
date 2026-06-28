@@ -198,8 +198,21 @@ window.fluxmqMonaco = (function () {
         monaco.editor.setTheme(isDark ? "fluxmq-dark" : "fluxmq-light");
     }
 
+    function measureElement(element) {
+        if (!element) {
+            return { Width: 0, Height: 0 };
+        }
+
+        const rect = element.getBoundingClientRect();
+        return {
+            Width: Math.max(0, Math.floor(rect.width || element.clientWidth || 0)),
+            Height: Math.max(0, Math.floor(rect.height || element.clientHeight || 0))
+        };
+    }
+
     return {
         ensureConfigured: ensureConfigured,
+        measureElement: measureElement,
         setTheme: setTheme
     };
 })();

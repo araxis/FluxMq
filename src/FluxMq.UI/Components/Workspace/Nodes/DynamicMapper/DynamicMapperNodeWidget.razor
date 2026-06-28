@@ -173,12 +173,14 @@
                         </div>
                     </div>
 
-                    <StandaloneCodeEditor @key="_inputEditorVersion"
-                                          @ref="_inputEditor"
-                                          Id="@InputEditorId"
-                                          CssClass="dynamic-mapper-monaco-editor dynamic-mapper-input-editor"
-                                          ConstructionOptions="@InputEditorConstructionOptions"
-                                          OnDidChangeModelContent="@OnInputEditorContentChanged" />
+                    <div class="dynamic-mapper-editor-host" @ref="_inputEditorHost">
+                        <StandaloneCodeEditor @key="_inputEditorVersion"
+                                              @ref="_inputEditor"
+                                              Id="@InputEditorId"
+                                              CssClass="dynamic-mapper-monaco-editor dynamic-mapper-input-editor"
+                                              ConstructionOptions="@InputEditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnInputEditorContentChanged" />
+                    </div>
 
                     @if (!string.IsNullOrWhiteSpace(_inputJsonError))
                     {
@@ -197,12 +199,14 @@
                         </div>
                     </div>
 
-                    <StandaloneCodeEditor @key="_editorVersion"
-                                          @ref="_editor"
-                                          Id="@EditorId"
-                                          CssClass="dynamic-mapper-monaco-editor dynamic-mapper-expression-editor"
-                                          ConstructionOptions="@EditorConstructionOptions"
-                                          OnDidChangeModelContent="@OnEditorContentChanged" />
+                    <div class="dynamic-mapper-editor-host" @ref="_expressionEditorHost">
+                        <StandaloneCodeEditor @key="_editorVersion"
+                                              @ref="_editor"
+                                              Id="@EditorId"
+                                              CssClass="dynamic-mapper-monaco-editor dynamic-mapper-expression-editor"
+                                              ConstructionOptions="@EditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnEditorContentChanged" />
+                    </div>
                 </section>
 
                 <section class="dynamic-mapper-result-workspace node-ui-code-surface" aria-label="Mapping result">
@@ -216,11 +220,13 @@
                         </div>
                     </div>
 
-                    <StandaloneCodeEditor @key="_resultEditorVersion"
-                                          @ref="_resultEditor"
-                                          Id="@ResultEditorId"
-                                          CssClass="dynamic-mapper-monaco-editor dynamic-mapper-result-editor"
-                                          ConstructionOptions="@ResultEditorConstructionOptions" />
+                    <div class="dynamic-mapper-editor-host" @ref="_resultEditorHost">
+                        <StandaloneCodeEditor @key="_resultEditorVersion"
+                                              @ref="_resultEditor"
+                                              Id="@ResultEditorId"
+                                              CssClass="dynamic-mapper-monaco-editor dynamic-mapper-result-editor"
+                                              ConstructionOptions="@ResultEditorConstructionOptions" />
+                    </div>
                 </section>
             </div>
         </div>
@@ -244,6 +250,9 @@
     private StandaloneCodeEditor? _initializedEditor;
     private StandaloneCodeEditor? _initializedInputEditor;
     private StandaloneCodeEditor? _initializedResultEditor;
+    private ElementReference _inputEditorHost;
+    private ElementReference _expressionEditorHost;
+    private ElementReference _resultEditorHost;
     private int _editorVersion;
     private int _inputEditorVersion;
     private int _resultEditorVersion;
@@ -358,6 +367,11 @@
         if (syncResult)
         {
             await SyncResultEditorAsync();
+        }
+
+        if (syncExpression || syncInput || syncResult)
+        {
+            await LayoutEditorsAfterRenderAsync();
         }
     }
 
@@ -683,6 +697,7 @@
         await InvokeAsync(StateHasChanged);
         await SyncResultEditorAsync();
         await DialogRefresh.RefreshAsync(Node.NodeName);
+        await LayoutEditorsAfterRenderAsync();
     }
 
     private async Task SyncEditorAsync()
@@ -749,6 +764,42 @@
         catch (Exception exception) when (IsNonCriticalEditorException(exception))
         {
             Console.Error.WriteLine($"Dynamic Mapper result editor sync failed: {exception.Message}");
+        }
+    }
+
+    private async Task LayoutEditorsAfterRenderAsync()
+    {
+        await Task.Yield();
+        await LayoutEditorsAsync();
+        await Task.Delay(50);
+        await LayoutEditorsAsync();
+    }
+
+    private async Task LayoutEditorsAsync()
+    {
+        await LayoutEditorAsync(_inputEditor, _inputEditorHost);
+        await LayoutEditorAsync(_editor, _expressionEditorHost);
+        await LayoutEditorAsync(_resultEditor, _resultEditorHost);
+    }
+
+    private async Task LayoutEditorAsync(StandaloneCodeEditor? editor, ElementReference host)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var size = await JsRuntime.InvokeAsync<EditorHostSize>("fluxmqMonaco.measureElement", host);
+            if (size is not null && size.Width > 0 && size.Height > 0)
+            {
+                await editor.Layout(new Dimension { Width = size.Width, Height = size.Height }, null);
+            }
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Dynamic Mapper editor layout failed: {exception.Message}");
         }
     }
 
@@ -826,5 +877,11 @@
     {
         WriteIndented = true
     };
+
+    private sealed class EditorHostSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
 
 }

@@ -101,6 +101,14 @@
     min-width: 0;
 }
 
+.dynamic-mapper-editor {
+    grid-template-rows: auto minmax(0, 1fr);
+    height: calc(100vh - 168px);
+    max-height: calc(100vh - 168px);
+    min-height: calc(100vh - 168px);
+    overflow: hidden;
+}
+
 .dynamic-mapper-control-row {
     align-items: center;
     display: grid;
@@ -240,6 +248,16 @@
     width: 1.5rem;
 }
 
+.dynamic-mapper-editor-host {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
 .dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor) {
     background: var(--flux-surface);
     border: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
@@ -302,6 +320,13 @@
 }
 
 @media (max-width: 960px) {
+    .dynamic-mapper-editor {
+        height: auto;
+        max-height: none;
+        min-height: 0;
+        overflow: visible;
+    }
+
     .dynamic-mapper-control-row {
         grid-template-columns: minmax(0, 1fr);
     }
