@@ -1,5 +1,8 @@
+@implements IDisposable
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject AppThemeService ThemeService
+@inject IJSRuntime JsRuntime
 @inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
@@ -51,7 +54,8 @@
             <div class="state-reducer-config-row node-ui-form-grid" aria-label="State reducer configuration">
                 <MudSelect T="string"
                            Label="Engine"
-                           @bind-Value="_engine"
+                           Value="@_engine"
+                           ValueChanged="@SetEngine"
                            Variant="Variant.Outlined"
                            Margin="Margin.Dense"
                            Dense="true"
@@ -90,16 +94,23 @@
             </div>
 
             <div class="state-reducer-rule-row" aria-label="State reducer rule">
-                <MudTextField T="string"
-                              Label="Reducer"
-                              Value="@_reducer"
-                              ValueChanged="@SetReducer"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Immediate="true"
-                              Lines="12"
-                              Class="state-reducer-reducer-field"
-                              Placeholder="input" />
+                <section class="state-reducer-expression-workspace node-ui-code-surface" aria-label="State reducer expression">
+                    <div class="state-reducer-workspace-header">
+                        <div>
+                            <span class="state-reducer-kicker">Reducer</span>
+                            <strong>@EngineCaption expression</strong>
+                        </div>
+                    </div>
+
+                    <div class="state-reducer-editor-host" @ref="_reducerEditorHost">
+                        <StandaloneCodeEditor @key="_editorVersion"
+                                              @ref="_editor"
+                                              Id="@EditorId"
+                                              CssClass="state-reducer-monaco-editor"
+                                              ConstructionOptions="@EditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnReducerContentChanged" />
+                    </div>
+                </section>
 
                 <div class="state-reducer-rule-sidecar">
                     <MudTextField T="string"
@@ -137,9 +148,15 @@
     private string _expressionName = string.Empty;
     private int _boundedCapacity = StateReducerNodeModel.DefaultBoundedCapacity;
     private int _maxKeys = StateReducerNodeModel.DefaultMaxKeys;
+    private StandaloneCodeEditor? _editor;
+    private StandaloneCodeEditor? _initializedEditor;
+    private ElementReference _reducerEditorHost;
+    private int _editorVersion;
+    private bool _syncingEditor;
     private string? _loadedNodeName;
     private FlowDiagramNodeModel? _loadedNode;
 
+    private string EditorId => $"state-reducer-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private string EngineCaption => EngineOptionLabel(StateReducerNodeModel.NormalizeEngine(Model.Engine));
     private string KeyCaption => string.IsNullOrWhiteSpace(Model.KeyExpression) ? "single state" : Model.KeyExpression.Trim();
     private string MaxKeysCaption => StateReducerNodeModel.NormalizeMaxKeys(Model.MaxKeys) == 0
@@ -161,6 +178,11 @@
         "StateReducerOperation"
     ];
 
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
     protected override void OnParametersSet()
     {
         if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
@@ -168,6 +190,20 @@
             LoadDraft();
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_editor is not null && !ReferenceEquals(_initializedEditor, _editor))
+        {
+            _initializedEditor = _editor;
+            await ConfigureMonacoAsync();
+            await SyncEditorAsync();
+            await LayoutEditorAfterRenderAsync();
+        }
+    }
+
+    public void Dispose()
+        => ThemeService.Changed -= OnThemeChanged;
 
     private void LoadDraft()
     {
@@ -179,10 +215,55 @@
         _expressionName = Model.ExpressionName;
         _boundedCapacity = StateReducerNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity);
         _maxKeys = StateReducerNodeModel.NormalizeMaxKeys(Model.MaxKeys);
+        _editorVersion++;
     }
 
-    private Task SaveAsync()
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureMonacoAsync);
+
+    private async Task SetEngine(string value)
     {
+        var normalized = StateReducerNodeModel.NormalizeEngine(value);
+        if (string.Equals(_engine, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _engine = normalized;
+        _editorVersion++;
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = string.Equals(_engine, "jsonata", StringComparison.OrdinalIgnoreCase) ? "jsonata" : "csharp",
+            ScrollBeyondLastLine = false,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _reducer
+        };
+
+    private async Task ConfigureMonacoAsync()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"State Reducer Monaco configuration failed: {exception.Message}");
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editor is not null)
+        {
+            _reducer = await _editor.GetValue();
+        }
+
         Model.Engine = StateReducerNodeModel.NormalizeEngine(_engine);
         Model.KeyExpression = _keyExpression.Trim();
         Model.Reducer = string.IsNullOrWhiteSpace(_reducer)
@@ -193,7 +274,6 @@
         Model.MaxKeys = StateReducerNodeModel.NormalizeMaxKeys(_maxKeys);
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
-        return Task.CompletedTask;
     }
 
     private async Task SetMaxKeys(int value)
@@ -208,9 +288,14 @@
         await RefreshDialogAsync();
     }
 
-    private async Task SetReducer(string value)
+    private async Task OnReducerContentChanged()
     {
-        _reducer = value ?? string.Empty;
+        if (_syncingEditor || _editor is null)
+        {
+            return;
+        }
+
+        _reducer = await _editor.GetValue();
         await RefreshDialogAsync();
     }
 
@@ -218,6 +303,58 @@
     {
         await InvokeAsync(StateHasChanged);
         await DialogRefresh.RefreshAsync(Node.NodeName);
+        await LayoutEditorAfterRenderAsync();
+    }
+
+    private async Task SyncEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _syncingEditor = true;
+        try
+        {
+            await _editor.SetValue(_reducer);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"State Reducer Monaco sync failed: {exception.Message}");
+        }
+        finally
+        {
+            _syncingEditor = false;
+        }
+    }
+
+    private async Task LayoutEditorAfterRenderAsync()
+    {
+        await Task.Yield();
+        await LayoutEditorAsync();
+        await Task.Delay(50);
+        await LayoutEditorAsync();
+    }
+
+    private async Task LayoutEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var size = await JsRuntime.InvokeAsync<EditorHostSize>("fluxmqMonaco.measureElement", _reducerEditorHost);
+            if (size is not null && size.Width > 0 && size.Height > 0)
+            {
+                await _editor.Layout(new Dimension { Width = size.Width, Height = size.Height }, null);
+            }
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"State Reducer editor layout failed: {exception.Message}");
+        }
     }
 
     private string? ValidateEditor()
@@ -241,4 +378,13 @@
         => string.Equals(engine, "jsonata", StringComparison.Ordinal)
             ? "JSONata"
             : "Dynamic Expresso";
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
+
+    private sealed class EditorHostSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
 }

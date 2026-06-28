@@ -126,8 +126,69 @@
     display: grid;
     gap: 7px;
     grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.5fr);
+    height: clamp(420px, 58vh, 680px);
     min-width: 0;
     padding-top: 7px;
+}
+
+.state-reducer-expression-workspace {
+    background: color-mix(in srgb, var(--flux-surface-2) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 24%, transparent);
+    border-radius: 6px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 5px;
+}
+
+.state-reducer-workspace-header {
+    align-items: center;
+    display: grid;
+    gap: 5px;
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: 4px;
+    min-width: 0;
+}
+
+.state-reducer-workspace-header > div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.state-reducer-kicker {
+    color: color-mix(in srgb, var(--mud-palette-info) 74%, var(--mud-palette-text-secondary));
+    font-size: 0.54rem;
+    font-weight: 820;
+    letter-spacing: 0;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.state-reducer-workspace-header strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 72%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
+    font-size: 0.8rem;
+    font-weight: 780;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.1;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.state-reducer-editor-host {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
 }
 
 .state-reducer-rule-sidecar {
@@ -189,8 +250,25 @@
     line-height: 1.36;
 }
 
-.state-reducer-editor ::deep(.state-reducer-reducer-field textarea.mud-input-root) {
-    min-height: 268px;
+.state-reducer-expression-workspace ::deep(.state-reducer-monaco-editor) {
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: block;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.state-reducer-expression-workspace ::deep(.state-reducer-monaco-editor > div),
+.state-reducer-expression-workspace ::deep(.state-reducer-monaco-editor .monaco-editor),
+.state-reducer-expression-workspace ::deep(.state-reducer-monaco-editor .overflow-guard) {
+    height: 100% !important;
+    min-height: 0;
+    min-width: 0;
 }
 
 .state-reducer-editor ::deep(.state-reducer-key-field textarea.mud-input-root) {
@@ -201,8 +279,7 @@
 .state-reducer-name-field,
 .state-reducer-buffer-field,
 .state-reducer-max-keys-field,
-.state-reducer-key-field,
-.state-reducer-reducer-field {
+.state-reducer-key-field {
     min-width: 0;
 }
 
@@ -211,6 +288,14 @@
     .state-reducer-config-row,
     .state-reducer-rule-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .state-reducer-rule-row {
+        height: auto;
+    }
+
+    .state-reducer-expression-workspace {
+        min-height: 360px;
     }
 
     .state-reducer-contract {
