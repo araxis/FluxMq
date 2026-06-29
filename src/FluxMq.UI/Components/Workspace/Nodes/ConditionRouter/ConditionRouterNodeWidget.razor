@@ -1,11 +1,14 @@
+@implements IDisposable
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject AppThemeService ThemeService
+@inject IJSRuntime JsRuntime
 @inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.CallSplit"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Medium"
+                 EditDialogMaxWidth="MaxWidth.Large"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
@@ -49,46 +52,53 @@
     </Body>
     <Editor>
         <div class="condition-router-editor node-ui-editor" aria-label="Condition router settings">
-            <div class="condition-router-config-row node-ui-form-grid">
-                <MudSelect T="string"
-                           Value="@_inputType"
-                           ValueChanged="@SetInputType"
-                           Label="Input type"
-                           aria-label="Condition input type"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="condition-router-input-field">
-                    @foreach (var inputType in ConditionRouterNodeModel.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@InputTypeLabel(inputType)</MudSelectItem>
-                    }
-                </MudSelect>
-            </div>
+            <div class="condition-router-rule-row" aria-label="Condition router rule">
+                <section class="condition-router-condition-workspace node-ui-code-surface" aria-label="Condition expression">
+                    <div class="condition-router-workspace-header">
+                        <div>
+                            <span class="condition-router-kicker">Condition</span>
+                            <strong>Route condition</strong>
+                        </div>
+                    </div>
 
-            <div class="condition-router-rule-grid" aria-label="Condition router rule">
-                <MudTextField T="string"
-                              Value="@_expression"
-                              ValueChanged="@SetExpression"
-                              Label="Route condition"
-                              aria-label="Condition expression"
-                              Variant="Variant.Outlined"
-                              Immediate="true"
-                              Lines="8"
-                              Class="condition-router-expression-field"
-                              Placeholder="@ExpressionPlaceholder" />
+                    <div class="condition-router-editor-host" @ref="_expressionEditorHost">
+                        <StandaloneCodeEditor @key="_editorVersion"
+                                              @ref="_editor"
+                                              Id="@EditorId"
+                                              CssClass="condition-router-code-editor"
+                                              ConstructionOptions="@EditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnExpressionContentChanged" />
+                    </div>
+                </section>
 
-                <div class="condition-router-variable-reference" aria-label="Available condition variables">
-                    <span class="condition-router-variable-label">Variables</span>
-                    <span class="condition-router-variable-list">
-                        @foreach (var variable in Variables)
+                <div class="condition-router-sidecar">
+                    <MudSelect T="string"
+                               Value="@_inputType"
+                               ValueChanged="@SetInputType"
+                               Label="Input type"
+                               aria-label="Condition input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="condition-router-input-field">
+                        @foreach (var inputType in ConditionRouterNodeModel.InputTypes)
                         {
-                            <span class="condition-router-variable-token node-ui-token" title="@($"{variable.Type}: {variable.Example}")">
-                                <code>@variable.Name</code>
-                                <small>@variable.Type</small>
-                            </span>
+                            <MudSelectItem Value="@inputType">@InputTypeLabel(inputType)</MudSelectItem>
                         }
-                    </span>
+                    </MudSelect>
+
+                    <div class="condition-router-variable-reference" aria-label="Available condition variables">
+                        <span class="condition-router-variable-label">Variables</span>
+                        <span class="condition-router-variable-list">
+                            @foreach (var variable in Variables)
+                            {
+                                <span class="condition-router-variable-token node-ui-token" title="@($"{variable.Type}: {variable.Example}")">
+                                    <code>@variable.Name</code>
+                                    <small>@variable.Type</small>
+                                </span>
+                            }
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -102,9 +112,15 @@
 
     private string _expression = string.Empty;
     private string _inputType = "MqttEnvelope";
+    private StandaloneCodeEditor? _editor;
+    private StandaloneCodeEditor? _initializedEditor;
+    private ElementReference _expressionEditorHost;
+    private int _editorVersion;
+    private bool _syncingEditor;
     private string? _loadedNodeName;
     private FlowDiagramNodeModel? _loadedNode;
     private bool IsMetricInput => string.Equals(_inputType, "NumberMetricReading", StringComparison.Ordinal);
+    private string EditorId => $"condition-router-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private string InputTypeCaption => InputTypeLabel(ConditionRouterNodeModel.NormalizeInputType(Model.InputType));
     private string ExpressionPreview => string.IsNullOrWhiteSpace(Model.Expression)
         ? ConditionRouterNodeModel.DefaultExpression(Model.InputType)
@@ -112,7 +128,6 @@
     private IReadOnlyList<ConditionVariable> Variables => IsMetricInput ? MetricVariables : MqttVariables;
     private IReadOnlyList<ConditionVariable> SummaryVariables => Variables.Take(MaxSummaryVariables).ToArray();
     private int VariableOverflow => Math.Max(0, Variables.Count - MaxSummaryVariables);
-    private string ExpressionPlaceholder => IsMetricInput ? "value > 10" : "topic.StartsWith(\"sensors/\") && qos >= 1";
     private const int MaxSummaryVariables = 4;
 
     private static readonly IReadOnlyList<ConditionVariable> MqttVariables =
@@ -132,6 +147,11 @@
         new("reading", "FluxMetricReading<double>", "reading.Value > 10")
     ];
 
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
     protected override void OnParametersSet()
     {
         if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
@@ -139,6 +159,20 @@
             LoadDraft();
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_editor is not null && !ReferenceEquals(_initializedEditor, _editor))
+        {
+            _initializedEditor = _editor;
+            await ConfigureCodeEditorAsync();
+            await SyncEditorAsync();
+            await LayoutEditorAfterRenderAsync();
+        }
+    }
+
+    public void Dispose()
+        => ThemeService.Changed -= OnThemeChanged;
 
     private void LoadDraft()
     {
@@ -148,14 +182,51 @@
         _expression = string.IsNullOrWhiteSpace(Model.Expression)
             ? ConditionRouterNodeModel.DefaultExpression(_inputType)
             : Model.Expression;
+        _editorVersion++;
     }
 
-    private Task SaveAsync()
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureCodeEditorAsync);
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "csharp",
+            ScrollBeyondLastLine = false,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _expression
+        };
+
+    private async Task ConfigureCodeEditorAsync()
     {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Condition Router code editor configuration failed: {exception.Message}");
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editor is not null)
+        {
+            try
+            {
+                _expression = await _editor.GetValue();
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Condition Router code editor read failed: {exception.Message}");
+            }
+        }
+
         Model.InputType = ConditionRouterNodeModel.NormalizeInputType(_inputType);
         Model.Expression = _expression.Trim();
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
-        return Task.CompletedTask;
     }
 
     private async Task SetInputType(string value)
@@ -165,15 +236,79 @@
         {
             _inputType = normalized;
             _expression = ConditionRouterNodeModel.DefaultExpression(_inputType);
+            await SyncEditorAsync();
         }
 
-        await DialogRefresh.RefreshAsync(Node.NodeName);
+        await RefreshDialogAsync();
     }
 
-    private async Task SetExpression(string value)
+    private async Task OnExpressionContentChanged()
     {
-        _expression = value ?? string.Empty;
+        if (_syncingEditor || _editor is null)
+        {
+            return;
+        }
+
+        _expression = await _editor.GetValue();
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
         await DialogRefresh.RefreshAsync(Node.NodeName);
+        await LayoutEditorAfterRenderAsync();
+    }
+
+    private async Task SyncEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _syncingEditor = true;
+        try
+        {
+            await _editor.SetValue(_expression);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Condition Router code editor sync failed: {exception.Message}");
+        }
+        finally
+        {
+            _syncingEditor = false;
+        }
+    }
+
+    private async Task LayoutEditorAfterRenderAsync()
+    {
+        await Task.Yield();
+        await LayoutEditorAsync();
+        await Task.Delay(50);
+        await LayoutEditorAsync();
+    }
+
+    private async Task LayoutEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var size = await JsRuntime.InvokeAsync<EditorHostSize>("fluxmqMonaco.measureElement", _expressionEditorHost);
+            if (size is not null && size.Width > 0 && size.Height > 0)
+            {
+                await _editor.Layout(new Dimension { Width = size.Width, Height = size.Height }, null);
+            }
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Condition Router editor layout failed: {exception.Message}");
+        }
     }
 
     private string? ValidateEditor()
@@ -185,6 +320,15 @@
         => string.Equals(inputType, "NumberMetricReading", StringComparison.Ordinal)
             ? "Number metric"
             : "MQTT message";
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
+
+    private sealed class EditorHostSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
 
     private readonly record struct ConditionVariable(string Name, string Type, string Example);
 }

@@ -4373,6 +4373,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `884f386 Polish state reducer editor`
   - `9a3958e Polish assertion editor`
   - `Polish message filter editor`
+  - `Polish condition router editor`
 - Dynamic Mapper result:
   - Rebuilt the edit dialog around three stable columns: sample input, mapping expression, and result.
   - Made the expression editor the dominant full-height workspace.
@@ -4400,6 +4401,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MessageFilterNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop visual note: a temporary `flow.filter` project opened correctly and confirmed the compact node face; this session could not drive the WebView settings button reliably enough to complete the edit-dialog manual path.
+- Condition Router result:
+  - Replaced the route-condition multiline text area with the same measured full-height code-editor workspace.
+  - Moved input type selection and variable reference into a compact right sidecar.
+  - Kept input-type normalization, type-change default expression reset, blank-condition validation, branch ports, and saved configuration shape unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ConditionRouterNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
 - Current design rules learned from visual review:
   - View mode must show useful operational facts, not decorative contract dumps.
   - Edit mode must use one clean flat form/workspace surface, not nested panels.
@@ -4408,5 +4416,5 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Dialog footers should sit in a consistent padded full-width footer panel.
   - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
 - Next implementation order:
-  1. Continue complex editor nodes: Condition Router, then any remaining schema/assertion/reducer edge cases.
+  1. Review any remaining schema/assertion/reducer edge cases from the complex editor group.
   2. Normalize source/trigger, routing, actor/sink, metric, and generic nodes only after the complex editors have the stable shared pattern.

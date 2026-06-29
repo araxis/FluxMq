@@ -106,17 +106,84 @@
     min-width: 0;
 }
 
-.condition-router-config-row {
+.condition-router-rule-row {
+    align-items: stretch;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.5fr);
+    height: clamp(420px, 58vh, 680px);
+    min-width: 0;
+    padding-top: 7px;
+}
+
+.condition-router-condition-workspace {
+    background: color-mix(in srgb, var(--flux-surface-2) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 24%, transparent);
+    border-radius: 6px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 5px;
+}
+
+.condition-router-workspace-header {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 2px 3px 5px;
+}
+
+.condition-router-workspace-header > div {
+    display: grid;
+    gap: 2px;
     min-width: 0;
 }
 
-.condition-router-rule-grid {
-    align-items: start;
+.condition-router-kicker {
+    color: var(--flux-text-muted);
+    font-size: 0.54rem;
+    font-weight: 760;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+}
+
+.condition-router-workspace-header strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
+    font-size: 0.8rem;
+    font-weight: 780;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.1;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.condition-router-editor-host {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.condition-router-sidecar {
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.42fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
     min-width: 0;
 }
 
@@ -132,11 +199,13 @@
 
 .condition-router-variable-reference {
     align-content: start;
-    border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
-    gap: 4px;
+    gap: 6px;
+    min-height: 0;
     min-width: 0;
-    padding-left: 7px;
+    overflow: hidden;
+    padding: 7px 2px 0;
 }
 
 .condition-router-variable-label {
@@ -148,7 +217,9 @@
     display: grid;
     gap: 4px;
     grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
     min-width: 0;
+    overflow: auto;
 }
 
 .condition-router-variable-token {
@@ -202,31 +273,43 @@
     font-size: 0.72rem;
 }
 
-.condition-router-editor ::deep(.condition-router-expression-field textarea.mud-input-root) {
-    min-height: 168px;
+.condition-router-condition-workspace ::deep(.condition-router-code-editor) {
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: block;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
 }
 
-.condition-router-input-field,
-.condition-router-expression-field {
+.condition-router-condition-workspace ::deep(.condition-router-code-editor > div),
+.condition-router-condition-workspace ::deep(.condition-router-code-editor .monaco-editor),
+.condition-router-condition-workspace ::deep(.condition-router-code-editor .overflow-guard) {
+    height: 100% !important;
+    min-height: 0;
     min-width: 0;
 }
 
-@media (max-width: 720px) {
+.condition-router-input-field {
+    min-width: 0;
+}
+
+@media (max-width: 760px) {
     .condition-router-meta,
-    .condition-router-config-row,
-    .condition-router-rule-grid {
+    .condition-router-rule-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .condition-router-variable-reference {
-        border-left: 0;
-        border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
-        padding-left: 0;
-        padding-top: 7px;
+    .condition-router-rule-row {
+        height: auto;
     }
 
-    .condition-router-variable-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .condition-router-condition-workspace {
+        min-height: 360px;
     }
 
     .condition-router-variables {
