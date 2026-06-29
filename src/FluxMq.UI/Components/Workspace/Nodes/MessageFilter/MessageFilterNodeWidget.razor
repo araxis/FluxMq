@@ -1,5 +1,8 @@
+@implements IDisposable
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject AppThemeService ThemeService
+@inject IJSRuntime JsRuntime
 @inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
@@ -48,72 +51,79 @@
     </Body>
     <Editor>
         <div class="message-filter-editor node-ui-editor" aria-label="Flow filter settings">
-            <div class="message-filter-editor-grid node-ui-form-grid" aria-label="Filter rules">
-                <section class="message-filter-scope-editor" aria-label="Topic pattern filters">
-                    <div class="message-filter-section-bar">
-                        <span>Topic scope</span>
-                        <MudTooltip Text="Add pattern">
-                            <MudIconButton Size="Size.Small"
-                                           Icon="@Icons.Material.Filled.Add"
-                                           Color="Color.Secondary"
-                                           aria-label="Add topic pattern"
-                                           Class="message-filter-add"
-                                           OnClick="@AddPattern" />
-                        </MudTooltip>
+            <div class="message-filter-rule-row" aria-label="Filter rules">
+                <section class="message-filter-condition-workspace node-ui-code-surface" aria-label="Condition expression">
+                    <div class="message-filter-workspace-header">
+                        <div>
+                            <span class="message-filter-kicker">Condition</span>
+                            <strong>Optional expression</strong>
+                        </div>
                     </div>
 
-                    <div class="message-filter-pattern-list">
-                        @for (var i = 0; i < _draftPatterns.Count; i++)
-                        {
-                            var index = i;
-                            <div class="message-filter-pattern-row">
-                                <MudTextField T="string"
-                                              aria-label="@($"Topic pattern {index + 1}")"
-                                              Value="@_draftPatterns[index]"
-                                              ValueChanged="@(value => SetPattern(index, value))"
-                                              Placeholder="sensors/#"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Class="message-filter-pattern-field" />
-                                <MudTooltip Text="Remove pattern">
-                                    <MudIconButton Size="Size.Small"
-                                                   Icon="@Icons.Material.Filled.Close"
-                                                   aria-label="@($"Remove topic pattern {index + 1}")"
-                                                   Class="message-filter-remove"
-                                                   OnClick="@(() => RemovePattern(index))" />
-                                </MudTooltip>
-                            </div>
-                        }
-
-                        @if (_draftPatterns.Count == 0)
-                        {
-                            <div class="message-filter-empty" role="status">No topic patterns</div>
-                        }
+                    <div class="message-filter-editor-host" @ref="_expressionEditorHost">
+                        <StandaloneCodeEditor @key="_editorVersion"
+                                              @ref="_editor"
+                                              Id="@EditorId"
+                                              CssClass="message-filter-code-editor"
+                                              ConstructionOptions="@EditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnExpressionContentChanged" />
                     </div>
                 </section>
 
-                <section class="message-filter-condition-editor" aria-label="Condition expression">
-                    <div class="message-filter-section-bar text-only">
-                        <span>Optional condition</span>
-                    </div>
+                <div class="message-filter-sidecar">
+                    <section class="message-filter-scope-editor" aria-label="Topic pattern filters">
+                        <div class="message-filter-section-bar">
+                            <span>Topic scope</span>
+                            <MudTooltip Text="Add pattern">
+                                <MudIconButton Size="Size.Small"
+                                               Icon="@Icons.Material.Filled.Add"
+                                               Color="Color.Secondary"
+                                               aria-label="Add topic pattern"
+                                               Class="message-filter-add"
+                                               OnClick="@AddPattern" />
+                            </MudTooltip>
+                        </div>
 
-                    <MudTextField T="string"
-                                  @bind-Value="_expression"
-                                  Label="Condition expression"
-                                  aria-label="Condition expression"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Lines="7"
-                                  Class="message-filter-expression-field"
-                                  Placeholder='payload.Length < 1024 && retain == false' />
+                        <div class="message-filter-pattern-list">
+                            @for (var i = 0; i < _draftPatterns.Count; i++)
+                            {
+                                var index = i;
+                                <div class="message-filter-pattern-row">
+                                    <MudTextField T="string"
+                                                  aria-label="@($"Topic pattern {index + 1}")"
+                                                  Value="@_draftPatterns[index]"
+                                                  ValueChanged="@(value => SetPattern(index, value))"
+                                                  Placeholder="sensors/#"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Class="message-filter-pattern-field" />
+                                    <MudTooltip Text="Remove pattern">
+                                        <MudIconButton Size="Size.Small"
+                                                       Icon="@Icons.Material.Filled.Close"
+                                                       aria-label="@($"Remove topic pattern {index + 1}")"
+                                                       Class="message-filter-remove"
+                                                       OnClick="@(() => RemovePattern(index))" />
+                                    </MudTooltip>
+                                </div>
+                            }
+
+                            @if (_draftPatterns.Count == 0)
+                            {
+                                <div class="message-filter-empty" role="status">No topic patterns</div>
+                            }
+                        </div>
+                    </section>
+
                     <div class="message-filter-reference" aria-label="Condition expression variables">
                         <span class="message-filter-reference-label">Variables</span>
-                        @foreach (var variable in ExpressionVariables)
-                        {
-                            <span class="message-filter-variable">@variable</span>
-                        }
+                        <span class="message-filter-variable-list">
+                            @foreach (var variable in ExpressionVariables)
+                            {
+                                <span class="message-filter-variable">@variable</span>
+                            }
+                        </span>
                     </div>
-                </section>
+                </div>
             </div>
         </div>
     </Editor>
@@ -126,9 +136,15 @@
 
     private readonly List<string> _draftPatterns = [];
     private string _expression = string.Empty;
+    private StandaloneCodeEditor? _editor;
+    private StandaloneCodeEditor? _initializedEditor;
+    private ElementReference _expressionEditorHost;
+    private int _editorVersion;
+    private bool _syncingEditor;
     private string? _loadedNodeName;
     private FlowDiagramNodeModel? _loadedNode;
 
+    private string EditorId => $"message-filter-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private bool HasExpression => !string.IsNullOrWhiteSpace(Model.Expression);
     private int PatternCount => Model.Patterns.Count(static pattern => !string.IsNullOrWhiteSpace(pattern));
     private string PatternCountCaption => $"{PatternCount} {PatternLabel(PatternCount)}";
@@ -149,6 +165,11 @@
         "receivedAt"
     ];
 
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
     protected override void OnParametersSet()
     {
         if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
@@ -156,6 +177,20 @@
             LoadDraft();
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_editor is not null && !ReferenceEquals(_initializedEditor, _editor))
+        {
+            _initializedEditor = _editor;
+            await ConfigureCodeEditorAsync();
+            await SyncEditorAsync();
+            await LayoutEditorAfterRenderAsync();
+        }
+    }
+
+    public void Dispose()
+        => ThemeService.Changed -= OnThemeChanged;
 
     private void LoadDraft()
     {
@@ -165,6 +200,32 @@
         _draftPatterns.AddRange(Model.Patterns);
         if (_draftPatterns.Count == 0) _draftPatterns.Add("#");
         _expression = Model.Expression;
+        _editorVersion++;
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureCodeEditorAsync);
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "csharp",
+            ScrollBeyondLastLine = false,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _expression
+        };
+
+    private async Task ConfigureCodeEditorAsync()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Message Filter code editor configuration failed: {exception.Message}");
+        }
     }
 
     private async Task AddPattern()
@@ -195,6 +256,7 @@
     {
         await InvokeAsync(StateHasChanged);
         await DialogRefresh.RefreshAsync(Node.NodeName);
+        await LayoutEditorAfterRenderAsync();
     }
 
     private string? ValidateEditor()
@@ -202,8 +264,20 @@
             ? null
             : "Add at least one topic pattern before saving.";
 
-    private Task SaveAsync()
+    private async Task SaveAsync()
     {
+        if (_editor is not null)
+        {
+            try
+            {
+                _expression = await _editor.GetValue();
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Message Filter code editor read failed: {exception.Message}");
+            }
+        }
+
         var trimmed = _draftPatterns
             .Select(p => p?.Trim() ?? string.Empty)
             .Where(p => p.Length > 0)
@@ -211,7 +285,68 @@
         Model.Patterns = trimmed.Length > 0 ? trimmed : ["#"];
         Model.Expression = _expression.Trim();
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
-        return Task.CompletedTask;
+    }
+
+    private async Task OnExpressionContentChanged()
+    {
+        if (_syncingEditor || _editor is null)
+        {
+            return;
+        }
+
+        _expression = await _editor.GetValue();
+        await RefreshDialogAsync();
+    }
+
+    private async Task SyncEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _syncingEditor = true;
+        try
+        {
+            await _editor.SetValue(_expression);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Message Filter code editor sync failed: {exception.Message}");
+        }
+        finally
+        {
+            _syncingEditor = false;
+        }
+    }
+
+    private async Task LayoutEditorAfterRenderAsync()
+    {
+        await Task.Yield();
+        await LayoutEditorAsync();
+        await Task.Delay(50);
+        await LayoutEditorAsync();
+    }
+
+    private async Task LayoutEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var size = await JsRuntime.InvokeAsync<EditorHostSize>("fluxmqMonaco.measureElement", _expressionEditorHost);
+            if (size is not null && size.Width > 0 && size.Height > 0)
+            {
+                await _editor.Layout(new Dimension { Width = size.Width, Height = size.Height }, null);
+            }
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Message Filter editor layout failed: {exception.Message}");
+        }
     }
 
     private static string PatternTokenClass(string pattern)
@@ -220,4 +355,13 @@
             : "message-filter-token";
 
     private static string PatternLabel(int count) => count == 1 ? "pattern" : "patterns";
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
+
+    private sealed class EditorHostSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
 }
