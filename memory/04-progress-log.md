@@ -4358,3 +4358,45 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Isolated UI test build passed with 0 warnings.
   - Focused `AppJsonPanel_UsesFlatCompactCodeViewerChrome` and `WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs` guards passed using isolated output.
 - Next step: visually inspect the App JSON tab, click `pip1` or another normal artifact tab, and confirm the visual workspace returns with tab switching still working.
+
+## 2026-06-29 - Pipeline node UI design-system round
+
+- Current local branch: `work/pipeline-node-ui-system`.
+- Goal narrowed from an open-ended UI-polish effort into an achievable branch:
+  - Establish one coherent Pipeline node UI direction.
+  - Prioritize complex editors first because broken editor sizing and empty code surfaces block real use.
+  - Keep runtime behavior, saved JSON schema, node ids, ports, contracts, and app resources unchanged.
+- Accepted and committed local slices:
+  - `508ce60 Restore mapper workbench columns`
+  - `dcf418f Fix mapper editor height`
+  - `081fb27 Fix code editor sizing`
+  - `884f386 Polish state reducer editor`
+- Dynamic Mapper result:
+  - Rebuilt the edit dialog around three stable columns: sample input, mapping expression, and result.
+  - Made the expression editor the dominant full-height workspace.
+  - Removed extra side metadata panels that were not needed for the mapping workflow.
+  - Fixed editor measurement/layout so code content no longer collapses into a thin strip.
+- JSON Schema Validator result:
+  - Fixed the inline schema editing path so it uses a proper code-editor surface instead of leaving a large blank area.
+  - Kept schema source/id behavior and saved configuration shape unchanged.
+- State Reducer result:
+  - Replaced the reducer multiline text area with a full code-editor surface.
+  - Kept key expression, variables, max keys, input buffer, validation, and config persistence behavior unchanged.
+  - Focused build and source-level UI test passed before the local commit.
+- Flow Assertion result:
+  - Replaced the pass-condition multiline text area with a measured full code-editor surface.
+  - Kept assertion name, input type, input buffer, failure message, variables, validation, and saved config behavior unchanged.
+  - Visual check confirmed the editor layout: expression workspace fills the left side, failure message and variables stay in the right sidecar, and the node header remains plain node name plus component subtitle.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowAssertionNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+- Current design rules learned from visual review:
+  - View mode must show useful operational facts, not decorative contract dumps.
+  - Edit mode must use one clean flat form/workspace surface, not nested panels.
+  - Code-heavy nodes need stable full-height editor surfaces and predictable columns.
+  - Save readiness must come from validation state, not status labels like `Ready to save`.
+  - Dialog footers should sit in a consistent padded full-width footer panel.
+  - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
+- Next implementation order:
+  1. Continue complex editor nodes: Message Filter, Condition Router, then any remaining schema/assertion/reducer edge cases.
+  2. Normalize source/trigger, routing, actor/sink, metric, and generic nodes only after the complex editors have the stable shared pattern.

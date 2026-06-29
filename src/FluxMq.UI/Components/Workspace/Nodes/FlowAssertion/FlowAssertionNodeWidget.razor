@@ -1,5 +1,8 @@
+@implements IDisposable
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject AppThemeService ThemeService
+@inject IJSRuntime JsRuntime
 @inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
@@ -75,35 +78,44 @@
                                  Class="flow-assertion-buffer-field" />
             </div>
 
-            <div class="flow-assertion-rule-stack node-ui-stack" aria-label="Flow assertion rule">
-                <MudTextField T="string"
-                              Label="Pass condition"
-                              Value="@_expression"
-                              ValueChanged="@SetExpression"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Immediate="true"
-                              Lines="12"
-                              Class="flow-assertion-expression-field"
-                              Placeholder='topic.StartsWith("factory/") && qos >= 1' />
+            <div class="flow-assertion-rule-row" aria-label="Flow assertion rule">
+                <section class="flow-assertion-expression-workspace node-ui-code-surface" aria-label="Assertion expression">
+                    <div class="flow-assertion-workspace-header">
+                        <div>
+                            <span class="flow-assertion-kicker">Condition</span>
+                            <strong>Pass condition</strong>
+                        </div>
+                    </div>
 
-                <MudTextField T="string"
-                              Label="Failure message"
-                              @bind-Value="_failureMessage"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Lines="3"
-                              Class="flow-assertion-message-field"
-                              Placeholder="Message on failure" />
+                    <div class="flow-assertion-editor-host" @ref="_expressionEditorHost">
+                        <StandaloneCodeEditor @key="_editorVersion"
+                                              @ref="_editor"
+                                              Id="@EditorId"
+                                              CssClass="flow-assertion-code-editor"
+                                              ConstructionOptions="@EditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnExpressionContentChanged" />
+                    </div>
+                </section>
 
-                <div class="flow-assertion-variable-strip" aria-label="Assertion expression variables">
-                    <span class="flow-assertion-variable-label">Variables</span>
-                    <span class="flow-assertion-variable-list">
-                        @foreach (var variable in ExpressionVariables)
-                        {
-                            <span class="flow-assertion-variable">@variable</span>
-                        }
-                    </span>
+                <div class="flow-assertion-rule-sidecar">
+                    <MudTextField T="string"
+                                  Label="Failure message"
+                                  @bind-Value="_failureMessage"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Lines="4"
+                                  Class="flow-assertion-message-field"
+                                  Placeholder="Message on failure" />
+
+                    <div class="flow-assertion-variable-strip" aria-label="Assertion expression variables">
+                        <span class="flow-assertion-variable-label">Variables</span>
+                        <span class="flow-assertion-variable-list">
+                            @foreach (var variable in ExpressionVariables)
+                            {
+                                <span class="flow-assertion-variable">@variable</span>
+                            }
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -120,9 +132,15 @@
     private string _expression = FlowAssertionNodeModel.DefaultExpression;
     private string _failureMessage = FlowAssertionNodeModel.DefaultFailureMessage;
     private int _boundedCapacity = FlowAssertionNodeModel.DefaultBoundedCapacity;
+    private StandaloneCodeEditor? _editor;
+    private StandaloneCodeEditor? _initializedEditor;
+    private ElementReference _expressionEditorHost;
+    private int _editorVersion;
+    private bool _syncingEditor;
     private string? _loadedNodeName;
     private FlowDiagramNodeModel? _loadedNode;
 
+    private string EditorId => $"flow-assertion-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private string AssertionCaption => string.IsNullOrWhiteSpace(Model.AssertionName)
         ? FlowAssertionNodeModel.DefaultAssertionName
         : Model.AssertionName.Trim();
@@ -148,6 +166,11 @@
         "issueCount"
     ];
 
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
     protected override void OnParametersSet()
     {
         if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
@@ -155,6 +178,20 @@
             LoadDraft();
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_editor is not null && !ReferenceEquals(_initializedEditor, _editor))
+        {
+            _initializedEditor = _editor;
+            await ConfigureCodeEditorAsync();
+            await SyncEditorAsync();
+            await LayoutEditorAfterRenderAsync();
+        }
+    }
+
+    public void Dispose()
+        => ThemeService.Changed -= OnThemeChanged;
 
     private void LoadDraft()
     {
@@ -165,10 +202,48 @@
         _expression = Model.Expression;
         _failureMessage = Model.FailureMessage;
         _boundedCapacity = FlowAssertionNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity);
+        _editorVersion++;
     }
 
-    private Task SaveAsync()
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureCodeEditorAsync);
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "csharp",
+            ScrollBeyondLastLine = false,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _expression
+        };
+
+    private async Task ConfigureCodeEditorAsync()
     {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Flow Assertion code editor configuration failed: {exception.Message}");
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editor is not null)
+        {
+            try
+            {
+                _expression = await _editor.GetValue();
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Flow Assertion code editor read failed: {exception.Message}");
+            }
+        }
+
         Model.AssertionName = string.IsNullOrWhiteSpace(_assertionName)
             ? FlowAssertionNodeModel.DefaultAssertionName
             : _assertionName.Trim();
@@ -182,17 +257,88 @@
         Model.BoundedCapacity = FlowAssertionNodeModel.NormalizeBoundedCapacity(_boundedCapacity);
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
-        return Task.CompletedTask;
     }
 
-    private async Task SetExpression(string value)
+    private async Task OnExpressionContentChanged()
     {
-        _expression = value ?? string.Empty;
+        if (_syncingEditor || _editor is null)
+        {
+            return;
+        }
+
+        _expression = await _editor.GetValue();
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
         await DialogRefresh.RefreshAsync(Node.NodeName);
+        await LayoutEditorAfterRenderAsync();
+    }
+
+    private async Task SyncEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _syncingEditor = true;
+        try
+        {
+            await _editor.SetValue(_expression);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Flow Assertion code editor sync failed: {exception.Message}");
+        }
+        finally
+        {
+            _syncingEditor = false;
+        }
+    }
+
+    private async Task LayoutEditorAfterRenderAsync()
+    {
+        await Task.Yield();
+        await LayoutEditorAsync();
+        await Task.Delay(50);
+        await LayoutEditorAsync();
+    }
+
+    private async Task LayoutEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var size = await JsRuntime.InvokeAsync<EditorHostSize>("fluxmqMonaco.measureElement", _expressionEditorHost);
+            if (size is not null && size.Width > 0 && size.Height > 0)
+            {
+                await _editor.Layout(new Dimension { Width = size.Width, Height = size.Height }, null);
+            }
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Flow Assertion editor layout failed: {exception.Message}");
+        }
     }
 
     private string? ValidateEditor()
         => string.IsNullOrWhiteSpace(_expression)
             ? "Enter an assertion condition before saving."
             : null;
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
+
+    private sealed class EditorHostSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
 }
