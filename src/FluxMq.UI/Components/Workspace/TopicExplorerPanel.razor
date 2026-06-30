@@ -1,5 +1,7 @@
 @implements IDisposable
+@using System.Text
 @using FluxMq.App.Definitions
+@using MQTTnet.Protocol
 @inject LiveMqttWorkspaceService Live
 @inject ProjectManagerService Projects
 @inject IDialogService DialogService
@@ -196,6 +198,82 @@
             }
         </section>
 
+        @if (Live.SelectedStoredSession is null)
+        {
+            <section class="topic-publish-panel" aria-label="Publish MQTT message">
+                <div class="topic-publish-header">
+                    <span>Publish</span>
+                    <span>@PublishConnectionLabel</span>
+                </div>
+
+                <div class="topic-publish-grid">
+                    <label class="topic-publish-field broker">
+                        <span class="topic-publish-label split">
+                            <span>Broker</span>
+                            <span>@PublishClientCountLabel</span>
+                        </span>
+                        @if (PublishConnections.Count > 0)
+                        {
+                            <select class="topic-publish-input"
+                                    aria-label="Publish broker"
+                                    @bind="_publishConnectionId">
+                                @foreach (var connection in PublishConnections)
+                                {
+                                    <option value="@connection.Id.ToString()">@PublishConnectionOptionLabel(connection)</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <div class="topic-publish-static">No app brokers</div>
+                        }
+                    </label>
+
+                    <label class="topic-publish-field topic">
+                        <span class="topic-publish-label">Topic</span>
+                        <input class="topic-publish-input"
+                               value="@_publishTopic"
+                               @oninput="OnPublishTopicChanged" />
+                    </label>
+
+                    <label class="topic-publish-field payload">
+                        <span class="topic-publish-label split">
+                            <span>Payload</span>
+                            <span>@PublishPayloadMeta</span>
+                        </span>
+                        <textarea class="topic-publish-textarea"
+                                  spellcheck="false"
+                                  @bind="_publishPayload"></textarea>
+                    </label>
+
+                    <div class="topic-publish-actions">
+                        <label class="topic-publish-qos" aria-label="Publish quality of service">
+                            <select @bind="_publishQos">
+                                <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
+                                <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
+                                <option value="@MqttQualityOfServiceLevel.ExactlyOnce">QoS 2</option>
+                            </select>
+                        </label>
+
+                        <button type="button"
+                                class="topic-publish-retain @(_publishRetain ? "active" : null)"
+                                @onclick="@(() => _publishRetain = !_publishRetain)">
+                            <span>Retain</span>
+                            <strong>@(_publishRetain ? "On" : "Off")</strong>
+                        </button>
+
+                        <button type="button"
+                                class="topic-publish-submit"
+                                disabled="@(!CanPublish)"
+                                @onclick="PublishTopicMessageAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                            <span>@PublishButtonLabel</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        }
+
         <section class="topic-history-panel" aria-label="Topic message history">
             <div class="topic-history-header">
                 <span>History</span>
@@ -318,10 +396,29 @@
     private string _filter = string.Empty;
     private bool _setupDialogOpen;
     private FlowWorkspaceService? _setupPromptedProject;
+    private bool _publishBusy;
+    private string _publishConnectionId = string.Empty;
+    private string _publishTopic = "test/topic";
+    private string _publishPayload = "{}";
+    private MqttQualityOfServiceLevel _publishQos = MqttQualityOfServiceLevel.AtMostOnce;
+    private bool _publishRetain;
 
     private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
         ? Live.RecentMessages
         : Live.SelectedSessionMessages;
+
+    private IReadOnlyList<ManagedConnection> PublishConnections => BuildPublishConnections();
+
+    private ManagedConnection? SelectedPublishConnection
+    {
+        get
+        {
+            EnsurePublishBrokerSelection();
+            return Guid.TryParse(_publishConnectionId, out var selectedId)
+                ? PublishConnections.FirstOrDefault(connection => connection.Id == selectedId)
+                : null;
+        }
+    }
 
     private IReadOnlyList<TopicBrokerGroup> BrokerGroups
     {
@@ -528,6 +625,34 @@
         var count => $"{count} messages"
     };
 
+    private bool CanPublish =>
+        !_publishBusy &&
+        SelectedPublishConnection is not null &&
+        !string.IsNullOrWhiteSpace(_publishTopic);
+
+    private string PublishButtonLabel => _publishBusy ? "Publishing" : "Publish";
+
+    private string PublishClientCountLabel => PublishConnections.Count switch
+    {
+        0 => "0 brokers",
+        1 => "1 broker",
+        var count => $"{count} brokers"
+    };
+
+    private string PublishConnectionLabel => SelectedPublishConnection is { } connection
+        ? $"{connection.ResourceName} / {BrokerStateLabel(connection.State)}"
+        : "No app broker";
+
+    private string PublishPayloadMeta
+    {
+        get
+        {
+            var payload = Encoding.UTF8.GetBytes(_publishPayload ?? string.Empty);
+            var inspection = PayloadInspector.Inspect(payload);
+            return $"{inspection.DisplayTypeLabel} / {payload.Length} B";
+        }
+    }
+
     private string TopicSourceLabel => Live.SelectedStoredSession is null
         ? "App broker monitor"
         : "Stored session";
@@ -578,6 +703,8 @@
         Live.Changed += OnLiveChanged;
         Projects.Changed += OnProjectsChanged;
         SyncProjectSubscription();
+        EnsurePublishConnectionsForActiveProject();
+        EnsurePublishBrokerSelection();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -598,6 +725,7 @@
         _selectedBrokerName = string.IsNullOrWhiteSpace(brokerName) ? null : brokerName;
         _selectedTopic = null;
         SelectLatestFilteredMessage();
+        SyncPublishSelectionFromTopicSelection(prefillTopic: false);
     }
 
     private void OnTopicSelected(string brokerName, string? topic)
@@ -605,6 +733,7 @@
         _selectedBrokerName = string.IsNullOrWhiteSpace(brokerName) ? null : brokerName;
         _selectedTopic = string.IsNullOrWhiteSpace(topic) ? null : topic;
         SelectLatestFilteredMessage();
+        SyncPublishSelectionFromTopicSelection(prefillTopic: true);
     }
 
     private void ClearTopicSelection()
@@ -630,6 +759,60 @@
         if (message is not null)
         {
             Live.SelectMessage(message);
+        }
+    }
+
+    private void OnPublishTopicChanged(ChangeEventArgs args)
+    {
+        _publishTopic = args.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task PublishTopicMessageAsync()
+    {
+        var connection = SelectedPublishConnection;
+        var topic = _publishTopic.Trim();
+        if (connection is null ||
+            string.IsNullOrWhiteSpace(topic))
+        {
+            return;
+        }
+
+        _publishBusy = true;
+        try
+        {
+            if (connection.State != MqttClientState.Connected)
+            {
+                await Live.ConnectAsync(connection.Id);
+            }
+
+            var connectedConnection = PublishConnections.FirstOrDefault(item => item.Id == connection.Id);
+            if (connectedConnection?.State != MqttClientState.Connected)
+            {
+                return;
+            }
+
+            var payload = _publishPayload ?? string.Empty;
+            var published = await Live.PublishAsync(
+                connectedConnection.Id,
+                topic,
+                payload,
+                _publishQos,
+                _publishRetain);
+
+            if (published)
+            {
+                Projects.ActiveProject?.RecordManualMqttPublish(
+                    topic,
+                    payload,
+                    (int)_publishQos,
+                    _publishRetain,
+                    connectedConnection.ResourceName);
+            }
+        }
+        finally
+        {
+            _publishBusy = false;
+            StateHasChanged();
         }
     }
 
@@ -768,6 +951,15 @@
             _ => "Idle"
         };
 
+    private static string BrokerStateLabel(MqttClientState state)
+        => state switch
+        {
+            MqttClientState.Connected => "Live",
+            MqttClientState.Connecting or MqttClientState.Reconnecting => "Connecting",
+            MqttClientState.Faulted => "Faulted",
+            _ => "Idle"
+        };
+
     private string FilterForGroup(TopicBrokerGroup group)
         => BrokerMatchesFilter(group) ? string.Empty : _filter;
 
@@ -781,6 +973,124 @@
             string.Equals(connection.ResourceName, monitorResourceName, StringComparison.Ordinal));
 
         return connection?.State ?? MqttClientState.Disconnected;
+    }
+
+    private IReadOnlyList<ManagedConnection> BuildPublishConnections()
+    {
+        var projectConnections = Projects.ActiveProject?.GetConnectionResources() ?? [];
+        var appConnectionOrder = projectConnections
+            .Select((connection, index) => (connection.Name, Index: index))
+            .ToDictionary(item => item.Name, item => item.Index, StringComparer.Ordinal);
+
+        return Live.Connections
+            .Where(connection => !LiveMqttWorkspaceService.IsTopicMonitorConnection(connection))
+            .Where(connection => appConnectionOrder.ContainsKey(connection.ResourceName))
+            .OrderBy(connection => appConnectionOrder.TryGetValue(connection.ResourceName, out var index)
+                ? index
+                : int.MaxValue)
+            .ThenBy(connection => connection.ResourceName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private void EnsurePublishConnectionsForActiveProject()
+    {
+        if (Projects.ActiveProject is not { } project)
+        {
+            return;
+        }
+
+        foreach (var (name, profile, subscription) in project.GetConnectionResources())
+        {
+            Live.AddConnectionIfAbsent(profile, subscription, name);
+        }
+    }
+
+    private void EnsurePublishBrokerSelection()
+    {
+        var connections = PublishConnections;
+        if (connections.Count == 0)
+        {
+            _publishConnectionId = string.Empty;
+            return;
+        }
+
+        if (Guid.TryParse(_publishConnectionId, out var selectedId) &&
+            connections.Any(connection => connection.Id == selectedId))
+        {
+            return;
+        }
+
+        var preferred = FindPublishConnectionForBroker(_selectedBrokerName) ?? connections[0];
+        _publishConnectionId = preferred.Id.ToString();
+    }
+
+    private void SyncPublishSelectionFromTopicSelection(bool prefillTopic)
+    {
+        var connections = PublishConnections;
+        if (connections.Count == 0)
+        {
+            _publishConnectionId = string.Empty;
+            return;
+        }
+
+        var preferred = FindPublishConnectionForBroker(_selectedBrokerName) ?? connections[0];
+        _publishConnectionId = preferred.Id.ToString();
+
+        if (prefillTopic &&
+            !string.IsNullOrWhiteSpace(_selectedTopic))
+        {
+            _publishTopic = _selectedTopic;
+        }
+    }
+
+    private ManagedConnection? FindPublishConnectionForBroker(string? brokerName)
+    {
+        if (string.IsNullOrWhiteSpace(brokerName))
+        {
+            return null;
+        }
+
+        var normalizedBrokerName = brokerName.Trim();
+        var connections = PublishConnections;
+        var byResource = SinglePublishConnectionOrDefault(connections.Where(connection =>
+            string.Equals(connection.ResourceName, normalizedBrokerName, StringComparison.Ordinal)));
+        if (byResource is not null)
+        {
+            return byResource;
+        }
+
+        var byProfileName = SinglePublishConnectionOrDefault(connections.Where(connection =>
+            string.Equals(connection.Profile.Name, normalizedBrokerName, StringComparison.Ordinal)));
+        if (byProfileName is not null)
+        {
+            return byProfileName;
+        }
+
+        var monitor = TopicExplorerMonitorConnections.FirstOrDefault(connection =>
+            string.Equals(connection.DisplayName, normalizedBrokerName, StringComparison.Ordinal));
+
+        return monitor is null
+            ? null
+            : SinglePublishConnectionOrDefault(connections.Where(connection =>
+                SameBrokerEndpoint(connection.Profile, monitor.Profile)));
+    }
+
+    private static ManagedConnection? SinglePublishConnectionOrDefault(IEnumerable<ManagedConnection> connections)
+    {
+        var matches = connections.Take(2).ToArray();
+        return matches.Length == 1 ? matches[0] : null;
+    }
+
+    private static bool SameBrokerEndpoint(MqttConnectionProfile left, MqttConnectionProfile right)
+        => string.Equals(left.Host, right.Host, StringComparison.OrdinalIgnoreCase) &&
+           left.Port == right.Port &&
+           left.UseTls == right.UseTls &&
+           string.Equals(left.Username, right.Username, StringComparison.Ordinal);
+
+    private static string PublishConnectionOptionLabel(ManagedConnection connection)
+    {
+        var scheme = connection.Profile.UseTls ? "mqtts" : "mqtt";
+        return $"{connection.ResourceName} ({scheme}://{connection.Profile.Host}:{connection.Profile.Port})";
     }
 
     private async Task EnsureTopicMonitorAsync()
@@ -890,18 +1200,23 @@
 
     private void OnLiveChanged(object? sender, EventArgs e)
     {
+        EnsurePublishBrokerSelection();
         _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e)
     {
         SyncProjectSubscription();
+        EnsurePublishConnectionsForActiveProject();
+        EnsurePublishBrokerSelection();
         _ = EnsureTopicMonitorAsync();
         _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnProjectChanged(object? sender, EventArgs e)
     {
+        EnsurePublishConnectionsForActiveProject();
+        EnsurePublishBrokerSelection();
         _ = EnsureTopicMonitorAsync();
         _ = InvokeAsync(StateHasChanged);
     }
