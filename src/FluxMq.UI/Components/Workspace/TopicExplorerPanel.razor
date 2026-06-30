@@ -1,5 +1,7 @@
 @implements IDisposable
+@using System.Globalization
 @using System.Text
+@using System.Text.Json.Serialization
 @using FluxMq.App.Definitions
 @using MQTTnet.Protocol
 @inject LiveMqttWorkspaceService Live
@@ -305,10 +307,62 @@
                 <span>@HistorySummaryLabel</span>
             </div>
 
+            <div class="topic-history-toolbar" role="search" aria-label="History filters">
+                <MudTextField T="string"
+                              Value="@_historyFilter"
+                              ValueChanged="@OnHistoryFilterChanged"
+                              Placeholder="Filter history"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              Clearable="true"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              AdornmentColor="Color.Secondary"
+                              Class="topic-history-filter" />
+
+                <label class="topic-history-select" aria-label="Filter history quality of service">
+                    <select @bind="HistoryQosFilter">
+                        <option value="@HistoryFilterAll">All</option>
+                        <option value="@HistoryQos0">QoS 0</option>
+                        <option value="@HistoryQos1">QoS 1</option>
+                        <option value="@HistoryQos2">QoS 2</option>
+                    </select>
+                </label>
+
+                <label class="topic-history-select" aria-label="Filter history retain state">
+                    <select @bind="HistoryRetainFilter">
+                        <option value="@HistoryFilterAll">All</option>
+                        <option value="@HistoryRetained">Retained</option>
+                        <option value="@HistoryNotRetained">Not retained</option>
+                    </select>
+                </label>
+
+                @if (HasHistoryFilters)
+                {
+                    <MudTooltip Text="Reset history filters">
+                        <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
+                                       Size="Size.Small"
+                                       Class="topic-history-action"
+                                       aria-label="Reset history filters"
+                                       OnClick="@ResetHistoryFilters" />
+                    </MudTooltip>
+                }
+
+                <MudTooltip Text="@ExportHistoryLabel">
+                    <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                                   Size="Size.Small"
+                                   Class="topic-history-action export"
+                                   Disabled="@(!CanExportHistory)"
+                                   aria-label="Export visible history as JSON"
+                                   OnClick="@ExportVisibleHistoryAsync" />
+                </MudTooltip>
+            </div>
+
             <div class="topic-history-body">
                 <div class="topic-message-table">
                     <MudTable T="MqttEnvelope"
-                              Items="@HistoryMessages"
+                              Items="@VisibleHistoryMessages"
                               Dense="true"
                               Hover="true"
                               Class="topic-message-grid"
@@ -327,6 +381,7 @@
                             <col class="topic-col-broker" />
                             <col class="topic-col-topic" />
                             <col class="topic-col-qos" />
+                            <col class="topic-col-retain" />
                             <col class="topic-col-bytes" />
                         </ColGroup>
                         <HeaderContent>
@@ -334,6 +389,7 @@
                             <MudTh>Broker</MudTh>
                             <MudTh>Topic</MudTh>
                             <MudTh>QoS</MudTh>
+                            <MudTh>Retain</MudTh>
                             <MudTh>Bytes</MudTh>
                         </HeaderContent>
                         <RowTemplate>
@@ -345,6 +401,7 @@
                                 </MudText>
                             </MudTd>
                             <MudTd DataLabel="QoS">@((int)context.QualityOfService)</MudTd>
+                            <MudTd DataLabel="Retain">@(context.Retain ? "Yes" : "No")</MudTd>
                             <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
                         </RowTemplate>
                         <NoRecordsContent>
@@ -440,6 +497,12 @@
     private const string PayloadRawView = "raw";
     private const string PayloadHexView = "hex";
     private const string PayloadMetaView = "meta";
+    private const string HistoryFilterAll = "all";
+    private const string HistoryQos0 = "0";
+    private const string HistoryQos1 = "1";
+    private const string HistoryQos2 = "2";
+    private const string HistoryRetained = "retained";
+    private const string HistoryNotRetained = "not-retained";
     private static readonly string[] PayloadViewOptions =
     [
         PayloadFormattedView,
@@ -447,6 +510,11 @@
         PayloadHexView,
         PayloadMetaView
     ];
+    private static readonly JsonSerializerOptions HistoryExportJsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = true
+    };
 
     private bool _disposed;
     private bool _monitorStarting;
@@ -455,6 +523,9 @@
     private string? _selectedBrokerName;
     private string? _selectedTopic;
     private string _filter = string.Empty;
+    private string _historyFilter = string.Empty;
+    private string _historyQosFilter = HistoryFilterAll;
+    private string _historyRetainFilter = HistoryFilterAll;
     private string _lastPayloadView = PayloadFormattedView;
     private string _selectedHistoryPayloadView = PayloadFormattedView;
     private bool _setupDialogOpen;
@@ -590,6 +661,31 @@
         .OrderByDescending(message => message.ReceivedAt)
         .ToArray();
 
+    private IReadOnlyList<MqttEnvelope> VisibleHistoryMessages
+    {
+        get
+        {
+            IEnumerable<MqttEnvelope> query = HistoryMessages;
+
+            if (!string.IsNullOrWhiteSpace(_historyFilter))
+            {
+                query = query.Where(MatchesHistoryTextFilter);
+            }
+
+            if (_historyQosFilter is not HistoryFilterAll)
+            {
+                query = query.Where(MatchesHistoryQosFilter);
+            }
+
+            if (_historyRetainFilter is not HistoryFilterAll)
+            {
+                query = query.Where(MatchesHistoryRetainFilter);
+            }
+
+            return query.ToArray();
+        }
+    }
+
     private IReadOnlyList<TopicBrokerGroup> NoTrafficBrokerGroups
     {
         get
@@ -617,7 +713,7 @@
     {
         get
         {
-            var messages = HistoryMessages;
+            var messages = VisibleHistoryMessages;
             if (_selectedHistoryMessage is not null &&
                 messages.Contains(_selectedHistoryMessage))
             {
@@ -675,11 +771,42 @@
         ? message.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
         : "No message";
 
-    private string HistorySummaryLabel => HistoryMessages.Count switch
+    private string HistorySummaryLabel => HasHistoryFilters
+        ? $"{VisibleHistoryMessages.Count} of {HistoryMessages.Count} messages"
+        : MessageCountLabel(HistoryMessages.Count);
+
+    private string HistoryQosFilter
     {
-        0 => "No messages",
-        1 => "1 message",
-        var count => $"{count} messages"
+        get => _historyQosFilter;
+        set
+        {
+            _historyQosFilter = string.IsNullOrWhiteSpace(value) ? HistoryFilterAll : value;
+            EnsureSelectedHistoryMessageVisible();
+        }
+    }
+
+    private string HistoryRetainFilter
+    {
+        get => _historyRetainFilter;
+        set
+        {
+            _historyRetainFilter = string.IsNullOrWhiteSpace(value) ? HistoryFilterAll : value;
+            EnsureSelectedHistoryMessageVisible();
+        }
+    }
+
+    private bool HasHistoryFilters =>
+        !string.IsNullOrWhiteSpace(_historyFilter) ||
+        _historyQosFilter is not HistoryFilterAll ||
+        _historyRetainFilter is not HistoryFilterAll;
+
+    private bool CanExportHistory => VisibleHistoryMessages.Count > 0;
+
+    private string ExportHistoryLabel => VisibleHistoryMessages.Count switch
+    {
+        0 => "No history rows to export",
+        1 => "Export 1 visible history row",
+        var count => $"Export {count} visible history rows"
     };
 
     private bool CanPublish =>
@@ -777,6 +904,12 @@
         _filter = value;
     }
 
+    private void OnHistoryFilterChanged(string value)
+    {
+        _historyFilter = value;
+        EnsureSelectedHistoryMessageVisible();
+    }
+
     private void OnBrokerSelected(string brokerName)
     {
         _selectedBrokerName = string.IsNullOrWhiteSpace(brokerName) ? null : brokerName;
@@ -802,7 +935,7 @@
 
     private void SelectLatestFilteredMessage()
     {
-        var latest = HistoryMessages.FirstOrDefault();
+        var latest = VisibleHistoryMessages.FirstOrDefault();
         _selectedHistoryMessage = latest;
         if (latest is not null)
         {
@@ -817,6 +950,31 @@
         {
             Live.SelectMessage(message);
         }
+    }
+
+    private void EnsureSelectedHistoryMessageVisible()
+    {
+        var visibleMessages = VisibleHistoryMessages;
+        if (_selectedHistoryMessage is not null &&
+            visibleMessages.Contains(_selectedHistoryMessage))
+        {
+            return;
+        }
+
+        var latest = visibleMessages.FirstOrDefault();
+        _selectedHistoryMessage = latest;
+        if (latest is not null)
+        {
+            Live.SelectMessage(latest);
+        }
+    }
+
+    private void ResetHistoryFilters()
+    {
+        _historyFilter = string.Empty;
+        _historyQosFilter = HistoryFilterAll;
+        _historyRetainFilter = HistoryFilterAll;
+        EnsureSelectedHistoryMessageVisible();
     }
 
     private void OnPublishTopicChanged(ChangeEventArgs args)
@@ -934,6 +1092,95 @@
         => Equals(message, SelectedHistoryMessage)
             ? "topic-history-row selected"
             : "topic-history-row";
+
+    private async Task ExportVisibleHistoryAsync()
+    {
+        var messages = VisibleHistoryMessages;
+        if (messages.Count == 0)
+        {
+            Snackbar.Add("No history rows to export", Severity.Warning);
+            return;
+        }
+
+        var dialog = await DialogService.ShowAsync<SaveAsDialog>(
+            "Export history",
+            new DialogParameters
+            {
+                [nameof(SaveAsDialog.SuggestedPath)] = SuggestedHistoryExportPath(),
+                [nameof(SaveAsDialog.DialogTitle)] = "Export history",
+                [nameof(SaveAsDialog.HelperText)] = "Full path including .json extension",
+                [nameof(SaveAsDialog.SubmitText)] = "Export"
+            },
+            new DialogOptions
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+                BackdropClick = false
+            });
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult is not { Canceled: false, Data: string path } ||
+            string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            await WriteHistoryExportAsync(BuildHistoryExportJson(messages), path);
+            Snackbar.Add("History export saved", Severity.Success);
+        }
+        catch (Exception exception)
+        {
+            Snackbar.Add($"History export failed: {exception.Message}", Severity.Error);
+        }
+    }
+
+    private string BuildHistoryExportJson(IReadOnlyList<MqttEnvelope> messages)
+    {
+        var rows = messages.Select(message =>
+        {
+            var inspection = PayloadInspector.Inspect(message.Payload);
+            return new
+            {
+                broker = BrokerLabel(message),
+                topic = message.Topic,
+                receivedAt = message.ReceivedAt,
+                qos = (int)message.QualityOfService,
+                retain = message.Retain,
+                payloadByteCount = message.Payload.Length,
+                payloadType = inspection.DisplayTypeLabel,
+                payloadBase64 = Convert.ToBase64String(message.Payload),
+                payloadText = inspection.IsText ? inspection.RawText : null,
+                payloadHex = inspection.HexDump
+            };
+        });
+
+        return JsonSerializer.Serialize(rows, HistoryExportJsonOptions);
+    }
+
+    private string SuggestedHistoryExportPath()
+    {
+        var currentFilePath = Projects.ActiveProject?.CurrentFilePath;
+        var directory = !string.IsNullOrWhiteSpace(currentFilePath)
+            ? Path.GetDirectoryName(currentFilePath)
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FluxMQ");
+        var stamp = DateTimeOffset.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+
+        return Path.Combine(directory ?? string.Empty, $"topics-history-{stamp}.json");
+    }
+
+    private static async Task WriteHistoryExportAsync(string content, string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        var directory = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        await File.WriteAllTextAsync(fullPath, content);
+    }
 
     private async Task CopyLatestPayloadViewAsync()
         => await CopyPayloadViewAsync(LastInspection, _lastPayloadView, "Latest payload view copied");
@@ -1055,6 +1302,45 @@
         string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
         topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
 
+    private bool MatchesHistoryTextFilter(MqttEnvelope message)
+    {
+        var filter = _historyFilter.Trim();
+        var receivedAt = message.ReceivedAt.ToLocalTime();
+        var qosLabel = $"QoS {(int)message.QualityOfService}";
+        var retainLabel = message.Retain ? "Retained" : "Not retained";
+        var retainShortLabel = message.Retain ? "Yes" : "No";
+        var byteCount = message.Payload.Length.ToString(CultureInfo.InvariantCulture);
+        var byteLabel = $"{byteCount} B";
+
+        return BrokerLabel(message).Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               message.Topic.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               receivedAt.ToString("HH:mm:ss", CultureInfo.InvariantCulture).Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               receivedAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture).Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               qosLabel.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               ((int)message.QualityOfService).ToString(CultureInfo.InvariantCulture).Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               retainLabel.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               retainShortLabel.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               byteCount.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               byteLabel.Contains(filter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool MatchesHistoryQosFilter(MqttEnvelope message)
+        => _historyQosFilter switch
+        {
+            HistoryQos0 => message.QualityOfService == MqttQualityOfServiceLevel.AtMostOnce,
+            HistoryQos1 => message.QualityOfService == MqttQualityOfServiceLevel.AtLeastOnce,
+            HistoryQos2 => message.QualityOfService == MqttQualityOfServiceLevel.ExactlyOnce,
+            _ => true
+        };
+
+    private bool MatchesHistoryRetainFilter(MqttEnvelope message)
+        => _historyRetainFilter switch
+        {
+            HistoryRetained => message.Retain,
+            HistoryNotRetained => !message.Retain,
+            _ => true
+        };
+
     private string BrokerLabel(MqttEnvelope message)
     {
         if (!string.IsNullOrWhiteSpace(message.BrokerName))
@@ -1116,6 +1402,14 @@
     private bool BrokerMatchesFilter(TopicBrokerGroup group)
         => !string.IsNullOrWhiteSpace(_filter) &&
            group.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase);
+
+    private static string MessageCountLabel(int count)
+        => count switch
+        {
+            0 => "No messages",
+            1 => "1 message",
+            _ => $"{count} messages"
+        };
 
     private MqttClientState ConnectionStateFor(string monitorResourceName)
     {

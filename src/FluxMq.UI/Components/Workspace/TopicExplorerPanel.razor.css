@@ -903,6 +903,76 @@ h3 {
     font-weight: 500;
 }
 
+.topic-history-toolbar {
+    align-items: center;
+    border-bottom: 1px solid var(--flux-border-soft);
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 36px;
+    min-width: 0;
+    padding: 5px 8px;
+}
+
+.topic-history-filter {
+    flex: 1 1 220px;
+    min-width: 168px;
+}
+
+.topic-history-filter ::deep .mud-input-control {
+    margin-top: 0;
+}
+
+.topic-history-filter ::deep .mud-input-root {
+    font-size: 11.5px;
+    min-height: 26px;
+}
+
+.topic-history-filter ::deep .mud-input > input.mud-input-root {
+    padding-bottom: 3px;
+    padding-top: 3px;
+}
+
+.topic-history-filter ::deep .mud-input-outlined-border {
+    border-color: var(--flux-border);
+}
+
+.topic-history-select {
+    display: inline-flex;
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.topic-history-select select {
+    background: var(--flux-canvas);
+    border: 1px solid var(--flux-border);
+    border-radius: 4px;
+    color: var(--mud-palette-text-primary);
+    font-size: 11.25px;
+    height: 26px;
+    min-width: 84px;
+    padding: 0 24px 0 7px;
+}
+
+.topic-history-action {
+    border-radius: 4px;
+    color: var(--flux-text-muted);
+    height: 26px;
+    min-height: 26px;
+    min-width: 26px;
+    padding: 0;
+    width: 26px;
+}
+
+.topic-history-action.export {
+    color: var(--flux-accent);
+}
+
+.topic-history-action ::deep .mud-icon-root {
+    font-size: 16px;
+}
+
 .topic-history-body {
     display: grid;
     flex: 1 1 auto;
@@ -974,6 +1044,10 @@ h3 {
     width: 64px;
 }
 
+.topic-message-table ::deep col.topic-col-retain {
+    width: 72px;
+}
+
 .topic-message-table ::deep col.topic-col-bytes {
     width: 76px;
 }
@@ -1009,6 +1083,13 @@ h3 {
 
 .topic-message-table ::deep th:nth-child(5),
 .topic-message-table ::deep td:nth-child(5) {
+    max-width: 72px;
+    min-width: 72px;
+    width: 72px;
+}
+
+.topic-message-table ::deep th:nth-child(6),
+.topic-message-table ::deep td:nth-child(6) {
     max-width: 76px;
     min-width: 76px;
     width: 76px;
@@ -1017,7 +1098,9 @@ h3 {
 .topic-message-table ::deep th:nth-child(4),
 .topic-message-table ::deep td:nth-child(4),
 .topic-message-table ::deep th:nth-child(5),
-.topic-message-table ::deep td:nth-child(5) {
+.topic-message-table ::deep td:nth-child(5),
+.topic-message-table ::deep th:nth-child(6),
+.topic-message-table ::deep td:nth-child(6) {
     text-align: center;
 }
 
