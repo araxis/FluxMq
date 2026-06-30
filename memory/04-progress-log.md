@@ -4426,6 +4426,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingCorrelationAndJoinNodeWidgets" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check attempted with native desktop control. The app window was controllable, but the Windows file picker overlay was not targetable by the helper and direct `--open` launch stayed on the startup splash, so edit-dialog visual verification remains a gap for this slice.
+- Routing Fork/Merge/Window result:
+  - Reworked the remaining routing utility editors into compact main editor areas plus support sidecars.
+  - Fork and Merge keep port row editing, add/remove controls, input type, input buffer, validation, ports, and saved configuration shape unchanged.
+  - Window keeps max items, time window, input type, input buffer, emit-partial control, zero-boundary validation, ports, and saved configuration shape unchanged.
+  - View mode remains compact operational facts with fork/merge port chips and window boundary chips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingFanNodeWidgets" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingWindowNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not completed because native desktop automation was stopped with Escape during file-open setup; no manual visual acceptance is claimed for this slice.
 - Current design rules learned from visual review:
   - View mode must show useful operational facts, not decorative contract dumps.
   - Edit mode must use one clean flat form/workspace surface, not nested panels.
@@ -4434,5 +4444,5 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Dialog footers should sit in a consistent padded full-width footer panel.
   - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
 - Next implementation order:
-  1. Continue remaining routing-node polish with Fork/Merge/Window using the same flat edit surface and useful compact view-mode facts.
-  2. Normalize source/trigger, actor/sink, metric, and generic nodes only after routing nodes have the stable shared pattern.
+  1. Normalize source/trigger nodes using the same compact view-mode facts and flat edit surface rules.
+  2. Then continue actor/sink, metric, and generic node polish.

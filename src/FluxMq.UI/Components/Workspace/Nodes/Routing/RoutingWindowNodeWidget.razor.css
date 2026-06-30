@@ -88,22 +88,28 @@
     min-width: 0;
 }
 
-.routing-window-primary-row {
-    align-items: end;
+.routing-window-layout {
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.42fr);
+    grid-template-columns: minmax(0, 1fr) minmax(164px, 0.38fr);
     min-width: 0;
 }
 
 .routing-window-boundary-editor {
     align-items: end;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.68fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     min-width: 0;
-    padding-top: 7px;
+}
+
+.routing-window-sidecar {
+    align-content: start;
+    border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding-left: 7px;
 }
 
 .routing-window-partial-option {
@@ -163,9 +169,16 @@
 
 @media (max-width: 720px) {
     .routing-window-meta,
-    .routing-window-primary-row,
+    .routing-window-layout,
     .routing-window-boundary-editor {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .routing-window-sidecar {
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+        padding-left: 0;
+        padding-top: 7px;
     }
 
     .routing-window-boundary {
