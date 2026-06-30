@@ -4378,6 +4378,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `Polish routing matching editors`
   - `Polish routing utility editors`
   - `Polish source and trigger editors`
+  - `Polish actor sink editors`
 - Dynamic Mapper result:
   - Rebuilt the edit dialog around three stable columns: sample input, mapping expression, and result.
   - Made the expression editor the dominant full-height workspace.
@@ -4448,6 +4449,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttTriggerNodeWidget|FullyQualifiedName~ConnectionStateTriggerNodeWidget|FullyQualifiedName~GeneratedSourceNodeWidget|FullyQualifiedName~ReplaySourceNodeWidget|FullyQualifiedName~StoredSessionSourceNodeWidget|FullyQualifiedName~TimerNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Actor Sink result:
+  - Removed view-mode request-field contract rows from `mqtt.publisher`, `mqtt.recorder`, and `file.writer`, leaving compact broker/target and input-buffer facts only.
+  - Kept `mqtt.publisher` broker selection, app-resource synchronization, live-connection synchronization, input-buffer validation, and saved configuration shape unchanged.
+  - Kept `mqtt.recorder` and `file.writer` as dense single-control input-buffer editors with existing validation and saved configuration unchanged.
+  - Runtime behavior, request contracts, node ids, ports, component contracts, and normalization behavior are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttPublisherNodeWidget|FullyQualifiedName~MqttRecorderNodeWidget|FullyQualifiedName~FileWriterNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Current design rules learned from visual review:
   - View mode must show useful operational facts, not decorative contract dumps.
   - Edit mode must use one clean flat form/workspace surface, not nested panels.
@@ -4456,5 +4466,5 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Dialog footers should sit in a consistent padded full-width footer panel.
   - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
 - Next implementation order:
-  1. Continue with actor/sink nodes using the same compact view-mode facts and flat edit surface rules.
-  2. Then continue metric and generic node polish.
+  1. Continue with metric node polish using the same compact view-mode facts and flat edit surface rules.
+  2. Then continue generic node polish.
