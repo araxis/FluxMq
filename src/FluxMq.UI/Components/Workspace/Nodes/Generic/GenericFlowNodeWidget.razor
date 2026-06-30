@@ -72,13 +72,13 @@
                 </div>
             </div>
 
-            <div class="generic-node-editor-port-list" aria-label="Generic component port contracts">
+            <div class="generic-node-editor-port-list" aria-label="Generic component port details">
                 @if (SortedPortDescriptors.Count > 0)
                 {
                     <div class="generic-node-editor-port-header" aria-hidden="true">
                         <span>Direction</span>
                         <span>Port</span>
-                        <span>Contract</span>
+                        <span>Value type</span>
                     </div>
                     @foreach (var port in SortedPortDescriptors)
                     {

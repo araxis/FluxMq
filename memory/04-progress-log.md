@@ -4467,6 +4467,16 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttMetricsNodeWidget|FullyQualifiedName~MetricSourceNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Generic Node result:
+  - Removed view-mode request/result/field dump rows from `http.request`, `payload.inspect`, and legacy `mqtt.payload-inspector`, leaving compact operational facts and option state.
+  - Renamed fallback editor port-detail wording for `GenericFlowNodeWidget` and `DefaultNodeWidget` away from contract language while keeping the same summary, port counts, and port chips.
+  - Kept `flow.logger` on the generic widget path; no dedicated widget was added.
+  - All affected editors remain flat detail/configuration surfaces without code-editor workspaces.
+  - Runtime behavior, saved configuration shape, node ids, ports, registry mappings, request/result shapes, component contracts, and normalization behavior are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~HttpRequestNodeWidget|FullyQualifiedName~PayloadInspectNodeWidget|FullyQualifiedName~PayloadInspectorNodeWidget|FullyQualifiedName~GenericFlowNodeWidget|FullyQualifiedName~DefaultNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Current design rules learned from visual review:
   - View mode must show useful operational facts, not decorative contract dumps.
   - Edit mode must use one clean flat form/workspace surface, not nested panels.
@@ -4475,4 +4485,4 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Dialog footers should sit in a consistent padded full-width footer panel.
   - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
 - Next implementation order:
-  1. Continue generic node polish.
+  1. Choose the next small designer-polish backlog item after the generic/fallback node pass.

@@ -31,22 +31,13 @@
                     <span>Input buffer</span>
                     <strong>@InputBufferCaption</strong>
                 </div>
-            </div>
-
-            <div class="payload-inspect-contracts node-ui-token-group">
-                <div class="payload-inspect-contract node-ui-token-row" aria-label="Payload inspection request fields">
-                    <span class="payload-inspect-contract-label node-ui-fact-label">Request fields</span>
-                    <span class="payload-inspect-token node-ui-token">text</span>
-                    <span class="payload-inspect-token node-ui-token">bytes</span>
-                    <span class="payload-inspect-token node-ui-token">contentType</span>
-                    <span class="payload-inspect-token node-ui-token">encodingHint</span>
+                <div class="payload-inspect-meta-item node-ui-fact">
+                    <span>Base64</span>
+                    <strong>@Base64Caption</strong>
                 </div>
-                <div class="payload-inspect-contract node-ui-token-row" aria-label="Payload inspection result fields">
-                    <span class="payload-inspect-contract-label node-ui-fact-label">Result fields</span>
-                    <span class="payload-inspect-token node-ui-token">kind</span>
-                    <span class="payload-inspect-token node-ui-token">contentType</span>
-                    <span class="payload-inspect-token node-ui-token">byteCount</span>
-                    <span class="payload-inspect-token node-ui-token">preview</span>
+                <div class="payload-inspect-meta-item node-ui-fact">
+                    <span>Formatting</span>
+                    <strong>@FormattersCaption</strong>
                 </div>
             </div>
         </div>
@@ -123,6 +114,14 @@
     private string InputBufferCaption => PayloadInspectNodeModel
         .NormalizePositiveInt(Model.BoundedCapacity, PayloadInspectNodeModel.DefaultBoundedCapacity)
         .ToString();
+    private string Base64Caption => Model.DetectBase64 ? "detect" : "off";
+    private string FormattersCaption => (Model.FormatJson, Model.FormatXml) switch
+    {
+        (true, true) => "JSON + XML",
+        (true, false) => "JSON",
+        (false, true) => "XML",
+        _ => "off"
+    };
 
     protected override void OnParametersSet()
     {

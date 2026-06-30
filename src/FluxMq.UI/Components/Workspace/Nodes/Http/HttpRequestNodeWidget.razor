@@ -27,21 +27,13 @@
                     <span>Input buffer</span>
                     <strong>@InputBufferCaption</strong>
                 </div>
-            </div>
-
-            <div class="http-client-contracts node-ui-token-group">
-                <div class="http-client-contract node-ui-token-row" aria-label="HTTP request fields">
-                    <span class="http-client-contract-label node-ui-fact-label">Request fields</span>
-                    <span class="http-client-token node-ui-token">method</span>
-                    <span class="http-client-token node-ui-token">url</span>
-                    <span class="http-client-token node-ui-token">headers</span>
-                    <span class="http-client-token node-ui-token">body</span>
+                <div class="http-client-meta-item node-ui-fact">
+                    <span>Redirects</span>
+                    <strong>@RedirectCaption</strong>
                 </div>
-                <div class="http-client-contract node-ui-token-row" aria-label="HTTP response fields">
-                    <span class="http-client-contract-label node-ui-fact-label">Response fields</span>
-                    <span class="http-client-token node-ui-token">status</span>
-                    <span class="http-client-token node-ui-token">headers</span>
-                    <span class="http-client-token node-ui-token">body</span>
+                <div class="http-client-meta-item node-ui-fact">
+                    <span>Errors</span>
+                    <strong>@ErrorModeCaption</strong>
                 </div>
             </div>
         </div>
@@ -132,6 +124,8 @@
     private string InputBufferCaption => HttpRequestNodeModel
         .NormalizePositiveInt(_boundedCapacity, HttpRequestNodeModel.DefaultBoundedCapacity)
         .ToString();
+    private string RedirectCaption => Model.FollowRedirects ? "follow" : "off";
+    private string ErrorModeCaption => Model.TreatNonSuccessStatusAsError ? "strict" : "pass through";
 
     protected override void OnParametersSet()
     {
