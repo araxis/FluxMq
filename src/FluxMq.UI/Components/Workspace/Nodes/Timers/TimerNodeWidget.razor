@@ -32,18 +32,6 @@
                     <strong>@BoundedCapacityCaption</strong>
                 </div>
             </div>
-
-            <div class="timer-node-contract node-ui-token-row" aria-label="@ContractAriaLabel">
-                <span class="timer-node-contract-label node-ui-fact-label">@ContractLabel</span>
-                @foreach (var token in SummaryTokens)
-                {
-                    <span class="@TimerTokenClass">@token</span>
-                }
-                @if (!string.IsNullOrWhiteSpace(LimitToken))
-                {
-                    <span class="timer-node-token muted node-ui-token">@LimitToken</span>
-                }
-            </div>
         </div>
     </Body>
     <Editor>
@@ -295,38 +283,9 @@
         _ => string.Empty
     };
 
-    private string ContractAriaLabel => $"{ModeCaption} timer fields";
-
     private Color TimerCategoryColor => string.Equals(Node.Category, "Control", StringComparison.Ordinal)
         ? Color.Secondary
         : Color.Primary;
-
-    private string TimerTokenClass => string.Equals(Node.Category, "Control", StringComparison.Ordinal)
-        ? "timer-node-token passthrough"
-        : "timer-node-token";
-
-    private string ContractLabel => Node switch
-    {
-        TimerIntervalNodeModel or TimerScheduleNodeModel => "Output fields",
-        _ => "Passthrough"
-    };
-
-    private IReadOnlyList<string> SummaryTokens => Node switch
-    {
-        TimerIntervalNodeModel => ["TimerTick", "tickId", "timestamp"],
-        TimerScheduleNodeModel => ["ScheduleTick", "cron", "scheduledAt"],
-        TimerDelayNodeModel delay => [TimerDelayNodeModel.NormalizeInputType(delay.InputType), "delayed", "unchanged"],
-        TimerDebounceNodeModel debounce => [TimerDelayNodeModel.NormalizeInputType(debounce.InputType), "last input", "unchanged"],
-        TimerThrottleNodeModel throttle => [TimerDelayNodeModel.NormalizeInputType(throttle.InputType), "window", "unchanged"],
-        _ => []
-    };
-
-    private string LimitToken => Node switch
-    {
-        TimerIntervalNodeModel interval => $"max {MaxTicksText(interval.MaxTicks)}",
-        TimerScheduleNodeModel schedule => $"max {MaxTicksText(schedule.MaxTicks)}",
-        _ => string.Empty
-    };
 
     private void LoadDraft()
     {
@@ -576,9 +535,6 @@
         => _boundedCapacity <= 0
             ? "Buffer must be greater than 0."
             : null;
-
-    private static string MaxTicksText(int maxTicks)
-        => maxTicks > 0 ? maxTicks.ToString() : "unlimited";
 
     private static string FormatMilliseconds(int milliseconds)
         => $"{milliseconds} ms";

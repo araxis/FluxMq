@@ -27,8 +27,7 @@
     grid-column: 1 / -1;
 }
 
-.generated-source-meta-item span,
-.generated-source-contract-label {
+.generated-source-meta-item span {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
     font-weight: 750;
@@ -90,22 +89,6 @@
     line-height: 1;
 }
 
-.generated-source-contract {
-    align-items: center;
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 3px;
-    justify-content: start;
-    min-width: 0;
-    padding: 5px 2px 0;
-}
-
-.generated-source-contract-label {
-    flex: 0 0 100%;
-    white-space: normal;
-}
-
 .generated-source-token {
     align-items: center;
     border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 28%, var(--flux-border-soft));
@@ -130,20 +113,27 @@
     min-width: 0;
 }
 
-.generated-source-settings-row {
-    align-items: center;
+.generated-source-layout {
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(168px, 0.28fr);
     min-width: 0;
-    width: 100%;
 }
 
 .generated-source-message-table {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
     gap: 0;
     min-width: 0;
+    overflow-x: auto;
+}
+
+.generated-source-sidecar {
+    align-content: start;
+    border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding-left: 7px;
 }
 
 .generated-source-table-header,
@@ -290,15 +280,20 @@
 }
 
 .generated-source-buffer-field {
-    justify-self: end;
-    max-width: 220px;
     width: 100%;
 }
 
 @media (max-width: 720px) {
     .generated-source-meta,
-    .generated-source-settings-row {
+    .generated-source-layout {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .generated-source-sidecar {
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+        padding-left: 0;
+        padding-top: 7px;
     }
 
     .generated-source-table-header {
@@ -329,7 +324,4 @@
         justify-content: start;
     }
 
-    .generated-source-contract {
-        align-items: flex-start;
-    }
 }

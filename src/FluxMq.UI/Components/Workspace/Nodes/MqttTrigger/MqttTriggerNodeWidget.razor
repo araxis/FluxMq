@@ -10,7 +10,7 @@
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
-                 EditDialogMaxWidth="@MaxWidth.Medium"
+                 EditDialogMaxWidth="@MaxWidth.Large"
                  OnSave="@SaveAsync"
                  EditorValidationError="@ValidateEditor"
                  OnCancel="@LoadDraft">
@@ -52,51 +52,8 @@
     </Body>
     <Editor>
         <div class="mqtt-trigger-editor node-ui-editor">
-            <section class="mqtt-trigger-editor-section" aria-label="Broker settings">
-                <div class="mqtt-trigger-editor-grid node-ui-form-grid">
-                    @{
-                        var brokerOptions = BrokerOptions;
-                    }
-                    @if (brokerOptions.Count > 0)
-                    {
-                        <MudSelect T="string"
-                                   Label="Broker connection"
-                                   @bind-Value="_connection"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Dense="true"
-                                   Class="mqtt-trigger-broker-field">
-                            @foreach (var option in brokerOptions)
-                            {
-                                <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
-                            }
-                        </MudSelect>
-                    }
-                    else
-                    {
-                        <div class="mqtt-trigger-broker-cell">
-                            <MudTextField T="string"
-                                          Label="Connection name"
-                                          @bind-Value="_connection"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Class="mqtt-trigger-broker-field" />
-                        </div>
-                    }
-                    <MudNumericField T="int"
-                                     Label="Output buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="mqtt-trigger-buffer-field" />
-                </div>
-            </section>
-
-            <section class="mqtt-trigger-editor-section compact" aria-label="Subscriptions">
-                <div class="mqtt-trigger-subscription-editor node-ui-table-wrap">
+            <div class="mqtt-trigger-layout" aria-label="MQTT trigger editor layout">
+                <section class="mqtt-trigger-subscription-editor node-ui-table-wrap" aria-label="Subscriptions">
                     <MudTable T="MqttTriggerSubscriptionEditorRow"
                               Items="@SubscriptionEditorRows"
                               Dense="true"
@@ -195,8 +152,47 @@
                             </div>
                         </NoRecordsContent>
                     </MudTable>
-                </div>
-            </section>
+                </section>
+
+                <aside class="mqtt-trigger-sidecar" aria-label="Broker settings">
+                    @{
+                        var brokerOptions = BrokerOptions;
+                    }
+                    @if (brokerOptions.Count > 0)
+                    {
+                        <MudSelect T="string"
+                                   Label="Broker connection"
+                                   @bind-Value="_connection"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="mqtt-trigger-broker-field">
+                            @foreach (var option in brokerOptions)
+                            {
+                                <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                    else
+                    {
+                        <MudTextField T="string"
+                                      Label="Connection name"
+                                      @bind-Value="_connection"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="mqtt-trigger-broker-field" />
+                    }
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="mqtt-trigger-buffer-field" />
+                </aside>
+            </div>
         </div>
     </Editor>
 </NodeWidgetShell>

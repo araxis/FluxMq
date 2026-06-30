@@ -23,8 +23,7 @@
     padding: 4px 5px;
 }
 
-.timer-node-meta-item span,
-.timer-node-contract-label {
+.timer-node-meta-item span {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
     font-weight: 750;
@@ -47,48 +46,6 @@
     overflow: hidden;
     overflow-wrap: anywhere;
     white-space: normal;
-}
-
-.timer-node-contract {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 68%, transparent);
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 3px;
-    min-width: 0;
-    padding: 5px 2px 0;
-}
-
-.timer-node-contract-label {
-    flex: 0 0 100%;
-    white-space: normal;
-}
-
-.timer-node-token {
-    align-items: center;
-    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 28%, var(--flux-border-soft));
-    border-radius: 4px;
-    color: color-mix(in srgb, var(--mud-palette-primary) 78%, var(--mud-palette-text-primary));
-    display: inline-flex;
-    font-size: 0.52rem;
-    font-weight: 760;
-    justify-content: center;
-    line-height: 1;
-    max-width: 100%;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    padding: 3px 5px;
-    text-align: center;
-    white-space: normal;
-}
-
-.timer-node-token.muted {
-    color: var(--flux-text-muted);
-}
-
-.timer-node-token.passthrough {
-    border-color: color-mix(in srgb, var(--mud-palette-secondary) 28%, var(--flux-border-soft));
-    color: color-mix(in srgb, var(--mud-palette-secondary) 78%, var(--mud-palette-text-primary));
 }
 
 .timer-node-editor {
@@ -209,7 +166,4 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .timer-node-contract {
-        align-items: flex-start;
-    }
 }

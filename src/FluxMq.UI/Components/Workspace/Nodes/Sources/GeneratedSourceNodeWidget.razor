@@ -46,119 +46,113 @@
                     <span class="generated-source-more">+@MessagePreviewOverflow more</span>
                 }
             </div>
-
-            <div class="generated-source-contract node-ui-token-row" aria-label="Generated source output fields">
-                <span class="generated-source-contract-label node-ui-fact-label">Output fields</span>
-                <span class="generated-source-token node-ui-token">MqttEnvelope</span>
-                <span class="generated-source-token node-ui-token">topic</span>
-                <span class="generated-source-token node-ui-token">payload</span>
-                <span class="generated-source-token node-ui-token">qos</span>
-            </div>
         </div>
     </Body>
     <Editor>
         <div class="generated-source-editor node-ui-editor" aria-label="Generated source settings">
-            <div class="generated-source-settings-row" aria-label="Generated source configuration">
-                <MudNumericField T="int"
-                                 Label="Output buffer"
-                                 Value="@_boundedCapacity"
-                                 ValueChanged="@SetBoundedCapacity"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="generated-source-buffer-field" />
-            </div>
-
-            <div class="generated-source-message-table" aria-label="Generated message rows">
-                <div class="generated-source-table-header">
-                    <span class="generated-source-column-header number">#</span>
-                    <span class="generated-source-column-header">Topic</span>
-                    <span class="generated-source-column-header">Payload</span>
-                    <span class="generated-source-column-header">QoS</span>
-                    <span class="generated-source-column-header">Retain</span>
-                    <span class="generated-source-column-header">Received at</span>
-                    <span class="generated-source-column-header action">
-                        <MudTooltip Text="Add message">
-                            <MudIconButton Size="Size.Small"
-                                           Icon="@Icons.Material.Filled.Add"
-                                           aria-label="Add generated message"
-                                           Class="generated-source-add-button"
-                                           OnClick="@AddMessageAsync" />
-                        </MudTooltip>
-                    </span>
-                </div>
-                @if (_messages.Count == 0)
-                {
-                    <div class="generated-source-empty" role="status">
-                        Add at least one generated message.
-                    </div>
-                }
-                else
-                {
-                    @for (var i = 0; i < _messages.Count; i++)
-                    {
-                        var index = i;
-                        <div class="generated-source-message-row" @key="_messages[index]">
-                            <span class="generated-source-message-index">@($"{index + 1:00}")</span>
-                            <MudTextField T="string"
-                                          Value="@_messages[index].Topic"
-                                          ValueChanged="@(value => UpdateMessageTopicAsync(index, value))"
-                                          Placeholder="@($"Topic {index + 1}")"
-                                          aria-label="@($"Generated message {index + 1} topic")"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Immediate="true"
-                                          Class="generated-source-topic-field" />
-                            <MudTextField T="string"
-                                          Value="@_messages[index].Payload"
-                                          ValueChanged="@(value => _messages[index].Payload = value ?? string.Empty)"
-                                          Placeholder="Payload"
-                                          aria-label="@($"Generated message {index + 1} payload")"
-                                          Lines="2"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Class="generated-source-payload-field" />
-                            <MudSelect T="int"
-                                       Value="@_messages[index].QualityOfService"
-                                       ValueChanged="@(value => _messages[index].QualityOfService = value)"
-                                       Label="QoS"
-                                       aria-label="@($"Generated message {index + 1} QoS")"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense"
-                                       Dense="true"
-                                       Class="generated-source-qos-field">
-                                <MudSelectItem Value="@(0)">QoS 0</MudSelectItem>
-                                <MudSelectItem Value="@(1)">QoS 1</MudSelectItem>
-                                <MudSelectItem Value="@(2)">QoS 2</MudSelectItem>
-                            </MudSelect>
-                            <div class="generated-source-retain-toggle">
-                                <MudCheckBox T="bool"
-                                             Value="@_messages[index].Retain"
-                                             ValueChanged="@(value => _messages[index].Retain = value)"
-                                             aria-label="@($"Generated message {index + 1} retained")"
-                                             Dense="true"
-                                             Class="generated-source-retain-check" />
-                            </div>
-                            <MudTextField T="string"
-                                          Value="@_messages[index].ReceivedAt"
-                                          ValueChanged="@(value => _messages[index].ReceivedAt = value ?? string.Empty)"
-                                          Placeholder="Received at"
-                                          aria-label="@($"Generated message {index + 1} received at")"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Class="generated-source-received-field" />
-                            <MudTooltip Text="Remove message">
+            <div class="generated-source-layout" aria-label="Generated source editor layout">
+                <div class="generated-source-message-table" aria-label="Generated message rows">
+                    <div class="generated-source-table-header">
+                        <span class="generated-source-column-header number">#</span>
+                        <span class="generated-source-column-header">Topic</span>
+                        <span class="generated-source-column-header">Payload</span>
+                        <span class="generated-source-column-header">QoS</span>
+                        <span class="generated-source-column-header">Retain</span>
+                        <span class="generated-source-column-header">Received at</span>
+                        <span class="generated-source-column-header action">
+                            <MudTooltip Text="Add message">
                                 <MudIconButton Size="Size.Small"
-                                               Icon="@Icons.Material.Filled.Close"
-                                               aria-label="@($"Remove generated message {index + 1}")"
-                                               Class="generated-source-remove-button"
-                                               OnClick="@(() => RemoveMessage(index))" />
+                                               Icon="@Icons.Material.Filled.Add"
+                                               aria-label="Add generated message"
+                                               Class="generated-source-add-button"
+                                               OnClick="@AddMessageAsync" />
                             </MudTooltip>
+                        </span>
+                    </div>
+                    @if (_messages.Count == 0)
+                    {
+                        <div class="generated-source-empty" role="status">
+                            Add at least one generated message.
                         </div>
                     }
-                }
+                    else
+                    {
+                        @for (var i = 0; i < _messages.Count; i++)
+                        {
+                            var index = i;
+                            <div class="generated-source-message-row" @key="_messages[index]">
+                                <span class="generated-source-message-index">@($"{index + 1:00}")</span>
+                                <MudTextField T="string"
+                                              Value="@_messages[index].Topic"
+                                              ValueChanged="@(value => UpdateMessageTopicAsync(index, value))"
+                                              Placeholder="@($"Topic {index + 1}")"
+                                              aria-label="@($"Generated message {index + 1} topic")"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Immediate="true"
+                                              Class="generated-source-topic-field" />
+                                <MudTextField T="string"
+                                              Value="@_messages[index].Payload"
+                                              ValueChanged="@(value => _messages[index].Payload = value ?? string.Empty)"
+                                              Placeholder="Payload"
+                                              aria-label="@($"Generated message {index + 1} payload")"
+                                              Lines="2"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="generated-source-payload-field" />
+                                <MudSelect T="int"
+                                           Value="@_messages[index].QualityOfService"
+                                           ValueChanged="@(value => _messages[index].QualityOfService = value)"
+                                           Label="QoS"
+                                           aria-label="@($"Generated message {index + 1} QoS")"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Dense="true"
+                                           Class="generated-source-qos-field">
+                                    <MudSelectItem Value="@(0)">QoS 0</MudSelectItem>
+                                    <MudSelectItem Value="@(1)">QoS 1</MudSelectItem>
+                                    <MudSelectItem Value="@(2)">QoS 2</MudSelectItem>
+                                </MudSelect>
+                                <div class="generated-source-retain-toggle">
+                                    <MudCheckBox T="bool"
+                                                 Value="@_messages[index].Retain"
+                                                 ValueChanged="@(value => _messages[index].Retain = value)"
+                                                 aria-label="@($"Generated message {index + 1} retained")"
+                                                 Dense="true"
+                                                 Class="generated-source-retain-check" />
+                                </div>
+                                <MudTextField T="string"
+                                              Value="@_messages[index].ReceivedAt"
+                                              ValueChanged="@(value => _messages[index].ReceivedAt = value ?? string.Empty)"
+                                              Placeholder="Received at"
+                                              aria-label="@($"Generated message {index + 1} received at")"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="generated-source-received-field" />
+                                <MudTooltip Text="Remove message">
+                                    <MudIconButton Size="Size.Small"
+                                                   Icon="@Icons.Material.Filled.Close"
+                                                   aria-label="@($"Remove generated message {index + 1}")"
+                                                   Class="generated-source-remove-button"
+                                                   OnClick="@(() => RemoveMessage(index))" />
+                                </MudTooltip>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <aside class="generated-source-sidecar" aria-label="Generated source support settings">
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     Value="@_boundedCapacity"
+                                     ValueChanged="@SetBoundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="generated-source-buffer-field" />
+                </aside>
             </div>
         </div>
     </Editor>
