@@ -38,7 +38,7 @@
             @if (Model.Parameters.Count > 0)
             {
                 <div class="metric-source-parameters" aria-label="Metric source parameters">
-                    <span class="metric-source-contract-label node-ui-fact-label">Parameters</span>
+                    <span class="metric-source-parameter-label node-ui-fact-label">Parameters</span>
                     @foreach (var parameter in ParameterPreview)
                     {
                         <span class="metric-source-token node-ui-token" title="@($"{parameter.Key}: {parameter.Value}")">@parameter.Key</span>
@@ -49,14 +49,6 @@
                     }
                 </div>
             }
-
-            <div class="metric-source-contract node-ui-token-row" aria-label="Metric source output fields">
-                <span class="metric-source-contract-label node-ui-fact-label">Output fields</span>
-                <span class="metric-source-token node-ui-token">NumberMetricReading</span>
-                <span class="metric-source-token node-ui-token">metricId</span>
-                <span class="metric-source-token node-ui-token">timestamp</span>
-                <span class="metric-source-token node-ui-token">value</span>
-            </div>
         </div>
     </Body>
     <Editor>
