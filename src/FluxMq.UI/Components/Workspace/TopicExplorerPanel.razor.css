@@ -380,22 +380,33 @@ h3 {
     overflow: hidden;
 }
 
-.topic-last-section-label {
+.topic-payload-header {
     align-items: center;
     border-bottom: 1px solid var(--flux-border-soft);
     color: var(--flux-text-muted);
     display: flex;
     flex: 0 0 auto;
-    font-size: 10.75px;
-    font-weight: 750;
     gap: 8px;
     justify-content: space-between;
-    min-height: 31px;
+    min-height: 34px;
     min-width: 0;
-    padding: 0 9px;
+    padding: 4px 6px 4px 9px;
 }
 
-.topic-last-section-label span:last-child {
+.topic-payload-heading {
+    display: flex;
+    flex: 1 1 auto;
+    gap: 8px;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.topic-payload-heading span:first-child {
+    font-size: 10.75px;
+    font-weight: 750;
+}
+
+.topic-payload-heading span:last-child {
     color: var(--flux-text-subtle);
     font-family: Consolas, "Courier New", monospace;
     font-size: 10.25px;
@@ -404,6 +415,56 @@ h3 {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.topic-payload-controls {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 3px;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.topic-payload-view-button {
+    align-items: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--flux-text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 10.5px;
+    font-weight: 650;
+    gap: 3px;
+    height: 24px;
+    line-height: 1;
+    padding: 0 5px;
+}
+
+.topic-payload-view-button:hover,
+.topic-payload-view-button.active {
+    background: var(--flux-surface);
+    border-color: var(--flux-border);
+    color: var(--mud-palette-text-primary);
+}
+
+.topic-payload-view-button ::deep .mud-icon-root {
+    font-size: 14px;
+}
+
+.topic-payload-copy {
+    color: var(--flux-text-muted);
+    height: 24px;
+    min-height: 24px;
+    min-width: 24px;
+    padding: 0;
+    width: 24px;
+}
+
+.topic-payload-copy ::deep .mud-icon-root {
+    font-size: 15px;
 }
 
 .topic-last-payload pre {
@@ -1016,8 +1077,7 @@ h3 {
     overflow: hidden;
 }
 
-.topic-history-detail-header,
-.topic-history-detail-payload-label {
+.topic-history-detail-header {
     align-items: center;
     border-bottom: 1px solid var(--flux-border-soft);
     color: var(--flux-text-muted);
@@ -1032,8 +1092,7 @@ h3 {
     padding: 0 9px;
 }
 
-.topic-history-detail-header span:last-child,
-.topic-history-detail-payload-label span:last-child {
+.topic-history-detail-header span:last-child {
     color: var(--flux-text-subtle);
     font-family: Consolas, "Courier New", monospace;
     font-size: 10.25px;

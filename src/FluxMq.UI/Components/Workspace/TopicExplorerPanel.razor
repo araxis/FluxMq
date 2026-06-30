@@ -5,6 +5,7 @@
 @inject LiveMqttWorkspaceService Live
 @inject ProjectManagerService Projects
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <div class="topic-explorer">
     <section class="topic-explorer-tree" aria-label="Topic tree">
@@ -165,9 +166,33 @@
             {
                 <div class="topic-last-body">
                     <div class="topic-last-payload">
-                        <div class="topic-last-section-label">
-                            <span>Payload</span>
-                            <span>@LastPayloadMeta</span>
+                        <div class="topic-payload-header">
+                            <div class="topic-payload-heading">
+                                <span>Payload</span>
+                                <span>@LastPayloadMeta</span>
+                            </div>
+                            <div class="topic-payload-controls" role="tablist" aria-label="Latest payload views">
+                                @foreach (var view in PayloadViewOptions)
+                                {
+                                    <button type="button"
+                                            role="tab"
+                                            aria-selected="@IsPayloadViewActive(_lastPayloadView, view)"
+                                            class="@PayloadViewButtonClass(_lastPayloadView, view)"
+                                            title="@PayloadViewLabel(view)"
+                                            @onclick="@(() => _lastPayloadView = view)">
+                                        <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" />
+                                        <span>@PayloadViewLabel(view)</span>
+                                    </button>
+                                }
+                                <MudTooltip Text="Copy latest payload view">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                   Size="Size.Small"
+                                                   Class="topic-payload-copy"
+                                                   Disabled="@(LastInspection is null)"
+                                                   aria-label="Copy latest payload view"
+                                                   OnClick="@CopyLatestPayloadViewAsync" />
+                                </MudTooltip>
+                            </div>
                         </div>
                         <pre>@LastPayloadPreview</pre>
                     </div>
@@ -372,9 +397,33 @@
                             </div>
 
                             <div class="topic-history-detail-payload">
-                                <div class="topic-history-detail-payload-label">
-                                    <span>Payload</span>
-                                    <span>@SelectedHistoryPayloadMeta</span>
+                                <div class="topic-payload-header">
+                                    <div class="topic-payload-heading">
+                                        <span>Payload</span>
+                                        <span>@SelectedHistoryPayloadMeta</span>
+                                    </div>
+                                    <div class="topic-payload-controls" role="tablist" aria-label="Selected payload views">
+                                        @foreach (var view in PayloadViewOptions)
+                                        {
+                                            <button type="button"
+                                                    role="tab"
+                                                    aria-selected="@IsPayloadViewActive(_selectedHistoryPayloadView, view)"
+                                                    class="@PayloadViewButtonClass(_selectedHistoryPayloadView, view)"
+                                                    title="@PayloadViewLabel(view)"
+                                                    @onclick="@(() => _selectedHistoryPayloadView = view)">
+                                                <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" />
+                                                <span>@PayloadViewLabel(view)</span>
+                                            </button>
+                                        }
+                                        <MudTooltip Text="Copy selected payload view">
+                                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                           Size="Size.Small"
+                                                           Class="topic-payload-copy"
+                                                           Disabled="@(SelectedHistoryInspection is null)"
+                                                           aria-label="Copy selected payload view"
+                                                           OnClick="@CopySelectedHistoryPayloadViewAsync" />
+                                        </MudTooltip>
+                                    </div>
                                 </div>
                                 <pre>@SelectedHistoryPayloadPreview</pre>
                             </div>
@@ -387,6 +436,18 @@
 </div>
 
 @code {
+    private const string PayloadFormattedView = "formatted";
+    private const string PayloadRawView = "raw";
+    private const string PayloadHexView = "hex";
+    private const string PayloadMetaView = "meta";
+    private static readonly string[] PayloadViewOptions =
+    [
+        PayloadFormattedView,
+        PayloadRawView,
+        PayloadHexView,
+        PayloadMetaView
+    ];
+
     private bool _disposed;
     private bool _monitorStarting;
     private FlowWorkspaceService? _subscribedProject;
@@ -394,6 +455,8 @@
     private string? _selectedBrokerName;
     private string? _selectedTopic;
     private string _filter = string.Empty;
+    private string _lastPayloadView = PayloadFormattedView;
+    private string _selectedHistoryPayloadView = PayloadFormattedView;
     private bool _setupDialogOpen;
     private FlowWorkspaceService? _setupPromptedProject;
     private bool _publishBusy;
@@ -592,13 +655,7 @@
         ? $"{inspection.DisplayTypeLabel} / {inspection.SizeBytes} B"
         : "No payload";
 
-    private string LastPayloadPreview
-    {
-        get
-        {
-            return FormatPayloadPreview(LastInspection);
-        }
-    }
+    private string LastPayloadPreview => DisplayPayloadView(LastInspection, _lastPayloadView);
 
     private string LastReceivedLabel => LastMessage is { } message
         ? message.ReceivedAt.ToLocalTime().ToString("HH:mm:ss")
@@ -612,7 +669,7 @@
         ? $"{inspection.DisplayTypeLabel} / {inspection.SizeBytes} B"
         : "No payload";
 
-    private string SelectedHistoryPayloadPreview => FormatPayloadPreview(SelectedHistoryInspection);
+    private string SelectedHistoryPayloadPreview => DisplayPayloadView(SelectedHistoryInspection, _selectedHistoryPayloadView);
 
     private string SelectedHistoryReceivedLabel => SelectedHistoryMessage is { } message
         ? message.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
@@ -878,13 +935,42 @@
             ? "topic-history-row selected"
             : "topic-history-row";
 
-    private static string FormatPayloadPreview(PayloadInspectionResult? inspection)
+    private async Task CopyLatestPayloadViewAsync()
+        => await CopyPayloadViewAsync(LastInspection, _lastPayloadView, "Latest payload view copied");
+
+    private async Task CopySelectedHistoryPayloadViewAsync()
+        => await CopyPayloadViewAsync(SelectedHistoryInspection, _selectedHistoryPayloadView, "Selected payload view copied");
+
+    private async Task CopyPayloadViewAsync(PayloadInspectionResult? inspection, string view, string successMessage)
+    {
+        if (inspection is null)
+        {
+            Snackbar.Add("No payload view to copy", Severity.Info);
+            return;
+        }
+
+        await Clipboard.Default.SetTextAsync(DisplayPayloadView(inspection, view));
+        Snackbar.Add(successMessage, Severity.Success);
+    }
+
+    private static string DisplayPayloadView(PayloadInspectionResult? inspection, string view)
     {
         if (inspection is null)
         {
             return "No payload captured.";
         }
 
+        return view switch
+        {
+            PayloadRawView => DisplayRawPayload(inspection),
+            PayloadHexView => DisplayHexPayload(inspection),
+            PayloadMetaView => DisplayPayloadMeta(inspection),
+            _ => DisplayFormattedPayload(inspection)
+        };
+    }
+
+    private static string DisplayFormattedPayload(PayloadInspectionResult inspection)
+    {
         if (inspection.SizeBytes == 0)
         {
             return "Empty payload.";
@@ -895,10 +981,74 @@
             return inspection.FormattedText;
         }
 
-        return inspection.IsText
-            ? inspection.RawText
+        if (inspection.IsText)
+        {
+            return inspection.RawText;
+        }
+
+        return string.IsNullOrWhiteSpace(inspection.HexDump)
+            ? "No formatted preview available."
             : inspection.HexDump;
     }
+
+    private static string DisplayRawPayload(PayloadInspectionResult inspection)
+    {
+        if (inspection.SizeBytes == 0)
+        {
+            return "Empty payload.";
+        }
+
+        return inspection.IsText
+            ? inspection.RawText
+            : "Binary payload. Use the hex view.";
+    }
+
+    private static string DisplayHexPayload(PayloadInspectionResult inspection)
+        => string.IsNullOrWhiteSpace(inspection.HexDump)
+            ? "Empty payload."
+            : inspection.HexDump;
+
+    private static string DisplayPayloadMeta(PayloadInspectionResult inspection)
+    {
+        var builder = new StringBuilder();
+        builder.Append("Type: ");
+        builder.AppendLine(inspection.DisplayTypeLabel);
+        builder.Append("Size: ");
+        builder.Append(inspection.SizeBytes);
+        builder.AppendLine(" bytes");
+        builder.Append("Text: ");
+        builder.AppendLine(inspection.IsText ? "Yes" : "No");
+        builder.Append("Metadata: ");
+        builder.Append(inspection.Metadata);
+
+        return builder.ToString();
+    }
+
+    private static bool IsPayloadViewActive(string currentView, string view)
+        => string.Equals(currentView, view, StringComparison.Ordinal);
+
+    private static string PayloadViewButtonClass(string currentView, string view)
+        => IsPayloadViewActive(currentView, view)
+            ? "topic-payload-view-button active"
+            : "topic-payload-view-button";
+
+    private static string PayloadViewLabel(string view)
+        => view switch
+        {
+            PayloadRawView => "Raw",
+            PayloadHexView => "Hex",
+            PayloadMetaView => "Meta",
+            _ => "Formatted"
+        };
+
+    private static string PayloadViewIcon(string view)
+        => view switch
+        {
+            PayloadRawView => Icons.Material.Filled.Subject,
+            PayloadHexView => Icons.Material.Filled.Tag,
+            PayloadMetaView => Icons.Material.Filled.Info,
+            _ => Icons.Material.Filled.DataObject
+        };
 
     private bool IsInSelectedTopic(string topic) =>
         string.IsNullOrWhiteSpace(_selectedTopic) ||
