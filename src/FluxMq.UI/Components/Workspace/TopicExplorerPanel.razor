@@ -298,6 +298,58 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="topic-publish-assist" aria-label="Publish assist">
+                    <div class="topic-publish-assist-actions">
+                        <span class="topic-publish-assist-label">Use message</span>
+                        <button type="button"
+                                class="topic-publish-assist-button"
+                                disabled="@(!CanUseLatestPublishSource)"
+                                title='@PublishSourceHint(LastMessage, LastInspection, "latest")'
+                                @onclick="@(() => ApplyMessagePublishSource(LastMessage))">
+                            <MudIcon Icon="@Icons.Material.Filled.NorthEast" Size="Size.Small" />
+                            <span>Use latest</span>
+                        </button>
+                        <button type="button"
+                                class="topic-publish-assist-button"
+                                disabled="@(!CanUseSelectedPublishSource)"
+                                title='@PublishSourceHint(SelectedHistoryMessage, SelectedHistoryInspection, "selected")'
+                                @onclick="@(() => ApplyMessagePublishSource(SelectedHistoryMessage))">
+                            <MudIcon Icon="@Icons.Material.Filled.SubdirectoryArrowRight" Size="Size.Small" />
+                            <span>Use selected</span>
+                        </button>
+                    </div>
+
+                    <div class="topic-publish-recent" aria-label="Recent publishes">
+                        @if (_recentPublishes.Count == 0)
+                        {
+                            <div class="topic-publish-recent-empty">No recent publishes</div>
+                        }
+                        else
+                        {
+                            <div class="topic-publish-recent-list">
+                                @foreach (var publish in _recentPublishes)
+                                {
+                                    <button type="button"
+                                            class="topic-publish-recent-row"
+                                            title="@RecentPublishTitle(publish)"
+                                            @key="@publish.PublishedAt"
+                                            @onclick="@(() => LoadRecentPublish(publish))">
+                                        <strong>@publish.Topic</strong>
+                                        <span>@RecentPublishMeta(publish)</span>
+                                    </button>
+                                }
+                            </div>
+                            <MudTooltip Text="Clear recent publishes">
+                                <MudIconButton Icon="@Icons.Material.Filled.ClearAll"
+                                               Size="Size.Small"
+                                               Class="topic-publish-recent-clear"
+                                               aria-label="Clear recent publishes"
+                                               OnClick="@ClearRecentPublishes" />
+                            </MudTooltip>
+                        }
+                    </div>
+                </div>
             </section>
         }
 
@@ -500,6 +552,7 @@
     private const string PayloadDiffView = "diff";
     private const int PayloadDiffContextLineCount = 2;
     private const int PayloadDiffMaxChangedLines = 80;
+    private const int MaxRecentPublishes = 6;
     private const string HistoryFilterAll = "all";
     private const string HistoryQos0 = "0";
     private const string HistoryQos1 = "1";
@@ -547,6 +600,7 @@
     private string _publishPayload = "{}";
     private MqttQualityOfServiceLevel _publishQos = MqttQualityOfServiceLevel.AtMostOnce;
     private bool _publishRetain;
+    private readonly List<TopicRecentPublish> _recentPublishes = [];
 
     private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
         ? Live.RecentMessages
@@ -825,6 +879,10 @@
         SelectedPublishConnection is not null &&
         !string.IsNullOrWhiteSpace(_publishTopic);
 
+    private bool CanUseLatestPublishSource => CanUseMessageAsPublishSource(LastMessage, LastInspection);
+
+    private bool CanUseSelectedPublishSource => CanUseMessageAsPublishSource(SelectedHistoryMessage, SelectedHistoryInspection);
+
     private string PublishButtonLabel => _publishBusy ? "Publishing" : "Publish";
 
     private string PublishClientCountLabel => PublishConnections.Count switch
@@ -847,6 +905,27 @@
             return $"{inspection.DisplayTypeLabel} / {payload.Length} B";
         }
     }
+
+    private static bool CanUseMessageAsPublishSource(MqttEnvelope? message, PayloadInspectionResult? inspection)
+        => message is not null && inspection is { IsText: true };
+
+    private static string PublishSourceHint(MqttEnvelope? message, PayloadInspectionResult? inspection, string source)
+    {
+        if (message is null)
+        {
+            return $"No {source} message to use";
+        }
+
+        return inspection is { IsText: true }
+            ? $"Use {source} message in publisher"
+            : $"Only text {source} payloads can be loaded into the publisher";
+    }
+
+    private static string RecentPublishMeta(TopicRecentPublish publish)
+        => $"{publish.BrokerResourceName} / QoS {((int)publish.QualityOfService).ToString(CultureInfo.InvariantCulture)} / {(publish.Retain ? "Retain" : "No retain")} / {publish.PayloadType} / {publish.PayloadBytes.ToString(CultureInfo.InvariantCulture)} B / {publish.PublishedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture)}";
+
+    private static string RecentPublishTitle(TopicRecentPublish publish)
+        => $"Load recent publish for {publish.Topic} from {publish.BrokerLabel}";
 
     private string TopicSourceLabel => Live.SelectedStoredSession is null
         ? "App broker monitor"
@@ -993,6 +1072,33 @@
         _publishTopic = args.Value?.ToString() ?? string.Empty;
     }
 
+    private void ApplyMessagePublishSource(MqttEnvelope? message)
+    {
+        if (message is null)
+        {
+            Snackbar.Add("No message to load", Severity.Info);
+            return;
+        }
+
+        var inspection = PayloadInspector.Inspect(message.Payload);
+        if (!inspection.IsText)
+        {
+            Snackbar.Add("Only text payloads can be loaded into the publisher", Severity.Info);
+            return;
+        }
+
+        _publishTopic = message.Topic;
+        _publishPayload = inspection.RawText;
+        _publishQos = message.QualityOfService;
+        _publishRetain = message.Retain;
+
+        var connection = FindPublishConnectionForBroker(BrokerLabel(message));
+        if (connection is not null)
+        {
+            _publishConnectionId = connection.Id.ToString();
+        }
+    }
+
     private async Task PublishTopicMessageAsync()
     {
         var connection = SelectedPublishConnection;
@@ -1033,6 +1139,8 @@
                     (int)_publishQos,
                     _publishRetain,
                     connectedConnection.ResourceName);
+
+                RecordRecentPublish(connectedConnection, topic, payload);
             }
         }
         finally
@@ -1040,6 +1148,55 @@
             _publishBusy = false;
             StateHasChanged();
         }
+    }
+
+    private void RecordRecentPublish(ManagedConnection connection, string topic, string payload)
+    {
+        var payloadText = payload ?? string.Empty;
+        var payloadBytes = Encoding.UTF8.GetBytes(payloadText);
+        var inspection = PayloadInspector.Inspect(payloadBytes);
+        var recent = new TopicRecentPublish(
+            connection.ResourceName,
+            PublishConnectionOptionLabel(connection),
+            topic,
+            payloadText,
+            _publishQos,
+            _publishRetain,
+            DateTimeOffset.UtcNow,
+            inspection.DisplayTypeLabel,
+            inspection.SizeBytes);
+
+        _recentPublishes.RemoveAll(item =>
+            string.Equals(item.BrokerResourceName, recent.BrokerResourceName, StringComparison.Ordinal) &&
+            string.Equals(item.Topic, recent.Topic, StringComparison.Ordinal) &&
+            string.Equals(item.Payload, recent.Payload, StringComparison.Ordinal) &&
+            item.QualityOfService == recent.QualityOfService &&
+            item.Retain == recent.Retain);
+        _recentPublishes.Insert(0, recent);
+        if (_recentPublishes.Count > MaxRecentPublishes)
+        {
+            _recentPublishes.RemoveRange(MaxRecentPublishes, _recentPublishes.Count - MaxRecentPublishes);
+        }
+    }
+
+    private void LoadRecentPublish(TopicRecentPublish publish)
+    {
+        var connection = PublishConnections.FirstOrDefault(connection =>
+            string.Equals(connection.ResourceName, publish.BrokerResourceName, StringComparison.Ordinal));
+        if (connection is not null)
+        {
+            _publishConnectionId = connection.Id.ToString();
+        }
+
+        _publishTopic = publish.Topic;
+        _publishPayload = publish.Payload;
+        _publishQos = publish.QualityOfService;
+        _publishRetain = publish.Retain;
+    }
+
+    private void ClearRecentPublishes()
+    {
+        _recentPublishes.Clear();
     }
 
     private bool CanEditBrokerMonitor(TopicBrokerGroup group)
@@ -1929,6 +2086,17 @@
             _subscribedProject.Changed -= OnProjectChanged;
         }
     }
+
+    private sealed record TopicRecentPublish(
+        string BrokerResourceName,
+        string BrokerLabel,
+        string Topic,
+        string Payload,
+        MqttQualityOfServiceLevel QualityOfService,
+        bool Retain,
+        DateTimeOffset PublishedAt,
+        string PayloadType,
+        int PayloadBytes);
 
     private sealed record TopicBrokerSnapshot(string Name, string Endpoint, MqttClientState State);
 

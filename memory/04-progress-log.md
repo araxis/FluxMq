@@ -4513,6 +4513,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Topics Publish Presets result:
+  - Added compact publish-assist controls inside the existing app-owned `Topics` publish composer.
+  - `Use latest` and `Use selected` load topic, text payload, QoS, retain, and a clean matching app broker into the composer when the source payload is text; binary/non-text payloads are not coerced into publish text.
+  - Successful publishes from this composer are kept in a bounded component-local recent list with load and clear actions, using broker resource/label, topic, text payload, QoS, retain, timestamp, payload type, and byte count.
+  - Preserved broker targeting, internal monitor-client filtering, `Live.ConnectAsync`, `Live.PublishAsync`, `FlowWorkspaceService.RecordManualMqttPublish`, selected broker/topic prefill, saved app schema, explorer schema, storage format, runtime components, node ids, ports, and component contracts.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Current design rules learned from visual review:
   - View mode must show useful operational facts, not decorative contract dumps.
   - Edit mode must use one clean flat form/workspace surface, not nested panels.
@@ -4521,4 +4530,4 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Dialog footers should sit in a consistent padded full-width footer panel.
   - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
 - Next implementation order:
-  1. Continue the next small `Topics` designer-polish backlog item, likely publish payload modes/templates/history, topic stats, or another focused MQTT Explorer control.
+  1. Continue the next small `Topics` designer-polish backlog item, likely topic stats or another focused MQTT Explorer control.
