@@ -1,11 +1,14 @@
+@implements IDisposable
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject AppThemeService ThemeService
+@inject IJSRuntime JsRuntime
 @inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.Hub"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Medium"
+                 EditDialogMaxWidth="MaxWidth.Large"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
@@ -24,8 +27,8 @@
                     <strong title="@RightInputTypeCaption">@RightInputTypeCaption</strong>
                 </div>
                 <div class="routing-join-meta-item node-ui-fact">
-                    <span>Output</span>
-                    <strong>FlowJoinResult</strong>
+                    <span>Timeout</span>
+                    <strong>@TimeoutCaption</strong>
                 </div>
                 <div class="routing-join-meta-item node-ui-fact">
                     <span>Buffer</span>
@@ -36,7 +39,6 @@
             <div class="routing-join-rules" aria-label="Routing join rules">
                 <span class="routing-join-contract-label node-ui-fact-label">Join</span>
                 <span class="routing-join-token node-ui-token" title="@JoinExpressionCaption">@JoinExpressionCaption</span>
-                <span class="routing-join-token node-ui-token">@TimeoutCaption</span>
                 <span class="routing-join-token node-ui-token">@PendingCaption</span>
                 <span class="routing-join-token node-ui-token">@CaseCaption</span>
             </div>
@@ -44,93 +46,116 @@
     </Body>
     <Editor>
         <div class="routing-join-editor node-ui-editor" aria-label="Routing join settings">
-            <div class="routing-join-config-row node-ui-form-grid" aria-label="Routing join input contracts">
-                <MudSelect T="string"
-                           Label="Left input type"
-                           @bind-Value="_leftInputType"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-join-left-type-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
+            <div class="routing-join-rule-row" aria-label="Routing join matching rule">
+                <div class="routing-join-expression-stack" aria-label="Routing join key expressions">
+                    <section class="routing-join-left-key-workspace node-ui-code-surface" aria-label="Routing join left key expression">
+                        <div class="routing-join-workspace-header">
+                            <div>
+                                <span class="routing-join-kicker">Left key</span>
+                                <strong>Left key expression</strong>
+                            </div>
+                        </div>
 
-                <MudSelect T="string"
-                           Label="Right input type"
-                           @bind-Value="_rightInputType"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-join-right-type-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
+                        <div class="routing-join-editor-host" @ref="_leftKeyEditorHost">
+                            <StandaloneCodeEditor @key="_editorVersion"
+                                                  @ref="_leftKeyEditor"
+                                                  Id="@LeftKeyEditorId"
+                                                  CssClass="routing-join-code-editor"
+                                                  ConstructionOptions="@LeftKeyEditorConstructionOptions"
+                                                  OnDidChangeModelContent="@OnLeftKeyExpressionContentChanged" />
+                        </div>
+                    </section>
 
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-join-buffer-field" />
-            </div>
+                    <section class="routing-join-right-key-workspace node-ui-code-surface" aria-label="Routing join right key expression">
+                        <div class="routing-join-workspace-header">
+                            <div>
+                                <span class="routing-join-kicker">Right key</span>
+                                <strong>Right key expression</strong>
+                            </div>
+                        </div>
 
-            <div class="routing-join-match-composer" aria-label="Routing join matching rule">
-                <div class="routing-join-key-row" aria-label="Routing join key expressions">
-                    <MudTextField T="string"
-                                  Label="Left key expression"
-                                  Value="@_leftKeyExpression"
-                                  ValueChanged="@SetLeftKeyExpression"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Immediate="true"
-                                  Class="routing-join-left-key-field"
-                                  Placeholder="topic" />
-
-                    <MudTextField T="string"
-                                  Label="Right key expression"
-                                  Value="@_rightKeyExpression"
-                                  ValueChanged="@SetRightKeyExpression"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Immediate="true"
-                                  Class="routing-join-right-key-field"
-                                  Placeholder="topic" />
+                        <div class="routing-join-editor-host" @ref="_rightKeyEditorHost">
+                            <StandaloneCodeEditor @key="_editorVersion"
+                                                  @ref="_rightKeyEditor"
+                                                  Id="@RightKeyEditorId"
+                                                  CssClass="routing-join-code-editor"
+                                                  ConstructionOptions="@RightKeyEditorConstructionOptions"
+                                                  OnDidChangeModelContent="@OnRightKeyExpressionContentChanged" />
+                        </div>
+                    </section>
                 </div>
 
-                <div class="routing-join-control-row" aria-label="Routing join limit settings">
-                    <MudNumericField T="int"
-                                     Label="Timeout ms"
-                                     @bind-Value="_timeoutMilliseconds"
-                                     Min="1"
-                                     Max="86400000"
-                                     Step="1000"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="routing-join-timeout-field" />
+                <div class="routing-join-sidecar">
+                    <div class="routing-join-config-row" aria-label="Routing join input settings">
+                        <MudSelect T="string"
+                                   Label="Left input type"
+                                   @bind-Value="_leftInputType"
+                                   aria-label="Routing join left input type"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="routing-join-left-type-field">
+                            @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                            {
+                                <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                            }
+                        </MudSelect>
 
-                    <MudNumericField T="int"
-                                     Label="Max pending"
-                                     @bind-Value="_maxPending"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="routing-join-pending-field" />
+                        <MudSelect T="string"
+                                   Label="Right input type"
+                                   @bind-Value="_rightInputType"
+                                   aria-label="Routing join right input type"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="routing-join-right-type-field">
+                            @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                            {
+                                <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                            }
+                        </MudSelect>
 
-                    <div class="routing-join-case-option">
-                        <MudCheckBox T="bool"
-                                     Label="Case sensitive"
-                                     @bind-Value="_caseSensitive"
-                                     Class="routing-join-case-check" />
+                        <MudNumericField T="int"
+                                         Label="Input buffer"
+                                         @bind-Value="_boundedCapacity"
+                                         aria-label="Routing join input buffer"
+                                         Min="1"
+                                         Max="100000"
+                                         Step="100"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Class="routing-join-buffer-field" />
+                    </div>
+
+                    <div class="routing-join-control-row" aria-label="Routing join limit settings">
+                        <MudNumericField T="int"
+                                         Label="Timeout ms"
+                                         @bind-Value="_timeoutMilliseconds"
+                                         aria-label="Routing join timeout"
+                                         Min="1"
+                                         Max="86400000"
+                                         Step="1000"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Class="routing-join-timeout-field" />
+
+                        <MudNumericField T="int"
+                                         Label="Max pending"
+                                         @bind-Value="_maxPending"
+                                         aria-label="Routing join max pending"
+                                         Min="1"
+                                         Max="100000"
+                                         Step="100"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Class="routing-join-pending-field" />
+
+                        <div class="routing-join-case-option">
+                            <MudCheckBox T="bool"
+                                         Label="Case sensitive"
+                                         @bind-Value="_caseSensitive"
+                                         Class="routing-join-case-check" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -151,8 +176,18 @@
     private int _timeoutMilliseconds = RoutingJoinNodeModel.DefaultTimeoutMilliseconds;
     private int _maxPending = RoutingJoinNodeModel.DefaultMaxPending;
     private int _boundedCapacity = RoutingJoinNodeModel.DefaultBoundedCapacity;
+    private StandaloneCodeEditor? _leftKeyEditor;
+    private StandaloneCodeEditor? _rightKeyEditor;
+    private StandaloneCodeEditor? _initializedLeftKeyEditor;
+    private StandaloneCodeEditor? _initializedRightKeyEditor;
+    private ElementReference _leftKeyEditorHost;
+    private ElementReference _rightKeyEditorHost;
+    private int _editorVersion;
+    private bool _syncingEditors;
     private string? _loadedNodeName;
     private FlowDiagramNodeModel? _loadedNode;
+    private string LeftKeyEditorId => $"routing-join-left-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
+    private string RightKeyEditorId => $"routing-join-right-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
 
     private string LeftInputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.LeftInputType);
     private string RightInputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.RightInputType);
@@ -170,6 +205,11 @@
         Model.BoundedCapacity,
         RoutingJoinNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
 
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
     protected override void OnParametersSet()
     {
         if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
@@ -177,6 +217,33 @@
             LoadDraft();
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var editorChanged = false;
+
+        if (_leftKeyEditor is not null && !ReferenceEquals(_initializedLeftKeyEditor, _leftKeyEditor))
+        {
+            _initializedLeftKeyEditor = _leftKeyEditor;
+            editorChanged = true;
+        }
+
+        if (_rightKeyEditor is not null && !ReferenceEquals(_initializedRightKeyEditor, _rightKeyEditor))
+        {
+            _initializedRightKeyEditor = _rightKeyEditor;
+            editorChanged = true;
+        }
+
+        if (editorChanged)
+        {
+            await ConfigureCodeEditorsAsync();
+            await SyncEditorsAsync();
+            await LayoutEditorsAfterRenderAsync();
+        }
+    }
+
+    public void Dispose()
+        => ThemeService.Changed -= OnThemeChanged;
 
     private void LoadDraft()
     {
@@ -200,22 +267,66 @@
         _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
             Model.BoundedCapacity,
             RoutingJoinNodeModel.DefaultBoundedCapacity);
+        _editorVersion++;
     }
 
-    private async Task SetLeftKeyExpression(string value)
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureCodeEditorsAsync);
+
+    private StandaloneEditorConstructionOptions LeftKeyEditorConstructionOptions(StandaloneCodeEditor editor)
+        => CreateEditorConstructionOptions(_leftKeyExpression);
+
+    private StandaloneEditorConstructionOptions RightKeyEditorConstructionOptions(StandaloneCodeEditor editor)
+        => CreateEditorConstructionOptions(_rightKeyExpression);
+
+    private StandaloneEditorConstructionOptions CreateEditorConstructionOptions(string value)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "csharp",
+            ScrollBeyondLastLine = false,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = value
+        };
+
+    private async Task ConfigureCodeEditorsAsync()
     {
-        _leftKeyExpression = value ?? string.Empty;
-        await DialogRefresh.RefreshAsync(Node.NodeName);
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Routing Join code editor configuration failed: {exception.Message}");
+        }
     }
 
-    private async Task SetRightKeyExpression(string value)
+    private async Task SaveAsync()
     {
-        _rightKeyExpression = value ?? string.Empty;
-        await DialogRefresh.RefreshAsync(Node.NodeName);
-    }
+        if (_leftKeyEditor is not null)
+        {
+            try
+            {
+                _leftKeyExpression = await _leftKeyEditor.GetValue();
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Routing Join left code editor read failed: {exception.Message}");
+            }
+        }
 
-    private Task SaveAsync()
-    {
+        if (_rightKeyEditor is not null)
+        {
+            try
+            {
+                _rightKeyExpression = await _rightKeyEditor.GetValue();
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Routing Join right code editor read failed: {exception.Message}");
+            }
+        }
+
         Model.LeftInputType = RoutingNodeConfiguration.NormalizeInputType(_leftInputType);
         Model.RightInputType = RoutingNodeConfiguration.NormalizeInputType(_rightInputType);
         Model.LeftKeyExpression = RoutingNodeConfiguration.NormalizeText(
@@ -236,7 +347,101 @@
             RoutingJoinNodeModel.DefaultBoundedCapacity);
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
-        return Task.CompletedTask;
+    }
+
+    private async Task OnLeftKeyExpressionContentChanged()
+    {
+        if (_syncingEditors || _leftKeyEditor is null)
+        {
+            return;
+        }
+
+        _leftKeyExpression = await _leftKeyEditor.GetValue();
+        await RefreshDialogAsync();
+    }
+
+    private async Task OnRightKeyExpressionContentChanged()
+    {
+        if (_syncingEditors || _rightKeyEditor is null)
+        {
+            return;
+        }
+
+        _rightKeyExpression = await _rightKeyEditor.GetValue();
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+        await LayoutEditorsAfterRenderAsync();
+    }
+
+    private async Task SyncEditorsAsync()
+    {
+        _syncingEditors = true;
+        try
+        {
+            await SyncEditorAsync(_leftKeyEditor, _leftKeyExpression, "left");
+            await SyncEditorAsync(_rightKeyEditor, _rightKeyExpression, "right");
+        }
+        finally
+        {
+            _syncingEditors = false;
+        }
+    }
+
+    private static async Task SyncEditorAsync(StandaloneCodeEditor? editor, string value, string editorName)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await editor.SetValue(value);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Routing Join {editorName} code editor sync failed: {exception.Message}");
+        }
+    }
+
+    private async Task LayoutEditorsAfterRenderAsync()
+    {
+        await Task.Yield();
+        await LayoutEditorsAsync();
+        await Task.Delay(50);
+        await LayoutEditorsAsync();
+    }
+
+    private async Task LayoutEditorsAsync()
+    {
+        await LayoutEditorAsync(_leftKeyEditor, _leftKeyEditorHost, "left");
+        await LayoutEditorAsync(_rightKeyEditor, _rightKeyEditorHost, "right");
+    }
+
+    private async Task LayoutEditorAsync(StandaloneCodeEditor? editor, ElementReference host, string editorName)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var size = await JsRuntime.InvokeAsync<EditorHostSize>("fluxmqMonaco.measureElement", host);
+            if (size is not null && size.Width > 0 && size.Height > 0)
+            {
+                await editor.Layout(new Dimension { Width = size.Width, Height = size.Height }, null);
+            }
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Routing Join {editorName} code editor layout failed: {exception.Message}");
+        }
     }
 
     private string? ValidateEditor()
@@ -249,5 +454,14 @@
         return string.IsNullOrWhiteSpace(_rightKeyExpression)
             ? "Enter a right key expression before saving."
             : null;
+    }
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
+
+    private sealed class EditorHostSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }

@@ -4375,6 +4375,7 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - `Polish message filter editor`
   - `Polish condition router editor`
   - `Polish routing switch editor`
+  - `Polish routing matching editors`
 - Dynamic Mapper result:
   - Rebuilt the edit dialog around three stable columns: sample input, mapping expression, and result.
   - Made the expression editor the dominant full-height workspace.
@@ -4416,6 +4417,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Verification passed:
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingSwitchNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+- Routing Correlation and Join result:
+  - Replaced correlation key/side expression fields and join left/right key expression fields with paired full-height code-editor workspaces.
+  - Moved input types, side names, timeout, max pending, input buffer, and case sensitivity into compact right sidecars.
+  - Kept required-expression validation, correlation side-name validation, normalization, ports, and saved configuration shape unchanged.
+  - View mode now favors input/side facts, timeout/buffer facts, case/pending state, and expression previews without join output contract clutter.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingCorrelationAndJoinNodeWidgets" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check attempted with native desktop control. The app window was controllable, but the Windows file picker overlay was not targetable by the helper and direct `--open` launch stayed on the startup splash, so edit-dialog visual verification remains a gap for this slice.
 - Current design rules learned from visual review:
   - View mode must show useful operational facts, not decorative contract dumps.
   - Edit mode must use one clean flat form/workspace surface, not nested panels.
@@ -4424,5 +4434,5 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Dialog footers should sit in a consistent padded full-width footer panel.
   - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
 - Next implementation order:
-  1. Continue remaining routing-node polish with the same flat edit surface and useful compact view-mode facts.
+  1. Continue remaining routing-node polish with Fork/Merge/Window using the same flat edit surface and useful compact view-mode facts.
   2. Normalize source/trigger, actor/sink, metric, and generic nodes only after routing nodes have the stable shared pattern.

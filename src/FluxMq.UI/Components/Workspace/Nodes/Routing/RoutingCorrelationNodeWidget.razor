@@ -1,11 +1,14 @@
+@implements IDisposable
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject AppThemeService ThemeService
+@inject IJSRuntime JsRuntime
 @inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.SyncAlt"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Medium"
+                 EditDialogMaxWidth="MaxWidth.Large"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
@@ -20,8 +23,8 @@
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
                 <div class="routing-correlation-meta-item node-ui-fact">
-                    <span>Outputs</span>
-                    <strong>2 outputs</strong>
+                    <span>Sides</span>
+                    <strong title="@SideFlowCaption">@SideFlowCaption</strong>
                 </div>
                 <div class="routing-correlation-meta-item node-ui-fact">
                     <span>Timeout</span>
@@ -37,7 +40,6 @@
                 <span class="routing-correlation-contract-label node-ui-fact-label">Correlation</span>
                 <span class="routing-correlation-token node-ui-token" title="@KeyExpressionCaption">key @KeyExpressionCaption</span>
                 <span class="routing-correlation-token node-ui-token" title="@SideExpressionCaption">side @SideExpressionCaption</span>
-                <span class="routing-correlation-token node-ui-token" title="@SideFlowCaption">@SideFlowCaption</span>
                 <span class="routing-correlation-token node-ui-token">@CaseCaption</span>
                 <span class="routing-correlation-token node-ui-token">@PendingCaption</span>
             </div>
@@ -45,99 +47,121 @@
     </Body>
     <Editor>
         <div class="routing-correlation-editor node-ui-editor" aria-label="Routing correlation settings">
-            <div class="routing-correlation-config-row node-ui-form-grid" aria-label="Routing correlation input settings">
-                <MudSelect T="string"
-                           Label="Input type"
-                           @bind-Value="_inputType"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-correlation-input-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
+            <div class="routing-correlation-rule-row" aria-label="Routing correlation matching rule">
+                <div class="routing-correlation-expression-stack" aria-label="Routing correlation expressions">
+                    <section class="routing-correlation-key-workspace node-ui-code-surface" aria-label="Correlation key expression">
+                        <div class="routing-correlation-workspace-header">
+                            <div>
+                                <span class="routing-correlation-kicker">Key expression</span>
+                                <strong>Correlation key</strong>
+                            </div>
+                        </div>
 
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-correlation-buffer-field" />
+                        <div class="routing-correlation-editor-host" @ref="_keyEditorHost">
+                            <StandaloneCodeEditor @key="_editorVersion"
+                                                  @ref="_keyEditor"
+                                                  Id="@KeyEditorId"
+                                                  CssClass="routing-correlation-code-editor"
+                                                  ConstructionOptions="@KeyEditorConstructionOptions"
+                                                  OnDidChangeModelContent="@OnKeyExpressionContentChanged" />
+                        </div>
+                    </section>
 
-                <MudNumericField T="int"
-                                 Label="Timeout ms"
-                                 @bind-Value="_timeoutMilliseconds"
-                                 Min="1"
-                                 Max="86400000"
-                                 Step="1000"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-correlation-timeout-field" />
+                    <section class="routing-correlation-side-workspace node-ui-code-surface" aria-label="Correlation side expression">
+                        <div class="routing-correlation-workspace-header">
+                            <div>
+                                <span class="routing-correlation-kicker">Side expression</span>
+                                <strong>Request or response selector</strong>
+                            </div>
+                        </div>
 
-                <MudNumericField T="int"
-                                 Label="Max pending"
-                                 @bind-Value="_maxPending"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-correlation-pending-field" />
-            </div>
-
-            <div class="routing-correlation-match-composer" aria-label="Routing correlation matching rule">
-                <div class="routing-correlation-expression-row" aria-label="Routing correlation expressions">
-                    <MudTextField T="string"
-                                  Label="Key expression"
-                                  Value="@_keyExpression"
-                                  ValueChanged="@SetKeyExpression"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Immediate="true"
-                                  Class="routing-correlation-key-field"
-                                  Placeholder="topic" />
-
-                    <MudTextField T="string"
-                                  Label="Side expression"
-                                  Value="@_sideExpression"
-                                  ValueChanged="@SetSideExpression"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Immediate="true"
-                                  Class="routing-correlation-side-field"
-                                  Placeholder="payloadText" />
+                        <div class="routing-correlation-editor-host" @ref="_sideEditorHost">
+                            <StandaloneCodeEditor @key="_editorVersion"
+                                                  @ref="_sideEditor"
+                                                  Id="@SideEditorId"
+                                                  CssClass="routing-correlation-code-editor"
+                                                  ConstructionOptions="@SideEditorConstructionOptions"
+                                                  OnDidChangeModelContent="@OnSideExpressionContentChanged" />
+                        </div>
+                    </section>
                 </div>
 
-                <div class="routing-correlation-side-map-row" aria-label="Routing correlation side mapping">
-                    <MudTextField T="string"
-                                  Label="Request side"
-                                  Value="@_requestSide"
-                                  ValueChanged="@SetRequestSide"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Immediate="true"
-                                  Class="routing-correlation-request-field" />
+                <div class="routing-correlation-sidecar">
+                    <div class="routing-correlation-config-row" aria-label="Routing correlation input settings">
+                        <MudSelect T="string"
+                                   Label="Input type"
+                                   @bind-Value="_inputType"
+                                   aria-label="Routing correlation input type"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="routing-correlation-input-field">
+                            @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                            {
+                                <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                            }
+                        </MudSelect>
 
-                    <MudTextField T="string"
-                                  Label="Response side"
-                                  Value="@_responseSide"
-                                  ValueChanged="@SetResponseSide"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Immediate="true"
-                                  Class="routing-correlation-response-field" />
+                        <MudNumericField T="int"
+                                         Label="Input buffer"
+                                         @bind-Value="_boundedCapacity"
+                                         aria-label="Routing correlation input buffer"
+                                         Min="1"
+                                         Max="100000"
+                                         Step="100"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Class="routing-correlation-buffer-field" />
 
-                    <div class="routing-correlation-case-option">
-                        <MudCheckBox T="bool"
-                                     Label="Case sensitive"
-                                     Value="@_caseSensitive"
-                                     ValueChanged="@SetCaseSensitive"
-                                     Class="routing-correlation-case-check" />
+                        <MudNumericField T="int"
+                                         Label="Timeout ms"
+                                         @bind-Value="_timeoutMilliseconds"
+                                         aria-label="Routing correlation timeout"
+                                         Min="1"
+                                         Max="86400000"
+                                         Step="1000"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Class="routing-correlation-timeout-field" />
+
+                        <MudNumericField T="int"
+                                         Label="Max pending"
+                                         @bind-Value="_maxPending"
+                                         aria-label="Routing correlation max pending"
+                                         Min="1"
+                                         Max="100000"
+                                         Step="100"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Class="routing-correlation-pending-field" />
+                    </div>
+
+                    <div class="routing-correlation-side-map-row" aria-label="Routing correlation side mapping">
+                        <MudTextField T="string"
+                                      Label="Request side"
+                                      Value="@_requestSide"
+                                      ValueChanged="@SetRequestSide"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      Class="routing-correlation-request-field" />
+
+                        <MudTextField T="string"
+                                      Label="Response side"
+                                      Value="@_responseSide"
+                                      ValueChanged="@SetResponseSide"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      Class="routing-correlation-response-field" />
+
+                        <div class="routing-correlation-case-option">
+                            <MudCheckBox T="bool"
+                                         Label="Case sensitive"
+                                         Value="@_caseSensitive"
+                                         ValueChanged="@SetCaseSensitive"
+                                         Class="routing-correlation-case-check" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -159,8 +183,18 @@
     private int _timeoutMilliseconds = RoutingCorrelationNodeModel.DefaultTimeoutMilliseconds;
     private int _maxPending = RoutingCorrelationNodeModel.DefaultMaxPending;
     private int _boundedCapacity = RoutingCorrelationNodeModel.DefaultBoundedCapacity;
+    private StandaloneCodeEditor? _keyEditor;
+    private StandaloneCodeEditor? _sideEditor;
+    private StandaloneCodeEditor? _initializedKeyEditor;
+    private StandaloneCodeEditor? _initializedSideEditor;
+    private ElementReference _keyEditorHost;
+    private ElementReference _sideEditorHost;
+    private int _editorVersion;
+    private bool _syncingEditors;
     private string? _loadedNodeName;
     private FlowDiagramNodeModel? _loadedNode;
+    private string KeyEditorId => $"routing-correlation-key-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
+    private string SideEditorId => $"routing-correlation-side-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
 
     private string InputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
     private string KeyExpressionCaption => RoutingNodeConfiguration.NormalizeText(
@@ -184,6 +218,11 @@
         Model.BoundedCapacity,
         RoutingCorrelationNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
 
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
     protected override void OnParametersSet()
     {
         if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
@@ -191,6 +230,33 @@
             LoadDraft();
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var editorChanged = false;
+
+        if (_keyEditor is not null && !ReferenceEquals(_initializedKeyEditor, _keyEditor))
+        {
+            _initializedKeyEditor = _keyEditor;
+            editorChanged = true;
+        }
+
+        if (_sideEditor is not null && !ReferenceEquals(_initializedSideEditor, _sideEditor))
+        {
+            _initializedSideEditor = _sideEditor;
+            editorChanged = true;
+        }
+
+        if (editorChanged)
+        {
+            await ConfigureCodeEditorsAsync();
+            await SyncEditorsAsync();
+            await LayoutEditorsAfterRenderAsync();
+        }
+    }
+
+    public void Dispose()
+        => ThemeService.Changed -= OnThemeChanged;
 
     private void LoadDraft()
     {
@@ -220,40 +286,66 @@
         _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
             Model.BoundedCapacity,
             RoutingCorrelationNodeModel.DefaultBoundedCapacity);
+        _editorVersion++;
     }
 
-    private async Task SetKeyExpression(string value)
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureCodeEditorsAsync);
+
+    private StandaloneEditorConstructionOptions KeyEditorConstructionOptions(StandaloneCodeEditor editor)
+        => CreateEditorConstructionOptions(_keyExpression);
+
+    private StandaloneEditorConstructionOptions SideEditorConstructionOptions(StandaloneCodeEditor editor)
+        => CreateEditorConstructionOptions(_sideExpression);
+
+    private StandaloneEditorConstructionOptions CreateEditorConstructionOptions(string value)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "csharp",
+            ScrollBeyondLastLine = false,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = value
+        };
+
+    private async Task ConfigureCodeEditorsAsync()
     {
-        _keyExpression = value ?? string.Empty;
-        await DialogRefresh.RefreshAsync(Node.NodeName);
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Routing Correlation code editor configuration failed: {exception.Message}");
+        }
     }
 
-    private async Task SetSideExpression(string value)
+    private async Task SaveAsync()
     {
-        _sideExpression = value ?? string.Empty;
-        await DialogRefresh.RefreshAsync(Node.NodeName);
-    }
+        if (_keyEditor is not null)
+        {
+            try
+            {
+                _keyExpression = await _keyEditor.GetValue();
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Routing Correlation key code editor read failed: {exception.Message}");
+            }
+        }
 
-    private async Task SetRequestSide(string value)
-    {
-        _requestSide = value ?? string.Empty;
-        await DialogRefresh.RefreshAsync(Node.NodeName);
-    }
+        if (_sideEditor is not null)
+        {
+            try
+            {
+                _sideExpression = await _sideEditor.GetValue();
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Routing Correlation side code editor read failed: {exception.Message}");
+            }
+        }
 
-    private async Task SetResponseSide(string value)
-    {
-        _responseSide = value ?? string.Empty;
-        await DialogRefresh.RefreshAsync(Node.NodeName);
-    }
-
-    private async Task SetCaseSensitive(bool value)
-    {
-        _caseSensitive = value;
-        await DialogRefresh.RefreshAsync(Node.NodeName);
-    }
-
-    private Task SaveAsync()
-    {
         Model.InputType = RoutingNodeConfiguration.NormalizeInputType(_inputType);
         Model.KeyExpression = RoutingNodeConfiguration.NormalizeText(
             _keyExpression,
@@ -280,7 +372,119 @@
             RoutingCorrelationNodeModel.DefaultBoundedCapacity);
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
-        return Task.CompletedTask;
+    }
+
+    private async Task OnKeyExpressionContentChanged()
+    {
+        if (_syncingEditors || _keyEditor is null)
+        {
+            return;
+        }
+
+        _keyExpression = await _keyEditor.GetValue();
+        await RefreshDialogAsync();
+    }
+
+    private async Task OnSideExpressionContentChanged()
+    {
+        if (_syncingEditors || _sideEditor is null)
+        {
+            return;
+        }
+
+        _sideExpression = await _sideEditor.GetValue();
+        await RefreshDialogAsync();
+    }
+
+    private async Task SetRequestSide(string value)
+    {
+        _requestSide = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetResponseSide(string value)
+    {
+        _responseSide = value ?? string.Empty;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task SetCaseSensitive(bool value)
+    {
+        _caseSensitive = value;
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+        await DialogRefresh.RefreshAsync(Node.NodeName);
+        await LayoutEditorsAfterRenderAsync();
+    }
+
+    private async Task SyncEditorsAsync()
+    {
+        _syncingEditors = true;
+        try
+        {
+            await SyncEditorAsync(_keyEditor, _keyExpression, "key");
+            await SyncEditorAsync(_sideEditor, _sideExpression, "side");
+        }
+        finally
+        {
+            _syncingEditors = false;
+        }
+    }
+
+    private static async Task SyncEditorAsync(StandaloneCodeEditor? editor, string value, string editorName)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await editor.SetValue(value);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Routing Correlation {editorName} code editor sync failed: {exception.Message}");
+        }
+    }
+
+    private async Task LayoutEditorsAfterRenderAsync()
+    {
+        await Task.Yield();
+        await LayoutEditorsAsync();
+        await Task.Delay(50);
+        await LayoutEditorsAsync();
+    }
+
+    private async Task LayoutEditorsAsync()
+    {
+        await LayoutEditorAsync(_keyEditor, _keyEditorHost, "key");
+        await LayoutEditorAsync(_sideEditor, _sideEditorHost, "side");
+    }
+
+    private async Task LayoutEditorAsync(StandaloneCodeEditor? editor, ElementReference host, string editorName)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var size = await JsRuntime.InvokeAsync<EditorHostSize>("fluxmqMonaco.measureElement", host);
+            if (size is not null && size.Width > 0 && size.Height > 0)
+            {
+                await editor.Layout(new Dimension { Width = size.Width, Height = size.Height }, null);
+            }
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Routing Correlation {editorName} code editor layout failed: {exception.Message}");
+        }
     }
 
     private string? ValidateEditor()
@@ -309,5 +513,14 @@
         return comparer.Equals(_requestSide.Trim(), _responseSide.Trim())
             ? "Request and response side names must be different."
             : null;
+    }
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
+
+    private sealed class EditorHostSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }
