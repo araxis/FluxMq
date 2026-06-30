@@ -225,6 +225,64 @@
             }
         </section>
 
+        @{
+            var topicStats = TopicStats;
+        }
+        <section class="topic-stats-panel" aria-label="Topic scope statistics">
+            <div class="topic-stats-header">
+                <span>Stats</span>
+                <span>@TopicStatsScopeLabel</span>
+            </div>
+
+            @if (topicStats.MessageCount == 0)
+            {
+                <div class="topic-stats-empty" role="status" aria-live="polite">
+                    No messages in this scope
+                </div>
+            }
+            else
+            {
+                <div class="topic-stats-grid">
+                    <div class="topic-stats-item primary">
+                        <span>Messages</span>
+                        <strong>@topicStats.MessageCount.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>Topics</span>
+                        <strong>@topicStats.TopicCount.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>Retained</span>
+                        <strong>@topicStats.RetainedCount.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>Payload</span>
+                        <strong>@FormatByteCount(topicStats.TotalPayloadBytes)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>Average</span>
+                        <strong>@FormatAveragePayloadBytes(topicStats.AveragePayloadBytes)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>QoS 0</span>
+                        <strong>@topicStats.Qos0Count.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>QoS 1</span>
+                        <strong>@topicStats.Qos1Count.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>QoS 2</span>
+                        <strong>@topicStats.Qos2Count.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item latest">
+                        <span>Latest</span>
+                        <strong>@FormatTopicStatsLatest(topicStats)</strong>
+                    </div>
+                </div>
+            }
+        </section>
+
         @if (Live.SelectedStoredSession is null)
         {
             <section class="topic-publish-panel" aria-label="Publish MQTT message">
@@ -840,6 +898,33 @@
         ? $"{VisibleHistoryMessages.Count} of {HistoryMessages.Count} messages"
         : MessageCountLabel(HistoryMessages.Count);
 
+    private TopicScopeStats TopicStats => BuildTopicScopeStats(HistoryMessages);
+
+    private string TopicStatsScopeLabel => SelectedTopicLabel;
+
+    private TopicScopeStats BuildTopicScopeStats(IReadOnlyList<MqttEnvelope> messages)
+    {
+        if (messages.Count == 0)
+        {
+            return TopicScopeStats.Empty;
+        }
+
+        var totalPayloadBytes = messages.Sum(static message => (long)message.Payload.Length);
+        return new TopicScopeStats(
+            messages.Count,
+            messages
+                .Select(message => $"{BrokerLabel(message)}\u001f{message.Topic}")
+                .Distinct(StringComparer.Ordinal)
+                .Count(),
+            messages.Count(static message => message.Retain),
+            totalPayloadBytes,
+            (double)totalPayloadBytes / messages.Count,
+            messages.Count(static message => message.QualityOfService == MqttQualityOfServiceLevel.AtMostOnce),
+            messages.Count(static message => message.QualityOfService == MqttQualityOfServiceLevel.AtLeastOnce),
+            messages.Count(static message => message.QualityOfService == MqttQualityOfServiceLevel.ExactlyOnce),
+            messages.Max(static message => message.ReceivedAt));
+    }
+
     private string HistoryQosFilter
     {
         get => _historyQosFilter;
@@ -926,6 +1011,39 @@
 
     private static string RecentPublishTitle(TopicRecentPublish publish)
         => $"Load recent publish for {publish.Topic} from {publish.BrokerLabel}";
+
+    private static string FormatTopicStatsLatest(TopicScopeStats stats)
+        => stats.LatestReceivedAt is { } receivedAt
+            ? receivedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture)
+            : "No message";
+
+    private static string FormatAveragePayloadBytes(double bytes)
+        => bytes <= 0
+            ? "0 B"
+            : FormatByteCount((long)Math.Round(bytes, MidpointRounding.AwayFromZero));
+
+    private static string FormatByteCount(long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return $"{bytes.ToString(CultureInfo.InvariantCulture)} B";
+        }
+
+        var kib = bytes / 1024d;
+        if (kib < 1024)
+        {
+            return $"{kib.ToString("0.#", CultureInfo.InvariantCulture)} KB";
+        }
+
+        var mib = kib / 1024d;
+        if (mib < 1024)
+        {
+            return $"{mib.ToString("0.#", CultureInfo.InvariantCulture)} MB";
+        }
+
+        var gib = mib / 1024d;
+        return $"{gib.ToString("0.#", CultureInfo.InvariantCulture)} GB";
+    }
 
     private string TopicSourceLabel => Live.SelectedStoredSession is null
         ? "App broker monitor"
@@ -2097,6 +2215,20 @@
         DateTimeOffset PublishedAt,
         string PayloadType,
         int PayloadBytes);
+
+    private sealed record TopicScopeStats(
+        int MessageCount,
+        int TopicCount,
+        int RetainedCount,
+        long TotalPayloadBytes,
+        double AveragePayloadBytes,
+        int Qos0Count,
+        int Qos1Count,
+        int Qos2Count,
+        DateTimeOffset? LatestReceivedAt)
+    {
+        public static TopicScopeStats Empty { get; } = new(0, 0, 0, 0, 0, 0, 0, 0, null);
+    }
 
     private sealed record TopicBrokerSnapshot(string Name, string Endpoint, MqttClientState State);
 

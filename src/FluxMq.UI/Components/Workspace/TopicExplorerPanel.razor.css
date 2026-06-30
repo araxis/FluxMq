@@ -526,6 +526,99 @@ h3 {
     white-space: normal;
 }
 
+.topic-stats-panel {
+    background: var(--flux-surface);
+    border-bottom: 1px solid var(--flux-border);
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 7px 8px 8px;
+}
+
+.topic-stats-header {
+    align-items: center;
+    color: var(--flux-text-muted);
+    display: flex;
+    font-size: 10.75px;
+    font-weight: 750;
+    gap: 8px;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    min-width: 0;
+}
+
+.topic-stats-header span:last-child {
+    color: var(--flux-text-subtle);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10.25px;
+    font-weight: 500;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.topic-stats-grid {
+    display: grid;
+    gap: 6px;
+    grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
+    min-width: 0;
+}
+
+.topic-stats-item,
+.topic-stats-empty {
+    background: var(--flux-canvas);
+    border: 1px solid var(--flux-border);
+    border-radius: 5px;
+    min-width: 0;
+}
+
+.topic-stats-item {
+    display: grid;
+    gap: 3px;
+    min-height: 42px;
+    padding: 6px 7px;
+}
+
+.topic-stats-item.primary {
+    border-color: color-mix(in srgb, var(--flux-accent) 30%, var(--flux-border));
+}
+
+.topic-stats-item.latest {
+    min-width: 104px;
+}
+
+.topic-stats-item span {
+    color: var(--flux-text-muted);
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.topic-stats-item strong {
+    color: var(--mud-palette-text-primary);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1.1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.topic-stats-empty {
+    align-items: center;
+    color: var(--flux-text-muted);
+    display: flex;
+    font-size: 11.5px;
+    min-height: 34px;
+    padding: 0 8px;
+}
+
 .topic-publish-panel {
     background: var(--flux-surface);
     border-bottom: 1px solid var(--flux-border);

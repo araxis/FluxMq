@@ -4522,6 +4522,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Topics Stats Panel result:
+  - Added a compact stats strip for the active broker/topic scope inside the existing app-owned `Topics` tab.
+  - Stats are derived only from scoped `HistoryMessages`, not local lower-history filters, and include message count, unique topic count, retained count, total payload bytes, average payload bytes, QoS 0/1/2 counts, and latest received time.
+  - The panel uses private `TopicExplorerPanel` helpers and a private helper record; no services, metric resources, saved fields, runtime wiring, or schema changes were added.
+  - Preserved monitor behavior, publish behavior, saved app schema, explorer schema, storage format, runtime components, node ids, ports, component contracts, publish semantics, and lower-history filter behavior.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Current design rules learned from visual review:
   - View mode must show useful operational facts, not decorative contract dumps.
   - Edit mode must use one clean flat form/workspace surface, not nested panels.
@@ -4530,4 +4539,4 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Dialog footers should sit in a consistent padded full-width footer panel.
   - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
 - Next implementation order:
-  1. Continue the next small `Topics` designer-polish backlog item, likely topic stats or another focused MQTT Explorer control.
+  1. Continue the next small designer-polish backlog item from remaining high-use workspace noise.
