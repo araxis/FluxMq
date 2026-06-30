@@ -460,7 +460,7 @@
                                         <span>@SelectedHistoryPayloadMeta</span>
                                     </div>
                                     <div class="topic-payload-controls" role="tablist" aria-label="Selected payload views">
-                                        @foreach (var view in PayloadViewOptions)
+                                        @foreach (var view in SelectedPayloadViewOptions)
                                         {
                                             <button type="button"
                                                     role="tab"
@@ -497,6 +497,9 @@
     private const string PayloadRawView = "raw";
     private const string PayloadHexView = "hex";
     private const string PayloadMetaView = "meta";
+    private const string PayloadDiffView = "diff";
+    private const int PayloadDiffContextLineCount = 2;
+    private const int PayloadDiffMaxChangedLines = 80;
     private const string HistoryFilterAll = "all";
     private const string HistoryQos0 = "0";
     private const string HistoryQos1 = "1";
@@ -509,6 +512,14 @@
         PayloadRawView,
         PayloadHexView,
         PayloadMetaView
+    ];
+    private static readonly string[] SelectedPayloadViewOptions =
+    [
+        PayloadFormattedView,
+        PayloadRawView,
+        PayloadHexView,
+        PayloadMetaView,
+        PayloadDiffView
     ];
     private static readonly JsonSerializerOptions HistoryExportJsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -765,7 +776,7 @@
         ? $"{inspection.DisplayTypeLabel} / {inspection.SizeBytes} B"
         : "No payload";
 
-    private string SelectedHistoryPayloadPreview => DisplayPayloadView(SelectedHistoryInspection, _selectedHistoryPayloadView);
+    private string SelectedHistoryPayloadPreview => DisplaySelectedPayloadView();
 
     private string SelectedHistoryReceivedLabel => SelectedHistoryMessage is { } message
         ? message.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
@@ -1186,7 +1197,16 @@
         => await CopyPayloadViewAsync(LastInspection, _lastPayloadView, "Latest payload view copied");
 
     private async Task CopySelectedHistoryPayloadViewAsync()
-        => await CopyPayloadViewAsync(SelectedHistoryInspection, _selectedHistoryPayloadView, "Selected payload view copied");
+    {
+        if (SelectedHistoryMessage is null)
+        {
+            Snackbar.Add("No payload view to copy", Severity.Info);
+            return;
+        }
+
+        await Clipboard.Default.SetTextAsync(SelectedHistoryPayloadPreview);
+        Snackbar.Add(_selectedHistoryPayloadView == PayloadDiffView ? "Payload diff copied" : "Selected payload view copied", Severity.Success);
+    }
 
     private async Task CopyPayloadViewAsync(PayloadInspectionResult? inspection, string view, string successMessage)
     {
@@ -1215,6 +1235,218 @@
             _ => DisplayFormattedPayload(inspection)
         };
     }
+
+    private string DisplaySelectedPayloadView()
+    {
+        if (_selectedHistoryPayloadView == PayloadDiffView)
+        {
+            return DisplaySelectedPayloadDiff();
+        }
+
+        return DisplayPayloadView(SelectedHistoryInspection, _selectedHistoryPayloadView);
+    }
+
+    private string DisplaySelectedPayloadDiff()
+    {
+        var latest = LastMessage;
+        var selected = SelectedHistoryMessage;
+        if (latest is null || selected is null)
+        {
+            return "No comparison available.";
+        }
+
+        if (Equals(latest, selected))
+        {
+            return "Selected message is the latest message.\nChoose another history row to compare payloads.";
+        }
+
+        var latestInspection = PayloadInspector.Inspect(latest.Payload);
+        var selectedInspection = PayloadInspector.Inspect(selected.Payload);
+        return BuildPayloadDiffText(latest, latestInspection, selected, selectedInspection);
+    }
+
+    private string BuildPayloadDiffText(
+        MqttEnvelope latest,
+        PayloadInspectionResult latestInspection,
+        MqttEnvelope selected,
+        PayloadInspectionResult selectedInspection)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("Compare latest -> selected");
+        builder.Append("Latest: ");
+        builder.AppendLine(PayloadDiffMessageSummary(latest, latestInspection));
+        builder.Append("Selected: ");
+        builder.AppendLine(PayloadDiffMessageSummary(selected, selectedInspection));
+        builder.Append("Byte delta: ");
+        builder.AppendLine(FormatByteDelta(selected.Payload.Length - latest.Payload.Length));
+
+        if (latest.Payload.SequenceEqual(selected.Payload))
+        {
+            builder.AppendLine("Payload unchanged.");
+            return builder.ToString().TrimEnd();
+        }
+
+        var firstDiff = FirstDifferingByteIndex(latest.Payload, selected.Payload);
+        builder.Append("First differing byte: ");
+        builder.AppendLine(FormatDiffOffset(firstDiff));
+
+        if (latestInspection.IsText && selectedInspection.IsText)
+        {
+            builder.AppendLine();
+            builder.Append(BuildUnifiedPayloadDiffText(latestInspection.RawText, selectedInspection.RawText));
+            return builder.ToString().TrimEnd();
+        }
+
+        builder.AppendLine();
+        builder.Append(BuildBinaryPayloadDiffText(latestInspection, selectedInspection, firstDiff));
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string BuildUnifiedPayloadDiffText(string latestText, string selectedText)
+    {
+        var latestLines = SplitPayloadLines(latestText);
+        var selectedLines = SplitPayloadLines(selectedText);
+        var commonPrefix = CountCommonPrefixLines(latestLines, selectedLines);
+        var commonSuffix = CountCommonSuffixLines(latestLines, selectedLines, commonPrefix);
+        var latestChangeEnd = latestLines.Length - commonSuffix;
+        var selectedChangeEnd = selectedLines.Length - commonSuffix;
+        var contextStart = Math.Max(0, commonPrefix - PayloadDiffContextLineCount);
+        var trailingContextEnd = Math.Min(latestLines.Length, latestChangeEnd + PayloadDiffContextLineCount);
+        var omittedChangeLines = 0;
+        var emittedChangeLines = 0;
+        var builder = new StringBuilder();
+
+        builder.AppendLine("Unified text diff");
+        if (contextStart > 0)
+        {
+            builder.AppendLine("  ...");
+        }
+
+        for (var i = contextStart; i < commonPrefix; i++)
+        {
+            builder.AppendLine("  " + latestLines[i]);
+        }
+
+        AppendBoundedDiffLines(builder, "-", latestLines, commonPrefix, latestChangeEnd, ref emittedChangeLines, ref omittedChangeLines);
+        AppendBoundedDiffLines(builder, "+", selectedLines, commonPrefix, selectedChangeEnd, ref emittedChangeLines, ref omittedChangeLines);
+
+        if (omittedChangeLines > 0)
+        {
+            builder.AppendLine($"  ... {omittedChangeLines.ToString(CultureInfo.InvariantCulture)} diff lines omitted");
+        }
+
+        for (var i = latestChangeEnd; i < trailingContextEnd; i++)
+        {
+            builder.AppendLine("  " + latestLines[i]);
+        }
+
+        if (trailingContextEnd < latestLines.Length)
+        {
+            builder.AppendLine("  ...");
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string BuildBinaryPayloadDiffText(
+        PayloadInspectionResult latestInspection,
+        PayloadInspectionResult selectedInspection,
+        int firstDiff)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("Binary or non-text payload comparison.");
+        builder.AppendLine($"Latest: {latestInspection.DisplayTypeLabel}, {latestInspection.SizeBytes.ToString(CultureInfo.InvariantCulture)} B");
+        builder.AppendLine($"Selected: {selectedInspection.DisplayTypeLabel}, {selectedInspection.SizeBytes.ToString(CultureInfo.InvariantCulture)} B");
+        builder.AppendLine($"First differing byte: {FormatDiffOffset(firstDiff)}");
+        builder.Append("Use Hex view for byte-level inspection.");
+        return builder.ToString();
+    }
+
+    private static void AppendBoundedDiffLines(
+        StringBuilder builder,
+        string prefix,
+        IReadOnlyList<string> lines,
+        int start,
+        int end,
+        ref int emitted,
+        ref int omitted)
+    {
+        for (var i = start; i < end; i++)
+        {
+            if (emitted >= PayloadDiffMaxChangedLines)
+            {
+                omitted++;
+                continue;
+            }
+
+            builder.Append(prefix);
+            builder.Append(' ');
+            builder.AppendLine(lines[i]);
+            emitted++;
+        }
+    }
+
+    private static int CountCommonPrefixLines(IReadOnlyList<string> latestLines, IReadOnlyList<string> selectedLines)
+    {
+        var limit = Math.Min(latestLines.Count, selectedLines.Count);
+        var index = 0;
+        while (index < limit && string.Equals(latestLines[index], selectedLines[index], StringComparison.Ordinal))
+        {
+            index++;
+        }
+
+        return index;
+    }
+
+    private static int CountCommonSuffixLines(IReadOnlyList<string> latestLines, IReadOnlyList<string> selectedLines, int commonPrefix)
+    {
+        var latestIndex = latestLines.Count - 1;
+        var selectedIndex = selectedLines.Count - 1;
+        var count = 0;
+        while (latestIndex >= commonPrefix
+            && selectedIndex >= commonPrefix
+            && string.Equals(latestLines[latestIndex], selectedLines[selectedIndex], StringComparison.Ordinal))
+        {
+            count++;
+            latestIndex--;
+            selectedIndex--;
+        }
+
+        return count;
+    }
+
+    private static string[] SplitPayloadLines(string text)
+        => text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n');
+
+    private static int FirstDifferingByteIndex(IReadOnlyList<byte> latestPayload, IReadOnlyList<byte> selectedPayload)
+    {
+        var limit = Math.Min(latestPayload.Count, selectedPayload.Count);
+        for (var i = 0; i < limit; i++)
+        {
+            if (latestPayload[i] != selectedPayload[i])
+            {
+                return i;
+            }
+        }
+
+        return latestPayload.Count == selectedPayload.Count ? -1 : limit;
+    }
+
+    private string PayloadDiffMessageSummary(MqttEnvelope message, PayloadInspectionResult inspection)
+        => $"{message.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)} / {BrokerLabel(message)} / {message.Topic} / {inspection.DisplayTypeLabel} / {inspection.SizeBytes.ToString(CultureInfo.InvariantCulture)} B";
+
+    private static string FormatByteDelta(int delta)
+        => delta switch
+        {
+            > 0 => $"+{delta.ToString(CultureInfo.InvariantCulture)} B",
+            < 0 => $"{delta.ToString(CultureInfo.InvariantCulture)} B",
+            _ => "0 B"
+        };
+
+    private static string FormatDiffOffset(int offset)
+        => offset < 0
+            ? "none"
+            : $"0x{offset.ToString("X", CultureInfo.InvariantCulture)} ({offset.ToString(CultureInfo.InvariantCulture)})";
 
     private static string DisplayFormattedPayload(PayloadInspectionResult inspection)
     {
@@ -1285,6 +1517,7 @@
             PayloadRawView => "Raw",
             PayloadHexView => "Hex",
             PayloadMetaView => "Meta",
+            PayloadDiffView => "Diff",
             _ => "Formatted"
         };
 
@@ -1294,6 +1527,7 @@
             PayloadRawView => Icons.Material.Filled.Subject,
             PayloadHexView => Icons.Material.Filled.Tag,
             PayloadMetaView => Icons.Material.Filled.Info,
+            PayloadDiffView => Icons.Material.Filled.CompareArrows,
             _ => Icons.Material.Filled.DataObject
         };
 
