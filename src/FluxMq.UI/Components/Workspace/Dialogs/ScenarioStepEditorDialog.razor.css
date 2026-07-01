@@ -153,12 +153,6 @@
     white-space: nowrap;
 }
 
-.scenario-step-editor-state.ready {
-    background: color-mix(in srgb, var(--mud-palette-success) 9%, var(--flux-surface));
-    color: var(--mud-palette-success);
-    display: none;
-}
-
 .scenario-step-editor-state.invalid {
     background: color-mix(in srgb, var(--mud-palette-error) 10%, var(--flux-surface));
     border-color: color-mix(in srgb, var(--mud-palette-error) 44%, var(--flux-border));
@@ -170,6 +164,7 @@
     display: flex;
     flex: 0 0 auto;
     gap: 5px;
+    margin-left: auto;
 }
 
 .scenario-step-editor-actions ::deep(.mud-button-root),

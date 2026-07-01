@@ -3647,8 +3647,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("scenario-step-editor-action-buttons");
         markup.ShouldContain("aria-label=\"Cancel step edit\"");
         markup.ShouldContain("aria-label=\"Apply step edit\"");
-        markup.ShouldContain("ValidationStateClass");
+        markup.ShouldContain("class=\"scenario-step-editor-state invalid\"");
         markup.ShouldContain("ValidationStateText");
+        markup.ShouldNotContain("ValidationStateClass");
+        markup.ShouldNotContain("Ready to apply");
+        markup.ShouldNotContain("scenario-step-editor-state ready");
         markup.ShouldContain("Disabled=\"@HasValidationIssues\"");
         markup.ShouldContain("BuildValidationMessages");
         markup.ShouldContain("AddRequiredMessage(messages, _connectionField.Label, _connection)");
@@ -3671,10 +3674,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".scenario-step-editor-actions");
         css.ShouldContain("justify-content: space-between;");
         css.ShouldContain(".scenario-step-editor-state");
-        css.ShouldContain(".scenario-step-editor-state.ready");
-        css.ShouldContain("display: none;");
+        css.ShouldNotContain(".scenario-step-editor-state.ready");
+        css.ShouldNotContain("display: none;");
         css.ShouldContain(".scenario-step-editor-state.invalid");
         css.ShouldContain(".scenario-step-editor-action-buttons");
+        css.ShouldContain("margin-left: auto;");
         css.ShouldContain("min-height: 28px;");
         css.ShouldContain("@media (max-width: 560px)");
         css.ShouldContain("flex-direction: column;");

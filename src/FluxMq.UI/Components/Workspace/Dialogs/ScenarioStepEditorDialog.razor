@@ -290,10 +290,13 @@
     </DialogContent>
     <DialogActions>
         <div class="scenario-step-editor-actions">
-            <div class="@ValidationStateClass" role="status" aria-live="polite">
-                <MudIcon Icon="@ValidationStateIcon" Size="Size.Small" />
-                <span>@ValidationStateText</span>
-            </div>
+            @if (HasValidationIssues)
+            {
+                <div class="scenario-step-editor-state invalid" role="status" aria-live="polite">
+                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                    <span>@ValidationStateText</span>
+                </div>
+            }
             <div class="scenario-step-editor-action-buttons">
                 <MudButton OnClick="@Cancel"
                            Variant="Variant.Text"
@@ -383,15 +386,7 @@
 
     private string ValidationStateText => ValidationMessages is { Count: > 0 } messages
         ? $"{messages.Count} {(messages.Count == 1 ? "issue" : "issues")} - {messages[0]}"
-        : "Ready to apply";
-
-    private string ValidationStateClass => HasValidationIssues
-        ? "scenario-step-editor-state invalid"
-        : "scenario-step-editor-state ready";
-
-    private string ValidationStateIcon => HasValidationIssues
-        ? Icons.Material.Filled.ErrorOutline
-        : Icons.Material.Filled.CheckCircle;
+        : string.Empty;
 
     protected override void OnInitialized()
     {
