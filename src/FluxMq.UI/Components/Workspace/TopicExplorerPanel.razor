@@ -1,8 +1,13 @@
 @implements IDisposable
+@using System.Globalization
+@using System.Text
+@using System.Text.Json.Serialization
 @using FluxMq.App.Definitions
+@using MQTTnet.Protocol
 @inject LiveMqttWorkspaceService Live
 @inject ProjectManagerService Projects
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <div class="topic-explorer">
     <section class="topic-explorer-tree" aria-label="Topic tree">
@@ -163,9 +168,33 @@
             {
                 <div class="topic-last-body">
                     <div class="topic-last-payload">
-                        <div class="topic-last-section-label">
-                            <span>Payload</span>
-                            <span>@LastPayloadMeta</span>
+                        <div class="topic-payload-header">
+                            <div class="topic-payload-heading">
+                                <span>Payload</span>
+                                <span>@LastPayloadMeta</span>
+                            </div>
+                            <div class="topic-payload-controls" role="tablist" aria-label="Latest payload views">
+                                @foreach (var view in PayloadViewOptions)
+                                {
+                                    <button type="button"
+                                            role="tab"
+                                            aria-selected="@IsPayloadViewActive(_lastPayloadView, view)"
+                                            class="@PayloadViewButtonClass(_lastPayloadView, view)"
+                                            title="@PayloadViewLabel(view)"
+                                            @onclick="@(() => _lastPayloadView = view)">
+                                        <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" />
+                                        <span>@PayloadViewLabel(view)</span>
+                                    </button>
+                                }
+                                <MudTooltip Text="Copy latest payload view">
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                   Size="Size.Small"
+                                                   Class="topic-payload-copy"
+                                                   Disabled="@(LastInspection is null)"
+                                                   aria-label="Copy latest payload view"
+                                                   OnClick="@CopyLatestPayloadViewAsync" />
+                                </MudTooltip>
+                            </div>
                         </div>
                         <pre>@LastPayloadPreview</pre>
                     </div>
@@ -196,16 +225,254 @@
             }
         </section>
 
+        @{
+            var topicStats = TopicStats;
+        }
+        <section class="topic-stats-panel" aria-label="Topic scope statistics">
+            <div class="topic-stats-header">
+                <span>Stats</span>
+                <span>@TopicStatsScopeLabel</span>
+            </div>
+
+            @if (topicStats.MessageCount == 0)
+            {
+                <div class="topic-stats-empty" role="status" aria-live="polite">
+                    No messages in this scope
+                </div>
+            }
+            else
+            {
+                <div class="topic-stats-grid">
+                    <div class="topic-stats-item primary">
+                        <span>Messages</span>
+                        <strong>@topicStats.MessageCount.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>Topics</span>
+                        <strong>@topicStats.TopicCount.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>Retained</span>
+                        <strong>@topicStats.RetainedCount.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>Payload</span>
+                        <strong>@FormatByteCount(topicStats.TotalPayloadBytes)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>Average</span>
+                        <strong>@FormatAveragePayloadBytes(topicStats.AveragePayloadBytes)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>QoS 0</span>
+                        <strong>@topicStats.Qos0Count.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>QoS 1</span>
+                        <strong>@topicStats.Qos1Count.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item">
+                        <span>QoS 2</span>
+                        <strong>@topicStats.Qos2Count.ToString(CultureInfo.InvariantCulture)</strong>
+                    </div>
+                    <div class="topic-stats-item latest">
+                        <span>Latest</span>
+                        <strong>@FormatTopicStatsLatest(topicStats)</strong>
+                    </div>
+                </div>
+            }
+        </section>
+
+        @if (Live.SelectedStoredSession is null)
+        {
+            <section class="topic-publish-panel" aria-label="Publish MQTT message">
+                <div class="topic-publish-header">
+                    <span>Publish</span>
+                    <span>@PublishConnectionLabel</span>
+                </div>
+
+                <div class="topic-publish-grid">
+                    <label class="topic-publish-field broker">
+                        <span class="topic-publish-label split">
+                            <span>Broker</span>
+                            <span>@PublishClientCountLabel</span>
+                        </span>
+                        @if (PublishConnections.Count > 0)
+                        {
+                            <select class="topic-publish-input"
+                                    aria-label="Publish broker"
+                                    @bind="_publishConnectionId">
+                                @foreach (var connection in PublishConnections)
+                                {
+                                    <option value="@connection.Id.ToString()">@PublishConnectionOptionLabel(connection)</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <div class="topic-publish-static">No app brokers</div>
+                        }
+                    </label>
+
+                    <label class="topic-publish-field topic">
+                        <span class="topic-publish-label">Topic</span>
+                        <input class="topic-publish-input"
+                               value="@_publishTopic"
+                               @oninput="OnPublishTopicChanged" />
+                    </label>
+
+                    <label class="topic-publish-field payload">
+                        <span class="topic-publish-label split">
+                            <span>Payload</span>
+                            <span>@PublishPayloadMeta</span>
+                        </span>
+                        <textarea class="topic-publish-textarea"
+                                  spellcheck="false"
+                                  @bind="_publishPayload"></textarea>
+                    </label>
+
+                    <div class="topic-publish-actions">
+                        <label class="topic-publish-qos" aria-label="Publish quality of service">
+                            <select @bind="_publishQos">
+                                <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
+                                <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
+                                <option value="@MqttQualityOfServiceLevel.ExactlyOnce">QoS 2</option>
+                            </select>
+                        </label>
+
+                        <button type="button"
+                                class="topic-publish-retain @(_publishRetain ? "active" : null)"
+                                @onclick="@(() => _publishRetain = !_publishRetain)">
+                            <span>Retain</span>
+                            <strong>@(_publishRetain ? "On" : "Off")</strong>
+                        </button>
+
+                        <button type="button"
+                                class="topic-publish-submit"
+                                disabled="@(!CanPublish)"
+                                @onclick="PublishTopicMessageAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                            <span>@PublishButtonLabel</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="topic-publish-assist" aria-label="Publish assist">
+                    <div class="topic-publish-assist-actions">
+                        <span class="topic-publish-assist-label">Use message</span>
+                        <button type="button"
+                                class="topic-publish-assist-button"
+                                disabled="@(!CanUseLatestPublishSource)"
+                                title='@PublishSourceHint(LastMessage, LastInspection, "latest")'
+                                @onclick="@(() => ApplyMessagePublishSource(LastMessage))">
+                            <MudIcon Icon="@Icons.Material.Filled.NorthEast" Size="Size.Small" />
+                            <span>Use latest</span>
+                        </button>
+                        <button type="button"
+                                class="topic-publish-assist-button"
+                                disabled="@(!CanUseSelectedPublishSource)"
+                                title='@PublishSourceHint(SelectedHistoryMessage, SelectedHistoryInspection, "selected")'
+                                @onclick="@(() => ApplyMessagePublishSource(SelectedHistoryMessage))">
+                            <MudIcon Icon="@Icons.Material.Filled.SubdirectoryArrowRight" Size="Size.Small" />
+                            <span>Use selected</span>
+                        </button>
+                    </div>
+
+                    <div class="topic-publish-recent" aria-label="Recent publishes">
+                        @if (_recentPublishes.Count == 0)
+                        {
+                            <div class="topic-publish-recent-empty">No recent publishes</div>
+                        }
+                        else
+                        {
+                            <div class="topic-publish-recent-list">
+                                @foreach (var publish in _recentPublishes)
+                                {
+                                    <button type="button"
+                                            class="topic-publish-recent-row"
+                                            title="@RecentPublishTitle(publish)"
+                                            @key="@publish.PublishedAt"
+                                            @onclick="@(() => LoadRecentPublish(publish))">
+                                        <strong>@publish.Topic</strong>
+                                        <span>@RecentPublishMeta(publish)</span>
+                                    </button>
+                                }
+                            </div>
+                            <MudTooltip Text="Clear recent publishes">
+                                <MudIconButton Icon="@Icons.Material.Filled.ClearAll"
+                                               Size="Size.Small"
+                                               Class="topic-publish-recent-clear"
+                                               aria-label="Clear recent publishes"
+                                               OnClick="@ClearRecentPublishes" />
+                            </MudTooltip>
+                        }
+                    </div>
+                </div>
+            </section>
+        }
+
         <section class="topic-history-panel" aria-label="Topic message history">
             <div class="topic-history-header">
                 <span>History</span>
                 <span>@HistorySummaryLabel</span>
             </div>
 
+            <div class="topic-history-toolbar" role="search" aria-label="History filters">
+                <MudTextField T="string"
+                              Value="@_historyFilter"
+                              ValueChanged="@OnHistoryFilterChanged"
+                              Placeholder="Filter history"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              Clearable="true"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              AdornmentColor="Color.Secondary"
+                              Class="topic-history-filter" />
+
+                <label class="topic-history-select" aria-label="Filter history quality of service">
+                    <select @bind="HistoryQosFilter">
+                        <option value="@HistoryFilterAll">All</option>
+                        <option value="@HistoryQos0">QoS 0</option>
+                        <option value="@HistoryQos1">QoS 1</option>
+                        <option value="@HistoryQos2">QoS 2</option>
+                    </select>
+                </label>
+
+                <label class="topic-history-select" aria-label="Filter history retain state">
+                    <select @bind="HistoryRetainFilter">
+                        <option value="@HistoryFilterAll">All</option>
+                        <option value="@HistoryRetained">Retained</option>
+                        <option value="@HistoryNotRetained">Not retained</option>
+                    </select>
+                </label>
+
+                @if (HasHistoryFilters)
+                {
+                    <MudTooltip Text="Reset history filters">
+                        <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
+                                       Size="Size.Small"
+                                       Class="topic-history-action"
+                                       aria-label="Reset history filters"
+                                       OnClick="@ResetHistoryFilters" />
+                    </MudTooltip>
+                }
+
+                <MudTooltip Text="@ExportHistoryLabel">
+                    <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                                   Size="Size.Small"
+                                   Class="topic-history-action export"
+                                   Disabled="@(!CanExportHistory)"
+                                   aria-label="Export visible history as JSON"
+                                   OnClick="@ExportVisibleHistoryAsync" />
+                </MudTooltip>
+            </div>
+
             <div class="topic-history-body">
                 <div class="topic-message-table">
                     <MudTable T="MqttEnvelope"
-                              Items="@HistoryMessages"
+                              Items="@VisibleHistoryMessages"
                               Dense="true"
                               Hover="true"
                               Class="topic-message-grid"
@@ -224,6 +491,7 @@
                             <col class="topic-col-broker" />
                             <col class="topic-col-topic" />
                             <col class="topic-col-qos" />
+                            <col class="topic-col-retain" />
                             <col class="topic-col-bytes" />
                         </ColGroup>
                         <HeaderContent>
@@ -231,6 +499,7 @@
                             <MudTh>Broker</MudTh>
                             <MudTh>Topic</MudTh>
                             <MudTh>QoS</MudTh>
+                            <MudTh>Retain</MudTh>
                             <MudTh>Bytes</MudTh>
                         </HeaderContent>
                         <RowTemplate>
@@ -242,6 +511,7 @@
                                 </MudText>
                             </MudTd>
                             <MudTd DataLabel="QoS">@((int)context.QualityOfService)</MudTd>
+                            <MudTd DataLabel="Retain">@(context.Retain ? "Yes" : "No")</MudTd>
                             <MudTd DataLabel="Bytes">@context.Payload.Length</MudTd>
                         </RowTemplate>
                         <NoRecordsContent>
@@ -294,9 +564,33 @@
                             </div>
 
                             <div class="topic-history-detail-payload">
-                                <div class="topic-history-detail-payload-label">
-                                    <span>Payload</span>
-                                    <span>@SelectedHistoryPayloadMeta</span>
+                                <div class="topic-payload-header">
+                                    <div class="topic-payload-heading">
+                                        <span>Payload</span>
+                                        <span>@SelectedHistoryPayloadMeta</span>
+                                    </div>
+                                    <div class="topic-payload-controls" role="tablist" aria-label="Selected payload views">
+                                        @foreach (var view in SelectedPayloadViewOptions)
+                                        {
+                                            <button type="button"
+                                                    role="tab"
+                                                    aria-selected="@IsPayloadViewActive(_selectedHistoryPayloadView, view)"
+                                                    class="@PayloadViewButtonClass(_selectedHistoryPayloadView, view)"
+                                                    title="@PayloadViewLabel(view)"
+                                                    @onclick="@(() => _selectedHistoryPayloadView = view)">
+                                                <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" />
+                                                <span>@PayloadViewLabel(view)</span>
+                                            </button>
+                                        }
+                                        <MudTooltip Text="Copy selected payload view">
+                                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                           Size="Size.Small"
+                                                           Class="topic-payload-copy"
+                                                           Disabled="@(SelectedHistoryInspection is null)"
+                                                           aria-label="Copy selected payload view"
+                                                           OnClick="@CopySelectedHistoryPayloadViewAsync" />
+                                        </MudTooltip>
+                                    </div>
                                 </div>
                                 <pre>@SelectedHistoryPayloadPreview</pre>
                             </div>
@@ -309,6 +603,41 @@
 </div>
 
 @code {
+    private const string PayloadFormattedView = "formatted";
+    private const string PayloadRawView = "raw";
+    private const string PayloadHexView = "hex";
+    private const string PayloadMetaView = "meta";
+    private const string PayloadDiffView = "diff";
+    private const int PayloadDiffContextLineCount = 2;
+    private const int PayloadDiffMaxChangedLines = 80;
+    private const int MaxRecentPublishes = 6;
+    private const string HistoryFilterAll = "all";
+    private const string HistoryQos0 = "0";
+    private const string HistoryQos1 = "1";
+    private const string HistoryQos2 = "2";
+    private const string HistoryRetained = "retained";
+    private const string HistoryNotRetained = "not-retained";
+    private static readonly string[] PayloadViewOptions =
+    [
+        PayloadFormattedView,
+        PayloadRawView,
+        PayloadHexView,
+        PayloadMetaView
+    ];
+    private static readonly string[] SelectedPayloadViewOptions =
+    [
+        PayloadFormattedView,
+        PayloadRawView,
+        PayloadHexView,
+        PayloadMetaView,
+        PayloadDiffView
+    ];
+    private static readonly JsonSerializerOptions HistoryExportJsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        WriteIndented = true
+    };
+
     private bool _disposed;
     private bool _monitorStarting;
     private FlowWorkspaceService? _subscribedProject;
@@ -316,12 +645,37 @@
     private string? _selectedBrokerName;
     private string? _selectedTopic;
     private string _filter = string.Empty;
+    private string _historyFilter = string.Empty;
+    private string _historyQosFilter = HistoryFilterAll;
+    private string _historyRetainFilter = HistoryFilterAll;
+    private string _lastPayloadView = PayloadFormattedView;
+    private string _selectedHistoryPayloadView = PayloadFormattedView;
     private bool _setupDialogOpen;
     private FlowWorkspaceService? _setupPromptedProject;
+    private bool _publishBusy;
+    private string _publishConnectionId = string.Empty;
+    private string _publishTopic = "test/topic";
+    private string _publishPayload = "{}";
+    private MqttQualityOfServiceLevel _publishQos = MqttQualityOfServiceLevel.AtMostOnce;
+    private bool _publishRetain;
+    private readonly List<TopicRecentPublish> _recentPublishes = [];
 
     private IReadOnlyList<MqttEnvelope> MessageSource => Live.SelectedStoredSession is null
         ? Live.RecentMessages
         : Live.SelectedSessionMessages;
+
+    private IReadOnlyList<ManagedConnection> PublishConnections => BuildPublishConnections();
+
+    private ManagedConnection? SelectedPublishConnection
+    {
+        get
+        {
+            EnsurePublishBrokerSelection();
+            return Guid.TryParse(_publishConnectionId, out var selectedId)
+                ? PublishConnections.FirstOrDefault(connection => connection.Id == selectedId)
+                : null;
+        }
+    }
 
     private IReadOnlyList<TopicBrokerGroup> BrokerGroups
     {
@@ -430,6 +784,31 @@
         .OrderByDescending(message => message.ReceivedAt)
         .ToArray();
 
+    private IReadOnlyList<MqttEnvelope> VisibleHistoryMessages
+    {
+        get
+        {
+            IEnumerable<MqttEnvelope> query = HistoryMessages;
+
+            if (!string.IsNullOrWhiteSpace(_historyFilter))
+            {
+                query = query.Where(MatchesHistoryTextFilter);
+            }
+
+            if (_historyQosFilter is not HistoryFilterAll)
+            {
+                query = query.Where(MatchesHistoryQosFilter);
+            }
+
+            if (_historyRetainFilter is not HistoryFilterAll)
+            {
+                query = query.Where(MatchesHistoryRetainFilter);
+            }
+
+            return query.ToArray();
+        }
+    }
+
     private IReadOnlyList<TopicBrokerGroup> NoTrafficBrokerGroups
     {
         get
@@ -457,7 +836,7 @@
     {
         get
         {
-            var messages = HistoryMessages;
+            var messages = VisibleHistoryMessages;
             if (_selectedHistoryMessage is not null &&
                 messages.Contains(_selectedHistoryMessage))
             {
@@ -495,13 +874,7 @@
         ? $"{inspection.DisplayTypeLabel} / {inspection.SizeBytes} B"
         : "No payload";
 
-    private string LastPayloadPreview
-    {
-        get
-        {
-            return FormatPayloadPreview(LastInspection);
-        }
-    }
+    private string LastPayloadPreview => DisplayPayloadView(LastInspection, _lastPayloadView);
 
     private string LastReceivedLabel => LastMessage is { } message
         ? message.ReceivedAt.ToLocalTime().ToString("HH:mm:ss")
@@ -515,18 +888,162 @@
         ? $"{inspection.DisplayTypeLabel} / {inspection.SizeBytes} B"
         : "No payload";
 
-    private string SelectedHistoryPayloadPreview => FormatPayloadPreview(SelectedHistoryInspection);
+    private string SelectedHistoryPayloadPreview => DisplaySelectedPayloadView();
 
     private string SelectedHistoryReceivedLabel => SelectedHistoryMessage is { } message
         ? message.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
         : "No message";
 
-    private string HistorySummaryLabel => HistoryMessages.Count switch
+    private string HistorySummaryLabel => HasHistoryFilters
+        ? $"{VisibleHistoryMessages.Count} of {HistoryMessages.Count} messages"
+        : MessageCountLabel(HistoryMessages.Count);
+
+    private TopicScopeStats TopicStats => BuildTopicScopeStats(HistoryMessages);
+
+    private string TopicStatsScopeLabel => SelectedTopicLabel;
+
+    private TopicScopeStats BuildTopicScopeStats(IReadOnlyList<MqttEnvelope> messages)
     {
-        0 => "No messages",
-        1 => "1 message",
-        var count => $"{count} messages"
+        if (messages.Count == 0)
+        {
+            return TopicScopeStats.Empty;
+        }
+
+        var totalPayloadBytes = messages.Sum(static message => (long)message.Payload.Length);
+        return new TopicScopeStats(
+            messages.Count,
+            messages
+                .Select(message => $"{BrokerLabel(message)}\u001f{message.Topic}")
+                .Distinct(StringComparer.Ordinal)
+                .Count(),
+            messages.Count(static message => message.Retain),
+            totalPayloadBytes,
+            (double)totalPayloadBytes / messages.Count,
+            messages.Count(static message => message.QualityOfService == MqttQualityOfServiceLevel.AtMostOnce),
+            messages.Count(static message => message.QualityOfService == MqttQualityOfServiceLevel.AtLeastOnce),
+            messages.Count(static message => message.QualityOfService == MqttQualityOfServiceLevel.ExactlyOnce),
+            messages.Max(static message => message.ReceivedAt));
+    }
+
+    private string HistoryQosFilter
+    {
+        get => _historyQosFilter;
+        set
+        {
+            _historyQosFilter = string.IsNullOrWhiteSpace(value) ? HistoryFilterAll : value;
+            EnsureSelectedHistoryMessageVisible();
+        }
+    }
+
+    private string HistoryRetainFilter
+    {
+        get => _historyRetainFilter;
+        set
+        {
+            _historyRetainFilter = string.IsNullOrWhiteSpace(value) ? HistoryFilterAll : value;
+            EnsureSelectedHistoryMessageVisible();
+        }
+    }
+
+    private bool HasHistoryFilters =>
+        !string.IsNullOrWhiteSpace(_historyFilter) ||
+        _historyQosFilter is not HistoryFilterAll ||
+        _historyRetainFilter is not HistoryFilterAll;
+
+    private bool CanExportHistory => VisibleHistoryMessages.Count > 0;
+
+    private string ExportHistoryLabel => VisibleHistoryMessages.Count switch
+    {
+        0 => "No history rows to export",
+        1 => "Export 1 visible history row",
+        var count => $"Export {count} visible history rows"
     };
+
+    private bool CanPublish =>
+        !_publishBusy &&
+        SelectedPublishConnection is not null &&
+        !string.IsNullOrWhiteSpace(_publishTopic);
+
+    private bool CanUseLatestPublishSource => CanUseMessageAsPublishSource(LastMessage, LastInspection);
+
+    private bool CanUseSelectedPublishSource => CanUseMessageAsPublishSource(SelectedHistoryMessage, SelectedHistoryInspection);
+
+    private string PublishButtonLabel => _publishBusy ? "Publishing" : "Publish";
+
+    private string PublishClientCountLabel => PublishConnections.Count switch
+    {
+        0 => "0 brokers",
+        1 => "1 broker",
+        var count => $"{count} brokers"
+    };
+
+    private string PublishConnectionLabel => SelectedPublishConnection is { } connection
+        ? $"{connection.ResourceName} / {BrokerStateLabel(connection.State)}"
+        : "No app broker";
+
+    private string PublishPayloadMeta
+    {
+        get
+        {
+            var payload = Encoding.UTF8.GetBytes(_publishPayload ?? string.Empty);
+            var inspection = PayloadInspector.Inspect(payload);
+            return $"{inspection.DisplayTypeLabel} / {payload.Length} B";
+        }
+    }
+
+    private static bool CanUseMessageAsPublishSource(MqttEnvelope? message, PayloadInspectionResult? inspection)
+        => message is not null && inspection is { IsText: true };
+
+    private static string PublishSourceHint(MqttEnvelope? message, PayloadInspectionResult? inspection, string source)
+    {
+        if (message is null)
+        {
+            return $"No {source} message to use";
+        }
+
+        return inspection is { IsText: true }
+            ? $"Use {source} message in publisher"
+            : $"Only text {source} payloads can be loaded into the publisher";
+    }
+
+    private static string RecentPublishMeta(TopicRecentPublish publish)
+        => $"{publish.BrokerResourceName} / QoS {((int)publish.QualityOfService).ToString(CultureInfo.InvariantCulture)} / {(publish.Retain ? "Retain" : "No retain")} / {publish.PayloadType} / {publish.PayloadBytes.ToString(CultureInfo.InvariantCulture)} B / {publish.PublishedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture)}";
+
+    private static string RecentPublishTitle(TopicRecentPublish publish)
+        => $"Load recent publish for {publish.Topic} from {publish.BrokerLabel}";
+
+    private static string FormatTopicStatsLatest(TopicScopeStats stats)
+        => stats.LatestReceivedAt is { } receivedAt
+            ? receivedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture)
+            : "No message";
+
+    private static string FormatAveragePayloadBytes(double bytes)
+        => bytes <= 0
+            ? "0 B"
+            : FormatByteCount((long)Math.Round(bytes, MidpointRounding.AwayFromZero));
+
+    private static string FormatByteCount(long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return $"{bytes.ToString(CultureInfo.InvariantCulture)} B";
+        }
+
+        var kib = bytes / 1024d;
+        if (kib < 1024)
+        {
+            return $"{kib.ToString("0.#", CultureInfo.InvariantCulture)} KB";
+        }
+
+        var mib = kib / 1024d;
+        if (mib < 1024)
+        {
+            return $"{mib.ToString("0.#", CultureInfo.InvariantCulture)} MB";
+        }
+
+        var gib = mib / 1024d;
+        return $"{gib.ToString("0.#", CultureInfo.InvariantCulture)} GB";
+    }
 
     private string TopicSourceLabel => Live.SelectedStoredSession is null
         ? "App broker monitor"
@@ -578,6 +1095,8 @@
         Live.Changed += OnLiveChanged;
         Projects.Changed += OnProjectsChanged;
         SyncProjectSubscription();
+        EnsurePublishConnectionsForActiveProject();
+        EnsurePublishBrokerSelection();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -593,11 +1112,18 @@
         _filter = value;
     }
 
+    private void OnHistoryFilterChanged(string value)
+    {
+        _historyFilter = value;
+        EnsureSelectedHistoryMessageVisible();
+    }
+
     private void OnBrokerSelected(string brokerName)
     {
         _selectedBrokerName = string.IsNullOrWhiteSpace(brokerName) ? null : brokerName;
         _selectedTopic = null;
         SelectLatestFilteredMessage();
+        SyncPublishSelectionFromTopicSelection(prefillTopic: false);
     }
 
     private void OnTopicSelected(string brokerName, string? topic)
@@ -605,6 +1131,7 @@
         _selectedBrokerName = string.IsNullOrWhiteSpace(brokerName) ? null : brokerName;
         _selectedTopic = string.IsNullOrWhiteSpace(topic) ? null : topic;
         SelectLatestFilteredMessage();
+        SyncPublishSelectionFromTopicSelection(prefillTopic: true);
     }
 
     private void ClearTopicSelection()
@@ -616,7 +1143,7 @@
 
     private void SelectLatestFilteredMessage()
     {
-        var latest = HistoryMessages.FirstOrDefault();
+        var latest = VisibleHistoryMessages.FirstOrDefault();
         _selectedHistoryMessage = latest;
         if (latest is not null)
         {
@@ -631,6 +1158,163 @@
         {
             Live.SelectMessage(message);
         }
+    }
+
+    private void EnsureSelectedHistoryMessageVisible()
+    {
+        var visibleMessages = VisibleHistoryMessages;
+        if (_selectedHistoryMessage is not null &&
+            visibleMessages.Contains(_selectedHistoryMessage))
+        {
+            return;
+        }
+
+        var latest = visibleMessages.FirstOrDefault();
+        _selectedHistoryMessage = latest;
+        if (latest is not null)
+        {
+            Live.SelectMessage(latest);
+        }
+    }
+
+    private void ResetHistoryFilters()
+    {
+        _historyFilter = string.Empty;
+        _historyQosFilter = HistoryFilterAll;
+        _historyRetainFilter = HistoryFilterAll;
+        EnsureSelectedHistoryMessageVisible();
+    }
+
+    private void OnPublishTopicChanged(ChangeEventArgs args)
+    {
+        _publishTopic = args.Value?.ToString() ?? string.Empty;
+    }
+
+    private void ApplyMessagePublishSource(MqttEnvelope? message)
+    {
+        if (message is null)
+        {
+            Snackbar.Add("No message to load", Severity.Info);
+            return;
+        }
+
+        var inspection = PayloadInspector.Inspect(message.Payload);
+        if (!inspection.IsText)
+        {
+            Snackbar.Add("Only text payloads can be loaded into the publisher", Severity.Info);
+            return;
+        }
+
+        _publishTopic = message.Topic;
+        _publishPayload = inspection.RawText;
+        _publishQos = message.QualityOfService;
+        _publishRetain = message.Retain;
+
+        var connection = FindPublishConnectionForBroker(BrokerLabel(message));
+        if (connection is not null)
+        {
+            _publishConnectionId = connection.Id.ToString();
+        }
+    }
+
+    private async Task PublishTopicMessageAsync()
+    {
+        var connection = SelectedPublishConnection;
+        var topic = _publishTopic.Trim();
+        if (connection is null ||
+            string.IsNullOrWhiteSpace(topic))
+        {
+            return;
+        }
+
+        _publishBusy = true;
+        try
+        {
+            if (connection.State != MqttClientState.Connected)
+            {
+                await Live.ConnectAsync(connection.Id);
+            }
+
+            var connectedConnection = PublishConnections.FirstOrDefault(item => item.Id == connection.Id);
+            if (connectedConnection?.State != MqttClientState.Connected)
+            {
+                return;
+            }
+
+            var payload = _publishPayload ?? string.Empty;
+            var published = await Live.PublishAsync(
+                connectedConnection.Id,
+                topic,
+                payload,
+                _publishQos,
+                _publishRetain);
+
+            if (published)
+            {
+                Projects.ActiveProject?.RecordManualMqttPublish(
+                    topic,
+                    payload,
+                    (int)_publishQos,
+                    _publishRetain,
+                    connectedConnection.ResourceName);
+
+                RecordRecentPublish(connectedConnection, topic, payload);
+            }
+        }
+        finally
+        {
+            _publishBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private void RecordRecentPublish(ManagedConnection connection, string topic, string payload)
+    {
+        var payloadText = payload ?? string.Empty;
+        var payloadBytes = Encoding.UTF8.GetBytes(payloadText);
+        var inspection = PayloadInspector.Inspect(payloadBytes);
+        var recent = new TopicRecentPublish(
+            connection.ResourceName,
+            PublishConnectionOptionLabel(connection),
+            topic,
+            payloadText,
+            _publishQos,
+            _publishRetain,
+            DateTimeOffset.UtcNow,
+            inspection.DisplayTypeLabel,
+            inspection.SizeBytes);
+
+        _recentPublishes.RemoveAll(item =>
+            string.Equals(item.BrokerResourceName, recent.BrokerResourceName, StringComparison.Ordinal) &&
+            string.Equals(item.Topic, recent.Topic, StringComparison.Ordinal) &&
+            string.Equals(item.Payload, recent.Payload, StringComparison.Ordinal) &&
+            item.QualityOfService == recent.QualityOfService &&
+            item.Retain == recent.Retain);
+        _recentPublishes.Insert(0, recent);
+        if (_recentPublishes.Count > MaxRecentPublishes)
+        {
+            _recentPublishes.RemoveRange(MaxRecentPublishes, _recentPublishes.Count - MaxRecentPublishes);
+        }
+    }
+
+    private void LoadRecentPublish(TopicRecentPublish publish)
+    {
+        var connection = PublishConnections.FirstOrDefault(connection =>
+            string.Equals(connection.ResourceName, publish.BrokerResourceName, StringComparison.Ordinal));
+        if (connection is not null)
+        {
+            _publishConnectionId = connection.Id.ToString();
+        }
+
+        _publishTopic = publish.Topic;
+        _publishPayload = publish.Payload;
+        _publishQos = publish.QualityOfService;
+        _publishRetain = publish.Retain;
+    }
+
+    private void ClearRecentPublishes()
+    {
+        _recentPublishes.Clear();
     }
 
     private bool CanEditBrokerMonitor(TopicBrokerGroup group)
@@ -695,13 +1379,352 @@
             ? "topic-history-row selected"
             : "topic-history-row";
 
-    private static string FormatPayloadPreview(PayloadInspectionResult? inspection)
+    private async Task ExportVisibleHistoryAsync()
+    {
+        var messages = VisibleHistoryMessages;
+        if (messages.Count == 0)
+        {
+            Snackbar.Add("No history rows to export", Severity.Warning);
+            return;
+        }
+
+        var dialog = await DialogService.ShowAsync<SaveAsDialog>(
+            "Export history",
+            new DialogParameters
+            {
+                [nameof(SaveAsDialog.SuggestedPath)] = SuggestedHistoryExportPath(),
+                [nameof(SaveAsDialog.DialogTitle)] = "Export history",
+                [nameof(SaveAsDialog.HelperText)] = "Full path including .json extension",
+                [nameof(SaveAsDialog.SubmitText)] = "Export"
+            },
+            new DialogOptions
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+                BackdropClick = false
+            });
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult is not { Canceled: false, Data: string path } ||
+            string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            await WriteHistoryExportAsync(BuildHistoryExportJson(messages), path);
+            Snackbar.Add("History export saved", Severity.Success);
+        }
+        catch (Exception exception)
+        {
+            Snackbar.Add($"History export failed: {exception.Message}", Severity.Error);
+        }
+    }
+
+    private string BuildHistoryExportJson(IReadOnlyList<MqttEnvelope> messages)
+    {
+        var rows = messages.Select(message =>
+        {
+            var inspection = PayloadInspector.Inspect(message.Payload);
+            return new
+            {
+                broker = BrokerLabel(message),
+                topic = message.Topic,
+                receivedAt = message.ReceivedAt,
+                qos = (int)message.QualityOfService,
+                retain = message.Retain,
+                payloadByteCount = message.Payload.Length,
+                payloadType = inspection.DisplayTypeLabel,
+                payloadBase64 = Convert.ToBase64String(message.Payload),
+                payloadText = inspection.IsText ? inspection.RawText : null,
+                payloadHex = inspection.HexDump
+            };
+        });
+
+        return JsonSerializer.Serialize(rows, HistoryExportJsonOptions);
+    }
+
+    private string SuggestedHistoryExportPath()
+    {
+        var currentFilePath = Projects.ActiveProject?.CurrentFilePath;
+        var directory = !string.IsNullOrWhiteSpace(currentFilePath)
+            ? Path.GetDirectoryName(currentFilePath)
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FluxMQ");
+        var stamp = DateTimeOffset.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+
+        return Path.Combine(directory ?? string.Empty, $"topics-history-{stamp}.json");
+    }
+
+    private static async Task WriteHistoryExportAsync(string content, string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        var directory = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        await File.WriteAllTextAsync(fullPath, content);
+    }
+
+    private async Task CopyLatestPayloadViewAsync()
+        => await CopyPayloadViewAsync(LastInspection, _lastPayloadView, "Latest payload view copied");
+
+    private async Task CopySelectedHistoryPayloadViewAsync()
+    {
+        if (SelectedHistoryMessage is null)
+        {
+            Snackbar.Add("No payload view to copy", Severity.Info);
+            return;
+        }
+
+        await Clipboard.Default.SetTextAsync(SelectedHistoryPayloadPreview);
+        Snackbar.Add(_selectedHistoryPayloadView == PayloadDiffView ? "Payload diff copied" : "Selected payload view copied", Severity.Success);
+    }
+
+    private async Task CopyPayloadViewAsync(PayloadInspectionResult? inspection, string view, string successMessage)
+    {
+        if (inspection is null)
+        {
+            Snackbar.Add("No payload view to copy", Severity.Info);
+            return;
+        }
+
+        await Clipboard.Default.SetTextAsync(DisplayPayloadView(inspection, view));
+        Snackbar.Add(successMessage, Severity.Success);
+    }
+
+    private static string DisplayPayloadView(PayloadInspectionResult? inspection, string view)
     {
         if (inspection is null)
         {
             return "No payload captured.";
         }
 
+        return view switch
+        {
+            PayloadRawView => DisplayRawPayload(inspection),
+            PayloadHexView => DisplayHexPayload(inspection),
+            PayloadMetaView => DisplayPayloadMeta(inspection),
+            _ => DisplayFormattedPayload(inspection)
+        };
+    }
+
+    private string DisplaySelectedPayloadView()
+    {
+        if (_selectedHistoryPayloadView == PayloadDiffView)
+        {
+            return DisplaySelectedPayloadDiff();
+        }
+
+        return DisplayPayloadView(SelectedHistoryInspection, _selectedHistoryPayloadView);
+    }
+
+    private string DisplaySelectedPayloadDiff()
+    {
+        var latest = LastMessage;
+        var selected = SelectedHistoryMessage;
+        if (latest is null || selected is null)
+        {
+            return "No comparison available.";
+        }
+
+        if (Equals(latest, selected))
+        {
+            return "Selected message is the latest message.\nChoose another history row to compare payloads.";
+        }
+
+        var latestInspection = PayloadInspector.Inspect(latest.Payload);
+        var selectedInspection = PayloadInspector.Inspect(selected.Payload);
+        return BuildPayloadDiffText(latest, latestInspection, selected, selectedInspection);
+    }
+
+    private string BuildPayloadDiffText(
+        MqttEnvelope latest,
+        PayloadInspectionResult latestInspection,
+        MqttEnvelope selected,
+        PayloadInspectionResult selectedInspection)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("Compare latest -> selected");
+        builder.Append("Latest: ");
+        builder.AppendLine(PayloadDiffMessageSummary(latest, latestInspection));
+        builder.Append("Selected: ");
+        builder.AppendLine(PayloadDiffMessageSummary(selected, selectedInspection));
+        builder.Append("Byte delta: ");
+        builder.AppendLine(FormatByteDelta(selected.Payload.Length - latest.Payload.Length));
+
+        if (latest.Payload.SequenceEqual(selected.Payload))
+        {
+            builder.AppendLine("Payload unchanged.");
+            return builder.ToString().TrimEnd();
+        }
+
+        var firstDiff = FirstDifferingByteIndex(latest.Payload, selected.Payload);
+        builder.Append("First differing byte: ");
+        builder.AppendLine(FormatDiffOffset(firstDiff));
+
+        if (latestInspection.IsText && selectedInspection.IsText)
+        {
+            builder.AppendLine();
+            builder.Append(BuildUnifiedPayloadDiffText(latestInspection.RawText, selectedInspection.RawText));
+            return builder.ToString().TrimEnd();
+        }
+
+        builder.AppendLine();
+        builder.Append(BuildBinaryPayloadDiffText(latestInspection, selectedInspection, firstDiff));
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string BuildUnifiedPayloadDiffText(string latestText, string selectedText)
+    {
+        var latestLines = SplitPayloadLines(latestText);
+        var selectedLines = SplitPayloadLines(selectedText);
+        var commonPrefix = CountCommonPrefixLines(latestLines, selectedLines);
+        var commonSuffix = CountCommonSuffixLines(latestLines, selectedLines, commonPrefix);
+        var latestChangeEnd = latestLines.Length - commonSuffix;
+        var selectedChangeEnd = selectedLines.Length - commonSuffix;
+        var contextStart = Math.Max(0, commonPrefix - PayloadDiffContextLineCount);
+        var trailingContextEnd = Math.Min(latestLines.Length, latestChangeEnd + PayloadDiffContextLineCount);
+        var omittedChangeLines = 0;
+        var emittedChangeLines = 0;
+        var builder = new StringBuilder();
+
+        builder.AppendLine("Unified text diff");
+        if (contextStart > 0)
+        {
+            builder.AppendLine("  ...");
+        }
+
+        for (var i = contextStart; i < commonPrefix; i++)
+        {
+            builder.AppendLine("  " + latestLines[i]);
+        }
+
+        AppendBoundedDiffLines(builder, "-", latestLines, commonPrefix, latestChangeEnd, ref emittedChangeLines, ref omittedChangeLines);
+        AppendBoundedDiffLines(builder, "+", selectedLines, commonPrefix, selectedChangeEnd, ref emittedChangeLines, ref omittedChangeLines);
+
+        if (omittedChangeLines > 0)
+        {
+            builder.AppendLine($"  ... {omittedChangeLines.ToString(CultureInfo.InvariantCulture)} diff lines omitted");
+        }
+
+        for (var i = latestChangeEnd; i < trailingContextEnd; i++)
+        {
+            builder.AppendLine("  " + latestLines[i]);
+        }
+
+        if (trailingContextEnd < latestLines.Length)
+        {
+            builder.AppendLine("  ...");
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string BuildBinaryPayloadDiffText(
+        PayloadInspectionResult latestInspection,
+        PayloadInspectionResult selectedInspection,
+        int firstDiff)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("Binary or non-text payload comparison.");
+        builder.AppendLine($"Latest: {latestInspection.DisplayTypeLabel}, {latestInspection.SizeBytes.ToString(CultureInfo.InvariantCulture)} B");
+        builder.AppendLine($"Selected: {selectedInspection.DisplayTypeLabel}, {selectedInspection.SizeBytes.ToString(CultureInfo.InvariantCulture)} B");
+        builder.AppendLine($"First differing byte: {FormatDiffOffset(firstDiff)}");
+        builder.Append("Use Hex view for byte-level inspection.");
+        return builder.ToString();
+    }
+
+    private static void AppendBoundedDiffLines(
+        StringBuilder builder,
+        string prefix,
+        IReadOnlyList<string> lines,
+        int start,
+        int end,
+        ref int emitted,
+        ref int omitted)
+    {
+        for (var i = start; i < end; i++)
+        {
+            if (emitted >= PayloadDiffMaxChangedLines)
+            {
+                omitted++;
+                continue;
+            }
+
+            builder.Append(prefix);
+            builder.Append(' ');
+            builder.AppendLine(lines[i]);
+            emitted++;
+        }
+    }
+
+    private static int CountCommonPrefixLines(IReadOnlyList<string> latestLines, IReadOnlyList<string> selectedLines)
+    {
+        var limit = Math.Min(latestLines.Count, selectedLines.Count);
+        var index = 0;
+        while (index < limit && string.Equals(latestLines[index], selectedLines[index], StringComparison.Ordinal))
+        {
+            index++;
+        }
+
+        return index;
+    }
+
+    private static int CountCommonSuffixLines(IReadOnlyList<string> latestLines, IReadOnlyList<string> selectedLines, int commonPrefix)
+    {
+        var latestIndex = latestLines.Count - 1;
+        var selectedIndex = selectedLines.Count - 1;
+        var count = 0;
+        while (latestIndex >= commonPrefix
+            && selectedIndex >= commonPrefix
+            && string.Equals(latestLines[latestIndex], selectedLines[selectedIndex], StringComparison.Ordinal))
+        {
+            count++;
+            latestIndex--;
+            selectedIndex--;
+        }
+
+        return count;
+    }
+
+    private static string[] SplitPayloadLines(string text)
+        => text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n');
+
+    private static int FirstDifferingByteIndex(IReadOnlyList<byte> latestPayload, IReadOnlyList<byte> selectedPayload)
+    {
+        var limit = Math.Min(latestPayload.Count, selectedPayload.Count);
+        for (var i = 0; i < limit; i++)
+        {
+            if (latestPayload[i] != selectedPayload[i])
+            {
+                return i;
+            }
+        }
+
+        return latestPayload.Count == selectedPayload.Count ? -1 : limit;
+    }
+
+    private string PayloadDiffMessageSummary(MqttEnvelope message, PayloadInspectionResult inspection)
+        => $"{message.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)} / {BrokerLabel(message)} / {message.Topic} / {inspection.DisplayTypeLabel} / {inspection.SizeBytes.ToString(CultureInfo.InvariantCulture)} B";
+
+    private static string FormatByteDelta(int delta)
+        => delta switch
+        {
+            > 0 => $"+{delta.ToString(CultureInfo.InvariantCulture)} B",
+            < 0 => $"{delta.ToString(CultureInfo.InvariantCulture)} B",
+            _ => "0 B"
+        };
+
+    private static string FormatDiffOffset(int offset)
+        => offset < 0
+            ? "none"
+            : $"0x{offset.ToString("X", CultureInfo.InvariantCulture)} ({offset.ToString(CultureInfo.InvariantCulture)})";
+
+    private static string DisplayFormattedPayload(PayloadInspectionResult inspection)
+    {
         if (inspection.SizeBytes == 0)
         {
             return "Empty payload.";
@@ -712,15 +1735,120 @@
             return inspection.FormattedText;
         }
 
-        return inspection.IsText
-            ? inspection.RawText
+        if (inspection.IsText)
+        {
+            return inspection.RawText;
+        }
+
+        return string.IsNullOrWhiteSpace(inspection.HexDump)
+            ? "No formatted preview available."
             : inspection.HexDump;
     }
+
+    private static string DisplayRawPayload(PayloadInspectionResult inspection)
+    {
+        if (inspection.SizeBytes == 0)
+        {
+            return "Empty payload.";
+        }
+
+        return inspection.IsText
+            ? inspection.RawText
+            : "Binary payload. Use the hex view.";
+    }
+
+    private static string DisplayHexPayload(PayloadInspectionResult inspection)
+        => string.IsNullOrWhiteSpace(inspection.HexDump)
+            ? "Empty payload."
+            : inspection.HexDump;
+
+    private static string DisplayPayloadMeta(PayloadInspectionResult inspection)
+    {
+        var builder = new StringBuilder();
+        builder.Append("Type: ");
+        builder.AppendLine(inspection.DisplayTypeLabel);
+        builder.Append("Size: ");
+        builder.Append(inspection.SizeBytes);
+        builder.AppendLine(" bytes");
+        builder.Append("Text: ");
+        builder.AppendLine(inspection.IsText ? "Yes" : "No");
+        builder.Append("Metadata: ");
+        builder.Append(inspection.Metadata);
+
+        return builder.ToString();
+    }
+
+    private static bool IsPayloadViewActive(string currentView, string view)
+        => string.Equals(currentView, view, StringComparison.Ordinal);
+
+    private static string PayloadViewButtonClass(string currentView, string view)
+        => IsPayloadViewActive(currentView, view)
+            ? "topic-payload-view-button active"
+            : "topic-payload-view-button";
+
+    private static string PayloadViewLabel(string view)
+        => view switch
+        {
+            PayloadRawView => "Raw",
+            PayloadHexView => "Hex",
+            PayloadMetaView => "Meta",
+            PayloadDiffView => "Diff",
+            _ => "Formatted"
+        };
+
+    private static string PayloadViewIcon(string view)
+        => view switch
+        {
+            PayloadRawView => Icons.Material.Filled.Subject,
+            PayloadHexView => Icons.Material.Filled.Tag,
+            PayloadMetaView => Icons.Material.Filled.Info,
+            PayloadDiffView => Icons.Material.Filled.CompareArrows,
+            _ => Icons.Material.Filled.DataObject
+        };
 
     private bool IsInSelectedTopic(string topic) =>
         string.IsNullOrWhiteSpace(_selectedTopic) ||
         string.Equals(topic, _selectedTopic, StringComparison.Ordinal) ||
         topic.StartsWith($"{_selectedTopic}/", StringComparison.Ordinal);
+
+    private bool MatchesHistoryTextFilter(MqttEnvelope message)
+    {
+        var filter = _historyFilter.Trim();
+        var receivedAt = message.ReceivedAt.ToLocalTime();
+        var qosLabel = $"QoS {(int)message.QualityOfService}";
+        var retainLabel = message.Retain ? "Retained" : "Not retained";
+        var retainShortLabel = message.Retain ? "Yes" : "No";
+        var byteCount = message.Payload.Length.ToString(CultureInfo.InvariantCulture);
+        var byteLabel = $"{byteCount} B";
+
+        return BrokerLabel(message).Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               message.Topic.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               receivedAt.ToString("HH:mm:ss", CultureInfo.InvariantCulture).Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               receivedAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture).Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               qosLabel.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               ((int)message.QualityOfService).ToString(CultureInfo.InvariantCulture).Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               retainLabel.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               retainShortLabel.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               byteCount.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               byteLabel.Contains(filter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool MatchesHistoryQosFilter(MqttEnvelope message)
+        => _historyQosFilter switch
+        {
+            HistoryQos0 => message.QualityOfService == MqttQualityOfServiceLevel.AtMostOnce,
+            HistoryQos1 => message.QualityOfService == MqttQualityOfServiceLevel.AtLeastOnce,
+            HistoryQos2 => message.QualityOfService == MqttQualityOfServiceLevel.ExactlyOnce,
+            _ => true
+        };
+
+    private bool MatchesHistoryRetainFilter(MqttEnvelope message)
+        => _historyRetainFilter switch
+        {
+            HistoryRetained => message.Retain,
+            HistoryNotRetained => !message.Retain,
+            _ => true
+        };
 
     private string BrokerLabel(MqttEnvelope message)
     {
@@ -768,6 +1896,15 @@
             _ => "Idle"
         };
 
+    private static string BrokerStateLabel(MqttClientState state)
+        => state switch
+        {
+            MqttClientState.Connected => "Live",
+            MqttClientState.Connecting or MqttClientState.Reconnecting => "Connecting",
+            MqttClientState.Faulted => "Faulted",
+            _ => "Idle"
+        };
+
     private string FilterForGroup(TopicBrokerGroup group)
         => BrokerMatchesFilter(group) ? string.Empty : _filter;
 
@@ -775,12 +1912,138 @@
         => !string.IsNullOrWhiteSpace(_filter) &&
            group.Name.Contains(_filter, StringComparison.OrdinalIgnoreCase);
 
+    private static string MessageCountLabel(int count)
+        => count switch
+        {
+            0 => "No messages",
+            1 => "1 message",
+            _ => $"{count} messages"
+        };
+
     private MqttClientState ConnectionStateFor(string monitorResourceName)
     {
         var connection = Live.Connections.FirstOrDefault(connection =>
             string.Equals(connection.ResourceName, monitorResourceName, StringComparison.Ordinal));
 
         return connection?.State ?? MqttClientState.Disconnected;
+    }
+
+    private IReadOnlyList<ManagedConnection> BuildPublishConnections()
+    {
+        var projectConnections = Projects.ActiveProject?.GetConnectionResources() ?? [];
+        var appConnectionOrder = projectConnections
+            .Select((connection, index) => (connection.Name, Index: index))
+            .ToDictionary(item => item.Name, item => item.Index, StringComparer.Ordinal);
+
+        return Live.Connections
+            .Where(connection => !LiveMqttWorkspaceService.IsTopicMonitorConnection(connection))
+            .Where(connection => appConnectionOrder.ContainsKey(connection.ResourceName))
+            .OrderBy(connection => appConnectionOrder.TryGetValue(connection.ResourceName, out var index)
+                ? index
+                : int.MaxValue)
+            .ThenBy(connection => connection.ResourceName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private void EnsurePublishConnectionsForActiveProject()
+    {
+        if (Projects.ActiveProject is not { } project)
+        {
+            return;
+        }
+
+        foreach (var (name, profile, subscription) in project.GetConnectionResources())
+        {
+            Live.AddConnectionIfAbsent(profile, subscription, name);
+        }
+    }
+
+    private void EnsurePublishBrokerSelection()
+    {
+        var connections = PublishConnections;
+        if (connections.Count == 0)
+        {
+            _publishConnectionId = string.Empty;
+            return;
+        }
+
+        if (Guid.TryParse(_publishConnectionId, out var selectedId) &&
+            connections.Any(connection => connection.Id == selectedId))
+        {
+            return;
+        }
+
+        var preferred = FindPublishConnectionForBroker(_selectedBrokerName) ?? connections[0];
+        _publishConnectionId = preferred.Id.ToString();
+    }
+
+    private void SyncPublishSelectionFromTopicSelection(bool prefillTopic)
+    {
+        var connections = PublishConnections;
+        if (connections.Count == 0)
+        {
+            _publishConnectionId = string.Empty;
+            return;
+        }
+
+        var preferred = FindPublishConnectionForBroker(_selectedBrokerName) ?? connections[0];
+        _publishConnectionId = preferred.Id.ToString();
+
+        if (prefillTopic &&
+            !string.IsNullOrWhiteSpace(_selectedTopic))
+        {
+            _publishTopic = _selectedTopic;
+        }
+    }
+
+    private ManagedConnection? FindPublishConnectionForBroker(string? brokerName)
+    {
+        if (string.IsNullOrWhiteSpace(brokerName))
+        {
+            return null;
+        }
+
+        var normalizedBrokerName = brokerName.Trim();
+        var connections = PublishConnections;
+        var byResource = SinglePublishConnectionOrDefault(connections.Where(connection =>
+            string.Equals(connection.ResourceName, normalizedBrokerName, StringComparison.Ordinal)));
+        if (byResource is not null)
+        {
+            return byResource;
+        }
+
+        var byProfileName = SinglePublishConnectionOrDefault(connections.Where(connection =>
+            string.Equals(connection.Profile.Name, normalizedBrokerName, StringComparison.Ordinal)));
+        if (byProfileName is not null)
+        {
+            return byProfileName;
+        }
+
+        var monitor = TopicExplorerMonitorConnections.FirstOrDefault(connection =>
+            string.Equals(connection.DisplayName, normalizedBrokerName, StringComparison.Ordinal));
+
+        return monitor is null
+            ? null
+            : SinglePublishConnectionOrDefault(connections.Where(connection =>
+                SameBrokerEndpoint(connection.Profile, monitor.Profile)));
+    }
+
+    private static ManagedConnection? SinglePublishConnectionOrDefault(IEnumerable<ManagedConnection> connections)
+    {
+        var matches = connections.Take(2).ToArray();
+        return matches.Length == 1 ? matches[0] : null;
+    }
+
+    private static bool SameBrokerEndpoint(MqttConnectionProfile left, MqttConnectionProfile right)
+        => string.Equals(left.Host, right.Host, StringComparison.OrdinalIgnoreCase) &&
+           left.Port == right.Port &&
+           left.UseTls == right.UseTls &&
+           string.Equals(left.Username, right.Username, StringComparison.Ordinal);
+
+    private static string PublishConnectionOptionLabel(ManagedConnection connection)
+    {
+        var scheme = connection.Profile.UseTls ? "mqtts" : "mqtt";
+        return $"{connection.ResourceName} ({scheme}://{connection.Profile.Host}:{connection.Profile.Port})";
     }
 
     private async Task EnsureTopicMonitorAsync()
@@ -890,18 +2153,23 @@
 
     private void OnLiveChanged(object? sender, EventArgs e)
     {
+        EnsurePublishBrokerSelection();
         _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e)
     {
         SyncProjectSubscription();
+        EnsurePublishConnectionsForActiveProject();
+        EnsurePublishBrokerSelection();
         _ = EnsureTopicMonitorAsync();
         _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnProjectChanged(object? sender, EventArgs e)
     {
+        EnsurePublishConnectionsForActiveProject();
+        EnsurePublishBrokerSelection();
         _ = EnsureTopicMonitorAsync();
         _ = InvokeAsync(StateHasChanged);
     }
@@ -935,6 +2203,31 @@
         {
             _subscribedProject.Changed -= OnProjectChanged;
         }
+    }
+
+    private sealed record TopicRecentPublish(
+        string BrokerResourceName,
+        string BrokerLabel,
+        string Topic,
+        string Payload,
+        MqttQualityOfServiceLevel QualityOfService,
+        bool Retain,
+        DateTimeOffset PublishedAt,
+        string PayloadType,
+        int PayloadBytes);
+
+    private sealed record TopicScopeStats(
+        int MessageCount,
+        int TopicCount,
+        int RetainedCount,
+        long TotalPayloadBytes,
+        double AveragePayloadBytes,
+        int Qos0Count,
+        int Qos1Count,
+        int Qos2Count,
+        DateTimeOffset? LatestReceivedAt)
+    {
+        public static TopicScopeStats Empty { get; } = new(0, 0, 0, 0, 0, 0, 0, 0, null);
     }
 
     private sealed record TopicBrokerSnapshot(string Name, string Endpoint, MqttClientState State);

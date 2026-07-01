@@ -5,7 +5,6 @@
                 <MudIcon Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" />
             </span>
             <MudText Typo="Typo.h6" Class="new-pipeline-dialog-heading">@Title</MudText>
-            <span class="@FormStatusClass" role="status" aria-live="polite">@FormStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
@@ -51,12 +50,6 @@
     private string _name = string.Empty;
 
     private bool IsValid => !string.IsNullOrWhiteSpace(_name);
-
-    private string FormStatusClass
-        => IsValid ? "new-pipeline-dialog-status ready" : "new-pipeline-dialog-status";
-
-    private string FormStatusText
-        => IsValid ? "Ready" : "Name required";
 
     private string PlaceholderText
         => Label.Equals("Name", StringComparison.OrdinalIgnoreCase) ? "Name" : Label;

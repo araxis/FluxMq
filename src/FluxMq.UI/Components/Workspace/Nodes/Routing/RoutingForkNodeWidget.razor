@@ -13,100 +13,102 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="routing-fork-summary">
-            <div class="routing-fork-meta">
-                <div class="routing-fork-meta-item input">
+        <div class="routing-fork-summary node-ui-summary">
+            <div class="routing-fork-meta node-ui-facts">
+                <div class="routing-fork-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
-                <div class="routing-fork-meta-item">
+                <div class="routing-fork-meta-item node-ui-fact">
                     <span>Outputs</span>
                     <strong>@OutputCountCaption</strong>
                 </div>
-                <div class="routing-fork-meta-item">
+                <div class="routing-fork-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
             <div class="routing-fork-ports" aria-label="Routing fork outputs">
-                <span class="routing-fork-contract-label">Output ports</span>
+                <span class="routing-fork-contract-label node-ui-fact-label">Output ports</span>
                 @foreach (var output in OutputPreview)
                 {
-                    <span class="routing-fork-token" title="@output">@output</span>
+                    <span class="routing-fork-token node-ui-token" title="@output">@output</span>
                 }
                 @if (OutputPreviewOverflow > 0)
                 {
-                    <span class="routing-fork-token overflow">+@OutputPreviewOverflow</span>
+                    <span class="routing-fork-token overflow node-ui-token">+@OutputPreviewOverflow</span>
                 }
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="routing-fork-editor" aria-label="Routing fork settings">
-            <div class="routing-fork-config-row">
-                <MudSelect T="string"
-                           Label="Input type"
-                           @bind-Value="_inputType"
-                           aria-label="Routing fork input type"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-fork-input-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
+        <div class="routing-fork-editor node-ui-editor" aria-label="Routing fork settings">
+            <div class="routing-fork-layout" aria-label="Routing fork editor layout">
+                <div class="routing-fork-port-composer" aria-label="Routing fork output ports">
+                    <div class="routing-fork-port-header">
+                        <span>Output port</span>
+                        <MudTooltip Text="Add output port">
+                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                           Size="Size.Small"
+                                           Class="routing-fork-add-port"
+                                           aria-label="Add output port"
+                                           OnClick="@AddOutput" />
+                        </MudTooltip>
+                    </div>
 
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 aria-label="Routing fork input buffer"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-fork-buffer-field" />
-            </div>
-
-            <div class="routing-fork-port-composer" aria-label="Routing fork output ports">
-                <div class="routing-fork-port-header">
-                    <span>Output port</span>
-                    <MudTooltip Text="Add output port">
-                        <MudIconButton Icon="@Icons.Material.Filled.Add"
-                                       Size="Size.Small"
-                                       Class="routing-fork-add-port"
-                                       aria-label="Add output port"
-                                       OnClick="@AddOutput" />
-                    </MudTooltip>
+                    <div class="routing-fork-port-list">
+                        @for (var index = 0; index < _outputDrafts.Count; index++)
+                        {
+                            var output = _outputDrafts[index];
+                            <div class="routing-fork-port-row" @key="output">
+                                <MudTextField T="string"
+                                              Value="@output.Name"
+                                              ValueChanged="@(value => SetOutputNameAsync(output, value))"
+                                              aria-label="@($"Output port {index + 1}")"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Immediate="true"
+                                              Class="routing-fork-output-name-field"
+                                              Placeholder="Audit" />
+                                <MudTooltip Text="@(_outputDrafts.Count > 1 ? "Remove output port" : "Keep at least one output")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   Size="Size.Small"
+                                                   Disabled="@(_outputDrafts.Count <= 1)"
+                                                   Class="routing-fork-remove-port"
+                                                   aria-label="@($"Remove output port {output.Name}")"
+                                                   OnClick="@(() => RemoveOutput(output))" />
+                                </MudTooltip>
+                            </div>
+                        }
+                    </div>
                 </div>
 
-                <div class="routing-fork-port-list">
-                    @for (var index = 0; index < _outputDrafts.Count; index++)
-                    {
-                        var output = _outputDrafts[index];
-                        <div class="routing-fork-port-row" @key="output">
-                            <MudTextField T="string"
-                                          Value="@output.Name"
-                                          ValueChanged="@(value => SetOutputNameAsync(output, value))"
-                                          aria-label="@($"Output port {index + 1}")"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Immediate="true"
-                                          Class="routing-fork-output-name-field"
-                                          Placeholder="Audit" />
-                            <MudTooltip Text="@(_outputDrafts.Count > 1 ? "Remove output port" : "Keep at least one output")">
-                                <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                               Size="Size.Small"
-                                               Disabled="@(_outputDrafts.Count <= 1)"
-                                               Class="routing-fork-remove-port"
-                                               aria-label="@($"Remove output port {output.Name}")"
-                                               OnClick="@(() => RemoveOutput(output))" />
-                            </MudTooltip>
-                        </div>
-                    }
+                <div class="routing-fork-sidecar" aria-label="Routing fork support settings">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               aria-label="Routing fork input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="routing-fork-input-field">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Routing fork input buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-fork-buffer-field" />
                 </div>
             </div>
         </div>

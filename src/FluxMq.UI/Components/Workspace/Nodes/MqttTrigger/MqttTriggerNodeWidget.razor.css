@@ -139,48 +139,40 @@
     min-width: 0;
 }
 
-.mqtt-trigger-editor-section {
+.mqtt-trigger-layout {
     display: grid;
     gap: 7px;
-    min-width: 0;
-    padding: 0;
-}
-
-.mqtt-trigger-editor-section.compact {
-    gap: 7px;
-}
-
-.mqtt-trigger-editor-grid {
-    align-items: start;
-    display: grid;
-    gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.36fr);
+    grid-template-columns: minmax(0, 1fr) minmax(170px, 0.34fr);
     min-width: 0;
 }
 
-.mqtt-trigger-broker-cell {
+.mqtt-trigger-sidecar {
+    align-content: start;
+    border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 4px;
+    gap: 6px;
     min-width: 0;
+    padding-left: 7px;
 }
 
-.mqtt-trigger-editor-grid ::deep .mud-input-control,
+.mqtt-trigger-editor ::deep .mud-input-control,
 .mqtt-trigger-subscription-editor ::deep(.mud-input-control) {
     margin-bottom: 0;
     margin-top: 0;
 }
 
-.mqtt-trigger-editor-grid ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input),
+.mqtt-trigger-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input),
 .mqtt-trigger-subscription-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
     min-height: 34px;
 }
 
-.mqtt-trigger-editor-grid ::deep(.mud-input-label),
+.mqtt-trigger-editor ::deep(.mud-input-label),
 .mqtt-trigger-subscription-editor ::deep(.mud-input-label) {
     font-size: 0.72rem;
 }
 
-.mqtt-trigger-editor-grid ::deep(.mud-input > input.mud-input-root),
+.mqtt-trigger-editor ::deep(.mud-input > input.mud-input-root),
+.mqtt-trigger-editor ::deep(.mud-input > .mud-select-input),
 .mqtt-trigger-subscription-editor ::deep(.mud-input > input.mud-input-root) {
     font-size: 0.82rem;
 }
@@ -204,6 +196,7 @@
 }
 
 .mqtt-trigger-subscription-editor {
+    display: grid;
     min-width: 0;
     overflow-x: auto;
 }
@@ -287,6 +280,11 @@
     min-width: 0;
 }
 
+.mqtt-trigger-broker-field,
+.mqtt-trigger-buffer-field {
+    min-width: 0;
+}
+
 .mqtt-trigger-table-check {
     align-items: center;
     display: flex;
@@ -330,8 +328,15 @@
 }
 
 @media (max-width: 720px) {
-    .mqtt-trigger-editor-grid {
+    .mqtt-trigger-layout {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mqtt-trigger-sidecar {
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+        padding-left: 0;
+        padding-top: 7px;
     }
 
     .mqtt-trigger-subscription-editor ::deep(.mqtt-trigger-subscription-table .mud-table-root) {

@@ -10,22 +10,22 @@
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
-                 EditDialogMaxWidth="@MaxWidth.Medium"
+                 EditDialogMaxWidth="@MaxWidth.Large"
                  OnSave="@SaveAsync"
                  EditorValidationError="@ValidateEditor"
                  OnCancel="@LoadDraft">
     <Body>
-        <div class="mqtt-trigger-summary">
-            <div class="mqtt-trigger-meta">
-                <div class="mqtt-trigger-meta-item broker">
+        <div class="mqtt-trigger-summary node-ui-summary">
+            <div class="mqtt-trigger-meta node-ui-facts">
+                <div class="mqtt-trigger-meta-item broker node-ui-fact">
                     <span>Broker</span>
                     <strong title="@BrokerDisplay">@BrokerDisplay</strong>
                 </div>
-                <div class="mqtt-trigger-meta-item">
+                <div class="mqtt-trigger-meta-item node-ui-fact">
                     <span>Filters</span>
                     <strong>@SubscriptionCountLabel</strong>
                 </div>
-                <div class="mqtt-trigger-meta-item">
+                <div class="mqtt-trigger-meta-item node-ui-fact">
                     <span>Output buffer</span>
                     <strong>@MqttTriggerNodeModel.NormalizeBoundedCapacity(Model.BoundedCapacity)</strong>
                 </div>
@@ -36,7 +36,7 @@
                 {
                     <div class="mqtt-trigger-subscription-row">
                         <span class="@TopicClass(subscription)" title="@SubscriptionTopic(subscription)">@SubscriptionTopic(subscription)</span>
-                        <span class="mqtt-trigger-token qos">Q@(subscription.QualityOfService)</span>
+                        <span class="mqtt-trigger-token qos node-ui-token">Q@(subscription.QualityOfService)</span>
                         <span class="@FlagTokenClass(subscription.ReceiveRetainedMessages, "retained")"
                               title="@ReceiveRetainedTitle(subscription)">@ReceiveRetainedLabel(subscription)</span>
                         <span class="@FlagTokenClass(subscription.RetainAsPublished, "retain-flag")"
@@ -51,52 +51,9 @@
         </div>
     </Body>
     <Editor>
-        <div class="mqtt-trigger-editor">
-            <section class="mqtt-trigger-editor-section" aria-label="Broker settings">
-                <div class="mqtt-trigger-editor-grid">
-                    @{
-                        var brokerOptions = BrokerOptions;
-                    }
-                    @if (brokerOptions.Count > 0)
-                    {
-                        <MudSelect T="string"
-                                   Label="Broker connection"
-                                   @bind-Value="_connection"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Dense="true"
-                                   Class="mqtt-trigger-broker-field">
-                            @foreach (var option in brokerOptions)
-                            {
-                                <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
-                            }
-                        </MudSelect>
-                    }
-                    else
-                    {
-                        <div class="mqtt-trigger-broker-cell">
-                            <MudTextField T="string"
-                                          Label="Connection name"
-                                          @bind-Value="_connection"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Class="mqtt-trigger-broker-field" />
-                        </div>
-                    }
-                    <MudNumericField T="int"
-                                     Label="Output buffer"
-                                     @bind-Value="_boundedCapacity"
-                                     Min="1"
-                                     Max="100000"
-                                     Step="100"
-                                     Variant="Variant.Outlined"
-                                     Margin="Margin.Dense"
-                                     Class="mqtt-trigger-buffer-field" />
-                </div>
-            </section>
-
-            <section class="mqtt-trigger-editor-section compact" aria-label="Subscriptions">
-                <div class="mqtt-trigger-subscription-editor">
+        <div class="mqtt-trigger-editor node-ui-editor">
+            <div class="mqtt-trigger-layout" aria-label="MQTT trigger editor layout">
+                <section class="mqtt-trigger-subscription-editor node-ui-table-wrap" aria-label="Subscriptions">
                     <MudTable T="MqttTriggerSubscriptionEditorRow"
                               Items="@SubscriptionEditorRows"
                               Dense="true"
@@ -195,8 +152,47 @@
                             </div>
                         </NoRecordsContent>
                     </MudTable>
-                </div>
-            </section>
+                </section>
+
+                <aside class="mqtt-trigger-sidecar" aria-label="Broker settings">
+                    @{
+                        var brokerOptions = BrokerOptions;
+                    }
+                    @if (brokerOptions.Count > 0)
+                    {
+                        <MudSelect T="string"
+                                   Label="Broker connection"
+                                   @bind-Value="_connection"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="mqtt-trigger-broker-field">
+                            @foreach (var option in brokerOptions)
+                            {
+                                <MudSelectItem Value="@option.Name">@option.Label</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                    else
+                    {
+                        <MudTextField T="string"
+                                      Label="Connection name"
+                                      @bind-Value="_connection"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="mqtt-trigger-broker-field" />
+                    }
+                    <MudNumericField T="int"
+                                     Label="Output buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="mqtt-trigger-buffer-field" />
+                </aside>
+            </div>
         </div>
     </Editor>
 </NodeWidgetShell>

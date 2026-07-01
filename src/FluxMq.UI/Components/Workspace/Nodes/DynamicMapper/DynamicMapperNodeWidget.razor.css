@@ -101,6 +101,14 @@
     min-width: 0;
 }
 
+.dynamic-mapper-editor {
+    grid-template-rows: auto minmax(0, 1fr);
+    height: calc(100vh - 168px);
+    max-height: calc(100vh - 168px);
+    min-height: calc(100vh - 168px);
+    overflow: hidden;
+}
+
 .dynamic-mapper-control-row {
     align-items: center;
     display: grid;
@@ -123,6 +131,7 @@
 }
 
 .dynamic-mapper-workspace {
+    grid-template-columns: minmax(240px, 0.72fr) minmax(420px, 1.48fr) minmax(260px, 0.8fr);
     grid-template-rows: minmax(0, 1fr);
     height: 100%;
     min-height: 0;
@@ -130,12 +139,15 @@
     width: 100%;
 }
 
+.dynamic-mapper-input-workspace,
+.dynamic-mapper-result-workspace,
 .dynamic-mapper-expression-workspace {
     background: color-mix(in srgb, var(--flux-surface-2) 5%, transparent);
     border: 1px solid color-mix(in srgb, var(--flux-border) 24%, transparent);
     border-radius: 6px;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
+    height: 100%;
     min-height: 0;
     min-width: 0;
     overflow: hidden;
@@ -143,33 +155,8 @@
     position: relative;
 }
 
-.dynamic-mapper-sample-popover {
-    background: color-mix(in srgb, var(--flux-surface) 94%, var(--flux-surface-2));
-    border: 1px solid color-mix(in srgb, var(--flux-border) 58%, transparent);
-    border-radius: 6px;
-    bottom: 8px;
-    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.32);
-    display: grid;
-    gap: 6px;
-    max-height: none;
-    min-height: 0;
-    min-width: 0;
-    overflow: hidden;
-    padding: 7px;
-    position: absolute;
-    right: 8px;
-    top: 38px;
-    width: min(460px, calc(100% - 16px));
-    z-index: 2;
-}
-
-.dynamic-mapper-sample-popover.has-editor {
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    height: auto;
-}
-
 .dynamic-mapper-workspace-header,
-.dynamic-mapper-sample-popover-header {
+.dynamic-mapper-result-header {
     align-items: center;
     display: grid;
     gap: 5px;
@@ -179,14 +166,14 @@
 }
 
 .dynamic-mapper-workspace-header > div,
-.dynamic-mapper-sample-popover-header > div {
+.dynamic-mapper-result-header > div {
     display: grid;
     gap: 2px;
     min-width: 0;
 }
 
 .dynamic-mapper-workspace-header strong,
-.dynamic-mapper-sample-popover-header strong {
+.dynamic-mapper-result-header strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 72%, var(--mud-palette-text-secondary));
     display: -webkit-box;
     font-size: 0.8rem;
@@ -200,7 +187,8 @@
     white-space: normal;
 }
 
-.dynamic-mapper-workspace-actions {
+.dynamic-mapper-workspace-actions,
+.dynamic-mapper-result-actions {
     align-items: center;
     display: flex;
     gap: 3px;
@@ -208,12 +196,26 @@
     min-width: 0;
 }
 
-.dynamic-mapper-sample-popover-actions {
+.dynamic-mapper-result-status {
     align-items: center;
-    display: flex;
-    gap: 3px;
-    justify-content: end;
+    border: 1px solid color-mix(in srgb, var(--flux-border-soft) 76%, transparent);
+    border-radius: 4px;
+    display: inline-flex;
+    font-size: 0.54rem;
+    font-weight: 780;
+    justify-content: center;
+    line-height: 1;
     min-width: 0;
+    padding: 3px 5px;
+    text-transform: uppercase;
+}
+
+.dynamic-mapper-result-status.ok {
+    color: color-mix(in srgb, var(--mud-palette-success) 80%, var(--mud-palette-text-primary));
+}
+
+.dynamic-mapper-result-status.error {
+    color: color-mix(in srgb, var(--mud-palette-error) 82%, var(--mud-palette-text-primary));
 }
 
 .dynamic-mapper-editor ::deep(.mud-input-control) {
@@ -246,13 +248,41 @@
     width: 1.5rem;
 }
 
+.dynamic-mapper-editor-host {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
 .dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor) {
     background: var(--flux-surface);
     border: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
     border-radius: 6px;
+    box-sizing: border-box;
+    display: block;
     height: 100%;
     min-height: 0;
+    min-width: 0;
     overflow: hidden;
+    width: 100%;
+}
+
+.dynamic-mapper-expression-workspace ::deep(.dynamic-mapper-expression-editor.dynamic-mapper-monaco-editor),
+.dynamic-mapper-input-workspace ::deep(.dynamic-mapper-input-editor.dynamic-mapper-monaco-editor),
+.dynamic-mapper-result-workspace ::deep(.dynamic-mapper-result-editor.dynamic-mapper-monaco-editor) {
+    height: 100%;
+    min-height: 0;
+}
+
+.dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor > div) {
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
 }
 
 .dynamic-mapper-workspace ::deep(.dynamic-mapper-monaco-editor .monaco-editor),
@@ -290,28 +320,26 @@
 }
 
 @media (max-width: 960px) {
+    .dynamic-mapper-editor {
+        height: auto;
+        max-height: none;
+        min-height: 0;
+        overflow: visible;
+    }
+
     .dynamic-mapper-control-row {
         grid-template-columns: minmax(0, 1fr);
     }
 
     .dynamic-mapper-workspace {
         height: auto;
+        grid-template-columns: minmax(0, 1fr);
         grid-template-rows: none;
         overflow: visible;
     }
 
-    .dynamic-mapper-sample-popover {
-        margin-top: 6px;
-        max-height: none;
-        position: static;
-        width: 100%;
-    }
-
-    .dynamic-mapper-sample-popover.has-editor {
-        height: 220px;
-    }
-
-    .dynamic-mapper-workspace ::deep(.dynamic-mapper-expression-editor) {
+    .dynamic-mapper-workspace ::deep(.dynamic-mapper-expression-editor),
+    .dynamic-mapper-workspace ::deep(.dynamic-mapper-result-editor) {
         height: 360px;
         min-height: 360px;
     }

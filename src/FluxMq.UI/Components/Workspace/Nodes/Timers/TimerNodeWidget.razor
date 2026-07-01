@@ -13,41 +13,29 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="timer-node-summary">
-            <div class="timer-node-meta">
-                <div class="timer-node-meta-item mode">
+        <div class="timer-node-summary node-ui-summary">
+            <div class="timer-node-meta node-ui-facts">
+                <div class="timer-node-meta-item mode node-ui-fact">
                     <span>Mode</span>
                     <strong>@ModeCaption</strong>
                 </div>
-                <div class="timer-node-meta-item timing">
+                <div class="timer-node-meta-item timing node-ui-fact">
                     <span>@PrimaryLabel</span>
                     <strong title="@PrimaryCaption">@PrimaryCaption</strong>
                 </div>
-                <div class="timer-node-meta-item detail">
+                <div class="timer-node-meta-item detail node-ui-fact">
                     <span>@SecondaryLabel</span>
                     <strong title="@SecondaryCaption">@SecondaryCaption</strong>
                 </div>
-                <div class="timer-node-meta-item">
+                <div class="timer-node-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BoundedCapacityCaption</strong>
                 </div>
             </div>
-
-            <div class="timer-node-contract" aria-label="@ContractAriaLabel">
-                <span class="timer-node-contract-label">@ContractLabel</span>
-                @foreach (var token in SummaryTokens)
-                {
-                    <span class="@TimerTokenClass">@token</span>
-                }
-                @if (!string.IsNullOrWhiteSpace(LimitToken))
-                {
-                    <span class="timer-node-token muted">@LimitToken</span>
-                }
-            </div>
         </div>
     </Body>
     <Editor>
-        <div class="timer-node-editor" aria-label="Timer settings">
+        <div class="timer-node-editor node-ui-editor" aria-label="Timer settings">
             @if (Node is TimerIntervalNodeModel)
             {
                 <div class="timer-node-mode interval" aria-label="Interval timer settings">
@@ -295,38 +283,9 @@
         _ => string.Empty
     };
 
-    private string ContractAriaLabel => $"{ModeCaption} timer fields";
-
     private Color TimerCategoryColor => string.Equals(Node.Category, "Control", StringComparison.Ordinal)
         ? Color.Secondary
         : Color.Primary;
-
-    private string TimerTokenClass => string.Equals(Node.Category, "Control", StringComparison.Ordinal)
-        ? "timer-node-token passthrough"
-        : "timer-node-token";
-
-    private string ContractLabel => Node switch
-    {
-        TimerIntervalNodeModel or TimerScheduleNodeModel => "Output fields",
-        _ => "Passthrough"
-    };
-
-    private IReadOnlyList<string> SummaryTokens => Node switch
-    {
-        TimerIntervalNodeModel => ["TimerTick", "tickId", "timestamp"],
-        TimerScheduleNodeModel => ["ScheduleTick", "cron", "scheduledAt"],
-        TimerDelayNodeModel delay => [TimerDelayNodeModel.NormalizeInputType(delay.InputType), "delayed", "unchanged"],
-        TimerDebounceNodeModel debounce => [TimerDelayNodeModel.NormalizeInputType(debounce.InputType), "last input", "unchanged"],
-        TimerThrottleNodeModel throttle => [TimerDelayNodeModel.NormalizeInputType(throttle.InputType), "window", "unchanged"],
-        _ => []
-    };
-
-    private string LimitToken => Node switch
-    {
-        TimerIntervalNodeModel interval => $"max {MaxTicksText(interval.MaxTicks)}",
-        TimerScheduleNodeModel schedule => $"max {MaxTicksText(schedule.MaxTicks)}",
-        _ => string.Empty
-    };
 
     private void LoadDraft()
     {
@@ -576,9 +535,6 @@
         => _boundedCapacity <= 0
             ? "Buffer must be greater than 0."
             : null;
-
-    private static string MaxTicksText(int maxTicks)
-        => maxTicks > 0 ? maxTicks.ToString() : "unlimited";
 
     private static string FormatMilliseconds(int milliseconds)
         => $"{milliseconds} ms";

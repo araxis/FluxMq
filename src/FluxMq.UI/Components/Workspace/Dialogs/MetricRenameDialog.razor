@@ -10,7 +10,6 @@
                 <strong>Rename metric</strong>
                 <small>Dashboard bindings stay connected</small>
             </span>
-            <span class="@RenameStatusClass" role="status" aria-live="polite">@RenameStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
@@ -83,20 +82,6 @@
     private bool HasValidation => !string.IsNullOrWhiteSpace(ValidationMessage);
 
     private string MetricIdInputClass => HasValidation ? "invalid" : string.Empty;
-
-    private string RenameStatusClass =>
-        HasValidation
-            ? "metric-rename-status invalid"
-            : CanRename
-                ? "metric-rename-status ready"
-                : "metric-rename-status";
-
-    private string RenameStatusText =>
-        HasValidation
-            ? "Needs attention"
-            : CanRename
-                ? "Ready"
-                : "No changes";
 
     private string? ValidationMessage
     {

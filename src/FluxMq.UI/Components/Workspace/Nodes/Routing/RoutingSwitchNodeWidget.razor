@@ -1,11 +1,14 @@
+@implements IDisposable
 @using FluxMq.UI.Components.Diagram
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
+@inject AppThemeService ThemeService
+@inject IJSRuntime JsRuntime
 @inject NodeEditDialogRefreshService DialogRefresh
 
 <NodeWidgetShell Node="@Node"
                  HeaderIcon="@Icons.Material.Filled.AccountTree"
                  CategoryColor="@Color.Secondary"
-                 EditDialogMaxWidth="MaxWidth.Medium"
+                 EditDialogMaxWidth="MaxWidth.Large"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
                  ShowCategoryChip="false"
@@ -13,156 +16,163 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="routing-switch-summary">
-            <div class="routing-switch-meta">
-                <div class="routing-switch-meta-item input">
+        <div class="routing-switch-summary node-ui-summary">
+            <div class="routing-switch-meta node-ui-facts">
+                <div class="routing-switch-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
-                <div class="routing-switch-meta-item">
+                <div class="routing-switch-meta-item node-ui-fact">
                     <span>Routes</span>
                     <strong>@RouteCountCaption</strong>
                 </div>
-                <div class="routing-switch-meta-item">
+                <div class="routing-switch-meta-item node-ui-fact">
                     <span>Envelope</span>
                     <strong>@EnvelopeCaption</strong>
                 </div>
-                <div class="routing-switch-meta-item">
+                <div class="routing-switch-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
             <div class="routing-switch-expression" aria-label="Routing switch expression">
-                <span class="routing-switch-contract-label">Expression</span>
+                <span class="routing-switch-contract-label node-ui-fact-label">Expression</span>
                 <strong title="@ExpressionPreview">@ExpressionPreview</strong>
             </div>
 
             <div class="routing-switch-routes" aria-label="Routing switch routes">
-                <span class="routing-switch-contract-label">Route outputs</span>
+                <span class="routing-switch-contract-label node-ui-fact-label">Route outputs</span>
                 @foreach (var route in RoutePreview)
                 {
-                    <span class="routing-switch-token" title="@($"{route.Key} => {route.OutputPort}")">@route.OutputPort</span>
+                    <span class="routing-switch-token node-ui-token" title="@($"{route.Key} => {route.OutputPort}")">@route.OutputPort</span>
                 }
                 @if (RoutePreviewOverflow > 0)
                 {
-                    <span class="routing-switch-token overflow">+@RoutePreviewOverflow</span>
+                    <span class="routing-switch-token overflow node-ui-token">+@RoutePreviewOverflow</span>
                 }
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="routing-switch-editor" aria-label="Routing switch settings">
-            <div class="routing-switch-config-row">
-                <MudSelect T="string"
-                           Label="Input type"
-                           @bind-Value="_inputType"
-                           aria-label="Routing switch input type"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-switch-input-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
+        <div class="routing-switch-editor node-ui-editor" aria-label="Routing switch settings">
+            <div class="routing-switch-rule-row" aria-label="Routing switch rule">
+                <section class="routing-switch-expression-workspace node-ui-code-surface" aria-label="Routing expression">
+                    <div class="routing-switch-workspace-header">
+                        <div>
+                            <span class="routing-switch-kicker">Expression</span>
+                            <strong>Route match value</strong>
+                        </div>
+                    </div>
 
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 aria-label="Routing switch input buffer"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-switch-buffer-field" />
+                    <div class="routing-switch-editor-host" @ref="_expressionEditorHost">
+                        <StandaloneCodeEditor @key="_editorVersion"
+                                              @ref="_editor"
+                                              Id="@EditorId"
+                                              CssClass="routing-switch-code-editor"
+                                              ConstructionOptions="@EditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnExpressionContentChanged" />
+                    </div>
+                </section>
 
-                <div class="routing-switch-envelope-option">
-                    <MudCheckBox T="bool"
-                                 Label="Emit envelope"
-                                 aria-label="Emit route envelope"
-                                 @bind-Value="_emitRouteEnvelope"
-                                 Class="routing-switch-envelope-check" />
-                </div>
-            </div>
+                <div class="routing-switch-sidecar">
+                    <div class="routing-switch-config-row">
+                        <MudSelect T="string"
+                                   Label="Input type"
+                                   @bind-Value="_inputType"
+                                   aria-label="Routing switch input type"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Dense="true"
+                                   Class="routing-switch-input-field">
+                            @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                            {
+                                <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                            }
+                        </MudSelect>
 
-            <div class="routing-switch-rule-grid" aria-label="Routing switch rule expression">
-                <div class="routing-switch-expression-stack">
-                    <MudTextField T="string"
-                                  Label="Expression"
-                                  Value="@_expression"
-                                  ValueChanged="@SetExpression"
-                                  aria-label="Routing switch expression"
-                                  Variant="Variant.Outlined"
-                                  Immediate="true"
-                                  Lines="5"
-                                  Class="routing-switch-expression-field"
-                                  Placeholder="qos >= 1" />
+                        <MudNumericField T="int"
+                                         Label="Input buffer"
+                                         @bind-Value="_boundedCapacity"
+                                         aria-label="Routing switch input buffer"
+                                         Min="1"
+                                         Max="100000"
+                                         Step="100"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Class="routing-switch-buffer-field" />
+
+                        <div class="routing-switch-envelope-option">
+                            <MudCheckBox T="bool"
+                                         Label="Emit envelope"
+                                         aria-label="Emit route envelope"
+                                         @bind-Value="_emitRouteEnvelope"
+                                         Class="routing-switch-envelope-check" />
+                        </div>
+                    </div>
 
                     <div class="routing-switch-variable-reference" aria-label="Routing switch expression variables">
                         <span class="routing-switch-variable-label">Variables</span>
                         <div class="routing-switch-variable-list">
                             @foreach (var variable in ExpressionVariables)
                             {
-                                <span class="routing-switch-variable-token">
+                                <span class="routing-switch-variable-token node-ui-token">
                                     <code>@variable.Name</code>
                                     <small>@variable.Type</small>
                                 </span>
                             }
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="routing-switch-route-composer" aria-label="Routing switch route outputs">
-                <div class="routing-switch-route-header">
-                    <span>Match key</span>
-                    <span>Output port</span>
-                    <MudTooltip Text="Add route">
-                        <MudIconButton Icon="@Icons.Material.Filled.Add"
-                                       Size="Size.Small"
-                                       Color="Color.Primary"
-                                       Class="routing-switch-route-add"
-                                       aria-label="Add route"
-                                       OnClick="@AddRoute" />
-                    </MudTooltip>
-                </div>
-
-                <div class="routing-switch-route-list">
-                    @for (var index = 0; index < _routeDrafts.Count; index++)
-                    {
-                        var route = _routeDrafts[index];
-                        <div class="routing-switch-route-row" @key="route">
-                            <MudTextField T="string"
-                                          aria-label="@($"Route match key {index + 1}")"
-                                          Value="@route.Key"
-                                          ValueChanged="@(value => SetRouteKeyAsync(route, value))"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Immediate="true"
-                                          Placeholder="Match key"
-                                          Class="routing-switch-route-key-field" />
-                            <MudTextField T="string"
-                                          aria-label="@($"Route output port {index + 1}")"
-                                          Value="@route.OutputPort"
-                                          ValueChanged="@(value => SetRouteOutputAsync(route, value))"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Immediate="true"
-                                          Placeholder="Output port"
-                                          Class="routing-switch-route-output-field" />
-                            <MudTooltip Text="Remove route">
-                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                    <div class="routing-switch-route-composer" aria-label="Routing switch route outputs">
+                        <div class="routing-switch-route-header">
+                            <span>Match key</span>
+                            <span>Output port</span>
+                            <MudTooltip Text="Add route">
+                                <MudIconButton Icon="@Icons.Material.Filled.Add"
                                                Size="Size.Small"
-                                               Disabled="@(_routeDrafts.Count == 1)"
-                                               Class="routing-switch-route-remove"
-                                               aria-label="@($"Remove route {route.Key}")"
-                                               OnClick="@(() => RemoveRoute(route))" />
+                                               Color="Color.Primary"
+                                               Class="routing-switch-route-add"
+                                               aria-label="Add route"
+                                               OnClick="@AddRoute" />
                             </MudTooltip>
                         </div>
-                    }
+
+                        <div class="routing-switch-route-list">
+                            @for (var index = 0; index < _routeDrafts.Count; index++)
+                            {
+                                var route = _routeDrafts[index];
+                                <div class="routing-switch-route-row" @key="route">
+                                    <MudTextField T="string"
+                                                  aria-label="@($"Route match key {index + 1}")"
+                                                  Value="@route.Key"
+                                                  ValueChanged="@(value => SetRouteKeyAsync(route, value))"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Immediate="true"
+                                                  Placeholder="Match key"
+                                                  Class="routing-switch-route-key-field" />
+                                    <MudTextField T="string"
+                                                  aria-label="@($"Route output port {index + 1}")"
+                                                  Value="@route.OutputPort"
+                                                  ValueChanged="@(value => SetRouteOutputAsync(route, value))"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Immediate="true"
+                                                  Placeholder="Output port"
+                                                  Class="routing-switch-route-output-field" />
+                                    <MudTooltip Text="Remove route">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                       Size="Size.Small"
+                                                       Disabled="@(_routeDrafts.Count == 1)"
+                                                       Class="routing-switch-route-remove"
+                                                       aria-label="@($"Remove route {route.Key}")"
+                                                       OnClick="@(() => RemoveRoute(route))" />
+                                    </MudTooltip>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -179,8 +189,14 @@
     private bool _emitRouteEnvelope;
     private int _boundedCapacity = RoutingSwitchNodeModel.DefaultBoundedCapacity;
     private List<RouteDraft> _routeDrafts = [];
+    private StandaloneCodeEditor? _editor;
+    private StandaloneCodeEditor? _initializedEditor;
+    private ElementReference _expressionEditorHost;
+    private int _editorVersion;
+    private bool _syncingEditor;
     private string? _loadedNodeName;
     private FlowDiagramNodeModel? _loadedNode;
+    private string EditorId => $"routing-switch-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
 
     private string InputTypeCaption => RoutingNodeConfiguration.NormalizeInputType(Model.InputType);
     private string RouteCountCaption => $"{Model.Routes.Count} routes";
@@ -203,6 +219,11 @@
         new("payloadJson", "json")
     ];
 
+    protected override void OnInitialized()
+    {
+        ThemeService.Changed += OnThemeChanged;
+    }
+
     protected override void OnParametersSet()
     {
         if (!ReferenceEquals(_loadedNode, Node) || !string.Equals(_loadedNodeName, Node.NodeName, StringComparison.Ordinal))
@@ -210,6 +231,20 @@
             LoadDraft();
         }
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_editor is not null && !ReferenceEquals(_initializedEditor, _editor))
+        {
+            _initializedEditor = _editor;
+            await ConfigureCodeEditorAsync();
+            await SyncEditorAsync();
+            await LayoutEditorAfterRenderAsync();
+        }
+    }
+
+    public void Dispose()
+        => ThemeService.Changed -= OnThemeChanged;
 
     private void LoadDraft()
     {
@@ -232,10 +267,48 @@
         _boundedCapacity = RoutingNodeConfiguration.NormalizePositiveInt(
             Model.BoundedCapacity,
             RoutingSwitchNodeModel.DefaultBoundedCapacity);
+        _editorVersion++;
     }
 
-    private Task SaveAsync()
+    private void OnThemeChanged(object? sender, EventArgs e)
+        => _ = InvokeAsync(ConfigureCodeEditorAsync);
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "csharp",
+            ScrollBeyondLastLine = false,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _expression
+        };
+
+    private async Task ConfigureCodeEditorAsync()
     {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Routing Switch code editor configuration failed: {exception.Message}");
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editor is not null)
+        {
+            try
+            {
+                _expression = await _editor.GetValue();
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Routing Switch code editor read failed: {exception.Message}");
+            }
+        }
+
         Model.InputType = RoutingNodeConfiguration.NormalizeInputType(_inputType);
         Model.Expression = string.IsNullOrWhiteSpace(_expression)
             ? RoutingSwitchNodeModel.DefaultExpression
@@ -247,7 +320,6 @@
             RoutingSwitchNodeModel.DefaultBoundedCapacity);
 
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
-        return Task.CompletedTask;
     }
 
     private async Task AddRoute()
@@ -261,7 +333,7 @@
         }
 
         _routeDrafts.Add(new RouteDraft(key, key));
-        await DialogRefresh.RefreshAsync(Node.NodeName);
+        await RefreshDialogAsync();
     }
 
     private async Task RemoveRoute(RouteDraft route)
@@ -272,25 +344,88 @@
         }
 
         _routeDrafts.Remove(route);
-        await DialogRefresh.RefreshAsync(Node.NodeName);
+        await RefreshDialogAsync();
     }
 
-    private async Task SetExpression(string value)
+    private async Task OnExpressionContentChanged()
     {
-        _expression = value ?? string.Empty;
-        await DialogRefresh.RefreshAsync(Node.NodeName);
+        if (_syncingEditor || _editor is null)
+        {
+            return;
+        }
+
+        _expression = await _editor.GetValue();
+        await RefreshDialogAsync();
     }
 
     private async Task SetRouteKeyAsync(RouteDraft route, string value)
     {
         route.Key = value ?? string.Empty;
-        await DialogRefresh.RefreshAsync(Node.NodeName);
+        await RefreshDialogAsync();
     }
 
     private async Task SetRouteOutputAsync(RouteDraft route, string value)
     {
         route.OutputPort = value ?? string.Empty;
+        await RefreshDialogAsync();
+    }
+
+    private async Task RefreshDialogAsync()
+    {
+        await InvokeAsync(StateHasChanged);
         await DialogRefresh.RefreshAsync(Node.NodeName);
+        await LayoutEditorAfterRenderAsync();
+    }
+
+    private async Task SyncEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _syncingEditor = true;
+        try
+        {
+            await _editor.SetValue(_expression);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Routing Switch code editor sync failed: {exception.Message}");
+        }
+        finally
+        {
+            _syncingEditor = false;
+        }
+    }
+
+    private async Task LayoutEditorAfterRenderAsync()
+    {
+        await Task.Yield();
+        await LayoutEditorAsync();
+        await Task.Delay(50);
+        await LayoutEditorAsync();
+    }
+
+    private async Task LayoutEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var size = await JsRuntime.InvokeAsync<EditorHostSize>("fluxmqMonaco.measureElement", _expressionEditorHost);
+            if (size is not null && size.Width > 0 && size.Height > 0)
+            {
+                await _editor.Layout(new Dimension { Width = size.Width, Height = size.Height }, null);
+            }
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Routing Switch editor layout failed: {exception.Message}");
+        }
     }
 
     private string? ValidateEditor()
@@ -337,6 +472,15 @@
     {
         public string Key { get; set; } = key;
         public string OutputPort { get; set; } = outputPort;
+    }
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
+
+    private sealed class EditorHostSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 
     private sealed record ExpressionVariable(string Name, string Type);

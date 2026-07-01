@@ -1,6 +1,7 @@
 @implements IDisposable
 @using FluxMq.Core.Models
 @using FluxMq.UI.Components.Diagram
+@using System.Text.Json
 @inherits FluxMq.UI.Components.Diagram.NodeWidgetBase
 @inject LiveMqttWorkspaceService Live
 @inject AppThemeService ThemeService
@@ -19,54 +20,54 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="dynamic-mapper-summary">
-            <div class="dynamic-mapper-meta">
-                <div class="dynamic-mapper-meta-item input">
+        <div class="dynamic-mapper-summary node-ui-summary">
+            <div class="dynamic-mapper-meta node-ui-facts">
+                <div class="dynamic-mapper-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@_inputType">@_inputType</strong>
                 </div>
-                <div class="dynamic-mapper-meta-item output">
+                <div class="dynamic-mapper-meta-item output node-ui-fact">
                     <span>Output</span>
                     <strong title="@OutputContractCaption">@OutputContractCaption</strong>
                 </div>
-                <div class="dynamic-mapper-meta-item">
+                <div class="dynamic-mapper-meta-item node-ui-fact">
                     <span>Engine</span>
                     <strong>@EngineCaption</strong>
                 </div>
-                <div class="dynamic-mapper-meta-item">
+                <div class="dynamic-mapper-meta-item node-ui-fact">
                     <span>Mode</span>
                     <strong>@OutputContractLabel</strong>
                 </div>
             </div>
 
-            <div class="dynamic-mapper-contracts">
-                <div class="dynamic-mapper-contract" aria-label="Mapper input variables">
-                    <span class="dynamic-mapper-contract-label">Input variables</span>
+            <div class="dynamic-mapper-contracts node-ui-token-group">
+                <div class="dynamic-mapper-contract node-ui-token-row" aria-label="Mapper input variables">
+                    <span class="dynamic-mapper-contract-label node-ui-fact-label">Input variables</span>
                     @foreach (var variable in SummaryVariables)
                     {
-                        <span class="dynamic-mapper-token">@variable.Label</span>
+                        <span class="dynamic-mapper-token node-ui-token">@variable.Label</span>
                     }
                     @if (SummaryVariableOverflow > 0)
                     {
-                        <span class="dynamic-mapper-token overflow">+@SummaryVariableOverflow</span>
+                        <span class="dynamic-mapper-token overflow node-ui-token">+@SummaryVariableOverflow</span>
                     }
                 </div>
-                <div class="dynamic-mapper-contract" aria-label="Mapper output fields">
-                    <span class="dynamic-mapper-contract-label">Output fields</span>
+                <div class="dynamic-mapper-contract node-ui-token-row" aria-label="Mapper output fields">
+                    <span class="dynamic-mapper-contract-label node-ui-fact-label">Output fields</span>
                     @foreach (var field in SummaryOutputFields)
                     {
-                        <span class="dynamic-mapper-token">@field.Name</span>
+                        <span class="dynamic-mapper-token node-ui-token">@field.Name</span>
                     }
                     @if (SummaryOutputOverflow > 0)
                     {
-                        <span class="dynamic-mapper-token overflow">+@SummaryOutputOverflow</span>
+                        <span class="dynamic-mapper-token overflow node-ui-token">+@SummaryOutputOverflow</span>
                     }
                 </div>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="dynamic-mapper-editor" aria-label="Dynamic mapper settings">
+        <div class="dynamic-mapper-editor node-ui-editor" aria-label="Dynamic mapper settings">
             <div class="dynamic-mapper-control-row" aria-label="Mapper configuration">
                 <MudSelect T="string"
                            Label="Input schema"
@@ -155,73 +156,77 @@
             </div>
 
             <div class="dynamic-mapper-workspace">
-                <section class="dynamic-mapper-expression-workspace" aria-label="Mapping expression">
+                <section class="dynamic-mapper-input-workspace node-ui-code-surface" aria-label="Sample input JSON">
+                    <div class="dynamic-mapper-workspace-header">
+                        <div>
+                            <span class="dynamic-mapper-kicker">Input</span>
+                            <strong>Sample JSON</strong>
+                        </div>
+                        <div class="dynamic-mapper-workspace-actions">
+                            <span class="dynamic-mapper-heading-token node-ui-token">@_sampleSource</span>
+                            <MudTooltip Text="Reload sample input">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Size="Size.Small"
+                                               Class="dynamic-mapper-toolbar-action"
+                                               OnClick="@ReloadWorkspaceSample" />
+                            </MudTooltip>
+                        </div>
+                    </div>
+
+                    <div class="dynamic-mapper-editor-host" @ref="_inputEditorHost">
+                        <StandaloneCodeEditor @key="_inputEditorVersion"
+                                              @ref="_inputEditor"
+                                              Id="@InputEditorId"
+                                              CssClass="dynamic-mapper-monaco-editor dynamic-mapper-input-editor"
+                                              ConstructionOptions="@InputEditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnInputEditorContentChanged" />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_inputJsonError))
+                    {
+                        <div class="dynamic-mapper-input-error" role="alert">
+                            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                            <span>@_inputJsonError</span>
+                        </div>
+                    }
+                </section>
+
+                <section class="dynamic-mapper-expression-workspace node-ui-code-surface" aria-label="Mapping expression">
                     <div class="dynamic-mapper-workspace-header">
                         <div>
                             <span class="dynamic-mapper-kicker">Mapping</span>
                             <strong>@EngineCaption expression</strong>
                         </div>
+                    </div>
+
+                    <div class="dynamic-mapper-editor-host" @ref="_expressionEditorHost">
+                        <StandaloneCodeEditor @key="_editorVersion"
+                                              @ref="_editor"
+                                              Id="@EditorId"
+                                              CssClass="dynamic-mapper-monaco-editor dynamic-mapper-expression-editor"
+                                              ConstructionOptions="@EditorConstructionOptions"
+                                              OnDidChangeModelContent="@OnEditorContentChanged" />
+                    </div>
+                </section>
+
+                <section class="dynamic-mapper-result-workspace node-ui-code-surface" aria-label="Mapping result">
+                    <div class="dynamic-mapper-workspace-header">
+                        <div>
+                            <span class="dynamic-mapper-kicker">Result</span>
+                            <strong>@_previewResult.Title</strong>
+                        </div>
                         <div class="dynamic-mapper-workspace-actions">
-                            <MudTooltip Text="@SampleToggleText">
-                                <MudIconButton Icon="@SampleToggleIcon"
-                                               Size="Size.Small"
-                                               Class="dynamic-mapper-toolbar-action"
-                                               OnClick="@ToggleSampleEditorAsync" />
-                            </MudTooltip>
+                            <span class="@PreviewStatusClass">@PreviewStatusText</span>
                         </div>
                     </div>
 
-                    <StandaloneCodeEditor @key="_editorVersion"
-                                          @ref="_editor"
-                                          Id="@EditorId"
-                                          CssClass="dynamic-mapper-monaco-editor dynamic-mapper-expression-editor"
-                                          ConstructionOptions="@EditorConstructionOptions"
-                                          OnDidChangeModelContent="@OnEditorContentChanged" />
-
-                    @if (ShouldRenderSamplePanel)
-                    {
-                        <section class="@SamplePanelClass" aria-label="Sample JSON">
-                            <div class="dynamic-mapper-sample-popover-header">
-                                <div>
-                                    <span class="dynamic-mapper-kicker">Input</span>
-                                    <strong>Sample JSON</strong>
-                                </div>
-                                <div class="dynamic-mapper-sample-popover-actions">
-                                    <span class="dynamic-mapper-heading-token">@_sampleSource</span>
-                                    <MudTooltip Text="Reload sample input">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                                       Size="Size.Small"
-                                                       Class="dynamic-mapper-toolbar-action"
-                                                       OnClick="@ReloadWorkspaceSample" />
-                                    </MudTooltip>
-                                    <MudTooltip Text="Hide sample JSON">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                       Size="Size.Small"
-                                                       Class="dynamic-mapper-toolbar-action"
-                                                       OnClick="@ToggleSampleEditorAsync" />
-                                    </MudTooltip>
-                                </div>
-                            </div>
-
-                            @if (_sampleEditorOpen)
-                            {
-                                <StandaloneCodeEditor @key="_inputEditorVersion"
-                                                      @ref="_inputEditor"
-                                                      Id="@InputEditorId"
-                                                      CssClass="dynamic-mapper-monaco-editor dynamic-mapper-input-editor"
-                                                      ConstructionOptions="@InputEditorConstructionOptions"
-                                                      OnDidChangeModelContent="@OnInputEditorContentChanged" />
-                            }
-
-                            @if (!string.IsNullOrWhiteSpace(_inputJsonError))
-                            {
-                                <div class="dynamic-mapper-input-error" role="alert">
-                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
-                                    <span>@_inputJsonError</span>
-                                </div>
-                            }
-                        </section>
-                    }
+                    <div class="dynamic-mapper-editor-host" @ref="_resultEditorHost">
+                        <StandaloneCodeEditor @key="_resultEditorVersion"
+                                              @ref="_resultEditor"
+                                              Id="@ResultEditorId"
+                                              CssClass="dynamic-mapper-monaco-editor dynamic-mapper-result-editor"
+                                              ConstructionOptions="@ResultEditorConstructionOptions" />
+                    </div>
                 </section>
             </div>
         </div>
@@ -241,31 +246,34 @@
     private string _expression = string.Empty;
     private StandaloneCodeEditor? _editor;
     private StandaloneCodeEditor? _inputEditor;
+    private StandaloneCodeEditor? _resultEditor;
+    private StandaloneCodeEditor? _initializedEditor;
+    private StandaloneCodeEditor? _initializedInputEditor;
+    private StandaloneCodeEditor? _initializedResultEditor;
+    private ElementReference _inputEditorHost;
+    private ElementReference _expressionEditorHost;
+    private ElementReference _resultEditorHost;
     private int _editorVersion;
     private int _inputEditorVersion;
+    private int _resultEditorVersion;
     private int _schemaControlVersion;
-    private bool _sampleEditorOpen;
-    private bool _syncInputAfterRender;
     private IReadOnlyList<DynamicMapperOutputField> _outputFields = [];
     private IReadOnlyList<DynamicMapperVariable> _variables = [];
+    private DynamicMapperPreviewResult _previewResult = ErrorPreview("MqttPublishRequest", "Preview is not ready.");
     private MqttEnvelope _sampleEnvelope = DynamicMapperWorkbenchPreview.FallbackEnvelope();
     private string _sampleSource = "sample";
     private bool _sampleEdited;
     private string _inputJsonText = string.Empty;
     private string? _inputJsonError;
+    private bool _syncingEditor;
     private bool _syncingInputEditor;
     private string? _loadedNodeName;
     private FlowDiagramNodeModel? _loadedNode;
 
     private string EditorId => $"mapper-expression-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private string InputEditorId => $"mapper-input-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
+    private string ResultEditorId => $"mapper-result-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private string SchemaControlKey => $"{_outputContract}:{_schemaControlVersion}";
-    private bool ShouldRenderSamplePanel => _sampleEditorOpen || !string.IsNullOrWhiteSpace(_inputJsonError);
-    private string SamplePanelClass => _sampleEditorOpen
-        ? "dynamic-mapper-sample-popover has-editor"
-        : "dynamic-mapper-sample-popover";
-    private string SampleToggleText => _sampleEditorOpen ? "Hide sample JSON" : "Show sample JSON";
-    private string SampleToggleIcon => _sampleEditorOpen ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.DataObject;
     private bool IsTypedOutputContract => string.Equals(_outputContract, DynamicMapperNodeModel.OutputContractTyped, StringComparison.Ordinal);
     private bool IsJsonSchemaFileContract => string.Equals(_outputContract, DynamicMapperNodeModel.OutputContractJsonSchemaFile, StringComparison.Ordinal);
     private string OutputFieldsKey => IsTypedOutputContract
@@ -281,6 +289,13 @@
     private string EngineCaption => string.Equals(_engine, "jsonata", StringComparison.OrdinalIgnoreCase)
         ? "JSONata"
         : "Dynamic Expresso";
+    private string ResultPreviewTitle => IsTypedOutputContract
+        ? _outputType
+        : IsJsonSchemaFileContract ? "JSON Schema result" : "Any JSON";
+    private string PreviewStatusClass => _previewResult.Success
+        ? "dynamic-mapper-result-status ok"
+        : "dynamic-mapper-result-status error";
+    private string PreviewStatusText => _previewResult.Success ? "valid" : "error";
     private IReadOnlyList<DynamicMapperVariable> SummaryVariables
         => _variables
             .Where(static variable => variable.Depth == 0)
@@ -312,16 +327,51 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        var syncExpression = false;
+        var syncInput = false;
+        var syncResult = false;
+
+        if (_editor is not null && !ReferenceEquals(_initializedEditor, _editor))
+        {
+            _initializedEditor = _editor;
+            syncExpression = true;
+        }
+
+        if (_inputEditor is not null && !ReferenceEquals(_initializedInputEditor, _inputEditor))
+        {
+            _initializedInputEditor = _inputEditor;
+            syncInput = true;
+        }
+
+        if (_resultEditor is not null && !ReferenceEquals(_initializedResultEditor, _resultEditor))
+        {
+            _initializedResultEditor = _resultEditor;
+            syncResult = true;
+        }
+
+        if (syncExpression || syncInput || syncResult)
         {
             await ConfigureMonacoAsync();
+        }
+
+        if (syncExpression)
+        {
+            await SyncEditorAsync();
+        }
+
+        if (syncInput)
+        {
             await SyncInputEditorAsync();
         }
 
-        if (_syncInputAfterRender && _inputEditor is not null)
+        if (syncResult)
         {
-            _syncInputAfterRender = false;
-            await SyncInputEditorAsync();
+            await SyncResultEditorAsync();
+        }
+
+        if (syncExpression || syncInput || syncResult)
+        {
+            await LayoutEditorsAfterRenderAsync();
         }
     }
 
@@ -357,6 +407,7 @@
             : Model.Expression;
         _editorVersion++;
         _inputEditorVersion++;
+        _resultEditorVersion++;
         RefreshWorkbench();
     }
 
@@ -366,6 +417,7 @@
         {
             RefreshWorkbench();
             await SyncInputEditorAsync();
+            await SyncResultEditorAsync();
             StateHasChanged();
         });
     }
@@ -392,6 +444,7 @@
 
         _variables = DynamicMapperWorkbenchPreview.Variables(_inputType, _sampleEnvelope);
         _outputFields = DynamicMapperWorkbenchPreview.OutputFields(OutputFieldsKey, _engine);
+        RefreshPreview();
     }
 
     private (MqttEnvelope Envelope, string Source) ResolveSampleEnvelope()
@@ -422,23 +475,8 @@
     private async Task ReloadWorkspaceSample()
     {
         _sampleEdited = false;
-        _sampleEditorOpen = true;
-        _syncInputAfterRender = true;
         RefreshWorkbench();
         await RefreshEditorsAndRenderAsync();
-    }
-
-    private async Task ToggleSampleEditorAsync()
-    {
-        _sampleEditorOpen = !_sampleEditorOpen;
-        if (_sampleEditorOpen)
-        {
-            _inputEditorVersion++;
-            _syncInputAfterRender = true;
-        }
-
-        await InvokeAsync(StateHasChanged);
-        await DialogRefresh.RefreshAsync(Node.NodeName);
     }
 
     private void LoadSampleEnvelope(MqttEnvelope envelope, string source, bool updateInputJson)
@@ -461,6 +499,7 @@
             _sampleEdited = true;
             _variables = DynamicMapperWorkbenchPreview.Variables(_inputType, _sampleEnvelope);
             _outputFields = DynamicMapperWorkbenchPreview.OutputFields(OutputFieldsKey, _engine);
+            RefreshPreview();
             return;
         }
 
@@ -469,6 +508,7 @@
         _inputJsonError = result.Error ?? "Input JSON is invalid.";
         _variables = [];
         _outputFields = DynamicMapperWorkbenchPreview.OutputFields(OutputFieldsKey, _engine);
+        RefreshPreview();
     }
 
     private Task SetEngine(string value)
@@ -572,6 +612,7 @@
             Language = "json",
             Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
             ReadOnly = !IsMqttInput,
+            ScrollBeyondLastLine = false,
             Value = _inputJsonText
         };
 
@@ -580,12 +621,34 @@
         {
             AutomaticLayout = true,
             Language = string.Equals(_engine, "jsonata", StringComparison.OrdinalIgnoreCase) ? "jsonata" : "csharp",
+            ScrollBeyondLastLine = false,
             Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
             Value = _expression
         };
 
+    private StandaloneEditorConstructionOptions ResultEditorConstructionOptions(StandaloneCodeEditor editor)
+        => new()
+        {
+            AutomaticLayout = true,
+            Language = "json",
+            ReadOnly = true,
+            RenderLineHighlight = "none",
+            ScrollBeyondLastLine = false,
+            Theme = ThemeService.IsDarkMode ? "fluxmq-dark" : "fluxmq-light",
+            Value = _previewResult.Json
+        };
+
     private async Task ConfigureMonacoAsync()
-        => await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("fluxmqMonaco.ensureConfigured", ThemeService.IsDarkMode);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Dynamic Mapper Monaco configuration failed: {exception.Message}");
+        }
+    }
 
     private async Task OnInputEditorContentChanged()
     {
@@ -610,11 +673,17 @@
 
     private async Task OnEditorContentChanged()
     {
+        if (_syncingEditor)
+        {
+            return;
+        }
+
         if (_editor is not null)
         {
             _expression = await _editor.GetValue();
         }
 
+        RefreshPreview();
         await RefreshEditorsAndRenderAsync(syncInput: false);
     }
 
@@ -626,7 +695,34 @@
         }
 
         await InvokeAsync(StateHasChanged);
+        await SyncResultEditorAsync();
         await DialogRefresh.RefreshAsync(Node.NodeName);
+        await LayoutEditorsAfterRenderAsync();
+    }
+
+    private async Task SyncEditorAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _syncingEditor = true;
+        try
+        {
+            try
+            {
+                await _editor.SetValue(_expression);
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Dynamic Mapper expression editor sync failed: {exception.Message}");
+            }
+        }
+        finally
+        {
+            _syncingEditor = false;
+        }
     }
 
     private async Task SyncInputEditorAsync()
@@ -639,7 +735,14 @@
         _syncingInputEditor = true;
         try
         {
-            await _inputEditor.SetValue(_inputJsonText);
+            try
+            {
+                await _inputEditor.SetValue(_inputJsonText);
+            }
+            catch (Exception exception) when (IsNonCriticalEditorException(exception))
+            {
+                Console.Error.WriteLine($"Dynamic Mapper sample editor sync failed: {exception.Message}");
+            }
         }
         finally
         {
@@ -647,8 +750,66 @@
         }
     }
 
-    private Task SaveAsync()
+    private async Task SyncResultEditorAsync()
     {
+        if (_resultEditor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _resultEditor.SetValue(_previewResult.Json);
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Dynamic Mapper result editor sync failed: {exception.Message}");
+        }
+    }
+
+    private async Task LayoutEditorsAfterRenderAsync()
+    {
+        await Task.Yield();
+        await LayoutEditorsAsync();
+        await Task.Delay(50);
+        await LayoutEditorsAsync();
+    }
+
+    private async Task LayoutEditorsAsync()
+    {
+        await LayoutEditorAsync(_inputEditor, _inputEditorHost);
+        await LayoutEditorAsync(_editor, _expressionEditorHost);
+        await LayoutEditorAsync(_resultEditor, _resultEditorHost);
+    }
+
+    private async Task LayoutEditorAsync(StandaloneCodeEditor? editor, ElementReference host)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var size = await JsRuntime.InvokeAsync<EditorHostSize>("fluxmqMonaco.measureElement", host);
+            if (size is not null && size.Width > 0 && size.Height > 0)
+            {
+                await editor.Layout(new Dimension { Width = size.Width, Height = size.Height }, null);
+            }
+        }
+        catch (Exception exception) when (IsNonCriticalEditorException(exception))
+        {
+            Console.Error.WriteLine($"Dynamic Mapper editor layout failed: {exception.Message}");
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editor is not null)
+        {
+            _expression = await _editor.GetValue();
+        }
+
         Model.Engine = string.IsNullOrWhiteSpace(_engine) ? "jsonata" : _engine.Trim();
         Model.InputType = DynamicMapperNodeModel.NormalizeInputType(_inputType);
         Model.OutputType = string.IsNullOrWhiteSpace(_outputType) ? "MqttPublishRequest" : _outputType.Trim();
@@ -658,13 +819,34 @@
             ? DynamicMapperNodeModel.DefaultExpression(Model.OutputType, Model.Engine, Model.InputType)
             : _expression.Trim();
         Flow.UpdateNodeConfiguration(Node.NodeName, Model.BuildConfiguration());
-        return Task.CompletedTask;
     }
 
     private string? ValidateEditor()
         => string.IsNullOrWhiteSpace(_expression)
             ? "Enter a mapping expression before saving."
             : null;
+
+    private void RefreshPreview()
+    {
+        _previewResult = BuildPreview();
+    }
+
+    private DynamicMapperPreviewResult BuildPreview()
+    {
+        if (string.IsNullOrWhiteSpace(_expression))
+        {
+            return ErrorPreview(ResultPreviewTitle, "Enter a mapping expression before previewing.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(_inputJsonError))
+        {
+            return ErrorPreview(ResultPreviewTitle, _inputJsonError);
+        }
+
+        return IsTypedOutputContract
+            ? DynamicMapperWorkbenchPreview.Preview(_engine, _outputType, _expression, _inputType, _sampleEnvelope)
+            : DynamicMapperWorkbenchPreview.PreviewAny(_engine, _expression, _inputType, _sampleEnvelope, ResultPreviewTitle);
+    }
 
     private static string NormalizeExpression(string expression)
         => string.Join('\n', expression.Split(["\r\n", "\n"], StringSplitOptions.None).Select(line => line.TrimEnd())).Trim();
@@ -679,5 +861,27 @@
                 { DevicePlatform.macOS, ["json", "public.json"] }
             })
         };
+
+    private static DynamicMapperPreviewResult ErrorPreview(string title, string message)
+        => new(false, title, [], message, JsonSerializer.Serialize(
+            new Dictionary<string, object?>
+            {
+                ["error"] = message
+            },
+            PreviewJsonOptions));
+
+    private static bool IsNonCriticalEditorException(Exception exception)
+        => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;
+
+    private static readonly JsonSerializerOptions PreviewJsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        WriteIndented = true
+    };
+
+    private sealed class EditorHostSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
 
 }

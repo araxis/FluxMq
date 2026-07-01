@@ -128,17 +128,49 @@
 
 .message-filter-editor {
     display: grid;
+    gap: 7px;
     min-width: 0;
 }
 
-.message-filter-editor-grid {
-    align-items: start;
+.message-filter-rule-row {
+    align-items: stretch;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
-    gap: 12px;
-    grid-template-columns: minmax(14rem, 0.82fr) minmax(0, 1.18fr);
+    gap: 7px;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.5fr);
+    height: clamp(420px, 58vh, 680px);
+    min-width: 0;
+    padding-top: 7px;
+}
+
+.message-filter-condition-workspace {
+    background: color-mix(in srgb, var(--flux-surface-2) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 24%, transparent);
+    border-radius: 6px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 5px;
+}
+
+.message-filter-workspace-header {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 2px 3px 5px;
+}
+
+.message-filter-workspace-header > div {
+    display: grid;
+    gap: 2px;
     min-width: 0;
 }
 
+.message-filter-kicker,
 .message-filter-section-bar,
 .message-filter-reference-label {
     color: var(--flux-text-muted);
@@ -150,10 +182,48 @@
     text-transform: uppercase;
 }
 
-.message-filter-scope-editor,
-.message-filter-condition-editor {
+.message-filter-kicker {
+    font-size: 0.54rem;
+    overflow-wrap: anywhere;
+}
+
+.message-filter-workspace-header strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
+    font-size: 0.8rem;
+    font-weight: 780;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.1;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.message-filter-editor-host {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.message-filter-sidecar {
     display: grid;
     gap: 7px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-height: 0;
+    min-width: 0;
+}
+
+.message-filter-scope-editor,
+.message-filter-reference {
+    display: grid;
+    gap: 7px;
+    min-height: 0;
     min-width: 0;
 }
 
@@ -166,10 +236,6 @@
     padding: 0 0 5px;
 }
 
-.message-filter-section-bar.text-only {
-    grid-template-columns: minmax(0, 1fr);
-}
-
 .message-filter-section-bar > span {
     min-width: 0;
     overflow-wrap: anywhere;
@@ -177,9 +243,12 @@
 }
 
 .message-filter-pattern-list {
+    align-content: start;
     display: grid;
     gap: 0;
+    min-height: 0;
     min-width: 0;
+    overflow: auto;
 }
 
 .message-filter-pattern-row {
@@ -214,12 +283,11 @@
 }
 
 .message-filter-reference {
-    align-items: center;
+    align-content: start;
+    align-items: start;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 30%, transparent);
-    display: flex;
-    flex-wrap: wrap;
     gap: 5px;
-    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
     padding: 7px 2px 0;
 }
 
@@ -229,9 +297,37 @@
     white-space: normal;
 }
 
+.message-filter-variable-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+}
+
 .message-filter-editor ::deep(.mud-input-control) {
     margin-bottom: 0;
     margin-top: 0;
+}
+
+.message-filter-condition-workspace ::deep(.message-filter-code-editor) {
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: block;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.message-filter-condition-workspace ::deep(.message-filter-code-editor > div),
+.message-filter-condition-workspace ::deep(.message-filter-code-editor .monaco-editor),
+.message-filter-condition-workspace ::deep(.message-filter-code-editor .overflow-guard) {
+    height: 100% !important;
+    min-height: 0;
+    min-width: 0;
 }
 
 .message-filter-editor ::deep(.mud-input-control > .mud-input-control-input-container > .mud-input) {
@@ -241,10 +337,6 @@
 .message-filter-editor ::deep(.mud-input > input.mud-input-root),
 .message-filter-editor ::deep(.mud-input > textarea.mud-input-root) {
     font-size: 0.82rem;
-}
-
-.message-filter-editor ::deep(.mud-input > textarea.mud-input-root) {
-    line-height: 1.36;
 }
 
 .message-filter-pattern-row ::deep(.message-filter-remove.mud-icon-button),
@@ -276,16 +368,23 @@
     font-size: 0.98rem;
 }
 
-.message-filter-pattern-field,
-.message-filter-expression-field {
+.message-filter-pattern-field {
     min-width: 0;
 }
 
 @media (max-width: 760px) {
     .message-filter-meta,
-    .message-filter-editor-grid,
+    .message-filter-rule-row,
     .message-filter-pattern-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .message-filter-rule-row {
+        height: auto;
+    }
+
+    .message-filter-condition-workspace {
+        min-height: 360px;
     }
 
     .message-filter-section-bar ::deep(.message-filter-add.mud-icon-button),

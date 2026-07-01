@@ -5,7 +5,6 @@
                 <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
             </span>
             <MudText Typo="Typo.h6" Class="add-connection-dialog-heading">New connection</MudText>
-            <span class="@FormStatusClass" role="status" aria-live="polite">@FormStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
@@ -185,18 +184,6 @@
         !string.IsNullOrWhiteSpace(_host) &&
         _port is >= 1 and <= 65535 &&
         _keepAliveSeconds > 0;
-
-    private string FormStatusClass
-        => IsValid ? "add-connection-dialog-status ready" : "add-connection-dialog-status";
-
-    private string FormStatusText
-        => string.IsNullOrWhiteSpace(_host)
-            ? "Host required"
-            : _port is < 1 or > 65535
-                ? "Port range"
-                : _keepAliveSeconds < 1
-                    ? "Keep alive range"
-                    : "Ready";
 
     private void Cancel() => MudDialog.Cancel();
 

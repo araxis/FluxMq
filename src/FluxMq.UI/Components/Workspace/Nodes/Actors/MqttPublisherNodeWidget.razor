@@ -14,29 +14,21 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="mqtt-publisher-summary">
-            <div class="mqtt-publisher-meta">
-                <div class="mqtt-publisher-meta-item broker">
+        <div class="mqtt-publisher-summary node-ui-summary">
+            <div class="mqtt-publisher-meta node-ui-facts">
+                <div class="mqtt-publisher-meta-item broker node-ui-fact">
                     <span>Broker</span>
                     <strong title="@DisplayConnection">@DisplayConnection</strong>
                 </div>
-                <div class="mqtt-publisher-meta-item">
+                <div class="mqtt-publisher-meta-item node-ui-fact">
                     <span>Input buffer</span>
                     <strong>@ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity)</strong>
                 </div>
             </div>
-
-            <div class="mqtt-publisher-contract" aria-label="Publish request fields">
-                <span class="mqtt-publisher-contract-label">Request fields</span>
-                <span class="mqtt-publisher-token">topic</span>
-                <span class="mqtt-publisher-token">payload</span>
-                <span class="mqtt-publisher-token">qos</span>
-                <span class="mqtt-publisher-token">retain</span>
-            </div>
         </div>
     </Body>
     <Editor>
-        <div class="mqtt-publisher-editor" aria-label="Publisher settings">
+        <div class="mqtt-publisher-editor node-ui-editor" aria-label="Publisher settings">
             @{
                 var brokerOptions = BrokerOptions;
             }

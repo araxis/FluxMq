@@ -9,14 +9,14 @@
                  ShowDisplayName="true"
                  ShowCategoryChip="false">
     <Body>
-        <div class="generic-node-summary">
-            <div class="generic-node-description" title="@SummaryCaption">@SummaryCaption</div>
-            <div class="generic-node-meta">
-                <div class="generic-node-meta-item">
+        <div class="generic-node-summary node-ui-summary">
+            <div class="generic-node-description node-ui-preview" title="@SummaryCaption">@SummaryCaption</div>
+            <div class="generic-node-meta node-ui-facts">
+                <div class="generic-node-meta-item node-ui-fact">
                     <span>Inputs</span>
                     <strong>@InputCount</strong>
                 </div>
-                <div class="generic-node-meta-item">
+                <div class="generic-node-meta-item node-ui-fact">
                     <span>Outputs</span>
                     <strong>@OutputCount</strong>
                 </div>
@@ -32,7 +32,7 @@
                             <span class="generic-node-port-token-list">
                                 @foreach (var output in OutputPortPreview)
                                 {
-                                    <span class="generic-node-token output" title="@output.ValueType">@output.Name</span>
+                                    <span class="generic-node-token output node-ui-token" title="@output.ValueType">@output.Name</span>
                                 }
                             </span>
                         </div>
@@ -44,21 +44,21 @@
                             <span class="generic-node-port-token-list">
                                 @foreach (var input in InputPortPreview)
                                 {
-                                    <span class="generic-node-token input" title="@input.ValueType">@input.Name</span>
+                                    <span class="generic-node-token input node-ui-token" title="@input.ValueType">@input.Name</span>
                                 }
                             </span>
                         </div>
                     }
                     @if (PortPreviewOverflow > 0)
                     {
-                        <span class="generic-node-token overflow">+@PortPreviewOverflow more</span>
+                        <span class="generic-node-token overflow node-ui-token">+@PortPreviewOverflow more</span>
                     }
                 </div>
             }
         </div>
     </Body>
     <Editor>
-        <div class="generic-node-editor" aria-label="Generic component details">
+        <div class="generic-node-editor node-ui-editor" aria-label="Generic component details">
             <div class="generic-node-editor-table" aria-label="Generic component summary">
                 <div class="generic-node-editor-row">
                     <span class="generic-node-editor-label">Type</span>
@@ -72,18 +72,18 @@
                 </div>
             </div>
 
-            <div class="generic-node-editor-port-list" aria-label="Generic component port contracts">
+            <div class="generic-node-editor-port-list" aria-label="Generic component port details">
                 @if (SortedPortDescriptors.Count > 0)
                 {
                     <div class="generic-node-editor-port-header" aria-hidden="true">
                         <span>Direction</span>
                         <span>Port</span>
-                        <span>Contract</span>
+                        <span>Value type</span>
                     </div>
                     @foreach (var port in SortedPortDescriptors)
                     {
                         <div class="generic-node-editor-port-row">
-                            <span class="generic-node-token @PortDirectionClass(port)">@PortDirection(port)</span>
+                            <span class="generic-node-token @PortDirectionClass(port) node-ui-token">@PortDirection(port)</span>
                             <strong title="@port.Name">@port.Name</strong>
                             <span class="generic-node-editor-note type" title="@port.ValueType">@port.ValueType</span>
                         </div>

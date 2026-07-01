@@ -93,12 +93,20 @@
     min-width: 0;
 }
 
-.routing-merge-config-row {
-    align-items: end;
+.routing-merge-layout {
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.54fr);
+    grid-template-columns: minmax(0, 1fr) minmax(164px, 0.36fr);
     min-width: 0;
+}
+
+.routing-merge-sidecar {
+    align-content: start;
+    border-left: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding-left: 7px;
 }
 
 .routing-merge-editor ::deep(.mud-input-control) {
@@ -126,11 +134,9 @@
 }
 
 .routing-merge-port-composer {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
     gap: 6px;
     min-width: 0;
-    padding-top: 7px;
 }
 
 .routing-merge-port-header {
@@ -210,9 +216,16 @@
 
 @media (max-width: 720px) {
     .routing-merge-meta,
-    .routing-merge-config-row,
+    .routing-merge-layout,
     .routing-merge-port-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .routing-merge-sidecar {
+        border-left: 0;
+        border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+        padding-left: 0;
+        padding-top: 7px;
     }
 
     .routing-merge-port-header {

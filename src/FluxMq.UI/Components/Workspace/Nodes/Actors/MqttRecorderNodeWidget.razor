@@ -12,27 +12,21 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="mqtt-recorder-summary">
-            <div class="mqtt-recorder-meta">
-                <div class="mqtt-recorder-meta-item target">
+        <div class="mqtt-recorder-summary node-ui-summary">
+            <div class="mqtt-recorder-meta node-ui-facts">
+                <div class="mqtt-recorder-meta-item target node-ui-fact">
                     <span>Target</span>
                     <strong>Local sessions</strong>
                 </div>
-                <div class="mqtt-recorder-meta-item">
+                <div class="mqtt-recorder-meta-item node-ui-fact">
                     <span>Input buffer</span>
                     <strong>@ActorNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity)</strong>
                 </div>
             </div>
-
-            <div class="mqtt-recorder-contract" aria-label="Recording request fields">
-                <span class="mqtt-recorder-contract-label">Request fields</span>
-                <span class="mqtt-recorder-token">sessionId</span>
-                <span class="mqtt-recorder-token">envelope</span>
-            </div>
         </div>
     </Body>
     <Editor>
-        <div class="mqtt-recorder-editor" aria-label="Recorder settings">
+        <div class="mqtt-recorder-editor node-ui-editor" aria-label="Recorder settings">
             <MudNumericField T="int"
                              Label="Input buffer"
                              Value="@_boundedCapacity"

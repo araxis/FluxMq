@@ -13,104 +13,106 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="routing-merge-summary">
-            <div class="routing-merge-meta">
-                <div class="routing-merge-meta-item input">
+        <div class="routing-merge-summary node-ui-summary">
+            <div class="routing-merge-meta node-ui-facts">
+                <div class="routing-merge-meta-item input node-ui-fact">
                     <span>Input</span>
                     <strong title="@InputTypeCaption">@InputTypeCaption</strong>
                 </div>
-                <div class="routing-merge-meta-item">
+                <div class="routing-merge-meta-item node-ui-fact">
                     <span>Inputs</span>
                     <strong>@InputCountCaption</strong>
                 </div>
-                <div class="routing-merge-meta-item output">
+                <div class="routing-merge-meta-item output node-ui-fact">
                     <span>Output</span>
                     <strong>Merged item</strong>
                 </div>
-                <div class="routing-merge-meta-item">
+                <div class="routing-merge-meta-item node-ui-fact">
                     <span>Buffer</span>
                     <strong>@BufferCaption</strong>
                 </div>
             </div>
 
             <div class="routing-merge-ports" aria-label="Routing merge inputs">
-                <span class="routing-merge-contract-label">Input ports</span>
+                <span class="routing-merge-contract-label node-ui-fact-label">Input ports</span>
                 @foreach (var input in InputPreview)
                 {
-                    <span class="routing-merge-token" title="@input">@input</span>
+                    <span class="routing-merge-token node-ui-token" title="@input">@input</span>
                 }
                 @if (InputPreviewOverflow > 0)
                 {
-                    <span class="routing-merge-token overflow">+@InputPreviewOverflow</span>
+                    <span class="routing-merge-token overflow node-ui-token">+@InputPreviewOverflow</span>
                 }
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="routing-merge-editor" aria-label="Routing merge settings">
-            <div class="routing-merge-config-row">
-                <MudSelect T="string"
-                           Label="Input type"
-                           @bind-Value="_inputType"
-                           aria-label="Routing merge input type"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Dense="true"
-                           Class="routing-merge-input-field">
-                    @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
-                    {
-                        <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
-                    }
-                </MudSelect>
+        <div class="routing-merge-editor node-ui-editor" aria-label="Routing merge settings">
+            <div class="routing-merge-layout" aria-label="Routing merge editor layout">
+                <div class="routing-merge-port-composer" aria-label="Routing merge input ports">
+                    <div class="routing-merge-port-header">
+                        <span>Input port</span>
+                        <MudTooltip Text="Add input port">
+                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                           Size="Size.Small"
+                                           Class="routing-merge-add-port"
+                                           aria-label="Add input port"
+                                           OnClick="@AddInput" />
+                        </MudTooltip>
+                    </div>
 
-                <MudNumericField T="int"
-                                 Label="Input buffer"
-                                 @bind-Value="_boundedCapacity"
-                                 aria-label="Routing merge input buffer"
-                                 Min="1"
-                                 Max="100000"
-                                 Step="100"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="routing-merge-buffer-field" />
-            </div>
-
-            <div class="routing-merge-port-composer" aria-label="Routing merge input ports">
-                <div class="routing-merge-port-header">
-                    <span>Input port</span>
-                    <MudTooltip Text="Add input port">
-                        <MudIconButton Icon="@Icons.Material.Filled.Add"
-                                       Size="Size.Small"
-                                       Class="routing-merge-add-port"
-                                       aria-label="Add input port"
-                                       OnClick="@AddInput" />
-                    </MudTooltip>
+                    <div class="routing-merge-port-list">
+                        @for (var index = 0; index < _inputDrafts.Count; index++)
+                        {
+                            var input = _inputDrafts[index];
+                            <div class="routing-merge-port-row" @key="input">
+                                <MudTextField T="string"
+                                              Value="@input.Name"
+                                              ValueChanged="@(value => SetInputNameAsync(input, value))"
+                                              aria-label="@($"Input port {index + 1}")"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Immediate="true"
+                                              Class="routing-merge-input-name-field"
+                                              Placeholder="Primary" />
+                                <MudTooltip Text="@(_inputDrafts.Count > 1 ? "Remove input port" : "Keep at least one input")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                   Size="Size.Small"
+                                                   Disabled="@(_inputDrafts.Count <= 1)"
+                                                   Class="routing-merge-remove-port"
+                                                   aria-label="@($"Remove input port {input.Name}")"
+                                                   OnClick="@(() => RemoveInput(input))" />
+                                </MudTooltip>
+                            </div>
+                        }
+                    </div>
                 </div>
 
-                <div class="routing-merge-port-list">
-                    @for (var index = 0; index < _inputDrafts.Count; index++)
-                    {
-                        var input = _inputDrafts[index];
-                        <div class="routing-merge-port-row" @key="input">
-                            <MudTextField T="string"
-                                          Value="@input.Name"
-                                          ValueChanged="@(value => SetInputNameAsync(input, value))"
-                                          aria-label="@($"Input port {index + 1}")"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Immediate="true"
-                                          Class="routing-merge-input-name-field"
-                                          Placeholder="Primary" />
-                            <MudTooltip Text="@(_inputDrafts.Count > 1 ? "Remove input port" : "Keep at least one input")">
-                                <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                               Size="Size.Small"
-                                               Disabled="@(_inputDrafts.Count <= 1)"
-                                               Class="routing-merge-remove-port"
-                                               aria-label="@($"Remove input port {input.Name}")"
-                                               OnClick="@(() => RemoveInput(input))" />
-                            </MudTooltip>
-                        </div>
-                    }
+                <div class="routing-merge-sidecar" aria-label="Routing merge support settings">
+                    <MudSelect T="string"
+                               Label="Input type"
+                               @bind-Value="_inputType"
+                               aria-label="Routing merge input type"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Dense="true"
+                               Class="routing-merge-input-field">
+                        @foreach (var inputType in RoutingNodeConfiguration.InputTypes)
+                        {
+                            <MudSelectItem Value="@inputType">@inputType</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudNumericField T="int"
+                                     Label="Input buffer"
+                                     @bind-Value="_boundedCapacity"
+                                     aria-label="Routing merge input buffer"
+                                     Min="1"
+                                     Max="100000"
+                                     Step="100"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Class="routing-merge-buffer-field" />
                 </div>
             </div>
         </div>

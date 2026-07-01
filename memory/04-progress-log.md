@@ -4358,3 +4358,212 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Isolated UI test build passed with 0 warnings.
   - Focused `AppJsonPanel_UsesFlatCompactCodeViewerChrome` and `WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs` guards passed using isolated output.
 - Next step: visually inspect the App JSON tab, click `pip1` or another normal artifact tab, and confirm the visual workspace returns with tab switching still working.
+
+## 2026-06-29 - Pipeline node UI design-system round
+
+- Current local branch: `work/pipeline-node-ui-system`.
+- Goal narrowed from an open-ended UI-polish effort into an achievable branch:
+  - Establish one coherent Pipeline node UI direction.
+  - Prioritize complex editors first because broken editor sizing and empty code surfaces block real use.
+  - Keep runtime behavior, saved JSON schema, node ids, ports, contracts, and app resources unchanged.
+- Accepted and committed local slices:
+  - `508ce60 Restore mapper workbench columns`
+  - `dcf418f Fix mapper editor height`
+  - `081fb27 Fix code editor sizing`
+  - `884f386 Polish state reducer editor`
+  - `9a3958e Polish assertion editor`
+  - `Polish message filter editor`
+  - `Polish condition router editor`
+  - `Polish routing switch editor`
+  - `Polish routing matching editors`
+  - `Polish routing utility editors`
+  - `Polish source and trigger editors`
+  - `Polish actor sink editors`
+- Dynamic Mapper result:
+  - Rebuilt the edit dialog around three stable columns: sample input, mapping expression, and result.
+  - Made the expression editor the dominant full-height workspace.
+  - Removed extra side metadata panels that were not needed for the mapping workflow.
+  - Fixed editor measurement/layout so code content no longer collapses into a thin strip.
+- JSON Schema Validator result:
+  - Fixed the inline schema editing path so it uses a proper code-editor surface instead of leaving a large blank area.
+  - Kept schema source/id behavior and saved configuration shape unchanged.
+- State Reducer result:
+  - Replaced the reducer multiline text area with a full code-editor surface.
+  - Kept key expression, variables, max keys, input buffer, validation, and config persistence behavior unchanged.
+  - Focused build and source-level UI test passed before the local commit.
+- Flow Assertion result:
+  - Replaced the pass-condition multiline text area with a measured full code-editor surface.
+  - Kept assertion name, input type, input buffer, failure message, variables, validation, and saved config behavior unchanged.
+  - Visual check confirmed the editor layout: expression workspace fills the left side, failure message and variables stay in the right sidecar, and the node header remains plain node name plus component subtitle.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowAssertionNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+- Message Filter result:
+  - Replaced the optional condition multiline text area with the same stable full-height code-editor workspace.
+  - Moved topic pattern editing into a compact right sidecar and kept variable references there.
+  - Kept topic-pattern validation, blank-condition behavior, view-mode facts, pattern chips, expression preview, and saved configuration shape unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MessageFilterNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop visual note: a temporary `flow.filter` project opened correctly and confirmed the compact node face; this session could not drive the WebView settings button reliably enough to complete the edit-dialog manual path.
+- Condition Router result:
+  - Replaced the route-condition multiline text area with the same measured full-height code-editor workspace.
+  - Moved input type selection and variable reference into a compact right sidecar.
+  - Kept input-type normalization, type-change default expression reset, blank-condition validation, branch ports, and saved configuration shape unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ConditionRouterNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+- Routing Switch result:
+  - Replaced the routing expression multiline text area with the same measured full-height code-editor workspace.
+  - Moved input type, input buffer, emit-envelope, variable reference, and route rows into a compact right sidecar.
+  - Kept expression validation, route validation, duplicate match-key validation, route parsing, ports, and saved configuration shape unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingSwitchNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+- Routing Correlation and Join result:
+  - Replaced correlation key/side expression fields and join left/right key expression fields with paired full-height code-editor workspaces.
+  - Moved input types, side names, timeout, max pending, input buffer, and case sensitivity into compact right sidecars.
+  - Kept required-expression validation, correlation side-name validation, normalization, ports, and saved configuration shape unchanged.
+  - View mode now favors input/side facts, timeout/buffer facts, case/pending state, and expression previews without join output contract clutter.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingCorrelationAndJoinNodeWidgets" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check attempted with native desktop control. The app window was controllable, but the Windows file picker overlay was not targetable by the helper and direct `--open` launch stayed on the startup splash, so edit-dialog visual verification remains a gap for this slice.
+- Routing Fork/Merge/Window result:
+  - Reworked the remaining routing utility editors into compact main editor areas plus support sidecars.
+  - Fork and Merge keep port row editing, add/remove controls, input type, input buffer, validation, ports, and saved configuration shape unchanged.
+  - Window keeps max items, time window, input type, input buffer, emit-partial control, zero-boundary validation, ports, and saved configuration shape unchanged.
+  - View mode remains compact operational facts with fork/merge port chips and window boundary chips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingFanNodeWidgets" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingWindowNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not completed because native desktop automation was stopped with Escape during file-open setup; no manual visual acceptance is claimed for this slice.
+- Source and Trigger result:
+  - Removed view-mode output-field contract rows from `mqtt.connection-state-trigger`, `generated.source`, `replay.source`, `session.source`, and timer nodes, leaving compact operational facts and previews only.
+  - Reworked `mqtt.trigger` so subscription editing remains the primary table workspace and broker/output-buffer controls sit in a compact sidecar.
+  - Reworked `generated.source` so generated message rows remain the primary table workspace and output-buffer control sits in a compact sidecar.
+  - Replay, stored session, connection-state, and timer editors remain dense flat configuration forms without code-editor workspaces.
+  - Validation, saved configuration shape, node ids, ports, runtime source/trigger semantics, and normalization behavior are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttTriggerNodeWidget|FullyQualifiedName~ConnectionStateTriggerNodeWidget|FullyQualifiedName~GeneratedSourceNodeWidget|FullyQualifiedName~ReplaySourceNodeWidget|FullyQualifiedName~StoredSessionSourceNodeWidget|FullyQualifiedName~TimerNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Actor Sink result:
+  - Removed view-mode request-field contract rows from `mqtt.publisher`, `mqtt.recorder`, and `file.writer`, leaving compact broker/target and input-buffer facts only.
+  - Kept `mqtt.publisher` broker selection, app-resource synchronization, live-connection synchronization, input-buffer validation, and saved configuration shape unchanged.
+  - Kept `mqtt.recorder` and `file.writer` as dense single-control input-buffer editors with existing validation and saved configuration unchanged.
+  - Runtime behavior, request contracts, node ids, ports, component contracts, and normalization behavior are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttPublisherNodeWidget|FullyQualifiedName~MqttRecorderNodeWidget|FullyQualifiedName~FileWriterNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Metric Node result:
+  - Removed the `metric.source` view-mode output-field contract row, leaving selected metric, latest value, start mode, output buffer, and parameter preview facts.
+  - Kept `mqtt.metrics` on its compact runtime summary with rate window, readout layout, selected readouts, top topics, and last-topic state without adding contract or decorative status rows.
+  - Both metric editors remain configuration-heavy flat editors without code-editor workspaces.
+  - Runtime behavior, saved configuration shape, node ids, ports, metric resources, snapshots, component contracts, and normalization behavior are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttMetricsNodeWidget|FullyQualifiedName~MetricSourceNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Generic Node result:
+  - Removed view-mode request/result/field dump rows from `http.request`, `payload.inspect`, and legacy `mqtt.payload-inspector`, leaving compact operational facts and option state.
+  - Renamed fallback editor port-detail wording for `GenericFlowNodeWidget` and `DefaultNodeWidget` away from contract language while keeping the same summary, port counts, and port chips.
+  - Kept `flow.logger` on the generic widget path; no dedicated widget was added.
+  - All affected editors remain flat detail/configuration surfaces without code-editor workspaces.
+  - Runtime behavior, saved configuration shape, node ids, ports, registry mappings, request/result shapes, component contracts, and normalization behavior are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~HttpRequestNodeWidget|FullyQualifiedName~PayloadInspectNodeWidget|FullyQualifiedName~PayloadInspectorNodeWidget|FullyQualifiedName~GenericFlowNodeWidget|FullyQualifiedName~DefaultNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Topics Publish Composer result:
+  - Added a compact flat publish composer inside the app-owned `Topics` tab detail area.
+  - Publish targets only active app MQTT broker resources; internal `topics:` monitor clients remain read-only monitor clients and are filtered out of the publish broker list.
+  - Selected broker/topic changes prefill the publish broker and topic when there is a clean app-broker match, with fallback to the first app broker and an editable topic field.
+  - Reused `LiveMqttWorkspaceService.PublishAsync`, `Live.ConnectAsync`, and `FlowWorkspaceService.RecordManualMqttPublish`; no runtime component behavior, saved app schema, explorer schema, storage format, node ids, ports, or component contracts changed.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel|FullyQualifiedName~LiveMqttWorkspaceService|FullyQualifiedName~TopicExplorerMonitorResolver" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Topics Payload Detail Controls result:
+  - Added local `Formatted`, `Raw`, `Hex`, and `Meta` payload view controls for both the latest message and selected history message in the existing app-owned `Topics` tab.
+  - Added copy actions for the currently visible latest/selected payload view through the app's clipboard and snackbar feedback pattern.
+  - Preserved the broker tree, latest metadata rail, publish composer, virtualized history grid, row selection, and selected-message detail layout.
+  - No MQTT monitor behavior, publish behavior, saved app schema, explorer schema, storage format, runtime components, node ids, ports, or component contracts changed.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Topics History Filter and Export result:
+  - Added a compact lower-history toolbar with displayed-field text filtering, QoS filtering, retain-state filtering, reset, and JSON export for visible rows.
+  - Kept topic-tree search and broker/topic selection separate from local history filters; latest message remains broker/topic scoped while the selected detail tracks the visible history grid.
+  - Export reuses the app's `SaveAsDialog` pattern and writes visible-row JSON with broker, topic, timestamp, QoS, retain, payload byte count, payload type, base64 payload, text payload when text, and hex dump.
+  - No MQTT monitor behavior, publish behavior, saved app schema, explorer schema, storage format, runtime components, node ids, ports, or component contracts changed.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Topics Payload Diff result:
+  - Added a selected-history-only `Diff` payload view in the existing app-owned `Topics` tab.
+  - The diff compares the selected history message against the current latest message for the active broker/topic scope, with compact latest-row, unchanged-payload, bounded text diff, and binary metadata/first-differing-byte states.
+  - The selected payload copy action now copies the visible diff text when `Diff` is active, while latest payload controls remain limited to formatted, raw, hex, and metadata views.
+  - Preserved the broker tree, latest panel, publish composer, history filters/export, virtualized grid, row selection, selected-message detail, monitor behavior, publish behavior, saved app schema, explorer schema, storage format, runtime components, node ids, ports, and component contracts.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Topics Publish Presets result:
+  - Added compact publish-assist controls inside the existing app-owned `Topics` publish composer.
+  - `Use latest` and `Use selected` load topic, text payload, QoS, retain, and a clean matching app broker into the composer when the source payload is text; binary/non-text payloads are not coerced into publish text.
+  - Successful publishes from this composer are kept in a bounded component-local recent list with load and clear actions, using broker resource/label, topic, text payload, QoS, retain, timestamp, payload type, and byte count.
+  - Preserved broker targeting, internal monitor-client filtering, `Live.ConnectAsync`, `Live.PublishAsync`, `FlowWorkspaceService.RecordManualMqttPublish`, selected broker/topic prefill, saved app schema, explorer schema, storage format, runtime components, node ids, ports, and component contracts.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Topics Stats Panel result:
+  - Added a compact stats strip for the active broker/topic scope inside the existing app-owned `Topics` tab.
+  - Stats are derived only from scoped `HistoryMessages`, not local lower-history filters, and include message count, unique topic count, retained count, total payload bytes, average payload bytes, QoS 0/1/2 counts, and latest received time.
+  - The panel uses private `TopicExplorerPanel` helpers and a private helper record; no services, metric resources, saved fields, runtime wiring, or schema changes were added.
+  - Preserved monitor behavior, publish behavior, saved app schema, explorer schema, storage format, runtime components, node ids, ports, component contracts, publish semantics, and lower-history filter behavior.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Workspace Logs Detail and Export result:
+  - Added compact copy and JSON export actions for the currently visible workspace log rows in the first-level `Logs` tab.
+  - Copy/export uses the post-filter `FilteredLogs` view, so scope, level, search, fixed scope, and max-entry limits are preserved.
+  - Export reuses the app's `SaveAsDialog` pattern and writes indented JSON with timestamp, severity, scope, artifact, workflow, source, code, node, port, message, and context fields.
+  - Helpers stay private to `WorkspaceLogPanel`; no runtime logging behavior, log collection semantics, saved app schema, storage model, component contracts, node ids, ports, or workspace routing changed.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Workspace Setup Dialogs result:
+  - Removed hidden/explicit readiness status chrome from the Add Connection and Start Recording dialogs.
+  - Add Connection still uses the same broker/client/keep-alive/TLS/certificate/clean-start controls, certificate picker behavior, validation, and result projection.
+  - Start Recording still uses the same project autocomplete, session name defaulting, Enter handling, project summary, and blank project/session normalization.
+  - Runtime behavior, MQTT connection behavior, recording behavior, saved app schema, storage model, monitor semantics, workspace routing, services, node ids, ports, and component contracts are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AddConnectionDialog|FullyQualifiedName~StartRecordingDialog" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Remaining Setup Dialogs result:
+  - Removed hidden/explicit readiness status chrome from New App, New Pipeline, Save As, Metric Create, Metric Rename, Metric Duplicate, and Metric Type Change dialogs.
+  - Kept useful non-readiness state intact: metric type/search counts, validation/error rows, destructive metric confirm/delete tone status, and runtime/dashboard/node/scenario status surfaces.
+  - Preserved app creation, pipeline creation, save path, metric create/rename/duplicate/type-change validation, metric id generation, default parameter previews, dashboard binding behavior, and type reset warnings.
+  - Runtime behavior, saved app schema, storage model, metric model, dashboard bindings, services, node ids, ports, and component contracts are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NewAppDialog|FullyQualifiedName~NewPipelineDialog|FullyQualifiedName~SaveAsDialog|FullyQualifiedName~MetricCreateDialog|FullyQualifiedName~MetricActionDialogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Current design rules learned from visual review:
+  - View mode must show useful operational facts, not decorative contract dumps.
+  - Edit mode must use one clean flat form/workspace surface, not nested panels.
+  - Code-heavy nodes need stable full-height editor surfaces and predictable columns.
+  - Save readiness must come from validation state, not status labels like `Ready to save`.
+  - Dialog footers should sit in a consistent padded full-width footer panel.
+  - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
+- Next implementation order:
+  1. Continue the next small designer-polish backlog item from remaining high-use workspace noise.

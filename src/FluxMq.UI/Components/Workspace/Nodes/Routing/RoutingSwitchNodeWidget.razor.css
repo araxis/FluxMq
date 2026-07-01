@@ -108,11 +108,94 @@
     min-width: 0;
 }
 
+.routing-switch-rule-row {
+    align-items: stretch;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
+    display: grid;
+    gap: 7px;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.62fr);
+    height: clamp(460px, 62vh, 720px);
+    min-width: 0;
+    padding-top: 7px;
+}
+
+.routing-switch-expression-workspace {
+    background: color-mix(in srgb, var(--flux-surface-2) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 24%, transparent);
+    border-radius: 6px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 5px;
+}
+
+.routing-switch-workspace-header {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 2px 3px 5px;
+}
+
+.routing-switch-workspace-header > div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.routing-switch-kicker {
+    color: var(--flux-text-muted);
+    font-size: 0.54rem;
+    font-weight: 760;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+}
+
+.routing-switch-workspace-header strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
+    font-size: 0.8rem;
+    font-weight: 780;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.1;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.routing-switch-editor-host {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.routing-switch-sidecar {
+    align-content: start;
+    display: grid;
+    gap: 7px;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
 .routing-switch-config-row {
     align-items: end;
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.52fr) minmax(0, 0.62fr);
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
 }
 
@@ -124,28 +207,15 @@
     padding: 0 2px;
 }
 
-.routing-switch-rule-grid {
-    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
-    display: grid;
-    gap: 7px;
-    grid-template-columns: minmax(0, 1fr);
-    min-width: 0;
-    padding-top: 7px;
-}
-
-.routing-switch-expression-stack {
-    display: grid;
-    gap: 7px;
-    min-width: 0;
-}
-
 .routing-switch-variable-reference {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    align-content: start;
+    border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
+    display: grid;
+    gap: 6px;
+    min-height: 0;
     min-width: 0;
-    padding: 0 2px;
+    overflow: hidden;
+    padding: 7px 2px 0;
 }
 
 .routing-switch-variable-label {
@@ -160,11 +230,12 @@
 }
 
 .routing-switch-variable-list {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
     gap: 4px;
-    justify-content: start;
+    grid-template-columns: minmax(0, 1fr);
+    max-height: 104px;
     min-width: 0;
+    overflow: auto;
 }
 
 .routing-switch-variable-token {
@@ -203,7 +274,10 @@
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
     gap: 7px;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
     min-width: 0;
+    overflow: hidden;
     padding-top: 7px;
 }
 
@@ -233,7 +307,9 @@
 .routing-switch-route-list {
     display: grid;
     gap: 0;
+    min-height: 0;
     min-width: 0;
+    overflow: auto;
 }
 
 .routing-switch-route-row {
@@ -266,8 +342,25 @@
     font-size: 0.72rem;
 }
 
-.routing-switch-editor ::deep(.routing-switch-expression-field textarea.mud-input-root) {
-    min-height: 120px;
+.routing-switch-expression-workspace ::deep(.routing-switch-code-editor) {
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: block;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.routing-switch-expression-workspace ::deep(.routing-switch-code-editor > div),
+.routing-switch-expression-workspace ::deep(.routing-switch-code-editor .monaco-editor),
+.routing-switch-expression-workspace ::deep(.routing-switch-code-editor .overflow-guard) {
+    height: 100% !important;
+    min-height: 0;
+    min-width: 0;
 }
 
 .routing-switch-envelope-option ::deep(.routing-switch-envelope-check) {
@@ -305,7 +398,6 @@
 
 .routing-switch-input-field,
 .routing-switch-buffer-field,
-.routing-switch-expression-field,
 .routing-switch-route-key-field,
 .routing-switch-route-output-field {
     min-width: 0;
@@ -313,10 +405,17 @@
 
 @media (max-width: 720px) {
     .routing-switch-meta,
-    .routing-switch-config-row,
-    .routing-switch-rule-grid,
+    .routing-switch-rule-row,
     .routing-switch-route-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .routing-switch-rule-row {
+        height: auto;
+    }
+
+    .routing-switch-expression-workspace {
+        min-height: 380px;
     }
 
     .routing-switch-route-header {

@@ -107,9 +107,10 @@
     background: var(--flux-surface);
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 54%, transparent);
     border-radius: 5px;
-    display: flex;
+    display: grid;
     flex: 1 1 auto;
-    height: clamp(360px, 56vh, 620px);
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
     min-height: 0;
     min-width: 0;
     overflow: hidden;
@@ -129,8 +130,8 @@
 }
 
 .json-schema-validator-inline-source {
-    display: flex;
-    flex: 1 1 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
     height: 100%;
     min-height: 0;
     min-width: 0;
@@ -187,7 +188,7 @@
 .json-schema-validator-inline-source ::deep(.schema-monaco-editor) {
     background: var(--flux-surface);
     border-radius: 4px;
-    flex: 1 1 0;
+    box-sizing: border-box;
     height: 100%;
     min-height: 0;
     min-width: 0;
@@ -195,8 +196,16 @@
     width: 100%;
 }
 
+.json-schema-validator-inline-source ::deep(.schema-monaco-editor > div) {
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+}
+
 .json-schema-validator-inline-source ::deep(.schema-monaco-editor .monaco-editor),
 .json-schema-validator-inline-source ::deep(.schema-monaco-editor .overflow-guard) {
+    height: 100% !important;
     border-radius: 4px;
 }
 
@@ -222,6 +231,6 @@
     }
 
     .json-schema-validator-schema-area {
-        height: clamp(360px, 58vh, 560px);
+        height: 100%;
     }
 }

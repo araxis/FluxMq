@@ -13,41 +13,33 @@
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
     <Body>
-        <div class="http-client-summary">
-            <div class="http-client-meta">
-                <div class="http-client-meta-item target">
+        <div class="http-client-summary node-ui-summary">
+            <div class="http-client-meta node-ui-facts">
+                <div class="http-client-meta-item target node-ui-fact">
                     <span>Target</span>
                     <strong title="@TargetCaption">@TargetCaption</strong>
                 </div>
-                <div class="http-client-meta-item">
+                <div class="http-client-meta-item node-ui-fact">
                     <span>Timeout</span>
                     <strong>@TimeoutCaption</strong>
                 </div>
-                <div class="http-client-meta-item">
+                <div class="http-client-meta-item node-ui-fact">
                     <span>Input buffer</span>
                     <strong>@InputBufferCaption</strong>
                 </div>
-            </div>
-
-            <div class="http-client-contracts">
-                <div class="http-client-contract" aria-label="HTTP request fields">
-                    <span class="http-client-contract-label">Request fields</span>
-                    <span class="http-client-token">method</span>
-                    <span class="http-client-token">url</span>
-                    <span class="http-client-token">headers</span>
-                    <span class="http-client-token">body</span>
+                <div class="http-client-meta-item node-ui-fact">
+                    <span>Redirects</span>
+                    <strong>@RedirectCaption</strong>
                 </div>
-                <div class="http-client-contract" aria-label="HTTP response fields">
-                    <span class="http-client-contract-label">Response fields</span>
-                    <span class="http-client-token">status</span>
-                    <span class="http-client-token">headers</span>
-                    <span class="http-client-token">body</span>
+                <div class="http-client-meta-item node-ui-fact">
+                    <span>Errors</span>
+                    <strong>@ErrorModeCaption</strong>
                 </div>
             </div>
         </div>
     </Body>
     <Editor>
-        <div class="http-client-editor" aria-label="HTTP client settings">
+        <div class="http-client-editor node-ui-editor" aria-label="HTTP client settings">
             <MudTextField T="string"
                           Label="Base URL"
                           @bind-Value="_baseUrl"
@@ -56,7 +48,7 @@
                           Margin="Margin.Dense"
                           Class="http-client-base-url-field" />
 
-            <div class="http-client-number-grid">
+            <div class="http-client-number-grid node-ui-form-grid">
                 <MudNumericField T="int"
                                  Label="Timeout ms"
                                  Value="@_defaultTimeoutMilliseconds"
@@ -89,7 +81,7 @@
                                  Class="http-client-buffer-field" />
             </div>
 
-            <div class="http-client-options" aria-label="HTTP client options">
+            <div class="http-client-options node-ui-checkbox-row" aria-label="HTTP client options">
                 <MudCheckBox T="bool"
                              Label="Follow redirects"
                              @bind-Value="_followRedirects"
@@ -132,6 +124,8 @@
     private string InputBufferCaption => HttpRequestNodeModel
         .NormalizePositiveInt(_boundedCapacity, HttpRequestNodeModel.DefaultBoundedCapacity)
         .ToString();
+    private string RedirectCaption => Model.FollowRedirects ? "follow" : "off";
+    private string ErrorModeCaption => Model.TreatNonSuccessStatusAsError ? "strict" : "pass through";
 
     protected override void OnParametersSet()
     {

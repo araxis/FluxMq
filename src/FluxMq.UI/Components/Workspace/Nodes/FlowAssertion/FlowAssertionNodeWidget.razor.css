@@ -134,14 +134,85 @@
     min-width: 0;
 }
 
-.flow-assertion-rule-stack {
+.flow-assertion-rule-row {
     align-items: stretch;
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 58%, transparent);
     display: grid;
     gap: 7px;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.5fr);
+    height: clamp(420px, 58vh, 680px);
     min-width: 0;
     padding-top: 7px;
+}
+
+.flow-assertion-expression-workspace {
+    background: color-mix(in srgb, var(--flux-surface-2) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 24%, transparent);
+    border-radius: 6px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 5px;
+}
+
+.flow-assertion-workspace-header {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 2px 3px 5px;
+}
+
+.flow-assertion-workspace-header > div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.flow-assertion-kicker {
+    color: var(--flux-text-muted);
+    font-size: 0.54rem;
+    font-weight: 760;
+    letter-spacing: 0;
+    line-height: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+}
+
+.flow-assertion-workspace-header strong {
+    color: color-mix(in srgb, var(--mud-palette-text-primary) 82%, var(--mud-palette-text-secondary));
+    display: -webkit-box;
+    font-size: 0.8rem;
+    font-weight: 780;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.1;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.flow-assertion-editor-host {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.flow-assertion-rule-sidecar {
+    display: grid;
+    gap: 7px;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    min-width: 0;
 }
 
 .flow-assertion-variable-strip {
@@ -149,7 +220,7 @@
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 42%, transparent);
     display: grid;
     gap: 6px;
-    grid-template-columns: minmax(4.5rem, max-content) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     min-width: 0;
     padding: 7px 2px 0;
 }
@@ -196,18 +267,34 @@
     line-height: 1.36;
 }
 
-.flow-assertion-editor ::deep(.flow-assertion-expression-field textarea.mud-input-root) {
-    min-height: 292px;
+.flow-assertion-editor ::deep(.flow-assertion-message-field textarea.mud-input-root) {
+    min-height: 96px;
 }
 
-.flow-assertion-editor ::deep(.flow-assertion-message-field textarea.mud-input-root) {
-    min-height: 72px;
+.flow-assertion-expression-workspace ::deep(.flow-assertion-code-editor) {
+    background: var(--flux-surface);
+    border: 1px solid color-mix(in srgb, var(--flux-border) 50%, transparent);
+    border-radius: 6px;
+    box-sizing: border-box;
+    display: block;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.flow-assertion-expression-workspace ::deep(.flow-assertion-code-editor > div),
+.flow-assertion-expression-workspace ::deep(.flow-assertion-code-editor .monaco-editor),
+.flow-assertion-expression-workspace ::deep(.flow-assertion-code-editor .overflow-guard) {
+    height: 100% !important;
+    min-height: 0;
+    min-width: 0;
 }
 
 .flow-assertion-name-field,
 .flow-assertion-input-field,
 .flow-assertion-buffer-field,
-.flow-assertion-expression-field,
 .flow-assertion-message-field {
     min-width: 0;
 }
@@ -215,8 +302,16 @@
 @media (max-width: 760px) {
     .flow-assertion-meta,
     .flow-assertion-config-row,
-    .flow-assertion-variable-strip {
+    .flow-assertion-rule-row {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .flow-assertion-rule-row {
+        height: auto;
+    }
+
+    .flow-assertion-expression-workspace {
+        min-height: 360px;
     }
 
     .flow-assertion-contract {
