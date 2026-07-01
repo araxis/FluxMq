@@ -3379,9 +3379,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@FirstRunIcon");
         markup.ShouldContain("@FirstRunStateLabel");
         markup.ShouldContain("@FirstRunTitle");
+        markup.ShouldContain("Run scenario to begin");
         markup.ShouldContain("@FirstRunDescription");
         markup.ShouldContain("@FirstRunEventModeLabel");
         markup.ShouldContain("test-runner-first-run-cues");
+        markup.ShouldContain("aria-label=\"First run facts\"");
         markup.ShouldContain("RunSummaryClass(latest)");
         markup.ShouldContain("RunSummaryAriaLabel(latest)");
         markup.ShouldContain("test-runner-result-scope");
@@ -3417,6 +3419,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("RunStatusPillClass(result.Status)");
         markup.ShouldNotContain("ActiveRunPillClass");
         markup.ShouldNotContain("test-runner-status-pill");
+        markup.ShouldNotContain("Runner ready");
+        markup.ShouldNotContain("First run readiness");
+        markup.ShouldNotContain("Ready for first run");
+        markup.ShouldNotContain("test-runner-result-strip empty ready");
 
         css.ShouldContain(".test-runner-title-icon");
         css.ShouldContain(".test-runner-empty-cues");
@@ -3439,7 +3445,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-runner-status-strip");
         css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
         css.ShouldContain(".test-runner-result-strip");
-        css.ShouldContain(".test-runner-result-strip.empty.ready");
+        css.ShouldContain(".test-runner-result-strip.empty.runnable");
         css.ShouldContain(".test-runner-result-strip.empty.warning");
         css.ShouldContain(".test-runner-result-strip.history");
         css.ShouldContain(".test-runner-result-scope");
@@ -3469,6 +3475,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldNotContain(".test-runner-panel-title");
         css.ShouldNotContain(".test-runner-status-pill");
+        css.ShouldNotContain(".test-runner-result-strip.empty.ready");
         css.ShouldNotContain("border-radius: 999px;");
     }
 
@@ -3551,6 +3558,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-step-status idle");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("test-step-badges");
+        markup.ShouldNotContain("Designer ready");
 
         css.ShouldContain(".test-scenario-heading-icon");
         css.ShouldContain(".test-scenario-meta-strip span,");

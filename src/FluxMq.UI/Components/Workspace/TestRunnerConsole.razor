@@ -25,10 +25,6 @@
                         <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
                         @NoTestSelectionHint
                     </span>
-                    <span>
-                        <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
-                        Runner ready
-                    </span>
                 </div>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -229,7 +225,7 @@
                         <strong>@FirstRunTitle</strong>
                         <span>@FirstRunDescription</span>
                     </div>
-                    <div class="test-runner-first-run-cues" aria-label="First run readiness">
+                    <div class="test-runner-first-run-cues" aria-label="First run facts">
                         <span>
                             <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" Size="Size.Small" />
                             @ScenarioStepLabel
@@ -411,7 +407,7 @@
 
     private string FirstRunStripClass
         => Scenario is { StepCount: > 0 }
-            ? "test-runner-result-strip empty ready"
+            ? "test-runner-result-strip empty runnable"
             : "test-runner-result-strip empty warning";
 
     private string FirstRunIcon
@@ -421,7 +417,7 @@
         => Scenario is { StepCount: > 0 } ? "Not run yet" : "Needs steps";
 
     private string FirstRunTitle
-        => Scenario is { StepCount: > 0 } ? "Ready for first run" : "Add steps before running";
+        => Scenario is { StepCount: > 0 } ? "Run scenario to begin" : "Add steps before running";
 
     private string FirstRunDescription
         => Scenario is { StepCount: > 0 }

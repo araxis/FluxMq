@@ -462,7 +462,7 @@
     background: color-mix(in srgb, var(--mud-palette-info) 5%, var(--flux-surface));
 }
 
-.test-runner-result-strip.empty.ready {
+.test-runner-result-strip.empty.runnable {
     background: color-mix(in srgb, var(--mud-palette-info) 4%, var(--flux-surface));
     border-color: color-mix(in srgb, var(--mud-palette-info) 28%, var(--flux-border));
 }
@@ -492,7 +492,7 @@
     color: var(--mud-palette-warning);
 }
 
-.test-runner-result-strip.empty.ready .test-runner-result-icon {
+.test-runner-result-strip.empty.runnable .test-runner-result-icon {
     color: var(--mud-palette-info);
 }
 
