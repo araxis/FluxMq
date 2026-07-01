@@ -3,7 +3,7 @@
     color: var(--mud-palette-text-primary);
     display: grid;
     gap: 8px;
-    grid-template-columns: 26px minmax(0, 1fr) auto;
+    grid-template-columns: 26px minmax(0, 1fr);
     min-height: 30px;
     min-width: 0;
 }
@@ -52,35 +52,6 @@
     font-size: 10.5px;
     font-weight: 650;
     line-height: 1.1;
-}
-
-.metric-duplicate-status {
-    align-items: center;
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border-soft);
-    border-radius: 6px;
-    color: var(--mud-palette-text-secondary);
-    display: inline-flex;
-    font-size: 10px;
-    font-weight: 760;
-    height: 22px;
-    justify-content: center;
-    line-height: 1;
-    padding: 0 8px;
-    white-space: nowrap;
-}
-
-.metric-duplicate-status.ready {
-    background: color-mix(in srgb, var(--mud-palette-success) 7%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--mud-palette-success) 24%, var(--flux-border-soft));
-    color: var(--mud-palette-success);
-    display: none;
-}
-
-.metric-duplicate-status.invalid {
-    background: color-mix(in srgb, var(--mud-palette-error) 7%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--mud-palette-error) 24%, var(--flux-border-soft));
-    color: var(--mud-palette-error);
 }
 
 .metric-duplicate-dialog {
@@ -221,15 +192,6 @@
 }
 
 @media (max-width: 520px) {
-    .metric-duplicate-title {
-        grid-template-columns: 26px minmax(0, 1fr);
-    }
-
-    .metric-duplicate-status {
-        grid-column: 2;
-        justify-self: start;
-    }
-
     .metric-duplicate-source {
         gap: 3px;
         grid-template-columns: minmax(0, 1fr);

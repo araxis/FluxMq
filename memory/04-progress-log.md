@@ -4549,6 +4549,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AddConnectionDialog|FullyQualifiedName~StartRecordingDialog" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Remaining Setup Dialogs result:
+  - Removed hidden/explicit readiness status chrome from New App, New Pipeline, Save As, Metric Create, Metric Rename, Metric Duplicate, and Metric Type Change dialogs.
+  - Kept useful non-readiness state intact: metric type/search counts, validation/error rows, destructive metric confirm/delete tone status, and runtime/dashboard/node/scenario status surfaces.
+  - Preserved app creation, pipeline creation, save path, metric create/rename/duplicate/type-change validation, metric id generation, default parameter previews, dashboard binding behavior, and type reset warnings.
+  - Runtime behavior, saved app schema, storage model, metric model, dashboard bindings, services, node ids, ports, and component contracts are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NewAppDialog|FullyQualifiedName~NewPipelineDialog|FullyQualifiedName~SaveAsDialog|FullyQualifiedName~MetricCreateDialog|FullyQualifiedName~MetricActionDialogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Current design rules learned from visual review:
   - View mode must show useful operational facts, not decorative contract dumps.
   - Edit mode must use one clean flat form/workspace surface, not nested panels.

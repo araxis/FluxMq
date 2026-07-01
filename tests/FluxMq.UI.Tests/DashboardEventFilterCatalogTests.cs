@@ -3770,22 +3770,20 @@ public sealed class DashboardEventFilterCatalogTests
             "NewAppDialog.razor.css"));
 
         markup.ShouldContain("new-app-dialog-title");
-        markup.ShouldContain("new-app-dialog-status");
-        markup.ShouldContain("role=\"status\"");
-        markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("new-app-dialog-section");
         markup.ShouldContain("new-app-dialog-grid connection");
         markup.ShouldContain("new-app-dialog-security-row");
         markup.ShouldContain("new-app-dialog-actions");
         markup.ShouldContain("aria-label=\"Create app\"");
         markup.ShouldContain("_port is >= 1 and <= 65535");
+        markup.ShouldNotContain("new-app-dialog-status");
+        markup.ShouldNotContain("FormStatusClass");
+        markup.ShouldNotContain("FormStatusText");
+        markup.ShouldNotContain(">Ready<");
         markup.ShouldNotContain("MudDivider");
         markup.ShouldNotContain("HelperText=");
 
         css.ShouldContain(".new-app-dialog-title");
-        css.ShouldContain(".new-app-dialog-status");
-        css.ShouldContain(".new-app-dialog-status.ready");
-        css.ShouldContain("display: none;");
         css.ShouldContain(".new-app-dialog-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".new-app-dialog-grid.connection");
@@ -3795,6 +3793,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldContain("@media (max-width: 480px)");
+        css.ShouldNotContain(".new-app-dialog-status");
+        css.ShouldNotContain(".new-app-dialog-status.ready");
     }
 
     [Fact]
@@ -3971,7 +3971,6 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("metric-create-title-icon");
         markup.ShouldContain("metric-create-title-copy");
-        markup.ShouldContain("metric-create-status");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("role=\"form\" aria-label=\"Create metric\"");
@@ -3980,10 +3979,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Color=\"Color.Primary\"");
         markup.ShouldContain("Variant=\"Variant.Filled\"");
         markup.ShouldContain("aria-invalid=\"@(!CanCreate)\"");
+        markup.ShouldContain("metric-create-count");
         markup.ShouldContain("metric-create-empty-defaults");
         markup.ShouldNotContain("Class=\"metric-create-submit\"");
-        markup.ShouldContain("CreateStatusClass");
-        markup.ShouldContain("CreateStatusText");
+        markup.ShouldNotContain("metric-create-status");
+        markup.ShouldNotContain("CreateStatusClass");
+        markup.ShouldNotContain("CreateStatusText");
+        markup.ShouldNotContain(">Ready<");
         markup.ShouldNotContain("MudStack");
         markup.ShouldNotContain("MudGrid");
         markup.ShouldNotContain("MudDivider");
@@ -3991,10 +3993,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".metric-create-title-icon");
         css.ShouldContain(".metric-create-title-copy");
-        css.ShouldContain(".metric-create-status");
-        css.ShouldContain(".metric-create-status.ready");
-        css.ShouldContain("display: none;");
-        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
+        css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain("border-radius: 6px;");
         css.ShouldContain("height: min(304px, calc(100vh - 220px));");
@@ -4002,6 +4001,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metric-create-empty-defaults");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldContain("@media (max-width: 520px)");
+        css.ShouldNotContain(".metric-create-status");
+        css.ShouldNotContain(".metric-create-status.ready");
         css.ShouldNotContain("metric-create-submit");
         css.ShouldNotContain("border-radius: 999px;");
         css.ShouldNotContain("box-shadow: 0 ");
@@ -4035,9 +4036,6 @@ public sealed class DashboardEventFilterCatalogTests
             markup.ShouldContain($"{prefix}-title");
             markup.ShouldContain($"{prefix}-title-icon");
             markup.ShouldContain($"{prefix}-title-copy");
-            markup.ShouldContain($"{prefix}-status");
-            markup.ShouldContain("role=\"status\"");
-            markup.ShouldContain("aria-live=\"polite\"");
             markup.ShouldContain("aria-label=");
             markup.ShouldNotContain("MudStack");
             markup.ShouldNotContain("MudGrid");
@@ -4047,8 +4045,21 @@ public sealed class DashboardEventFilterCatalogTests
             css.ShouldContain($".{prefix}-title");
             css.ShouldContain($".{prefix}-title-icon");
             css.ShouldContain($".{prefix}-title-copy");
-            css.ShouldContain($".{prefix}-status");
-            css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
+            if (prefix is "metric-confirm" or "metric-delete")
+            {
+                markup.ShouldContain($"{prefix}-status");
+                markup.ShouldContain("role=\"status\"");
+                markup.ShouldContain("aria-live=\"polite\"");
+                css.ShouldContain($".{prefix}-status");
+                css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
+            }
+            else
+            {
+                markup.ShouldNotContain($"{prefix}-status");
+                markup.ShouldNotContain(">Ready<");
+                css.ShouldNotContain($".{prefix}-status");
+                css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr);");
+            }
             css.ShouldContain("border: 1px solid var(--flux-border-soft);");
             css.ShouldContain("border-radius: 6px;");
             css.ShouldContain("min-height: 28px;");
@@ -4058,21 +4069,41 @@ public sealed class DashboardEventFilterCatalogTests
         }
 
         File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("metric-confirm-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("role=\"status\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
             .ShouldContain("role=\"alert\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("metric-delete-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("role=\"status\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldContain("role=\"alert\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldNotContain("metric-rename-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldNotContain("RenameStatusText");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldNotContain("metric-duplicate-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldNotContain("DuplicateStatusText");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldNotContain("metric-type-change-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldNotContain("TypeChangeStatusText");
         File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor.css"))
-            .ShouldContain(".metric-rename-status.ready");
+            .ShouldNotContain(".metric-rename-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor.css"))
-            .ShouldContain("display: none;");
+            .ShouldNotContain(".metric-rename-status.ready");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor.css"))
-            .ShouldContain(".metric-duplicate-status.ready");
+            .ShouldNotContain(".metric-duplicate-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor.css"))
-            .ShouldContain("display: none;");
+            .ShouldNotContain(".metric-duplicate-status.ready");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor.css"))
-            .ShouldContain(".metric-type-change-status.ready");
+            .ShouldNotContain(".metric-type-change-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor.css"))
-            .ShouldContain("display: none;");
+            .ShouldNotContain(".metric-type-change-status.ready");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor.css"))
             .ShouldContain("height: min(304px, calc(100vh - 220px));");
     }
@@ -4099,28 +4130,28 @@ public sealed class DashboardEventFilterCatalogTests
             "NewPipelineDialog.razor.css"));
 
         markup.ShouldContain("new-pipeline-dialog-title");
-        markup.ShouldContain("new-pipeline-dialog-status");
-        markup.ShouldContain("role=\"status\"");
-        markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("new-pipeline-dialog-section");
         markup.ShouldContain("new-pipeline-dialog-actions");
         markup.ShouldContain("Disabled=\"@(!IsValid)\"");
         markup.ShouldContain("CancelAriaLabel");
         markup.ShouldContain("SubmitAriaLabel");
         markup.ShouldContain("DialogResult.Ok(_name.Trim())");
+        markup.ShouldNotContain("new-pipeline-dialog-status");
+        markup.ShouldNotContain("FormStatusClass");
+        markup.ShouldNotContain("FormStatusText");
+        markup.ShouldNotContain(">Ready<");
         markup.ShouldNotContain("MudGrid");
         markup.ShouldNotContain("MudStack");
 
         css.ShouldContain(".new-pipeline-dialog-title");
-        css.ShouldContain(".new-pipeline-dialog-status");
-        css.ShouldContain(".new-pipeline-dialog-status.ready");
-        css.ShouldContain("display: none;");
         css.ShouldContain(".new-pipeline-dialog-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".new-pipeline-dialog-field");
         css.ShouldContain("::deep(.new-pipeline-dialog-submit)");
         css.ShouldContain("@media (max-width: 480px)");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldNotContain(".new-pipeline-dialog-status");
+        css.ShouldNotContain(".new-pipeline-dialog-status.ready");
     }
 
     [Fact]
@@ -4145,22 +4176,20 @@ public sealed class DashboardEventFilterCatalogTests
             "SaveAsDialog.razor.css"));
 
         markup.ShouldContain("save-as-dialog-title");
-        markup.ShouldContain("save-as-dialog-status");
-        markup.ShouldContain("role=\"status\"");
-        markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("save-as-dialog-section");
         markup.ShouldContain("save-as-dialog-helper");
         markup.ShouldContain("save-as-dialog-actions");
         markup.ShouldContain("Disabled=\"@(!IsValid)\"");
         markup.ShouldContain("OnKeyDown");
         markup.ShouldContain("DialogResult.Ok(_path.Trim())");
+        markup.ShouldNotContain("save-as-dialog-status");
+        markup.ShouldNotContain("FormStatusClass");
+        markup.ShouldNotContain("FormStatusText");
+        markup.ShouldNotContain(">Ready<");
         markup.ShouldNotContain("HelperText=");
         markup.ShouldNotContain("MudStack");
 
         css.ShouldContain(".save-as-dialog-title");
-        css.ShouldContain(".save-as-dialog-status");
-        css.ShouldContain(".save-as-dialog-status.ready");
-        css.ShouldContain("display: none;");
         css.ShouldContain(".save-as-dialog-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".save-as-dialog-helper");
@@ -4168,6 +4197,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("::deep(.save-as-dialog-submit)");
         css.ShouldContain("@media (max-width: 480px)");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldNotContain(".save-as-dialog-status");
+        css.ShouldNotContain(".save-as-dialog-status.ready");
     }
 
     [Fact]

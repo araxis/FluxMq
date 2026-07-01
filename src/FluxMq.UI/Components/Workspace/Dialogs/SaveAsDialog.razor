@@ -5,7 +5,6 @@
                 <MudIcon Icon="@Icons.Material.Filled.SaveAs" Size="Size.Small" />
             </span>
             <MudText Typo="Typo.h6" Class="save-as-dialog-heading">@DialogTitle</MudText>
-            <span class="@FormStatusClass" role="status" aria-live="polite">@FormStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
@@ -55,12 +54,6 @@
     private string _path = string.Empty;
 
     private bool IsValid => !string.IsNullOrWhiteSpace(_path);
-
-    private string FormStatusClass
-        => IsValid ? "save-as-dialog-status ready" : "save-as-dialog-status";
-
-    private string FormStatusText
-        => IsValid ? "Ready" : "Path required";
 
     private string CancelAriaLabel => $"Cancel {DialogTitle}";
 

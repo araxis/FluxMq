@@ -2,7 +2,7 @@
     align-items: center;
     display: grid;
     gap: 8px;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
     min-width: 0;
     width: 100%;
 }
@@ -32,26 +32,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.save-as-dialog-status {
-    align-items: center;
-    background: var(--flux-surface-2);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 42%, var(--flux-border));
-    border-radius: 5px;
-    color: var(--mud-palette-warning);
-    display: inline-flex;
-    font-size: 10.5px;
-    font-weight: 800;
-    height: 24px;
-    padding: 0 7px;
-    white-space: nowrap;
-}
-
-.save-as-dialog-status.ready {
-    border-color: color-mix(in srgb, var(--flux-accent) 36%, var(--flux-border));
-    color: var(--flux-accent);
-    display: none;
 }
 
 .save-as-dialog-content {
@@ -103,16 +83,6 @@
 }
 
 @media (max-width: 480px) {
-    .save-as-dialog-title {
-        grid-template-columns: auto minmax(0, 1fr);
-    }
-
-    .save-as-dialog-status {
-        grid-column: 1 / -1;
-        justify-content: center;
-        width: 100%;
-    }
-
     .save-as-dialog-actions {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));

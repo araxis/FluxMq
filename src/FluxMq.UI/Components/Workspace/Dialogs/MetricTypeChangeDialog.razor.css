@@ -3,7 +3,7 @@
     color: var(--mud-palette-text-primary);
     display: grid;
     gap: 8px;
-    grid-template-columns: 26px minmax(0, 1fr) auto;
+    grid-template-columns: 26px minmax(0, 1fr);
     min-height: 30px;
     min-width: 0;
 }
@@ -52,29 +52,6 @@
     font-size: 10.5px;
     font-weight: 650;
     line-height: 1.1;
-}
-
-.metric-type-change-status {
-    align-items: center;
-    background: var(--flux-surface-2);
-    border: 1px solid var(--flux-border-soft);
-    border-radius: 6px;
-    color: var(--mud-palette-text-secondary);
-    display: inline-flex;
-    font-size: 10px;
-    font-weight: 760;
-    height: 22px;
-    justify-content: center;
-    line-height: 1;
-    padding: 0 8px;
-    white-space: nowrap;
-}
-
-.metric-type-change-status.ready {
-    background: color-mix(in srgb, var(--mud-palette-success) 7%, var(--flux-surface-2));
-    border-color: color-mix(in srgb, var(--mud-palette-success) 24%, var(--flux-border-soft));
-    color: var(--mud-palette-success);
-    display: none;
 }
 
 .metric-type-change-dialog {
@@ -482,15 +459,6 @@
 }
 
 @media (max-width: 520px) {
-    .metric-type-change-title {
-        grid-template-columns: 26px minmax(0, 1fr);
-    }
-
-    .metric-type-change-status {
-        grid-column: 2;
-        justify-self: start;
-    }
-
     .metric-type-change-actions {
         align-items: stretch;
         flex-direction: column-reverse;

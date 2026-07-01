@@ -2,7 +2,7 @@
     align-items: center;
     display: grid;
     gap: 8px;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
     min-width: 0;
     width: 100%;
 }
@@ -32,26 +32,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.new-app-dialog-status {
-    align-items: center;
-    background: var(--flux-surface-2);
-    border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 42%, var(--flux-border));
-    border-radius: 5px;
-    color: var(--mud-palette-warning);
-    display: inline-flex;
-    font-size: 10.5px;
-    font-weight: 800;
-    height: 24px;
-    padding: 0 7px;
-    white-space: nowrap;
-}
-
-.new-app-dialog-status.ready {
-    border-color: color-mix(in srgb, var(--flux-accent) 36%, var(--flux-border));
-    color: var(--flux-accent);
-    display: none;
 }
 
 .new-app-dialog-content {
@@ -165,16 +145,6 @@
 }
 
 @media (max-width: 480px) {
-    .new-app-dialog-title {
-        grid-template-columns: auto minmax(0, 1fr);
-    }
-
-    .new-app-dialog-status {
-        grid-column: 1 / -1;
-        justify-content: center;
-        width: 100%;
-    }
-
     .new-app-dialog-security-row {
         align-items: stretch;
         flex-direction: column;

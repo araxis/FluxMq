@@ -8,7 +8,6 @@
                 <strong>Duplicate metric</strong>
                 <small>Copy type and parameters</small>
             </span>
-            <span class="@DuplicateStatusClass" role="status" aria-live="polite">@DuplicateStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
@@ -86,12 +85,6 @@
     private bool CanDuplicate => !string.IsNullOrWhiteSpace(DisplayName);
 
     private string DisplayNameInputClass => CanDuplicate ? string.Empty : "invalid";
-
-    private string DuplicateStatusClass => CanDuplicate
-        ? "metric-duplicate-status ready"
-        : "metric-duplicate-status invalid";
-
-    private string DuplicateStatusText => CanDuplicate ? "Ready" : "Needs attention";
 
     protected override void OnParametersSet()
     {

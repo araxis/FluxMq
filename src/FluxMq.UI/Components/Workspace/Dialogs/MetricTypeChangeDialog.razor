@@ -10,7 +10,6 @@
                 <strong>Change metric type</strong>
                 <small>Defaults reset after selection</small>
             </span>
-            <span class="@TypeChangeStatusClass" role="status" aria-live="polite">@TypeChangeStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
@@ -176,12 +175,6 @@
         !string.Equals(selected.TypeId, CurrentTypeId, StringComparison.Ordinal);
 
     private string SubmitText => CanChange ? "Change type" : "Current type";
-
-    private string TypeChangeStatusClass => CanChange
-        ? "metric-type-change-status ready"
-        : "metric-type-change-status";
-
-    private string TypeChangeStatusText => CanChange ? "Ready" : "Current type";
 
     private string ResetNoteClass => CanChange ? "metric-type-change-note warning" : "metric-type-change-note";
 

@@ -10,7 +10,6 @@
                 <strong>New metric</strong>
                 <small>Choose type and defaults</small>
             </span>
-            <span class="@CreateStatusClass" role="status" aria-live="polite">@CreateStatusText</span>
         </div>
     </TitleContent>
     <DialogContent>
@@ -170,12 +169,6 @@
         SortedDescriptors.FirstOrDefault(descriptor => string.Equals(descriptor.TypeId, _selectedTypeId, StringComparison.Ordinal));
 
     private bool CanCreate => SelectedDescriptor is not null && !string.IsNullOrWhiteSpace(_name);
-
-    private string CreateStatusClass => CanCreate
-        ? "metric-create-status ready"
-        : "metric-create-status invalid";
-
-    private string CreateStatusText => CanCreate ? "Ready" : "Needs name";
 
     private string MetricIdPreview => MetricDesignerState.UniqueMetricId(_name, ExistingMetricIds);
 
