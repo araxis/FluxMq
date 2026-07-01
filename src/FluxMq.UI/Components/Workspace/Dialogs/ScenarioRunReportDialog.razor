@@ -36,10 +36,6 @@
             </div>
 
             <div class="scenario-report-toolbar" aria-label="Scenario report actions">
-                <span class="@ExportStateClass" title="@ExportStateTooltip" role="status" aria-live="polite">
-                    <MudIcon Icon="@ExportStateIcon" Size="Size.Small" />
-                    <span>@ExportStateText</span>
-                </span>
                 <div class="scenario-report-action-group compact" aria-label="Scenario report export actions">
                     <div class="scenario-report-action-cluster">
                         <span class="scenario-report-action-label">Summary</span>
@@ -199,32 +195,6 @@
     private bool HasSummaryReport => !string.IsNullOrWhiteSpace(TextReport);
 
     private bool HasJsonReport => !string.IsNullOrWhiteSpace(JsonReport);
-
-    private int AvailableReportFormatCount
-        => (HasSummaryReport ? 1 : 0) + (HasJsonReport ? 1 : 0);
-
-    private string ExportStateClass
-        => AvailableReportFormatCount == 0
-            ? "scenario-report-export-state empty"
-            : "scenario-report-export-state ready";
-
-    private string ExportStateIcon
-        => AvailableReportFormatCount == 0
-            ? Icons.Material.Filled.ErrorOutline
-            : Icons.Material.Filled.IosShare;
-
-    private string ExportStateText
-        => AvailableReportFormatCount switch
-        {
-            2 => "2 formats ready",
-            1 => "1 format ready",
-            _ => "No export content"
-        };
-
-    private string ExportStateTooltip
-        => AvailableReportFormatCount == 0
-            ? "No report content is available to copy or save."
-            : "Copy or save the available report formats.";
 
     private string CopySummaryTooltip
         => HasSummaryReport ? "Copy summary report" : "Summary report unavailable";

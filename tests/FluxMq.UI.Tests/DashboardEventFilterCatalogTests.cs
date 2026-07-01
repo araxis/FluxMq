@@ -3717,9 +3717,6 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("scenario-report-title");
         markup.ShouldContain("scenario-report-toolbar");
         markup.ShouldContain("scenario-report-meta-strip");
-        markup.ShouldContain("scenario-report-export-state");
-        markup.ShouldContain("role=\"status\"");
-        markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("scenario-report-summary-grid");
         markup.ShouldContain("IssueMetricClass");
         markup.ShouldContain("scenario-report-viewer");
@@ -3731,16 +3728,22 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("scenario-report-action-group");
         markup.ShouldContain("Disabled=\"@(!HasSummaryReport)\"");
         markup.ShouldContain("Disabled=\"@(!HasJsonReport)\"");
+        markup.ShouldContain("scenario-report-empty\" role=\"status\"");
         markup.ShouldContain("scenario-report-close");
         markup.ShouldContain("aria-label=\"Close scenario report\"");
+        markup.ShouldNotContain("scenario-report-export-state");
+        markup.ShouldNotContain("ExportState");
+        markup.ShouldNotContain("AvailableReportFormatCount");
+        markup.ShouldNotContain("formats ready");
+        markup.ShouldNotContain("No export content");
+        markup.ShouldNotContain("aria-live=\"polite\"");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("MudTextField");
 
         css.ShouldContain(".scenario-report-title");
         css.ShouldContain(".scenario-report-toolbar");
         css.ShouldContain(".scenario-report-meta-strip");
-        css.ShouldContain(".scenario-report-export-state");
-        css.ShouldContain("height: 24px;");
+        css.ShouldNotContain(".scenario-report-export-state");
         css.ShouldContain(".scenario-report-summary-grid");
         css.ShouldContain("grid-template-columns: repeat(4, minmax(0, 1fr));");
         css.ShouldContain("min-height: min(62vh, 540px);");
