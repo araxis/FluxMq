@@ -1,4 +1,10 @@
+@using System.Globalization
+@using System.Text
+@using System.Text.Json
 @using FluxMq.UI.Models
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject ProjectManagerService Projects
 
 <div class="@RootClass">
     <div class="workspace-log-header">
@@ -23,6 +29,22 @@
                     }
                 </div>
             }
+            <MudTooltip Text="Copy visible logs">
+                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                               Size="Size.Small"
+                               Class="workspace-log-icon-button"
+                               Disabled="@(FilteredLogs.Count == 0)"
+                               aria-label="Copy visible logs"
+                               OnClick="CopyVisibleLogsAsync" />
+            </MudTooltip>
+            <MudTooltip Text="Export visible logs">
+                <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
+                               Size="Size.Small"
+                               Class="workspace-log-icon-button"
+                               Disabled="@(FilteredLogs.Count == 0)"
+                               aria-label="Export visible logs"
+                               OnClick="ExportVisibleLogsAsync" />
+            </MudTooltip>
             <MudTooltip Text="Reset filters">
                 <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
                                Size="Size.Small"
@@ -166,6 +188,11 @@
         "Trace"
     ];
 
+    private static readonly JsonSerializerOptions LogExportJsonOptions = new()
+    {
+        WriteIndented = true
+    };
+
     private string _scope = WorkspaceLogFilter.All;
     private string _severity = WorkspaceLogFilter.All;
     private string? _search;
@@ -266,6 +293,62 @@
         if (OnClear.HasDelegate)
         {
             await OnClear.InvokeAsync();
+        }
+    }
+
+    private async Task CopyVisibleLogsAsync()
+    {
+        var logs = FilteredLogs;
+        if (logs.Count == 0)
+        {
+            Snackbar.Add("No visible logs to copy", Severity.Info);
+            return;
+        }
+
+        await Clipboard.Default.SetTextAsync(BuildVisibleLogsText(logs));
+        Snackbar.Add("Visible logs copied", Severity.Success);
+    }
+
+    private async Task ExportVisibleLogsAsync()
+    {
+        var logs = FilteredLogs;
+        if (logs.Count == 0)
+        {
+            Snackbar.Add("No visible logs to export", Severity.Warning);
+            return;
+        }
+
+        var dialog = await DialogService.ShowAsync<SaveAsDialog>(
+            "Export logs",
+            new DialogParameters
+            {
+                [nameof(SaveAsDialog.SuggestedPath)] = SuggestedLogExportPath(),
+                [nameof(SaveAsDialog.DialogTitle)] = "Export logs",
+                [nameof(SaveAsDialog.HelperText)] = "Full path including .json extension",
+                [nameof(SaveAsDialog.SubmitText)] = "Export"
+            },
+            new DialogOptions
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+                BackdropClick = false
+            });
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult is not { Canceled: false, Data: string path } ||
+            string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            await WriteLogExportAsync(BuildVisibleLogsJson(logs), path);
+            Snackbar.Add("Log export saved", Severity.Success);
+        }
+        catch (Exception exception)
+        {
+            Snackbar.Add($"Log export failed: {exception.Message}", Severity.Error);
         }
     }
 
@@ -408,5 +491,76 @@
             "Trace" => Icons.Material.Filled.Timeline,
             _ => Icons.Material.Filled.Info
         };
+
+    private static string BuildVisibleLogsText(IReadOnlyList<WorkspaceLogEntry> logs)
+    {
+        var builder = new StringBuilder();
+        foreach (var entry in logs)
+        {
+            builder.Append(entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+            builder.Append(" | ");
+            builder.Append(SeverityLabel(entry));
+            builder.Append(" | ");
+            builder.Append(EntryScopeLabel(entry));
+            builder.Append(" | ");
+            builder.Append(SourceCode(entry));
+            builder.Append(" | ");
+            builder.AppendLine(entry.Message);
+
+            foreach (var detail in DetailLabels(entry))
+            {
+                builder.Append("  ");
+                builder.AppendLine(detail);
+            }
+
+            if (!string.IsNullOrWhiteSpace(entry.Context))
+            {
+                builder.Append("  ");
+                builder.AppendLine(entry.Context);
+            }
+        }
+
+        return builder.ToString().TrimEnd();
+    }
+
+    private static string BuildVisibleLogsJson(IReadOnlyList<WorkspaceLogEntry> logs)
+        => JsonSerializer.Serialize(logs.Select(static entry => new
+        {
+            timestamp = entry.Timestamp,
+            severity = SeverityLabel(entry),
+            scope = entry.Scope,
+            artifactKind = entry.ArtifactKind,
+            artifactName = entry.ArtifactName,
+            workflow = entry.WorkflowName,
+            source = entry.Source,
+            code = entry.Code,
+            node = entry.NodeName,
+            port = entry.PortName,
+            message = entry.Message,
+            context = entry.Context
+        }), LogExportJsonOptions);
+
+    private string SuggestedLogExportPath()
+    {
+        var currentFilePath = Projects.ActiveProject?.CurrentFilePath;
+        var directory = !string.IsNullOrWhiteSpace(currentFilePath)
+            ? Path.GetDirectoryName(currentFilePath)
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "FluxMQ");
+        var stamp = DateTimeOffset.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+
+        return Path.Combine(directory ?? string.Empty, $"workspace-logs-{stamp}.json");
+    }
+
+    private static async Task WriteLogExportAsync(string content, string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        var directory = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        await File.WriteAllTextAsync(fullPath, content);
+    }
 
 }

@@ -4303,6 +4303,19 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("InitialQuery.Equals(_appliedInitialQuery)");
         markup.ShouldContain("_severity = string.IsNullOrWhiteSpace(InitialQuery.Severity)");
         markup.ShouldContain("_search = InitialQuery.Search");
+        markup.ShouldContain("Copy visible logs");
+        markup.ShouldContain("Export visible logs");
+        markup.ShouldContain("Disabled=\"@(FilteredLogs.Count == 0)\"");
+        markup.ShouldContain("CopyVisibleLogsAsync");
+        markup.ShouldContain("ExportVisibleLogsAsync");
+        markup.ShouldContain("Clipboard.Default.SetTextAsync(BuildVisibleLogsText(logs))");
+        markup.ShouldContain("ShowAsync<SaveAsDialog>");
+        markup.ShouldContain("[nameof(SaveAsDialog.SubmitText)] = \"Export\"");
+        markup.ShouldContain("BuildVisibleLogsJson(logs)");
+        markup.ShouldContain("SuggestedLogExportPath");
+        markup.ShouldContain("workspace-logs-{stamp}.json");
+        markup.ShouldContain("WriteLogExportAsync");
+        markup.ShouldContain("File.WriteAllTextAsync(fullPath, content)");
         markup.ShouldContain("aria-label=\"@($\"{SeverityLabel(entry)} log at {FormatLogTime(entry)} from {SourceCode(entry)}\")\"");
         markup.ShouldContain("workspace-log-row-icon");
         markup.ShouldContain("DetailLabels(entry)");
@@ -4344,6 +4357,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Action needed");
         markup.ShouldNotContain("Show problems");
         markup.ShouldNotContain("ProblemStatus");
+        markup.ShouldNotContain("LogExportService");
+        markup.ShouldNotContain("PersistLog");
+        markup.ShouldNotContain("SaveLogFilter");
         css.ShouldNotContain(".workspace-log-status");
         css.ShouldNotContain("grid-template-columns: 72px 86px minmax(0, 1fr);");
     }
