@@ -23,13 +23,6 @@
                 <span>@InspectorGroupCountLabel(propertyGroups.Count)</span>
                 <span>@InspectorPropertyCountLabel(propertyGroups)</span>
             </div>
-            <div class="dashboard-inspector-live-strip dashboard-inspector-status-chip"
-                 role="status"
-                 aria-live="polite"
-                 title="@InspectorStatusLabel">
-                <MudIcon Icon="@InspectorStatusIcon" Size="Size.Small" />
-                <span>@InspectorStatusLabel</span>
-            </div>
         </div>
         @if (Widget is not null)
         {
@@ -153,23 +146,11 @@
 
     private string InspectorEmptyTitle => SelectedCells.Count == 0
         ? "Select a cell or widget"
-        : "Cell ready";
+        : "Empty cell";
 
     private string InspectorEmptyHint => SelectedCells.Count == 0
         ? "Select a dashboard cell or widget to edit its properties."
         : "Drop a widget here or choose one from the catalog.";
-
-    private string InspectorStatusIcon => Widget is not null
-        ? Icons.Material.Filled.Bolt
-        : SelectedCells.Count == 0
-            ? Icons.Material.Filled.TouchApp
-            : Icons.Material.Filled.AutoFixHigh;
-
-    private string InspectorStatusLabel => Widget is not null
-        ? "Widget edits apply immediately"
-        : SelectedCells.Count == 0
-            ? "Select a target to edit"
-            : "Cell edits apply immediately";
 
     private static string InspectorGroupCountLabel(int count)
         => count == 1 ? "1 group" : $"{count} groups";
