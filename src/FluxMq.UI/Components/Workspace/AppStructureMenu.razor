@@ -388,7 +388,7 @@
 
     private static string TestRunMenuMeta(ScenarioRunResult? latestRun)
         => latestRun is null
-            ? "Ready for first run"
+            ? "No run yet"
             : $"Latest {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}";
 
     private static string TestRunMenuStateLabel(ScenarioRunResult? latestRun)

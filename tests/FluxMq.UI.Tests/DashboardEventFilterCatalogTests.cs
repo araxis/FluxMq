@@ -11507,9 +11507,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("LatestTestRun(a, t)");
         markup.ShouldContain("test-artifact-icon-frame");
         markup.ShouldContain("test-artifact-copy");
+        markup.ShouldContain("TestRunMeta(latestTestRun)");
         markup.ShouldContain("TestRunSummaryClass(latestTestRun)");
         markup.ShouldContain("TestRunDetailText(latestTestRun)");
         markup.ShouldContain("TestRunStateClass(latestTestRun)");
+        markup.ShouldContain("No run yet");
         markup.ShouldContain("tree-item-actions");
         markup.ShouldContain("tree-delete-button");
         markup.ShouldContain("RemoveTestAsync(a, t)");
@@ -11518,6 +11520,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static string TestRunIssueText");
         markup.ShouldNotContain("TestRunPillClass(latestTestRun)");
         markup.ShouldNotContain("test-run-pill");
+        markup.ShouldNotContain("Ready for first run");
 
         css.ShouldContain(".tree-empty-artifact-row");
         css.ShouldContain(".tree-empty ::deep .mud-icon-root");
@@ -11634,6 +11637,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("app-menu-test-icon-frame");
         markup.ShouldContain("app-menu-artifact-copy");
         markup.ShouldContain("app-menu-artifact-meta");
+        markup.ShouldContain("TestRunMenuMeta(latestTestRun)");
         markup.ShouldContain("TestRunMenuRowClass(latestTestRun)");
         markup.ShouldContain("TestRunMenuSummaryClass(latestTestRun)");
         markup.ShouldContain("TestRunMenuDetailText(latestTestRun)");
@@ -11647,6 +11651,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static ScenarioRunResult? LatestTestRun");
         markup.ShouldContain("private string TestArtifactItemClass");
         markup.ShouldContain("private static string TestRunMenuIssueText");
+        markup.ShouldContain("No run yet");
         markup.ShouldContain("No run");
         markup.ShouldContain("No history");
         markup.ShouldNotContain("app-structure-current");
@@ -11671,6 +11676,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("app-menu-broker-pill");
         markup.ShouldNotContain("app-menu-artifact-token");
         markup.ShouldNotContain("app-menu-test-pill");
+        markup.ShouldNotContain("Ready for first run");
 
         css.ShouldContain("height: 28px;");
         css.ShouldContain("max-width: 132px;");

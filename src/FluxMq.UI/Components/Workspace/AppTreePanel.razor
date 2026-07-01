@@ -537,7 +537,7 @@ else
 
     private static string TestRunMeta(ScenarioRunResult? latestRun)
         => latestRun is null
-            ? "Ready for first run"
+            ? "No run yet"
             : $"Latest {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}";
 
     private static string TestRunStateLabel(ScenarioRunResult? latestRun)
