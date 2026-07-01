@@ -3928,6 +3928,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("MaxHeight=\"320\"");
         markup.ShouldContain("Class=\"metrics-type-filter-icon\" Icon=\"@Icons.Material.Filled.FilterAlt\"");
         markup.ShouldContain("<MudSelectItem T=\"string\" Value=\"@AllTypes\">All types</MudSelectItem>");
+        markup.ShouldContain("<strong>@EditorEmptyTitle</strong>");
+        markup.ShouldContain("Rows.Count == 0 ? \"No metrics yet\" : \"No metric selected\"");
+        markup.ShouldNotContain("Ready to edit");
         markup.ShouldNotContain("Adornment=\"Adornment.Start\"");
         markup.ShouldNotContain("AdornmentIcon=\"@Icons.Material.Filled.FilterAlt\"");
         markup.ShouldNotContain("class=\"metrics-toolbar\"");
