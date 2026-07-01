@@ -5895,19 +5895,23 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("StepPhaseMetaClass(item)");
         markup.ShouldContain("StepKindLabel(item)");
         markup.ShouldContain("StepParameterLabel(item)");
+        markup.ShouldContain("Available");
         markup.ShouldContain("descriptor.DefaultPhase");
         markup.ShouldContain("descriptor.Fields.Count");
         markup.ShouldNotContain("catalog-step-badges");
         markup.ShouldNotContain("StepPhaseBadgeClass(item)");
         markup.ShouldNotContain("catalog-item-badge");
+        markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("catalog-use-state ready");
 
         css.ShouldContain(".catalog-title-copy");
         css.ShouldContain(".catalog-title-label");
         css.ShouldContain(".catalog-meta-strip span,");
         css.ShouldContain("background: var(--flux-canvas);");
         css.ShouldContain("border-bottom: 1px solid var(--flux-border-soft);");
-        css.ShouldContain(".catalog-use-state.ready");
+        css.ShouldContain(".catalog-use-state.available");
         css.ShouldContain(".catalog-use-state.inactive");
+        css.ShouldNotContain(".catalog-use-state.ready");
         css.ShouldContain(".catalog-empty ::deep .mud-icon-root");
         css.ShouldContain("grid-template-columns: minmax(0, min(280px, 100%));");
         css.ShouldContain("flex: 1 1 auto;");

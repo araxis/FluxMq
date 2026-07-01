@@ -156,7 +156,7 @@
     max-width: 60px;
 }
 
-.catalog-use-state.ready {
+.catalog-use-state.available {
     background: color-mix(in srgb, var(--flux-accent) 9%, transparent);
     border-color: color-mix(in srgb, var(--flux-accent) 24%, var(--flux-border));
     color: var(--flux-accent);
