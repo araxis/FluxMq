@@ -4540,6 +4540,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Workspace Setup Dialogs result:
+  - Removed hidden/explicit readiness status chrome from the Add Connection and Start Recording dialogs.
+  - Add Connection still uses the same broker/client/keep-alive/TLS/certificate/clean-start controls, certificate picker behavior, validation, and result projection.
+  - Start Recording still uses the same project autocomplete, session name defaulting, Enter handling, project summary, and blank project/session normalization.
+  - Runtime behavior, MQTT connection behavior, recording behavior, saved app schema, storage model, monitor semantics, workspace routing, services, node ids, ports, and component contracts are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AddConnectionDialog|FullyQualifiedName~StartRecordingDialog" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Current design rules learned from visual review:
   - View mode must show useful operational facts, not decorative contract dumps.
   - Edit mode must use one clean flat form/workspace surface, not nested panels.

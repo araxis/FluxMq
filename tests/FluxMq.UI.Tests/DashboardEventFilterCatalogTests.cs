@@ -3819,9 +3819,6 @@ public sealed class DashboardEventFilterCatalogTests
             "AddConnectionDialog.razor.css"));
 
         markup.ShouldContain("add-connection-dialog-title");
-        markup.ShouldContain("add-connection-dialog-status");
-        markup.ShouldContain("role=\"status\"");
-        markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("add-connection-dialog-section");
         markup.ShouldContain("add-connection-dialog-grid broker");
         markup.ShouldContain("add-connection-dialog-checkbox-cell");
@@ -3851,13 +3848,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("@inject IDialogService");
         markup.ShouldNotContain("MudDivider");
         markup.ShouldNotContain("add-connection-dialog-security-row");
+        markup.ShouldNotContain("add-connection-dialog-status");
+        markup.ShouldNotContain("FormStatusClass");
+        markup.ShouldNotContain("FormStatusText");
+        markup.ShouldNotContain(">Ready<");
         markup.ShouldNotContain("Label=\"TLS\"");
         markup.ShouldNotContain("<input");
 
         css.ShouldContain(".add-connection-dialog-title");
-        css.ShouldContain(".add-connection-dialog-status");
-        css.ShouldContain(".add-connection-dialog-status.ready");
-        css.ShouldContain("display: none;");
         css.ShouldContain(".add-connection-dialog-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".add-connection-dialog-grid.broker");
@@ -3869,6 +3867,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldContain("@media (max-width: 480px)");
         css.ShouldNotContain(".add-connection-dialog-security-row");
+        css.ShouldNotContain(".add-connection-dialog-status");
+        css.ShouldNotContain(".add-connection-dialog-status.ready");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.55fr) 92px;");
     }
 
@@ -4194,9 +4194,6 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("start-recording-title");
         markup.ShouldContain("start-recording-title-icon");
         markup.ShouldContain("start-recording-title-copy");
-        markup.ShouldContain("start-recording-status");
-        markup.ShouldContain("role=\"status\"");
-        markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("role=\"form\" aria-label=\"Start recording\"");
         markup.ShouldContain("start-recording-section");
         markup.ShouldContain("start-recording-fields");
@@ -4208,14 +4205,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ProjectSummaryText");
         markup.ShouldContain("OnKeyDown");
         markup.ShouldContain("StartRecordingResult(project, session)");
+        markup.ShouldNotContain("start-recording-status");
+        markup.ShouldNotContain(">Ready<");
         markup.ShouldNotContain("MudStack");
         markup.ShouldNotContain("<MudText Typo=\"Typo.h6\">Start Recording</MudText>");
 
         css.ShouldContain(".start-recording-title");
         css.ShouldContain(".start-recording-title-icon");
         css.ShouldContain(".start-recording-title-copy");
-        css.ShouldContain(".start-recording-status");
-        css.ShouldContain("display: none;");
         css.ShouldContain(".start-recording-section");
         css.ShouldContain("border: 1px solid var(--flux-border-soft);");
         css.ShouldContain("border-radius: 6px;");
@@ -4224,6 +4221,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".start-recording-actions");
         css.ShouldContain("min-height: 28px;");
         css.ShouldContain("@media (max-width: 520px)");
+        css.ShouldNotContain(".start-recording-status");
         css.ShouldNotContain("border-radius: 999px;");
         css.ShouldNotContain("box-shadow: 0 ");
     }
