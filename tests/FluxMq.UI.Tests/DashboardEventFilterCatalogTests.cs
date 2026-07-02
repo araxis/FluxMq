@@ -2491,11 +2491,15 @@ public sealed class DashboardEventFilterCatalogTests
         propertyGrid.ShouldContain("aria-label=\"Dashboard property editor\"");
         propertyGrid.ShouldContain("role=\"rowgroup\"");
         propertyGrid.ShouldContain("aria-label=\"@GroupAriaLabel(group, collapsed)\"");
+        propertyGrid.ShouldContain("aria-controls=\"@GroupBodyId(group)\"");
         propertyGrid.ShouldContain("aria-label=\"@GroupHeaderAriaLabel(group, collapsed)\"");
         propertyGrid.ShouldContain("title=\"@group.Title\"");
+        propertyGrid.ShouldContain("id=\"@GroupBodyId(group)\"");
         propertyGrid.ShouldContain("aria-label=\"@FormatSettingCount(group.SettingCount)\"");
         propertyGrid.ShouldContain("private static string GroupAriaLabel");
         propertyGrid.ShouldContain("private static string GroupHeaderAriaLabel");
+        propertyGrid.ShouldContain("private static string GroupBodyId");
+        propertyGrid.ShouldContain("private static string SanitizeIdToken");
         propertyGridCss.ShouldContain("container-name: property-grid;");
         propertyGridCss.ShouldContain("position: sticky;");
         propertyGridCss.ShouldContain("grid-template-columns: 20px minmax(0, 1fr) auto;");

@@ -37,6 +37,7 @@
             <button type="button"
                     class="property-grid-group-header"
                     aria-expanded="@(!collapsed)"
+                    aria-controls="@GroupBodyId(group)"
                     aria-label="@GroupHeaderAriaLabel(group, collapsed)"
                     title="@group.Title"
                     @onclick="@(() => ToggleGroupAsync(group.Id))">
@@ -52,7 +53,7 @@
             </button>
             @if (!collapsed)
             {
-                <div class="property-grid-group-body">
+                <div id="@GroupBodyId(group)" class="property-grid-group-body">
                     @group.Content
                 </div>
             }
@@ -155,6 +156,20 @@
 
     private static string GroupHeaderAriaLabel(PropertyGridGroup group, bool collapsed)
         => $"{(collapsed ? "Expand" : "Collapse")} {GroupAriaLabel(group, collapsed)}";
+
+    private static string GroupBodyId(PropertyGridGroup group)
+        => $"property-grid-group-{SanitizeIdToken(group.Id)}-body";
+
+    private static string SanitizeIdToken(string value)
+    {
+        var builder = new System.Text.StringBuilder(value.Length);
+        foreach (var current in value)
+        {
+            builder.Append(char.IsLetterOrDigit(current) || current is '-' or '_' ? current : '-');
+        }
+
+        return builder.Length == 0 ? "group" : builder.ToString();
+    }
 
     private void StartNameColumnResize(PointerEventArgs args)
     {
