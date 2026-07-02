@@ -33,6 +33,7 @@ else
                      role="button"
                      tabindex="0"
                      aria-label="@AppRowLabel(a, isActive)"
+                     aria-current="@TreeItemCurrent(isActive)"
                      title="@AppRowLabel(a, isActive)"
                      @onclick="@(() => SelectApp(a))"
                      @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboardAsync(args, a))">
@@ -151,6 +152,7 @@ else
                                      role="button"
                                      tabindex="0"
                                      aria-label="@($"Open pipeline {w}")"
+                                     aria-current="@TreeItemCurrent(isPipeActive)"
                                      @onclick="@(() => SelectPipeline(a, w))"
                                      @onkeydown="@((KeyboardEventArgs args) => SelectPipelineFromKeyboardAsync(args, a, w))">
                                     <MudIcon Icon="@Icons.Material.Filled.Timeline"
@@ -182,10 +184,13 @@ else
                         }
                         else if (!metricsCollapsed)
                         {
-                            <div class="artifact-item @(a == Projects.ActiveProject && a.ActiveArtifactKind == WorkspaceArtifactKind.Metrics ? "active" : null)"
+                            var isMetricsActive = a == Projects.ActiveProject &&
+                                a.ActiveArtifactKind == WorkspaceArtifactKind.Metrics;
+                            <div class="artifact-item @(isMetricsActive ? "active" : null)"
                                  role="button"
                                  tabindex="0"
                                  aria-label="Open metric designer"
+                                 aria-current="@TreeItemCurrent(isMetricsActive)"
                                  @onclick="@(() => SelectMetrics(a))"
                                  @onkeydown="@((KeyboardEventArgs args) => SelectMetricsFromKeyboardAsync(args, a))">
                                 <MudIcon Icon="@Icons.Material.Filled.QueryStats"
@@ -226,6 +231,7 @@ else
                                      role="button"
                                      tabindex="0"
                                      aria-label="@($"Open dashboard {d}")"
+                                     aria-current="@TreeItemCurrent(isDashboardActive)"
                                      @onclick="@(() => SelectDashboard(a, d))"
                                      @onkeydown="@((KeyboardEventArgs args) => SelectDashboardFromKeyboardAsync(args, a, d))">
                                     <MudIcon Icon="@Icons.Material.Filled.Dashboard"
@@ -289,6 +295,7 @@ else
                                      tabindex="0"
                                      title="@TestArtifactTitle(t, latestTestRun)"
                                      aria-label="@TestArtifactTitle(t, latestTestRun)"
+                                     aria-current="@TreeItemCurrent(isTestActive)"
                                      @onclick="@(() => SelectTest(a, t))"
                                      @onkeydown="@((KeyboardEventArgs args) => SelectTestFromKeyboardAsync(args, a, t))">
                                     <span class="test-artifact-icon-frame" aria-hidden="true">
@@ -436,6 +443,9 @@ else
         var saved = app.HasUnsavedChanges ? "unsaved changes" : "saved";
         return $"{app.Name}, {state}, {saved}, {BuildAppMeta(app)}";
     }
+
+    private static string? TreeItemCurrent(bool isActive)
+        => isActive ? "true" : null;
 
     private static bool IsActivationKey(KeyboardEventArgs args)
         => args.Key is "Enter" or " " or "Spacebar";

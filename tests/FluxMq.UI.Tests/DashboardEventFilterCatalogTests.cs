@@ -12036,8 +12036,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("tree-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("app-tree\" aria-label=\"App structure tree\"");
         markup.ShouldContain("aria-label=\"@AppRowLabel(a, isActive)\"");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isActive)\"");
         markup.ShouldContain("title=\"@AppRowLabel(a, isActive)\"");
         markup.ShouldContain("private static string AppRowLabel");
+        markup.ShouldContain("private static string? TreeItemCurrent");
         markup.ShouldContain("aria-label=\"@($\"Close app {a.Name}\")\"");
         markup.ShouldContain("tree-empty-artifact-row tests");
         markup.ShouldContain("role=\"button\"");
@@ -12057,9 +12059,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SelectAppFromKeyboardAsync(args, a)");
         markup.ShouldContain("ToggleSectionFromKeyboardAsync(args, app, section)");
         markup.ShouldContain("SelectPipelineFromKeyboardAsync(args, a, w)");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isPipeActive)\"");
         markup.ShouldContain("SelectMetricsFromKeyboardAsync(args, a)");
+        markup.ShouldContain("var isMetricsActive = a == Projects.ActiveProject");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isMetricsActive)\"");
         markup.ShouldContain("SelectDashboardFromKeyboardAsync(args, a, d)");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isDashboardActive)\"");
         markup.ShouldContain("SelectTestFromKeyboardAsync(args, a, t)");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isTestActive)\"");
         markup.ShouldContain("aria-expanded=\"@AriaExpanded(isCollapsed)\"");
         markup.ShouldContain("aria-controls=\"@TreeSectionBodyId(app, section)\"");
         markup.ShouldContain("id=\"@TreeSectionBodyId(a, BrokerSection)\"");
