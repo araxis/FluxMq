@@ -11997,11 +11997,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ToggleConnectionAsync(conn)");
         markup.ShouldContain("PrimaryActionIcon(conn)");
         markup.ShouldContain("PrimaryActionClass(conn)");
-        markup.ShouldContain("StatePillClass");
+        markup.ShouldContain("StateClass");
         markup.ShouldContain("StateDotClass");
         markup.ShouldContain("private static string ConnectionRowLabel");
         markup.ShouldContain("aria-label=\"@PrimaryActionLabel(conn)\"");
         markup.ShouldContain("aria-label=\"@RemoveLabel(conn)\"");
+        markup.ShouldNotContain("StatePillClass");
         markup.ShouldNotContain("MudTreeView");
         markup.ShouldNotContain("MudTreeViewItem");
         markup.ShouldNotContain("StateColor");

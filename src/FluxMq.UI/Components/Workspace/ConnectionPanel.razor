@@ -46,7 +46,7 @@
                     <div class="connection-main">
                         <div class="connection-name-line">
                             <span class="connection-name">@ConnectionDisplayName(conn)</span>
-                            <span class="@StatePillClass(conn.State)" title="@StateLabel(conn.State)">
+                            <span class="@StateClass(conn.State)" title="@StateLabel(conn.State)">
                                 @StateLabel(conn.State)
                             </span>
                         </div>
@@ -148,7 +148,7 @@
         _ => "Disconnected"
     };
 
-    private static string StatePillClass(MqttClientState state) => state switch
+    private static string StateClass(MqttClientState state) => state switch
     {
         MqttClientState.Connected => "connection-state live",
         MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-state pending",
