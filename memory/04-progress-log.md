@@ -4697,3 +4697,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only title-icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App Tree decorative icon accessibility result:
+  - Added `aria-hidden="true"` to decorative empty, app row, pipeline, metric, dashboard, empty-test, and section header icons in `AppTreePanel`.
+  - Preserved visible labels, row/button semantics, active `aria-current` markers, section `aria-expanded` and `aria-controls`, connection state markers, test run summaries, action buttons, artifact routing, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused App Tree guard to require the hidden decorative icon treatment for the updated icon surfaces.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only app-tree icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

@@ -12131,10 +12131,12 @@ public sealed class DashboardEventFilterCatalogTests
             "AppTreePanel.razor.css"));
 
         markup.ShouldContain("tree-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Medium\" aria-hidden=\"true\" />");
         markup.ShouldContain("app-tree\" aria-label=\"App structure tree\"");
         markup.ShouldContain("aria-label=\"@AppRowLabel(a, isActive)\"");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isActive)\"");
         markup.ShouldContain("title=\"@AppRowLabel(a, isActive)\"");
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""app-row-icon""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("private static string AppRowLabel");
         markup.ShouldContain("private static string? TreeItemCurrent");
         markup.ShouldContain("aria-label=\"@($\"Close app {a.Name}\")\"");
@@ -12142,6 +12144,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("role=\"button\"");
         markup.ShouldContain("aria-label=\"Create test scenario\"");
         markup.ShouldContain("AddTestFromKeyboardAsync(args, a)");
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""tree-empty-artifact-icon""\s+aria-hidden=""true""").ShouldBeTrue();
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""tree-empty-artifact-add""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("tree-empty-artifact-copy");
         markup.ShouldContain("tree-empty-artifact-cues");
         markup.ShouldContain("@ConnectionDotClass(c.State)");
@@ -12160,15 +12164,19 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ToggleSectionFromKeyboardAsync(args, app, section)");
         markup.ShouldContain("SelectPipelineFromKeyboardAsync(args, a, w)");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isPipeActive)\"");
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""pipe-icon""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("SelectMetricsFromKeyboardAsync(args, a)");
         markup.ShouldContain("var isMetricsActive = a == Projects.ActiveProject");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isMetricsActive)\"");
+        System.Text.RegularExpressions.Regex.Matches(markup, @"Class=""artifact-icon dashboard""\s+aria-hidden=""true""").Count.ShouldBe(2);
         markup.ShouldContain("SelectDashboardFromKeyboardAsync(args, a, d)");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isDashboardActive)\"");
         markup.ShouldContain("SelectTestFromKeyboardAsync(args, a, t)");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isTestActive)\"");
         markup.ShouldContain("aria-expanded=\"@AriaExpanded(isCollapsed)\"");
         markup.ShouldContain("aria-controls=\"@TreeSectionBodyId(app, section)\"");
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""tree-section-chevron""\s+aria-hidden=""true""").ShouldBeTrue();
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""@\(\$""tree-section-icon \{iconClass\}""\)""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("id=\"@TreeSectionBodyId(a, BrokerSection)\"");
         markup.ShouldContain("id=\"@TreeSectionBodyId(a, PipelineSection)\"");
         markup.ShouldContain("id=\"@TreeSectionBodyId(a, MetricSection)\"");

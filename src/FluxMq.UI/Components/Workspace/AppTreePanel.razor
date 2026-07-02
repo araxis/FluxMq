@@ -7,7 +7,7 @@
 @if (Projects.Projects.Count == 0)
 {
     <div class="tree-empty" role="status" aria-live="polite">
-        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Medium" />
+        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Medium" aria-hidden="true" />
         <div>
             <div class="tree-empty-title">No apps open</div>
             <div class="tree-empty-copy">Create or open a project from the top bar.</div>
@@ -39,7 +39,8 @@ else
                      @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboardAsync(args, a))">
                     <MudIcon Icon="@(isActive ? Icons.Material.Filled.FolderOpen : Icons.Material.Filled.Folder)"
                              Size="Size.Small"
-                             Class="app-row-icon" />
+                             Class="app-row-icon"
+                             aria-hidden="true" />
                     <div class="app-row-text">
                         <div class="app-name">@a.Name</div>
                         <div class="app-meta">
@@ -160,7 +161,8 @@ else
                                      @onkeydown="@((KeyboardEventArgs args) => SelectPipelineFromKeyboardAsync(args, a, w))">
                                     <MudIcon Icon="@Icons.Material.Filled.Timeline"
                                              Size="Size.Small"
-                                             Class="pipe-icon" />
+                                             Class="pipe-icon"
+                                             aria-hidden="true" />
                                     <span>@w</span>
                                 </div>
                             }
@@ -198,7 +200,8 @@ else
                                  @onkeydown="@((KeyboardEventArgs args) => SelectMetricsFromKeyboardAsync(args, a))">
                                 <MudIcon Icon="@Icons.Material.Filled.QueryStats"
                                          Size="Size.Small"
-                                         Class="artifact-icon dashboard" />
+                                         Class="artifact-icon dashboard"
+                                         aria-hidden="true" />
                                 <span>Metric Designer</span>
                             </div>
                         }
@@ -239,7 +242,8 @@ else
                                      @onkeydown="@((KeyboardEventArgs args) => SelectDashboardFromKeyboardAsync(args, a, d))">
                                     <MudIcon Icon="@Icons.Material.Filled.Dashboard"
                                              Size="Size.Small"
-                                             Class="artifact-icon dashboard" />
+                                             Class="artifact-icon dashboard"
+                                             aria-hidden="true" />
                                     <span>@d</span>
                                 </div>
                             }
@@ -270,7 +274,8 @@ else
                                  @onkeydown="@((KeyboardEventArgs args) => AddTestFromKeyboardAsync(args, a))">
                                 <MudIcon Icon="@Icons.Material.Filled.FactCheck"
                                          Size="Size.Small"
-                                         Class="tree-empty-artifact-icon" />
+                                         Class="tree-empty-artifact-icon"
+                                         aria-hidden="true" />
                                 <div class="tree-empty-artifact-copy">
                                     <span>No tests</span>
                                     <small>Create a scenario to design and run checks.</small>
@@ -281,7 +286,8 @@ else
                                 </div>
                                 <MudIcon Icon="@Icons.Material.Filled.Add"
                                          Size="Size.Small"
-                                         Class="tree-empty-artifact-add" />
+                                         Class="tree-empty-artifact-add"
+                                         aria-hidden="true" />
                             </div>
                         }
                         else if (!testsCollapsed)
@@ -369,10 +375,12 @@ else
             <div class="tree-section-title">
                 <MudIcon Icon="@CollapseIcon(isCollapsed)"
                          Size="Size.Small"
-                         Class="tree-section-chevron" />
+                         Class="tree-section-chevron"
+                         aria-hidden="true" />
                 <MudIcon Icon="@icon"
                          Size="Size.Small"
-                         Class="@($"tree-section-icon {iconClass}")" />
+                         Class="@($"tree-section-icon {iconClass}")"
+                         aria-hidden="true" />
                 <span>@title</span>
                 <span class="tree-section-count">@count</span>
             </div>
