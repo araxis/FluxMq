@@ -92,7 +92,7 @@
             <div class="metrics-list">
                 @if (Rows.Count == 0)
                 {
-                    <div class="metrics-list-empty create-empty">
+                    <div class="metrics-list-empty create-empty" role="status" aria-live="polite">
                         <span class="metrics-empty-icon" aria-hidden="true">
                             <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
                         </span>
@@ -110,7 +110,7 @@
                 }
                 else if (FilteredRows.Count == 0)
                 {
-                    <div class="metrics-list-empty filter-empty">
+                    <div class="metrics-list-empty filter-empty" role="status" aria-live="polite">
                         <span class="metrics-empty-icon muted" aria-hidden="true">
                             <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                         </span>
@@ -179,7 +179,7 @@
         <section class="metrics-editor-pane" aria-label="Metric editor">
             @if (_draft is null || _selectedMetricName is null)
             {
-                <div class="metrics-editor-empty">
+                <div class="metrics-editor-empty" role="status" aria-live="polite">
                     <span class="metrics-empty-icon" aria-hidden="true">
                         <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
                     </span>
@@ -391,7 +391,7 @@
                                 else
                                 {
                                     <div class="metrics-preview-card muted" title="Stopped or not emitted.">
-                                        <div class="metrics-preview-empty">
+                                        <div class="metrics-preview-empty" role="status" aria-live="polite">
                                             <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" aria-hidden="true" />
                                             <span>
                                                 <strong>No reading</strong>
@@ -413,7 +413,7 @@
                                 </div>
                                 @if (ReferenceSummaries.Count == 0)
                                 {
-                                    <div class="metrics-reference-empty">
+                                    <div class="metrics-reference-empty" role="status" aria-live="polite">
                                         <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" aria-hidden="true" />
                                         <span>
                                             <strong>No references</strong>

@@ -4517,8 +4517,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-side-indicator live");
         markup.ShouldContain("metrics-side-indicator danger");
         markup.ShouldContain("metrics-preview-marker");
-        markup.ShouldContain("metrics-list-empty create-empty");
-        markup.ShouldContain("metrics-list-empty filter-empty");
+        markup.ShouldContain("metrics-list-empty create-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metrics-list-empty filter-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metrics-editor-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metrics-preview-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metrics-reference-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("aria-label=\"@MetricRowLabel(current)\"");
         markup.ShouldContain("private static string MetricRowLabel(MetricDesignerRow row)");
         markup.ShouldContain("Select metric {row.DisplayName} ({row.Id})");
