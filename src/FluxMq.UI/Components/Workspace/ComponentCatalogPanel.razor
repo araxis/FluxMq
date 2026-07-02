@@ -73,11 +73,13 @@
 
     private RenderFragment<CatalogEntry> RenderCatalogItem => item =>
         @<div class="@CatalogItemClass(item)"
-              role="listitem"
+              role="button"
               tabindex="@(!CanUseItem ? "-1" : "0")"
               title="@CatalogItemTitle"
               aria-label="@CatalogItemAriaLabel(item)"
+              aria-disabled="@CatalogItemDisabled"
               aria-grabbed="@CatalogItemGrabbed(item)"
+              aria-keyshortcuts="Enter Space"
               @onpointerdown="@((PointerEventArgs args) => BeginItemDrag(args, item))"
               @onclick="@(() => AddItem(item))"
               @onkeydown="@((KeyboardEventArgs args) => AddItemFromKeyboard(args, item))"
@@ -265,6 +267,9 @@
                 _ => $"{item.DisplayName}. Drag or press Enter to add."
             }
             : $"{item.DisplayName}. Unavailable in this tab.";
+
+    private string CatalogItemDisabled
+        => CanUseItem ? "false" : "true";
 
     private string CatalogItemGrabbed(CatalogEntry item)
         => IsDraggingItem(item) ? "true" : "false";

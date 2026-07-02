@@ -6381,8 +6381,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@EmptyIcon");
         markup.ShouldContain("@EmptyHintLabel");
         markup.ShouldContain("catalog-item-affordance");
+        markup.ShouldContain("role=\"button\"");
+        markup.ShouldContain("tabindex=\"@(!CanUseItem ? \"-1\" : \"0\")\"");
         markup.ShouldContain("CatalogItemAriaLabel(item)");
+        markup.ShouldContain("aria-disabled=\"@CatalogItemDisabled\"");
         markup.ShouldContain("aria-grabbed=\"@CatalogItemGrabbed(item)\"");
+        markup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
+        markup.ShouldContain("private string CatalogItemDisabled");
         markup.ShouldContain("ShouldShowStepMetadata(item)");
         markup.ShouldContain("catalog-step-meta");
         markup.ShouldContain("StepPhaseMetaClass(item)");
