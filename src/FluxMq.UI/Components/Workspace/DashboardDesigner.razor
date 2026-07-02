@@ -181,9 +181,9 @@
                      @onpointerleave="HandleDesignerPointerLeave">
                 @if (HasActiveDashboardDrag)
                 {
-                    <div class="dashboard-drop-status" role="status" aria-live="polite">
-                        <MudIcon Icon="@DashboardDragStatusIcon" Size="Size.Small" />
-                        <span>@DashboardDragStatusText</span>
+                    <div class="dashboard-drop-hint" role="status" aria-live="polite">
+                        <MudIcon Icon="@DashboardDragHintIcon" Size="Size.Small" />
+                        <span>@DashboardDragHintText</span>
                     </div>
                 }
                 <div class="dashboard-grid-stage">
@@ -1153,20 +1153,20 @@
             IsDashboardMoveDrag ? "moving-widget" : null
         }.Where(static value => !string.IsNullOrWhiteSpace(value)));
 
-    private string DashboardDragStatusIcon
+    private string DashboardDragHintIcon
         => IsDashboardMoveDrag ? Icons.Material.Filled.OpenWith : Icons.Material.Filled.Add;
 
-    private string DashboardDragStatusText
+    private string DashboardDragHintText
         => IsDashboardMoveDrag
-            ? DropTargetStatus(MoveTargetCellName, "Move widget")
-            : DropTargetStatus(_hoveredDropCellName, "Place widget");
+            ? DropTargetHint(MoveTargetCellName, "Move widget")
+            : DropTargetHint(_hoveredDropCellName, "Place widget");
 
     private string? MoveTargetCellName
         => string.Equals(_hoveredWidgetMoveCellName, _movingWidgetSourceCellName, StringComparison.Ordinal)
             ? null
             : _hoveredWidgetMoveCellName;
 
-    private string DropTargetStatus(string? cellName, string fallback)
+    private string DropTargetHint(string? cellName, string fallback)
     {
         var cell = VisibleCells.FirstOrDefault(cell => string.Equals(cell.Name, cellName, StringComparison.Ordinal));
         return cell is null ? fallback : $"{fallback}: {CellTitle(cell)}";

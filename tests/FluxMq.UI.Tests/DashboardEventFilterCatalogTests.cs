@@ -4832,8 +4832,10 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardDesigner.razor.css"));
 
         razor.ShouldContain("class=\"@DashboardGridFrameClass\"");
-        razor.ShouldContain("dashboard-drop-status");
-        razor.ShouldContain("DashboardDragStatusText");
+        razor.ShouldContain("dashboard-drop-hint");
+        razor.ShouldContain("DashboardDragHintText");
+        razor.ShouldNotContain("dashboard-drop-status");
+        razor.ShouldNotContain("DashboardDragStatusText");
         razor.ShouldContain("drop-target");
         razor.ShouldContain("move-target");
         razor.ShouldContain("dashboard-cell-drop-mark");
@@ -4846,7 +4848,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overscroll-behavior: contain;");
         css.ShouldContain("border-right: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-grid");
-        css.ShouldContain(".dashboard-drop-status");
+        css.ShouldContain(".dashboard-drop-hint");
+        css.ShouldNotContain(".dashboard-drop-status");
         css.ShouldContain(".dashboard-grid-empty-icon");
         css.ShouldContain("left: 8px;");
         css.ShouldContain("max-width: min(340px, calc(100% - 16px));");

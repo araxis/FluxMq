@@ -398,7 +398,7 @@
     outline-color: color-mix(in srgb, var(--mud-palette-info) 34%, transparent);
 }
 
-.dashboard-drop-status {
+.dashboard-drop-hint {
     align-items: center;
     background: color-mix(in srgb, var(--flux-surface-2) 92%, var(--flux-canvas));
     border: 1px solid color-mix(in srgb, var(--flux-accent) 42%, var(--flux-border));
@@ -421,13 +421,13 @@
     z-index: 8;
 }
 
-.dashboard-drop-status ::deep .mud-icon-root {
+.dashboard-drop-hint ::deep .mud-icon-root {
     color: var(--flux-accent);
     flex: 0 0 auto;
     font-size: 17px;
 }
 
-.dashboard-drop-status span {
+.dashboard-drop-hint span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
