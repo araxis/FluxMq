@@ -24,7 +24,7 @@
 .test-runner-title-block,
 .test-runner-actions,
 .test-runner-section-title,
-.test-runner-status-item,
+.test-runner-preflight-item,
 .test-runner-status-state,
 .test-runner-report-actions,
 .test-runner-result-strip,
@@ -394,14 +394,14 @@
     padding: 6px;
 }
 
-.test-runner-status-strip {
+.test-runner-preflight-strip {
     display: grid;
     gap: 6px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     min-width: 0;
 }
 
-.test-runner-status-item {
+.test-runner-preflight-item {
     background: var(--flux-surface);
     border: 1px solid var(--flux-border-soft);
     border-radius: 5px;
@@ -411,21 +411,21 @@
     padding: 5px 7px;
 }
 
-.test-runner-status-item.passed {
+.test-runner-preflight-item.passed {
     color: var(--mud-palette-success);
 }
 
-.test-runner-status-item.warning {
+.test-runner-preflight-item.warning {
     color: var(--mud-palette-warning);
 }
 
-.test-runner-status-item span {
+.test-runner-preflight-item span {
     color: var(--mud-palette-text-secondary);
     font-size: 11px;
     font-weight: 750;
 }
 
-.test-runner-status-item strong {
+.test-runner-preflight-item strong {
     color: var(--mud-palette-text-primary);
     font-size: 12px;
     font-weight: 750;
@@ -1101,7 +1101,7 @@
         overflow: auto;
     }
 
-    .test-runner-status-strip,
+    .test-runner-preflight-strip,
     .test-runner-activity-grid {
         grid-template-columns: minmax(0, 1fr);
     }

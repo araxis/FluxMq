@@ -3387,7 +3387,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@SaveReportTooltip\"");
         markup.ShouldContain("Class=\"test-runner-run-action\"");
         markup.ShouldContain("test-runner-workspace");
-        markup.ShouldContain("test-runner-status-strip");
+        markup.ShouldContain("test-runner-preflight-strip");
         markup.ShouldContain("PreflightItemClass");
         markup.ShouldContain("test-runner-result-strip");
         markup.ShouldContain("@FirstRunStripClass");
@@ -3441,6 +3441,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("RunStatusPillClass(result.Status)");
         markup.ShouldNotContain("ActiveRunPillClass");
         markup.ShouldNotContain("test-runner-status-pill");
+        markup.ShouldNotContain("test-runner-status-strip");
+        markup.ShouldNotContain("test-runner-status-item");
         markup.ShouldNotContain("Runner ready");
         markup.ShouldNotContain("var ready = await Live.EnsureConnectionsAsync");
         markup.ShouldNotContain("if (!ready)");
@@ -3468,7 +3470,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("flex-wrap: nowrap;");
         css.ShouldContain(".test-runner-workspace");
         css.ShouldContain("grid-template-rows: auto auto minmax(0, 1fr);");
-        css.ShouldContain(".test-runner-status-strip");
+        css.ShouldContain(".test-runner-preflight-strip");
         css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
         css.ShouldContain(".test-runner-result-strip");
         css.ShouldContain(".test-runner-result-strip.empty.runnable");
@@ -3501,6 +3503,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldNotContain(".test-runner-panel-title");
         css.ShouldNotContain(".test-runner-status-pill");
+        css.ShouldNotContain(".test-runner-status-strip");
+        css.ShouldNotContain(".test-runner-status-item");
         css.ShouldNotContain(".test-runner-result-strip.empty.ready");
         css.ShouldNotContain("border-radius: 999px;");
     }

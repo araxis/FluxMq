@@ -172,7 +172,7 @@
         </div>
 
         <div class="test-runner-workspace">
-            <section class="test-runner-status-strip" aria-label="Scenario preflight">
+            <section class="test-runner-preflight-strip" aria-label="Scenario preflight">
                 <div class="@PreflightItemClass(Scenario.StepCount > 0)">
                     <MudIcon Icon="@CheckIcon(Scenario.StepCount > 0)" Size="Size.Small" />
                     <span>Steps</span>
@@ -525,7 +525,7 @@
         => passed ? "test-runner-check passed" : "test-runner-check warning";
 
     private static string PreflightItemClass(bool passed)
-        => passed ? "test-runner-status-item passed" : "test-runner-status-item warning";
+        => passed ? "test-runner-preflight-item passed" : "test-runner-preflight-item warning";
 
     private static string CheckIcon(bool passed)
         => passed ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Info;
