@@ -37,12 +37,12 @@
             </div>
 
             <div class="routing-switch-expression" aria-label="Routing switch expression">
-                <span class="routing-switch-contract-label node-ui-fact-label">Expression</span>
+                <span class="routing-switch-summary-label node-ui-fact-label">Expression</span>
                 <strong title="@ExpressionPreview">@ExpressionPreview</strong>
             </div>
 
             <div class="routing-switch-routes" aria-label="Routing switch routes">
-                <span class="routing-switch-contract-label node-ui-fact-label">Route outputs</span>
+                <span class="routing-switch-summary-label node-ui-fact-label">Route outputs</span>
                 @foreach (var route in RoutePreview)
                 {
                     <span class="routing-switch-token node-ui-token" title="@($"{route.Key} => {route.OutputPort}")">@route.OutputPort</span>

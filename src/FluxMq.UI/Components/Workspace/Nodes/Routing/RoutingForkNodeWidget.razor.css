@@ -24,7 +24,7 @@
 }
 
 .routing-fork-meta-item span,
-.routing-fork-contract-label {
+.routing-fork-summary-label {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
     font-weight: 750;
@@ -60,7 +60,7 @@
     padding: 5px 2px 0;
 }
 
-.routing-fork-contract-label {
+.routing-fork-summary-label {
     flex: 0 0 100%;
     white-space: normal;
 }

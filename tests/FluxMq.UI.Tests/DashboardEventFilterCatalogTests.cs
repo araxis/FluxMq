@@ -7947,12 +7947,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("BufferCaption");
         markup.ShouldContain("routing-switch-expression");
         markup.ShouldContain("aria-label=\"Routing switch expression\"");
+        markup.ShouldContain("routing-switch-summary-label");
         markup.ShouldContain("ExpressionPreview");
         markup.ShouldContain("routing-switch-routes");
         markup.ShouldContain("aria-label=\"Routing switch routes\"");
         markup.ShouldContain("RoutePreview");
         markup.ShouldContain("RoutePreviewOverflow");
         markup.ShouldContain("routing-switch-token");
+        markup.ShouldNotContain("routing-switch-contract-label");
         markup.ShouldContain("routing-switch-editor");
         markup.ShouldContain("aria-label=\"Routing switch settings\"");
         markup.ShouldContain("routing-switch-rule-row");
@@ -8100,6 +8102,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".routing-switch-expression");
         css.ShouldContain(".routing-switch-routes");
+        css.ShouldContain(".routing-switch-summary-label");
+        css.ShouldNotContain(".routing-switch-contract-label");
         css.ShouldContain("display: flex;");
         css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         css.ShouldContain(".routing-switch-token");
@@ -8253,9 +8257,11 @@ public sealed class DashboardEventFilterCatalogTests
         forkMarkup.ShouldContain("BufferCaption");
         forkMarkup.ShouldContain("routing-fork-ports");
         forkMarkup.ShouldContain("aria-label=\"Routing fork outputs\"");
+        forkMarkup.ShouldContain("routing-fork-summary-label");
         forkMarkup.ShouldContain("OutputPreview");
         forkMarkup.ShouldContain("OutputPreviewOverflow");
         forkMarkup.ShouldContain("routing-fork-token");
+        forkMarkup.ShouldNotContain("routing-fork-contract-label");
         forkMarkup.ShouldContain("routing-fork-editor");
         forkMarkup.ShouldContain("aria-label=\"Routing fork settings\"");
         forkMarkup.ShouldContain("routing-fork-layout");
@@ -8338,6 +8344,8 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldContain("display: -webkit-box;");
         forkCss.ShouldContain("-webkit-line-clamp: 2;");
         forkCss.ShouldContain(".routing-fork-ports");
+        forkCss.ShouldContain(".routing-fork-summary-label");
+        forkCss.ShouldNotContain(".routing-fork-contract-label");
         forkCss.ShouldContain("display: flex;");
         forkCss.ShouldContain("flex-wrap: wrap;");
         forkCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
@@ -8424,9 +8432,11 @@ public sealed class DashboardEventFilterCatalogTests
         mergeMarkup.ShouldNotContain("FlowMergeItem");
         mergeMarkup.ShouldContain("routing-merge-ports");
         mergeMarkup.ShouldContain("aria-label=\"Routing merge inputs\"");
+        mergeMarkup.ShouldContain("routing-merge-summary-label");
         mergeMarkup.ShouldContain("InputPreview");
         mergeMarkup.ShouldContain("InputPreviewOverflow");
         mergeMarkup.ShouldContain("routing-merge-token");
+        mergeMarkup.ShouldNotContain("routing-merge-contract-label");
         mergeMarkup.ShouldContain("routing-merge-editor");
         mergeMarkup.ShouldContain("aria-label=\"Routing merge settings\"");
         mergeMarkup.ShouldContain("routing-merge-layout");
@@ -8509,6 +8519,8 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldContain("display: -webkit-box;");
         mergeCss.ShouldContain("-webkit-line-clamp: 2;");
         mergeCss.ShouldContain(".routing-merge-ports");
+        mergeCss.ShouldContain(".routing-merge-summary-label");
+        mergeCss.ShouldNotContain(".routing-merge-contract-label");
         mergeCss.ShouldContain("display: flex;");
         mergeCss.ShouldContain("flex-wrap: wrap;");
         mergeCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
@@ -8813,10 +8825,12 @@ public sealed class DashboardEventFilterCatalogTests
         correlationMarkup.ShouldContain("BufferCaption");
         correlationMarkup.ShouldContain("routing-correlation-rules");
         correlationMarkup.ShouldContain("aria-label=\"Routing correlation rules\"");
+        correlationMarkup.ShouldContain("routing-correlation-summary-label");
         correlationMarkup.ShouldContain("KeyExpressionCaption");
         correlationMarkup.ShouldContain("SideExpressionCaption");
         correlationMarkup.ShouldContain("CaseCaption");
         correlationMarkup.ShouldContain("PendingCaption");
+        correlationMarkup.ShouldNotContain("routing-correlation-contract-label");
         correlationMarkup.ShouldContain("routing-correlation-editor");
         correlationMarkup.ShouldContain("aria-label=\"Routing correlation settings\"");
         correlationMarkup.ShouldContain("routing-correlation-rule-row");
@@ -8926,6 +8940,8 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldContain("display: -webkit-box;");
         correlationCss.ShouldContain("-webkit-line-clamp: 2;");
         correlationCss.ShouldContain(".routing-correlation-rules");
+        correlationCss.ShouldContain(".routing-correlation-summary-label");
+        correlationCss.ShouldNotContain(".routing-correlation-contract-label");
         correlationCss.ShouldContain("flex-wrap: wrap;");
         correlationCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         correlationCss.ShouldContain("flex: 0 0 100%;");
@@ -9018,6 +9034,8 @@ public sealed class DashboardEventFilterCatalogTests
         joinMarkup.ShouldContain("BufferCaption");
         joinMarkup.ShouldContain("routing-join-rules");
         joinMarkup.ShouldContain("aria-label=\"Routing join rules\"");
+        joinMarkup.ShouldContain("routing-join-summary-label");
+        joinMarkup.ShouldNotContain("routing-join-contract-label");
         joinMarkup.ShouldContain("routing-join-editor");
         joinMarkup.ShouldContain("aria-label=\"Routing join settings\"");
         joinMarkup.ShouldContain("routing-join-rule-row");
@@ -9112,6 +9130,8 @@ public sealed class DashboardEventFilterCatalogTests
         joinCss.ShouldContain("display: -webkit-box;");
         joinCss.ShouldContain("-webkit-line-clamp: 2;");
         joinCss.ShouldContain(".routing-join-rules");
+        joinCss.ShouldContain(".routing-join-summary-label");
+        joinCss.ShouldNotContain(".routing-join-contract-label");
         joinCss.ShouldContain("display: flex;");
         joinCss.ShouldContain("flex-wrap: wrap;");
         joinCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");

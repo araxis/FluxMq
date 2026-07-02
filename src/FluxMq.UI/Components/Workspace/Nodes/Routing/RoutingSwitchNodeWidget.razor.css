@@ -24,7 +24,7 @@
 }
 
 .routing-switch-meta-item span,
-.routing-switch-contract-label {
+.routing-switch-summary-label {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
     font-weight: 750;
@@ -75,7 +75,7 @@
     justify-content: start;
 }
 
-.routing-switch-contract-label {
+.routing-switch-summary-label {
     flex: 0 0 100%;
     white-space: normal;
 }

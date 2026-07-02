@@ -4589,5 +4589,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DynamicMapperNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Routing Summary Hook result:
+  - Renamed compact summary label hooks from contract wording to neutral summary-label wording for Routing Switch, Correlation, Join, Fork, and Merge widgets.
+  - Kept all visible routing facts, route/port chips, expression previews, editor layouts, validation, saved configuration, node ids, ports, and runtime behavior unchanged.
+  - Updated the focused routing guards to require the neutral summary hooks and reject the old routing contract-label hooks.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingSwitchNodeWidget|FullyQualifiedName~RoutingFanNodeWidgets|FullyQualifiedName~RoutingCorrelationAndJoinNodeWidgets" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Next implementation order:
   1. Continue the next small designer-polish backlog item from remaining high-use workspace noise, starting with remaining compact node-summary naming noise where a focused guard already exists.
