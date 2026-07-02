@@ -4668,3 +4668,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - The first parallel build attempt hit the known transient XAML compiler file lock; the serial rerun passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App JSON decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the decorative App JSON title icon wrapper in `AppJsonPanel`.
+  - Preserved the visible title, file label, JSON summary, unsaved indicator, copy action, Monaco viewer configuration/sync, app JSON generation, saved app schema, services, schemas, ids, ports, and contracts.
+  - Updated the focused App JSON guard to require the hidden decorative title icon wrapper.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel_UsesFlatCompactCodeViewerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

@@ -4869,7 +4869,7 @@ public sealed class DashboardEventFilterCatalogTests
             "AppJsonPanel.razor.css"));
 
         markup.ShouldContain("aria-label=\"Application JSON toolbar\"");
-        markup.ShouldContain("app-json-title-icon");
+        markup.ShouldContain("class=\"app-json-title-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("<strong>App JSON</strong>");
         markup.ShouldContain("@FileLabel");
         markup.ShouldContain("@JsonLineCount lines");
