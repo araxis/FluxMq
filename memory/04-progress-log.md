@@ -4687,3 +4687,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only tab-icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Metric dialog decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the title icon wrappers in MetricCreateDialog, MetricRenameDialog, MetricDuplicateDialog, MetricTypeChangeDialog, MetricConfirmDialog, and MetricDeleteDialog.
+  - Preserved visible title/subtitle copy, metric type search/counts, validation rows, tone chips, destructive warnings, binding/reference details, button labels, dialog results, metric model behavior, dashboard binding behavior, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused metric creation and metric action dialog guards to require hidden decorative title icons.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only title-icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

@@ -4396,7 +4396,7 @@ public sealed class DashboardEventFilterCatalogTests
             "Dialogs",
             "MetricCreateDialog.razor.css"));
 
-        markup.ShouldContain("metric-create-title-icon");
+        markup.ShouldContain("class=\"metric-create-title-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("metric-create-title-copy");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("aria-live=\"polite\"");
@@ -4464,6 +4464,14 @@ public sealed class DashboardEventFilterCatalogTests
             markup.ShouldContain($"{prefix}-title-icon");
             markup.ShouldContain($"{prefix}-title-copy");
             markup.ShouldContain("aria-label=");
+            if (prefix == "metric-confirm")
+            {
+                markup.ShouldContain("class=\"metric-confirm-title-icon @ToneClass\" aria-hidden=\"true\"");
+            }
+            else
+            {
+                markup.ShouldContain($"class=\"{prefix}-title-icon\" aria-hidden=\"true\"");
+            }
             markup.ShouldNotContain("MudStack");
             markup.ShouldNotContain("MudGrid");
             markup.ShouldNotContain("MudDivider");
