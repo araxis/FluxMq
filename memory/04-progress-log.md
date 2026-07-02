@@ -5534,3 +5534,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Dashboard Designer label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace Logs header-label specificity result:
+  - Replaced generic Logs header group labels with `Workspace log commands` and `Workspace log total and problem count`.
+  - Preserved scope/level/search filters, visible-row copy/export, reset/clear behavior, log rendering, forced-scope handling, export JSON, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Workspace Logs guard to require the workspace-specific labels and reject the old generic labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Workspace Logs label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

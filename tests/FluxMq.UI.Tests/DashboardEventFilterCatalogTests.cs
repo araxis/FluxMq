@@ -5147,8 +5147,12 @@ public sealed class DashboardEventFilterCatalogTests
             "WorkspaceLogPanel.razor.css"));
 
         markup.ShouldContain("Logs.Count > 0");
+        markup.ShouldContain("aria-label=\"Workspace log commands\"");
         markup.ShouldContain("role=\"search\" aria-label=\"Log filters\"");
         markup.ShouldContain("workspace-log-stats");
+        markup.ShouldContain("aria-label=\"Workspace log total and problem count\"");
+        markup.ShouldNotContain("aria-label=\"Log commands\"");
+        markup.ShouldNotContain("aria-label=\"Log summary\"");
         System.Text.RegularExpressions.Regex.Matches(
                 markup,
                 @"<MudIcon\b(?:(?!/>).)*?/>",
