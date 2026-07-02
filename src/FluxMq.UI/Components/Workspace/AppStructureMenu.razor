@@ -37,7 +37,7 @@
                 @if (conns.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.Hub, "No connections", "Add a broker profile to connect.")
+                        @MenuEmptyRow(Icons.Material.Filled.Hub, "No connections", "Add a broker profile to connect.")
                     </MudMenuItem>
                 }
                 else
@@ -89,7 +89,7 @@
                 @if (active.WorkflowNames.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.Timeline, "No pipelines", "Create a flow to process traffic.")
+                        @MenuEmptyRow(Icons.Material.Filled.Timeline, "No pipelines", "Create a flow to process traffic.")
                     </MudMenuItem>
                 }
                 else
@@ -145,7 +145,7 @@
                 @if (active.DashboardNames.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.Dashboard, "No dashboards", "Create a view for live metrics.")
+                        @MenuEmptyRow(Icons.Material.Filled.Dashboard, "No dashboards", "Create a view for live metrics.")
                     </MudMenuItem>
                 }
                 else
@@ -201,7 +201,7 @@
                 @if (active.MetricNames.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.QueryStats, "No metrics", "Add a metric to power dashboards.")
+                        @MenuEmptyRow(Icons.Material.Filled.QueryStats, "No metrics", "Add a metric to power dashboards.")
                     </MudMenuItem>
                 }
                 else
@@ -245,7 +245,7 @@
                 @if (active.TestNames.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.FactCheck, "No tests", "Create a scenario to validate flows.")
+                        @MenuEmptyRow(Icons.Material.Filled.FactCheck, "No tests", "Create a scenario to validate flows.")
                     </MudMenuItem>
                 }
                 else
@@ -302,15 +302,15 @@
 @code {
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
 
-    private static RenderFragment MenuStateRow(string icon, string title, string hint) => @<div class="app-menu-state-row">
-        <span class="app-menu-state-icon" aria-hidden="true">
+    private static RenderFragment MenuEmptyRow(string icon, string title, string hint) => @<div class="app-menu-empty-row">
+        <span class="app-menu-empty-icon" aria-hidden="true">
             <MudIcon Icon="@icon" Size="Size.Small" />
         </span>
-        <span class="app-menu-state-copy">
+        <span class="app-menu-empty-copy">
             <span>@title</span>
             <small>@hint</small>
         </span>
-        <span class="app-menu-state-text">Empty</span>
+        <span class="app-menu-empty-text">Empty</span>
     </div>;
 
     private static RenderFragment MenuCommandRow(string title, string hint) => @<div class="app-menu-command-row">
