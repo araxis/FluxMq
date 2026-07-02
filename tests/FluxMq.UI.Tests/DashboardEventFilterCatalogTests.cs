@@ -12282,6 +12282,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-current=\"@WorkspaceTabCurrent(topicsActive)\"");
         markup.ShouldContain("aria-current=\"@WorkspaceTabCurrent(logsActive)\"");
         markup.ShouldContain("aria-current=\"@WorkspaceTabCurrent(_jsonView)\"");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(7);
         markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveWorkflow(w); _jsonView = false; })");
         markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveMetrics(); _jsonView = false; })");
         markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveDashboard(d); _jsonView = false; })");

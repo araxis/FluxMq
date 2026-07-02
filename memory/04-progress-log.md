@@ -5103,3 +5103,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only App Tree keyboard shortcut scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Workspace tab keyboard shortcut hint result:
+  - Added `aria-keyshortcuts="Enter Space"` to Workspace project-tab role-buttons that already support keyboard activation: pipeline, metrics, dashboard, test, topics, logs, and App JSON tabs.
+  - Preserved tab selection, artifact routing, diagnostics-to-logs routing, JSON view toggling, close/delete actions, visible labels, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused WorkspacePage guard to require seven project-tab keyboard shortcut hints.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Workspace tab keyboard shortcut scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
