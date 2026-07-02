@@ -9,7 +9,7 @@
                 </span>
                 <div class="scenario-report-title-copy">
                     <MudText Typo="Typo.h6" Class="scenario-report-heading">@Title</MudText>
-                    <div class="scenario-report-meta-strip" aria-label="Scenario report summary">
+                    <div class="scenario-report-meta-strip" aria-label="@ReportMetaSummaryLabel">
                         @if (!string.IsNullOrWhiteSpace(RunScopeText))
                         {
                             <span class="@ReportMetaClass(RunScopeColor)">
@@ -35,8 +35,8 @@
                 </div>
             </div>
 
-            <div class="scenario-report-toolbar" aria-label="Scenario report actions">
-                <div class="scenario-report-action-group compact" aria-label="Scenario report export actions">
+            <div class="scenario-report-toolbar" aria-label="@ReportToolbarLabel">
+                <div class="scenario-report-action-group compact" aria-label="@ReportExportActionsLabel">
                     <div class="scenario-report-action-cluster">
                         <span class="scenario-report-action-label">Summary</span>
                         <MudTooltip Text="@CopySummaryTooltip">
@@ -45,7 +45,7 @@
                                            Class="scenario-report-action"
                                            Disabled="@(!HasSummaryReport)"
                                            OnClick="@CopySummaryAsync"
-                                           aria-label="Copy summary report" />
+                                           aria-label="@CopySummaryAriaLabel" />
                         </MudTooltip>
                         <MudTooltip Text="@SaveSummaryTooltip">
                             <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
@@ -53,7 +53,7 @@
                                            Class="scenario-report-action"
                                            Disabled="@(!HasSummaryReport)"
                                            OnClick="@SaveSummary"
-                                           aria-label="Save summary report" />
+                                           aria-label="@SaveSummaryAriaLabel" />
                         </MudTooltip>
                     </div>
                     <div class="scenario-report-action-cluster">
@@ -64,7 +64,7 @@
                                            Class="scenario-report-action"
                                            Disabled="@(!HasJsonReport)"
                                            OnClick="@CopyJsonAsync"
-                                           aria-label="Copy JSON report" />
+                                           aria-label="@CopyJsonAriaLabel" />
                         </MudTooltip>
                         <MudTooltip Text="@SaveJsonTooltip">
                             <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
@@ -72,7 +72,7 @@
                                            Class="scenario-report-action"
                                            Disabled="@(!HasJsonReport)"
                                            OnClick="@SaveJson"
-                                           aria-label="Save JSON report" />
+                                           aria-label="@SaveJsonAriaLabel" />
                         </MudTooltip>
                     </div>
                 </div>
@@ -81,7 +81,7 @@
     </TitleContent>
     <DialogContent>
         <div class="scenario-report-content">
-            <div class="scenario-report-summary-grid" aria-label="Run details">
+            <div class="scenario-report-summary-grid" aria-label="@RunDetailsLabel">
                 @if (!string.IsNullOrWhiteSpace(RunIdText))
                 {
                     <div class="scenario-report-metric">
@@ -195,6 +195,22 @@
     private bool HasSummaryReport => !string.IsNullOrWhiteSpace(TextReport);
 
     private bool HasJsonReport => !string.IsNullOrWhiteSpace(JsonReport);
+
+    private string ReportMetaSummaryLabel => $"{Title} run summary facts";
+
+    private string ReportToolbarLabel => $"{Title} report actions";
+
+    private string ReportExportActionsLabel => $"{Title} export actions";
+
+    private string CopySummaryAriaLabel => $"Copy summary for {Title}";
+
+    private string SaveSummaryAriaLabel => $"Save summary for {Title}";
+
+    private string CopyJsonAriaLabel => $"Copy JSON for {Title}";
+
+    private string SaveJsonAriaLabel => $"Save JSON for {Title}";
+
+    private string RunDetailsLabel => $"{Title} run details";
 
     private string CopySummaryTooltip
         => HasSummaryReport ? "Copy summary report" : "Summary report unavailable";

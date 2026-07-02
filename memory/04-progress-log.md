@@ -5544,3 +5544,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Workspace Logs label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Scenario Run Report dialog-label specificity result:
+  - Replaced generic scenario report summary/action/detail accessible names with title-backed labels for run facts, report actions, export actions, and run details.
+  - Replaced static copy/save report button accessible names with `for {Title}` labels while preserving existing availability tooltips and copy/save behavior.
+  - Preserved report title, visible metadata chips, text/JSON tabs, copy/save actions, close action, snackbar messages, dialog results, report content, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Scenario Run Report guard to require the new label helpers and reject the old static group/button labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunReportDialog_UsesFlatCompactReviewChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Scenario Run Report label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
