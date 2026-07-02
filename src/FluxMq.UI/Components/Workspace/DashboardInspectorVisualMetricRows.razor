@@ -46,7 +46,7 @@
                                 aria-label="@($"Move {VisualMetricLabel(currentMetric)} up")"
                                 disabled="@(item.Index == 0)"
                                 @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, -1)))">
-                            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" aria-hidden="true" />
                         </button>
                         <button type="button"
                                 class="visual-metric-icon-button"
@@ -54,7 +54,7 @@
                                 aria-label="@($"Move {VisualMetricLabel(currentMetric)} down")"
                                 disabled="@(item.Index == Draft.DisplayMetrics.Count - 1)"
                                 @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, 1)))">
-                            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" aria-hidden="true" />
                         </button>
                         <button type="button"
                                 class="visual-metric-icon-button danger"
@@ -62,7 +62,7 @@
                                 aria-label="@($"Remove {VisualMetricLabel(currentMetric)}")"
                                 disabled="@(!Draft.CanRemoveDisplayMetric)"
                                 @onclick="@(() => RemoveMetric.InvokeAsync(currentMetric))">
-                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                         </button>
                     </span>
                 </div>
@@ -81,7 +81,7 @@
                         aria-label="Add metric card"
                         disabled="@string.IsNullOrWhiteSpace(MetricToAdd)"
                         @onclick="@(() => AddMetric.InvokeAsync())">
-                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                 </button>
             </div>
         </PropertyGridRow>

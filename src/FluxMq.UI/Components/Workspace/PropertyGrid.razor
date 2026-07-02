@@ -42,7 +42,7 @@
                     title="@group.Title"
                     @onclick="@(() => ToggleGroupAsync(group.Id))">
                 <span class="property-grid-group-toggle">
-                    <MudIcon Icon="@ToggleIcon(collapsed)" Size="Size.Small" />
+                    <MudIcon Icon="@ToggleIcon(collapsed)" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <span class="property-grid-group-title">@group.Title</span>
                 <span class="property-grid-group-count"

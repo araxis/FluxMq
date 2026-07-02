@@ -4859,3 +4859,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Test Scenario Designer icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Dashboard Inspector/property-grid decorative icon accessibility result:
+  - Added hidden decorative semantics to direct inspector, group-toggle, help, select-arrow, color-picker, segmented-option, metric/open, reset, duplicate/delete, visual-metric, add-card, and empty-state `MudIcon` markers in `DashboardInspector` and the shared property-grid controls.
+  - Preserved visible labels, button labels, property group ownership, select/listbox ownership, color popover ownership, metric card ordering, widget actions, dashboard editing behavior, saved dashboard schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Dashboard Inspector guard to scan the inspector/property-grid markups and reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Inspector/property-grid icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

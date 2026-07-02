@@ -22,14 +22,14 @@
                     title="Duplicate widget"
                     aria-label="Duplicate widget"
                     @onclick="@(() => DuplicateWidget.InvokeAsync())">
-                <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-hidden="true" />
             </button>
             <button type="button"
                     class="property-grid-icon-action danger"
                     title="Delete widget"
                     aria-label="Delete widget"
                     @onclick="@(() => DeleteWidget.InvokeAsync())">
-                <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
             </button>
         </div>
     </PropertyGridRow>

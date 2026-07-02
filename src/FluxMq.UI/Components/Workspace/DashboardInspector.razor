@@ -13,7 +13,7 @@
 <aside class="dashboard-inspector" role="complementary" aria-label="Dashboard inspector">
     <header class="@InspectorHeaderClass">
         <div class="dashboard-inspector-icon" aria-hidden="true">
-            <MudIcon Icon="@InspectorIcon" Size="Size.Small" />
+            <MudIcon Icon="@InspectorIcon" Size="Size.Small" aria-hidden="true" />
         </div>
         <div class="dashboard-inspector-heading">
             <span class="dashboard-inspector-title">@InspectorTitle</span>
@@ -32,7 +32,7 @@
                             class="dashboard-inspector-command dashboard-inspector-reset-command"
                             aria-label="Reset widget properties"
                             @onclick="@ResetWidgetPropertiesAsync">
-                        <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" aria-hidden="true" />
                         <span>Reset</span>
                     </button>
                 </MudTooltip>
@@ -54,7 +54,7 @@
             @if (SelectedCells.Count == 0)
             {
                 <span class="dashboard-inspector-empty-icon" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.GridView" />
+                    <MudIcon Icon="@Icons.Material.Filled.GridView" aria-hidden="true" />
                 </span>
                 <span class="dashboard-inspector-empty-title">@InspectorEmptyTitle</span>
                 <small>@InspectorEmptyHint</small>

@@ -2447,6 +2447,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridSelect.razor.css"));
+        var iconSegmentMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridIconSegment.razor"));
         var iconSegmentCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2454,6 +2461,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridIconSegment.razor.css"));
+        var colorPickerMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridColorPicker.razor"));
         var colorPickerCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2482,6 +2496,27 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspector.razor.css"));
+        var appMetricRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorAppMetricRows.razor"));
+        var cellStyleRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorCellStyleRows.razor"));
+        var layoutRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorLayoutRows.razor"));
         var visualMetricRows = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2489,8 +2524,27 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspectorVisualMetricRows.razor"));
+        var inspectorControlMarkups = new[]
+        {
+            propertyGrid,
+            rowMarkup,
+            selectMarkup,
+            iconSegmentMarkup,
+            colorPickerMarkup,
+            inspector,
+            appMetricRows,
+            cellStyleRows,
+            layoutRows,
+            visualMetricRows
+        };
 
         propertyGrid.ShouldContain("DefaultNameColumnWidth = 116");
+        inspectorControlMarkups
+            .SelectMany(static markup => markup.Split('\n'))
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         propertyGrid.ShouldContain("MinNameColumnWidth = 78");
         propertyGrid.ShouldContain("MaxNameColumnWidth = 176");
         propertyGrid.ShouldContain("--property-grid-name-width: min({_nameColumnWidth.ToString(\"0\", CultureInfo.InvariantCulture)}px, 39%);");

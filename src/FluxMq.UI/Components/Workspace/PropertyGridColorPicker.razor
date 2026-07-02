@@ -31,7 +31,7 @@
             aria-expanded="@_pickerOpen"
             aria-controls="@_popoverId"
             @onclick="@TogglePicker">
-        <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" />
+        <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" aria-hidden="true" />
     </button>
 
     <MudOverlay Visible="@_pickerOpen"
