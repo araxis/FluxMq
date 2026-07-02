@@ -110,17 +110,17 @@
                     </MudButton>
                 </MudTooltip>
 
-                <MudTooltip Text="@ActiveProjectStateTooltip">
-                    <div class="@FlowStateClass">
-                        <span class="flux-flow-dot"></span>
-                        <span>@ActiveProjectStateLabel</span>
+                <MudTooltip Text="@AppRuntimeTooltip">
+                    <div class="@AppRuntimeMarkerClass">
+                        <span class="flux-app-runtime-dot"></span>
+                        <span>@AppRuntimeSummaryLabel</span>
                     </div>
                 </MudTooltip>
 
                 <span class="flux-toolbar-divider"></span>
 
-                <div class="@RunStateClass">
-                    <span class="flux-run-dot"></span>
+                <div class="@LiveConnectionMarkerClass">
+                    <span class="flux-live-connection-dot"></span>
                     <span>@Live.State</span>
                 </div>
 
@@ -297,24 +297,24 @@
             _ => Icons.Material.Filled.Extension
         };
 
-    private string RunStateClass => Live.State switch
+    private string LiveConnectionMarkerClass => Live.State switch
     {
-        MqttClientState.Connected => "flux-runstate live",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-runstate pending",
-        MqttClientState.Faulted => "flux-runstate faulted",
-        _ => "flux-runstate"
+        MqttClientState.Connected => "flux-live-connection-marker live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-live-connection-marker pending",
+        MqttClientState.Faulted => "flux-live-connection-marker faulted",
+        _ => "flux-live-connection-marker"
     };
 
-    private string FlowStateClass => Projects.ActiveProject?.State switch
+    private string AppRuntimeMarkerClass => Projects.ActiveProject?.State switch
     {
-        RuntimeWorkspaceState.Valid => "flux-flowstate valid",
-        RuntimeWorkspaceState.Running => "flux-flowstate running",
-        RuntimeWorkspaceState.Faulted => "flux-flowstate faulted",
-        RuntimeWorkspaceState.Stopped => "flux-flowstate stopped",
-        _ => "flux-flowstate"
+        RuntimeWorkspaceState.Valid => "flux-app-runtime-marker valid",
+        RuntimeWorkspaceState.Running => "flux-app-runtime-marker running",
+        RuntimeWorkspaceState.Faulted => "flux-app-runtime-marker faulted",
+        RuntimeWorkspaceState.Stopped => "flux-app-runtime-marker stopped",
+        _ => "flux-app-runtime-marker"
     };
 
-    private string ActiveProjectStateLabel => Projects.ActiveProject is null
+    private string AppRuntimeSummaryLabel => Projects.ActiveProject is null
         ? "No app"
         : Projects.ActiveProject.State switch
         {
@@ -325,7 +325,7 @@
             _ => "App idle"
         };
 
-    private string ActiveProjectStateTooltip
+    private string AppRuntimeTooltip
     {
         get
         {
@@ -336,7 +336,7 @@
             var warnings = project.Diagnostics.Count(d => string.Equals(d.Severity, "Warning", StringComparison.Ordinal));
             return errors > 0 || warnings > 0
                 ? $"{project.State}: {errors} errors, {warnings} warnings"
-                : $"App runtime state: {project.State}";
+                : $"App runtime: {project.State}";
         }
     }
 

@@ -136,7 +136,7 @@
     }
 }
 
-.flux-runstate {
+.flux-live-connection-marker {
     align-items: center;
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
@@ -150,7 +150,7 @@
     white-space: nowrap;
 }
 
-.flux-flowstate {
+.flux-app-runtime-marker {
     align-items: center;
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
@@ -164,8 +164,8 @@
     white-space: nowrap;
 }
 
-.flux-run-dot,
-.flux-flow-dot,
+.flux-live-connection-dot,
+.flux-app-runtime-dot,
 .flux-live-dot {
     background: var(--flux-idle);
     border-radius: 50%;
@@ -174,31 +174,31 @@
     width: 6px;
 }
 
-.flux-runstate.live .flux-run-dot,
+.flux-live-connection-marker.live .flux-live-connection-dot,
 .flux-live-dot.live {
     background: var(--mud-palette-success);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-success) 18%, transparent);
 }
 
-.flux-flowstate.valid .flux-flow-dot,
-.flux-flowstate.running .flux-flow-dot {
+.flux-app-runtime-marker.valid .flux-app-runtime-dot,
+.flux-app-runtime-marker.running .flux-app-runtime-dot {
     background: var(--mud-palette-success);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-success) 18%, transparent);
 }
 
-.flux-runstate.pending .flux-run-dot,
+.flux-live-connection-marker.pending .flux-live-connection-dot,
 .flux-live-dot.pending {
     background: var(--mud-palette-warning);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-warning) 16%, transparent);
 }
 
-.flux-flowstate.stopped .flux-flow-dot {
+.flux-app-runtime-marker.stopped .flux-app-runtime-dot {
     background: var(--mud-palette-info);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-info) 16%, transparent);
 }
 
-.flux-runstate.faulted .flux-run-dot,
-.flux-flowstate.faulted .flux-flow-dot,
+.flux-live-connection-marker.faulted .flux-live-connection-dot,
+.flux-app-runtime-marker.faulted .flux-app-runtime-dot,
 .flux-live-dot.faulted {
     background: var(--mud-palette-error);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--mud-palette-error) 16%, transparent);
@@ -299,7 +299,7 @@
         margin: 0;
     }
 
-    .flux-runstate {
+    .flux-live-connection-marker {
         display: none;
     }
 }
@@ -316,13 +316,13 @@
         gap: 8px;
     }
 
-    .flux-flowstate {
+    .flux-app-runtime-marker {
         justify-content: center;
         padding: 0;
         width: 28px;
     }
 
-    .flux-flowstate span:last-child {
+    .flux-app-runtime-marker span:last-child {
         display: none;
     }
 }
@@ -372,7 +372,7 @@
 
     .flux-toolbar-divider,
     .flux-brand-name,
-    .flux-runstate {
+    .flux-live-connection-marker {
         display: none;
     }
 
