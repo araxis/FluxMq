@@ -72,7 +72,7 @@
 }
 
 .app-json-meta span,
-.app-json-state {
+.app-json-unsaved-indicator {
     background: var(--flux-surface-2);
     border-radius: 4px;
     color: var(--mud-palette-text-secondary);
@@ -83,7 +83,7 @@
     white-space: nowrap;
 }
 
-.app-json-state.unsaved {
+.app-json-unsaved-indicator {
     background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
     color: var(--mud-palette-warning);
     font-family: inherit;
@@ -91,7 +91,7 @@
     position: relative;
 }
 
-.app-json-state.unsaved::before {
+.app-json-unsaved-indicator::before {
     background: var(--mud-palette-warning);
     border-radius: 999px;
     content: "";
@@ -181,7 +181,7 @@
         grid-row: 2;
     }
 
-    .app-json-state {
+    .app-json-unsaved-indicator {
         grid-column: 1;
         justify-self: start;
     }

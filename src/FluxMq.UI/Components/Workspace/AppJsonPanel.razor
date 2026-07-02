@@ -20,7 +20,7 @@
         </div>
         @if (Project.HasUnsavedChanges)
         {
-            <span class="app-json-state unsaved" role="status" aria-live="polite">Unsaved</span>
+            <span class="app-json-unsaved-indicator" role="status" aria-live="polite">Unsaved</span>
         }
         <MudTooltip Text="Copy JSON">
             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"

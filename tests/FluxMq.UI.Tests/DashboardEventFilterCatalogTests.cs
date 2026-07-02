@@ -4561,8 +4561,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@FileLabel");
         markup.ShouldContain("@JsonLineCount lines");
         markup.ShouldContain("@JsonSizeLabel");
-        markup.ShouldContain("app-json-state unsaved");
+        markup.ShouldContain("app-json-unsaved-indicator");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\">Unsaved</span>");
+        markup.ShouldNotContain("app-json-state");
         markup.ShouldContain("aria-label=\"Copy JSON\"");
         markup.ShouldContain("Disabled=\"@string.IsNullOrWhiteSpace(_fullJson)\"");
         markup.ShouldContain("app-json-editor-shell");
@@ -4599,8 +4600,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("padding: 5px 8px;");
         css.ShouldContain("height: 26px;");
         css.ShouldContain(".app-json-meta span,");
-        css.ShouldContain(".app-json-state.unsaved");
-        css.ShouldContain(".app-json-state.unsaved::before");
+        css.ShouldContain(".app-json-unsaved-indicator");
+        css.ShouldContain(".app-json-unsaved-indicator::before");
+        css.ShouldNotContain(".app-json-state");
         css.ShouldContain(".app-json-toolbar ::deep .mud-icon-button");
         css.ShouldContain(".app-json-editor-shell ::deep .app-json-monaco-editor");
         css.ShouldContain(".app-json-editor-shell ::deep .app-json-monaco-editor .monaco-editor,");
