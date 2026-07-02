@@ -3425,11 +3425,32 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "TopicTree",
             "TopicTreeNode.razor.css"));
+        var viewMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "TopicTree",
+            "TopicTreeView.razor"));
+        var viewCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "TopicTree",
+            "TopicTreeView.razor.css"));
 
         markup.ShouldContain("topic-node-branch");
         markup.ShouldContain("style=\"@($\"--topic-depth:{Node.Depth};\")\"");
         markup.ShouldContain("TopicSelected.InvokeAsync(Node.FullPath)");
         markup.ShouldContain("Node.Children.Values.OrderBy(n => n.Name)");
+        markup.ShouldContain("role=\"treeitem\"");
+        markup.ShouldContain("tabindex=\"0\"");
+        markup.ShouldContain("aria-label=\"@Node.FullPath\"");
+        markup.ShouldContain("aria-level=\"@TopicNodeLevel()\"");
+        markup.ShouldContain("aria-selected=\"@TopicNodeSelected()\"");
+        markup.ShouldContain("@onkeydown=\"SelectFromKeyboardAsync\"");
+        markup.ShouldContain("class=\"topic-node-children\" role=\"group\"");
         markup.ShouldContain("<button type=\"button\"");
         markup.ShouldContain("class=\"topic-node-chevron\"");
         markup.ShouldContain("aria-label=\"@TopicNodeChevronLabel()\"");
@@ -3438,6 +3459,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@onclick:stopPropagation");
         markup.ShouldContain("topic-node-chevron-static");
         markup.ShouldContain("private string TopicNodeChevronLabel()");
+        markup.ShouldContain("private int TopicNodeLevel()");
+        markup.ShouldContain("private string TopicNodeSelected()");
+        markup.ShouldContain("private Task SelectFromKeyboardAsync(KeyboardEventArgs args)");
         markup.ShouldContain("private static void IgnoreChevronClick()");
         markup.ShouldNotContain("<span class=\"topic-node-chevron\" @onclick=\"Toggle\"");
 
@@ -3448,9 +3472,21 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("appearance: none;");
         css.ShouldContain("background: transparent;");
         css.ShouldContain("border: 0;");
+        css.ShouldContain(".topic-node-row:focus-visible");
         css.ShouldContain(".topic-node-chevron:focus-visible");
         css.ShouldContain(".topic-node-chevron-static");
         css.ShouldNotContain("border-radius: 999px;");
+
+        viewMarkup.ShouldContain("class=\"topic-tree-nodes\" role=\"tree\" aria-label=\"Topics\"");
+        viewMarkup.ShouldContain("role=\"treeitem\"");
+        viewMarkup.ShouldContain("aria-label=\"@node.FullPath\"");
+        viewMarkup.ShouldContain("aria-level=\"@TopicNodeLevel(node)\"");
+        viewMarkup.ShouldContain("aria-selected=\"@TopicNodeSelected(node)\"");
+        viewMarkup.ShouldContain("@onkeydown=\"@((KeyboardEventArgs args) => SelectTopicFromKeyboardAsync(args, node.FullPath))\"");
+        viewMarkup.ShouldContain("private static int TopicNodeLevel(TopicNode node)");
+        viewMarkup.ShouldContain("private string TopicNodeSelected(TopicNode node)");
+        viewMarkup.ShouldContain("private Task SelectTopicFromKeyboardAsync(KeyboardEventArgs args, string? topic)");
+        viewCss.ShouldContain(".topic-node-flat:focus-visible");
     }
 
     [Fact]

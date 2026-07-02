@@ -4,6 +4,12 @@
 
     <div class="topic-node-row @(Node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
          title="@Node.FullPath"
+         role="treeitem"
+         tabindex="0"
+         aria-label="@Node.FullPath"
+         aria-level="@TopicNodeLevel()"
+         aria-selected="@TopicNodeSelected()"
+         @onkeydown="SelectFromKeyboardAsync"
          @onclick="Select">
         <span class="topic-node-branch"></span>
 
@@ -41,13 +47,15 @@
 
     @if (_expanded && Node.HasChildren)
     {
-        @foreach (var child in Node.Children.Values.OrderBy(n => n.Name))
-        {
-            <TopicTreeNode Node="child"
-                           SelectedTopic="@SelectedTopic"
-                           TopicSelected="@TopicSelected"
-                           Compact="@Compact" />
-        }
+        <div class="topic-node-children" role="group">
+            @foreach (var child in Node.Children.Values.OrderBy(n => n.Name))
+            {
+                <TopicTreeNode Node="child"
+                               SelectedTopic="@SelectedTopic"
+                               TopicSelected="@TopicSelected"
+                               Compact="@Compact" />
+            }
+        </div>
     }
 
 </div>
@@ -75,7 +83,19 @@
     private string TopicNodeChevronLabel()
         => _expanded ? "Collapse topic branch" : "Expand topic branch";
 
+    private int TopicNodeLevel()
+        => Node.Depth + 1;
+
+    private string TopicNodeSelected()
+        => string.Equals(Node.FullPath, SelectedTopic, StringComparison.Ordinal) ? "true" : "false";
+
     private void Toggle() => _expanded = !_expanded;
     private static void IgnoreChevronClick() { }
+    private static bool IsActivationKey(KeyboardEventArgs args)
+        => args.Key is "Enter" or " " or "Spacebar";
+
+    private Task SelectFromKeyboardAsync(KeyboardEventArgs args)
+        => IsActivationKey(args) ? Select() : Task.CompletedTask;
+
     private Task Select() => TopicSelected.InvokeAsync(Node.FullPath);
 }

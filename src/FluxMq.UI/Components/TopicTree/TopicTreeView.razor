@@ -3,7 +3,7 @@
 
 <div class="topic-tree-view @(Compact ? "compact" : null)">
 
-    <div class="topic-tree-nodes">
+    <div class="topic-tree-nodes" role="tree" aria-label="Topics">
         @if (string.IsNullOrWhiteSpace(Filter))
         {
             var roots = Roots.OrderBy(n => n.Name).ToList();
@@ -39,6 +39,12 @@
                 {
                     <div class="topic-node-flat @(node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
                          title="@node.FullPath"
+                         role="treeitem"
+                         tabindex="0"
+                         aria-label="@node.FullPath"
+                         aria-level="@TopicNodeLevel(node)"
+                         aria-selected="@TopicNodeSelected(node)"
+                         @onkeydown="@((KeyboardEventArgs args) => SelectTopicFromKeyboardAsync(args, node.FullPath))"
                          @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
                         <span class="topic-node-flat-icon">
                             <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" />
@@ -107,6 +113,15 @@
     }
 
     private void OnIndexChanged(object? sender, EventArgs e) => _pendingUpdate = true;
+    private static int TopicNodeLevel(TopicNode node) => node.Depth + 1;
+    private string TopicNodeSelected(TopicNode node)
+        => string.Equals(node.FullPath, SelectedTopic, StringComparison.Ordinal) ? "true" : "false";
+
+    private static bool IsActivationKey(KeyboardEventArgs args)
+        => args.Key is "Enter" or " " or "Spacebar";
+
+    private Task SelectTopicFromKeyboardAsync(KeyboardEventArgs args, string? topic)
+        => IsActivationKey(args) ? TopicSelected.InvokeAsync(topic) : Task.CompletedTask;
 
     public void Dispose()
     {
