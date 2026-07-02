@@ -285,7 +285,7 @@
                                         var currentWidgetLabel = WidgetLabel(currentCell.Widget);
                                         <div class="dashboard-cell-widget-preview"
                                              draggable="true"
-                                             title="Drag to move widget; use toolbar to edit"
+                                             title="@($"Drag {currentWidgetLabel} to move; use toolbar to edit")"
                                              @ondragstart="@(() => BeginWidgetMove(currentCell.Widget, currentCell.Name))"
                                              @ondragend="@EndWidgetMove">
                                             <DashboardWidgetView Project="@Project"
@@ -1166,7 +1166,7 @@
 
     private string DashboardDragHintText
         => IsDashboardMoveDrag
-            ? DropTargetHint(MoveTargetCellName, "Move widget")
+            ? DropTargetHint(MoveTargetCellName, $"Move {WidgetLabel(_movingWidgetName)}")
             : DropTargetHint(_hoveredDropCellName, "Place widget");
 
     private string? MoveTargetCellName
