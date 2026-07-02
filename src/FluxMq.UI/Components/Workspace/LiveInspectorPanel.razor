@@ -94,7 +94,7 @@
 
         @if (LatestDiagnostic is null)
         {
-            <div class="status-line muted">Idle</div>
+            <div class="publisher-diagnostic muted">Idle</div>
         }
         else
         {
@@ -158,10 +158,10 @@
 
     private string LatestDiagnosticClass => LatestDiagnostic?.Severity switch
     {
-        "Error" => "status-line error",
-        "Warning" => "status-line warning",
-        "Info" => "status-line info",
-        _ => "status-line muted"
+        "Error" => "publisher-diagnostic error",
+        "Warning" => "publisher-diagnostic warning",
+        "Info" => "publisher-diagnostic info",
+        _ => "publisher-diagnostic muted"
     };
 
     private string LatestDiagnosticIcon => LatestDiagnostic?.Severity switch

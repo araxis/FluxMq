@@ -2605,6 +2605,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Live.PublishAsync(");
         markup.ShouldContain("RecordManualMqttPublish");
         markup.ShouldContain("diagnostics-panel");
+        markup.ShouldContain("publisher-diagnostic muted");
+        markup.ShouldContain("LatestDiagnosticClass");
         markup.ShouldContain("publish-form-grid");
         markup.ShouldContain("publish-field broker");
         markup.ShouldContain("publish-field topic");
@@ -2636,6 +2638,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("section-badge");
         markup.ShouldNotContain("ConnectionBadgeClass");
         markup.ShouldNotContain("connection-badge");
+        markup.ShouldNotContain("status-line");
 
         css.ShouldContain(".publisher-header");
         css.ShouldContain(".publisher-title-lockup");
@@ -2656,9 +2659,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".publish-qos-select");
         css.ShouldContain(".publish-retain-toggle.active");
         css.ShouldContain(".diagnostics-panel");
-        css.ShouldContain(".status-line.info");
-        css.ShouldContain(".status-line.warning");
-        css.ShouldContain(".status-line.error");
+        css.ShouldContain(".publisher-diagnostic.info");
+        css.ShouldContain(".publisher-diagnostic.warning");
+        css.ShouldContain(".publisher-diagnostic.error");
+        css.ShouldNotContain(".status-line");
         css.ShouldNotContain(".client-panel");
         css.ShouldNotContain(".client-summary");
         css.ShouldNotContain(".client-state-dot");
