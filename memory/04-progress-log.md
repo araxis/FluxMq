@@ -4565,5 +4565,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Save readiness must come from validation state, not status labels like `Ready to save`.
   - Dialog footers should sit in a consistent padded full-width footer panel.
   - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
+- State Reducer Summary Copy result:
+  - Replaced the remaining State Reducer view-summary `Contract` label and contract-named token group with neutral data-type wording.
+  - Kept the same compact operational facts, expression preview, code editor workspace, sidecar controls, validation, saved configuration shape, node id, ports, and runtime behavior.
+  - Updated the focused guard to require `State reducer data types` and reject the old State Reducer contract summary hooks.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~StateReducerNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Next implementation order:
-  1. Continue the next small designer-polish backlog item from remaining high-use workspace noise.
+  1. Continue the next small designer-polish backlog item from remaining high-use workspace noise, starting with remaining compact node-summary naming noise where a focused guard already exists.
