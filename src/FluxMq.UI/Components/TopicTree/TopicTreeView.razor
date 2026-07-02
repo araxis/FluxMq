@@ -3,7 +3,7 @@
 
 <div class="topic-tree-view @(Compact ? "compact" : null)">
 
-    <div class="topic-tree-nodes" role="tree" aria-label="Topics">
+    <div class="topic-tree-nodes" role="tree" aria-label="@TopicTreeLabel">
         @if (string.IsNullOrWhiteSpace(Filter))
         {
             var roots = Roots.OrderBy(n => n.Name).ToList();
@@ -82,6 +82,20 @@
     private IReadOnlyCollection<TopicNode> Roots => ActiveTopicIndex.Roots.Values.ToArray();
     private IEnumerable<TopicNode> SearchResults => ActiveTopicIndex.Search(Filter);
     private ITopicIndex ActiveTopicIndex => _localTopicIndex ?? TopicIndex;
+    private string TopicTreeLabel
+    {
+        get
+        {
+            var topicCount = CountTopics(Roots);
+            var messageCount = Roots.Sum(static root => root.MessageCount);
+            var topicText = topicCount == 1 ? "1 topic" : $"{topicCount} topics";
+            var messageText = messageCount == 1 ? "1 message" : $"{messageCount} messages";
+
+            return string.IsNullOrWhiteSpace(Filter)
+                ? $"Topic tree with {topicText} and {messageText}"
+                : $"Filtered topic tree for {Filter.Trim()}, {topicText} and {messageText}";
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -115,6 +129,9 @@
 
     private void OnIndexChanged(object? sender, EventArgs e) => _pendingUpdate = true;
     private static int TopicNodeLevel(TopicNode node) => node.Depth + 1;
+    private static int CountTopics(IEnumerable<TopicNode> nodes)
+        => nodes.Sum(static node => 1 + CountTopics(node.Children.Values));
+
     private string TopicNodeSelected(TopicNode node)
         => string.Equals(node.FullPath, SelectedTopic, StringComparison.Ordinal) ? "true" : "false";
 

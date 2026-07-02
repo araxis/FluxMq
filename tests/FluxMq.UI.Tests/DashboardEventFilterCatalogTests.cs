@@ -3654,7 +3654,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".topic-node-chevron-static");
         css.ShouldNotContain("border-radius: 999px;");
 
-        viewMarkup.ShouldContain("class=\"topic-tree-nodes\" role=\"tree\" aria-label=\"Topics\"");
+        viewMarkup.ShouldContain("class=\"topic-tree-nodes\" role=\"tree\" aria-label=\"@TopicTreeLabel\"");
+        viewMarkup.ShouldContain("private string TopicTreeLabel");
+        viewMarkup.ShouldContain("Topic tree with {topicText} and {messageText}");
+        viewMarkup.ShouldContain("Filtered topic tree for {Filter.Trim()}, {topicText} and {messageText}");
+        viewMarkup.ShouldContain("private static int CountTopics(IEnumerable<TopicNode> nodes)");
+        viewMarkup.ShouldNotContain("aria-label=\"Topics\"");
         viewMarkup.ShouldContain("role=\"treeitem\"");
         viewMarkup.ShouldContain("aria-label=\"@node.FullPath\"");
         viewMarkup.ShouldContain("aria-level=\"@TopicNodeLevel(node)\"");
