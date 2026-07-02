@@ -4832,7 +4832,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void DashboardQueryPreviewFrame_UsesNeutralPreviewStateChrome()
+    public void DashboardQueryPreviewFrame_UsesNeutralPreviewSourceChrome()
     {
         var root = FindRepositoryRoot();
         var markup = File.ReadAllText(Path.Combine(
@@ -4853,15 +4853,18 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Widget preview");
         markup.ShouldContain("Current style and draft query");
         markup.ShouldContain("Refresh sample");
-        markup.ShouldContain("DataStateClass");
-        markup.ShouldContain("dashboard-query-preview-frame-state live");
-        markup.ShouldContain("dashboard-query-preview-frame-state sample");
+        markup.ShouldContain("PreviewSourceClass");
+        markup.ShouldContain("dashboard-query-preview-frame-source live");
+        markup.ShouldContain("dashboard-query-preview-frame-source sample");
+        markup.ShouldNotContain("DataStateClass");
+        markup.ShouldNotContain("dashboard-query-preview-frame-state");
         markup.ShouldNotContain("BadgeClass");
         markup.ShouldNotContain("dashboard-query-preview-frame-badge");
 
-        css.ShouldContain(".dashboard-query-preview-frame-state");
-        css.ShouldContain(".dashboard-query-preview-frame-state.live");
-        css.ShouldContain(".dashboard-query-preview-frame-state.sample");
+        css.ShouldContain(".dashboard-query-preview-frame-source");
+        css.ShouldContain(".dashboard-query-preview-frame-source.live");
+        css.ShouldContain(".dashboard-query-preview-frame-source.sample");
+        css.ShouldNotContain(".dashboard-query-preview-frame-state");
         css.ShouldNotContain(".dashboard-query-preview-frame-badge");
     }
 
