@@ -5769,3 +5769,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only scenario run-history stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Runner Console section label specificity result:
+  - Replaced static setup, preflight, first-run facts, timeline, and activity accessible labels with scenario/count-aware labels.
+  - Preserved empty state, preflight checks, first-run summary, timeline rendering, runtime/log activity rendering, run execution, report actions, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Runner Console guard to require the section label helpers and reject the old static section labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TestRunnerConsole section-label stale scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

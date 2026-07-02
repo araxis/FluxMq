@@ -20,7 +20,7 @@
                     <span>@NoTestEmptyTitle</span>
                     <small>@NoTestEmptyText</small>
                 </div>
-                <div class="test-runner-empty-cues" aria-label="Test runner setup">
+                <div class="test-runner-empty-cues" aria-label="@TestRunnerSetupLabel">
                     <span>
                         <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                         @NoTestSelectionHint
@@ -172,7 +172,7 @@
         </div>
 
         <div class="test-runner-workspace">
-            <section class="test-runner-preflight-strip" aria-label="Scenario preflight">
+            <section class="test-runner-preflight-strip" aria-label="@ScenarioPreflightLabel">
                 <div class="@PreflightItemClass(Scenario.StepCount > 0)">
                     <MudIcon Icon="@CheckIcon(Scenario.StepCount > 0)" Size="Size.Small" aria-hidden="true" />
                     <span>Steps</span>
@@ -225,7 +225,7 @@
                         <strong>@FirstRunTitle</strong>
                         <span>@FirstRunDescription</span>
                     </div>
-                    <div class="test-runner-first-run-cues" aria-label="First run facts">
+                    <div class="test-runner-first-run-cues" aria-label="@FirstRunFactsLabel">
                         <span>
                             <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" Size="Size.Small" aria-hidden="true" />
                             @ScenarioStepLabel
@@ -243,7 +243,7 @@
             }
 
             <div class="test-runner-main">
-                <section class="test-runner-section timeline" aria-label="Scenario timeline">
+                <section class="test-runner-section timeline" aria-label="@ScenarioTimelineLabel">
                     <div class="test-runner-section-title">
                         <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" aria-hidden="true" />
                         <span>Timeline</span>
@@ -285,7 +285,7 @@
                     </div>
                 </section>
 
-                <section class="test-runner-section activity" aria-label="Scenario activity">
+                <section class="test-runner-section activity" aria-label="@ScenarioActivityLabel">
                     <div class="test-runner-section-title">
                         <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" aria-hidden="true" />
                         <span>Activity</span>
@@ -382,6 +382,11 @@
     private string NoTestSelectionHint
         => Project.TestNames.Count == 0 ? "No tests" : FormatCount(Project.TestNames.Count, "test");
 
+    private string TestRunnerSetupLabel
+        => Project.TestNames.Count == 0
+            ? "Test runner setup with no tests"
+            : $"Test runner setup with {FormatCount(Project.TestNames.Count, "test")}";
+
     private string ScenarioStepLabel
         => Scenario is { } scenario ? FormatCount(scenario.StepCount, "step") : "No steps";
 
@@ -438,6 +443,26 @@
 
     private string FirstRunEventModeLabel
         => Project.State == RuntimeWorkspaceState.Running ? "Runtime attached" : "Isolated run";
+
+    private string ScenarioPreflightLabel
+        => Scenario is { } scenario
+            ? $"Preflight checks for {scenario.Name}"
+            : "Preflight checks with no active scenario";
+
+    private string FirstRunFactsLabel
+        => Scenario is { } scenario
+            ? $"First run facts for {scenario.Name}"
+            : "First run facts with no active scenario";
+
+    private string ScenarioTimelineLabel
+        => Scenario is { } scenario
+            ? $"Timeline for {scenario.Name}"
+            : "Timeline with no active scenario";
+
+    private string ScenarioActivityLabel
+        => Scenario is { } scenario
+            ? $"Activity for {scenario.Name}: {ActivitySummaryLabel}"
+            : "Activity with no active scenario";
 
     private string FirstRunAriaLabel
         => $"{FirstRunTitle}. {FirstRunDescription}";
