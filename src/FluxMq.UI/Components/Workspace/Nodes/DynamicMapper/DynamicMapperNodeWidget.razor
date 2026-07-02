@@ -205,7 +205,7 @@
                             <strong>@_previewResult.Title</strong>
                         </div>
                         <div class="dynamic-mapper-workspace-actions">
-                            <span class="@PreviewResultStateClass">@PreviewResultStateText</span>
+                            <span class="@PreviewResultMarkerClass">@PreviewResultMarkerText</span>
                         </div>
                     </div>
 
@@ -281,10 +281,10 @@
     private string ResultPreviewTitle => IsTypedOutputMode
         ? _outputType
         : IsJsonSchemaFileMode ? "JSON Schema result" : "Any JSON";
-    private string PreviewResultStateClass => _previewResult.Success
-        ? "dynamic-mapper-result-state ok"
-        : "dynamic-mapper-result-state error";
-    private string PreviewResultStateText => _previewResult.Success ? "valid" : "error";
+    private string PreviewResultMarkerClass => _previewResult.Success
+        ? "dynamic-mapper-result-marker ok"
+        : "dynamic-mapper-result-marker error";
+    private string PreviewResultMarkerText => _previewResult.Success ? "valid" : "error";
     private IReadOnlyList<DynamicMapperVariable> SummaryVariables
         => _variables
             .Where(static variable => variable.Depth == 0)

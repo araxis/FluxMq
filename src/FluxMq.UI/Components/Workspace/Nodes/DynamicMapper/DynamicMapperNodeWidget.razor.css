@@ -196,7 +196,7 @@
     min-width: 0;
 }
 
-.dynamic-mapper-result-state {
+.dynamic-mapper-result-marker {
     align-items: center;
     border: 1px solid color-mix(in srgb, var(--flux-border-soft) 76%, transparent);
     border-radius: 4px;
@@ -210,11 +210,11 @@
     text-transform: uppercase;
 }
 
-.dynamic-mapper-result-state.ok {
+.dynamic-mapper-result-marker.ok {
     color: color-mix(in srgb, var(--mud-palette-success) 80%, var(--mud-palette-text-primary));
 }
 
-.dynamic-mapper-result-state.error {
+.dynamic-mapper-result-marker.error {
     color: color-mix(in srgb, var(--mud-palette-error) 82%, var(--mud-palette-text-primary));
 }
 
