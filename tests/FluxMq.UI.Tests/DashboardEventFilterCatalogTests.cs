@@ -4325,6 +4325,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-preview-marker");
         markup.ShouldContain("metrics-list-empty create-empty");
         markup.ShouldContain("metrics-list-empty filter-empty");
+        markup.ShouldContain("role=\"radiogroup\"");
+        markup.ShouldContain("aria-orientation=\"horizontal\"");
+        markup.ShouldContain("aria-label=\"@parameter.DisplayName\"");
+        markup.ShouldContain("role=\"radio\"");
+        markup.ShouldContain("aria-checked=\"@AriaState(IsToggleSelected(toggleValue, TrueValue))\"");
         markup.ShouldNotContain("metrics-latest-state");
         markup.ShouldNotContain("metrics-preview-state");
         markup.ShouldNotContain("ShowEditorState");
