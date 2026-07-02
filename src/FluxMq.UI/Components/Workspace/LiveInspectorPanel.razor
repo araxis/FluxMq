@@ -18,7 +18,7 @@
                 <span>@ActiveAppLabel</span>
             </span>
         </div>
-        <span class="@ConnectionStateClass">@ConnectionStateLabel</span>
+        <span class="@ConnectionMarkerClass">@ConnectionMarkerLabel</span>
     </header>
 
     <section class="publisher-panel publish-form-panel">
@@ -85,7 +85,7 @@
 
     <section class="publisher-panel diagnostics-panel">
         <div class="section-label">
-            <span>MQTT state</span>
+            <span>MQTT connection</span>
             @if (LatestDiagnostic is not null)
             {
                 <span>@LatestDiagnostic.Code</span>
@@ -146,14 +146,14 @@
         var count => $"{count} clients"
     };
 
-    private string ConnectionStateLabel => SelectedConnection?.State.ToString() ?? "No client";
+    private string ConnectionMarkerLabel => SelectedConnection?.State.ToString() ?? "No client";
 
-    private string ConnectionStateClass => SelectedConnection?.State switch
+    private string ConnectionMarkerClass => SelectedConnection?.State switch
     {
-        MqttClientState.Connected => "connection-state connected",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-state pending",
-        MqttClientState.Faulted => "connection-state faulted",
-        _ => "connection-state"
+        MqttClientState.Connected => "connection-marker connected",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-marker pending",
+        MqttClientState.Faulted => "connection-marker faulted",
+        _ => "connection-marker"
     };
 
     private string LatestDiagnosticClass => LatestDiagnostic?.Severity switch

@@ -2595,10 +2595,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Icons.Material.Filled.Send");
         markup.ShouldContain("MQTT Publisher");
         markup.ShouldContain("MQTT client");
-        markup.ShouldContain("MQTT state");
+        markup.ShouldContain("MQTT connection");
         markup.ShouldContain("ActiveAppLabel");
         markup.ShouldContain("ClientCountLabel");
-        markup.ShouldContain("ConnectionStateClass");
+        markup.ShouldContain("ConnectionMarkerClass");
+        markup.ShouldContain("ConnectionMarkerLabel");
         markup.ShouldContain("EnsureLiveConnectionsForActiveProject");
         markup.ShouldContain("Live.AddConnectionIfAbsent(profile, subscription, name)");
         markup.ShouldContain("Live.ConnectAsync(connection.Id)");
@@ -2638,15 +2639,19 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("section-badge");
         markup.ShouldNotContain("ConnectionBadgeClass");
         markup.ShouldNotContain("connection-badge");
+        markup.ShouldNotContain("MQTT state");
+        markup.ShouldNotContain("ConnectionStateClass");
+        markup.ShouldNotContain("ConnectionStateLabel");
         markup.ShouldNotContain("MQTT status");
         markup.ShouldNotContain("status-line");
 
         css.ShouldContain(".publisher-header");
         css.ShouldContain(".publisher-title-lockup");
         css.ShouldContain(".publisher-icon");
-        css.ShouldContain(".connection-state.connected");
-        css.ShouldContain(".connection-state.pending");
-        css.ShouldContain(".connection-state.faulted");
+        css.ShouldContain(".connection-marker.connected");
+        css.ShouldContain(".connection-marker.pending");
+        css.ShouldContain(".connection-marker.faulted");
+        css.ShouldNotContain(".connection-state");
         css.ShouldContain(".publisher-panel");
         css.ShouldContain(".publish-form-grid");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
