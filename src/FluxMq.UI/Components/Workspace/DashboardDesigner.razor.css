@@ -728,16 +728,16 @@
     border-color: color-mix(in srgb, var(--flux-accent) 48%, var(--flux-border));
 }
 
-.dashboard-cell.drop-ready {
+.dashboard-cell.drop-target {
     background: color-mix(in srgb, var(--flux-accent) 4%, var(--flux-surface-2));
     border-color: color-mix(in srgb, var(--flux-accent) 28%, var(--flux-border));
 }
 
-.dashboard-cell.has-widget.drop-ready {
+.dashboard-cell.has-widget.drop-target {
     background: color-mix(in srgb, var(--flux-accent) 3%, transparent);
 }
 
-.dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready {
+.dashboard-grid-frame.adding-widget .dashboard-cell.drop-target {
     border-style: dashed;
 }
 
@@ -854,7 +854,7 @@
     font-size: 15px;
 }
 
-.dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready .dashboard-cell-drop-mark {
+.dashboard-grid-frame.adding-widget .dashboard-cell.drop-target .dashboard-cell-drop-mark {
     opacity: 0.5;
     transform: scale(0.94);
 }
@@ -870,7 +870,7 @@
     transform: scale(1);
 }
 
-.dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready:hover .dashboard-cell-drop-mark,
+.dashboard-grid-frame.adding-widget .dashboard-cell.drop-target:hover .dashboard-cell-drop-mark,
 .dashboard-grid-frame.adding-widget .dashboard-cell.dropping .dashboard-cell-drop-mark {
     opacity: 1;
     transform: scale(1);

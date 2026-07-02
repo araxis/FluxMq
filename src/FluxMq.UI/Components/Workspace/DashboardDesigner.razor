@@ -1184,7 +1184,7 @@
             hasWidget ? "has-widget" : null,
             cell.IsMerged ? "merged" : null,
             _selectedCellIds.Contains(cell.Name) ? "selected" : null,
-            IsDashboardComponentDrag ? "drop-ready" : null,
+            IsDashboardComponentDrag ? "drop-target" : null,
             IsDashboardMoveDrag && !isMoveSource ? "move-target" : null,
             IsDashboardComponentDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null,
             IsDashboardMoveDrag && string.Equals(_hoveredWidgetMoveCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null,

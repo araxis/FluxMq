@@ -4717,9 +4717,10 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("class=\"@DashboardGridFrameClass\"");
         razor.ShouldContain("dashboard-drop-status");
         razor.ShouldContain("DashboardDragStatusText");
-        razor.ShouldContain("drop-ready");
+        razor.ShouldContain("drop-target");
         razor.ShouldContain("move-target");
         razor.ShouldContain("dashboard-cell-drop-mark");
+        razor.ShouldNotContain("drop-ready");
         razor.ShouldContain("role=\"status\" aria-live=\"polite\"");
         razor.ShouldContain("dashboard-grid-empty-icon");
         razor.ShouldContain("@EmptyGridHint");
@@ -4734,9 +4735,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("max-width: min(340px, calc(100% - 16px));");
         css.ShouldContain(".dashboard-track-handle:focus-visible");
         css.ShouldContain(".dashboard-cell:focus-visible");
-        css.ShouldContain(".dashboard-cell.drop-ready");
-        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready");
-        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready .dashboard-cell-drop-mark");
+        css.ShouldContain(".dashboard-cell.drop-target");
+        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-target");
+        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-target .dashboard-cell-drop-mark");
         css.ShouldContain(".dashboard-cell.move-target");
         css.ShouldContain(".dashboard-cell.selected::after");
         css.ShouldContain(".dashboard-cell.dropping::after");
@@ -4745,6 +4746,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dashboard-cell.moving-source::before");
         css.ShouldContain(".dashboard-cell-drop-mark");
         css.ShouldContain(".dashboard-cell:hover .dashboard-cell-placeholder");
+        css.ShouldNotContain(".dashboard-cell.drop-ready");
     }
 
     [Fact]
