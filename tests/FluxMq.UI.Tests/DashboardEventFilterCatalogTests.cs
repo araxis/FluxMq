@@ -6129,6 +6129,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@WorkflowSelectionLabel");
         markup.ShouldContain("flow-canvas-metrics");
         markup.ShouldContain("flow-canvas-stat");
+        markup.ShouldContain("aria-label=\"Pipeline canvas state and commands\"");
         markup.ShouldContain("flow-canvas-command-group");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("@EmptyCanvasHint");
@@ -6145,6 +6146,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("ViewStrokeColor=\"#FBBF24\"");
         markup.ShouldNotContain("flow-link-condition-meta");
         markup.ShouldNotContain("Icons.Material.Filled.Link");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas status and commands\"");
         markup.ShouldNotContain(">Ready<");
         markup.IndexOf("class=\"flow-canvas-header\"", StringComparison.Ordinal)
             .ShouldBeLessThan(markup.IndexOf("class=\"flow-canvas\" role=\"group\"", StringComparison.Ordinal));
