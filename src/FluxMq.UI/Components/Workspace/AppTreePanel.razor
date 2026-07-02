@@ -82,7 +82,7 @@ else
                         {
                             var c = conn;
                             <div class="conn-item" @key="c.Id">
-                                <span class="@StateDotClass(c.State)"></span>
+                                <span class="@ConnectionDotClass(c.State)"></span>
                                 <div class="conn-text">
                                     <div class="conn-name">@c.ResourceName</div>
                                     <div class="conn-endpoint">@c.Profile.Host:@c.Profile.Port</div>
@@ -702,7 +702,7 @@ else
         }
     }
 
-    private static string StateDotClass(MqttClientState state) => state switch
+    private static string ConnectionDotClass(MqttClientState state) => state switch
     {
         MqttClientState.Connected => "conn-dot live",
         MqttClientState.Connecting or MqttClientState.Reconnecting => "conn-dot pending",

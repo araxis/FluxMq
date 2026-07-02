@@ -11814,6 +11814,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AddTestFromKeyboardAsync(args, a)");
         markup.ShouldContain("tree-empty-artifact-copy");
         markup.ShouldContain("tree-empty-artifact-cues");
+        markup.ShouldContain("@ConnectionDotClass(c.State)");
+        markup.ShouldContain("private static string ConnectionDotClass");
+        markup.ShouldNotContain("StateDotClass");
         markup.ShouldContain("TreeSectionHeader(");
         markup.ShouldContain("private RenderFragment TreeSectionHeader");
         markup.ShouldContain("BrokerSection");
