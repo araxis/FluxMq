@@ -49,14 +49,14 @@
                             <span class="app-tile-path">@FileLabel(a)</span>
                             <span class="app-tile-meta">@BuildAppMeta(a)</span>
                         </span>
-                        <span class="app-tile-states">
+                        <span class="app-tile-markers">
                             @if (isActive)
                             {
-                                <span class="app-state active">@CurrentArtifactLabel(a)</span>
+                                <span class="app-marker active">@CurrentArtifactLabel(a)</span>
                             }
                             @if (a.HasUnsavedChanges)
                             {
-                                <span class="app-state unsaved">Unsaved</span>
+                                <span class="app-marker unsaved">Unsaved</span>
                             }
                         </span>
                     </div>

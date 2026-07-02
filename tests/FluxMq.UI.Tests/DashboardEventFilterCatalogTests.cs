@@ -12106,8 +12106,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static bool IsActivationKey");
         markup.ShouldContain("\"Spacebar\"");
         markup.ShouldContain("app-tile-meta");
-        markup.ShouldContain("app-state active");
-        markup.ShouldContain("app-state unsaved");
+        markup.ShouldContain("app-tile-markers");
+        markup.ShouldContain("app-marker active");
+        markup.ShouldContain("app-marker unsaved");
+        markup.ShouldNotContain("app-tile-states");
+        markup.ShouldNotContain("app-state active");
+        markup.ShouldNotContain("app-state unsaved");
         markup.ShouldContain("aria-label=\"@CloseLabel(a)\"");
         markup.ShouldContain("private static string BuildAppMeta");
         markup.ShouldContain("private static string FileLabel");
@@ -12133,7 +12137,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-tile-close");
         css.ShouldContain("opacity: 0.58;");
         css.ShouldContain(".app-tile:hover .app-tile-close");
-        css.ShouldContain(".app-state.unsaved");
+        css.ShouldContain(".app-tile-markers");
+        css.ShouldContain(".app-marker.unsaved");
+        css.ShouldNotContain(".app-tile-states");
+        css.ShouldNotContain(".app-state");
         css.ShouldContain("max-width: 64px;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("@media (max-width: 760px)");
