@@ -34,7 +34,7 @@
 
                 @if (References.Count == 0)
                 {
-                    <div class="metric-delete-empty">
+                    <div class="metric-delete-empty" role="status" aria-live="polite">
                         <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" aria-hidden="true" />
                         <span>Not used by any dashboard binding.</span>
                     </div>

@@ -66,7 +66,7 @@
 
                     @if (FilteredDescriptors.Count == 0)
                     {
-                        <div class="metric-type-change-empty">
+                        <div class="metric-type-change-empty" role="status" aria-live="polite">
                             <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                             <span>No metric types match your search</span>
                         </div>
@@ -107,7 +107,7 @@
                         }
                         else
                         {
-                            <div class="metric-type-change-empty-defaults">
+                            <div class="metric-type-change-empty-defaults" role="status" aria-live="polite">
                                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" aria-hidden="true" />
                                 <span>This type has no parameters.</span>
                             </div>

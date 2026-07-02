@@ -4629,7 +4629,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Variant=\"Variant.Filled\"");
         markup.ShouldContain("aria-invalid=\"@(!CanCreate)\"");
         markup.ShouldContain("metric-create-count");
-        markup.ShouldContain("metric-create-empty-defaults");
+        markup.ShouldContain("metric-create-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metric-create-empty-defaults\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldNotContain("Class=\"metric-create-submit\"");
         markup.ShouldNotContain("metric-create-status");
         markup.ShouldNotContain("CreateStatusClass");
@@ -4747,6 +4748,8 @@ public sealed class DashboardEventFilterCatalogTests
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldContain("metric-delete-tone");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("metric-delete-empty\" role=\"status\" aria-live=\"polite\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldNotContain("metric-delete-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldNotContain("DeleteStatusText");
@@ -4764,6 +4767,10 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldNotContain("DuplicateStatusText");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldNotContain("metric-type-change-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("metric-type-change-empty\" role=\"status\" aria-live=\"polite\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("metric-type-change-empty-defaults\" role=\"status\" aria-live=\"polite\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))

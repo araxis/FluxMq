@@ -5282,3 +5282,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~LiveInspectorPanel_UsesAppLevelMqttPublisherPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Metric dialog empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to Metric Create and Metric Type Change no-result/no-parameter placeholders, plus the Metric Delete no-reference placeholder.
+  - Preserved metric descriptor selection, search, id/name validation, parameter previews, type-change reset warning, delete warning, dashboard reference rendering, metric model behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Metric Create and Metric Action dialog guards to require the status-backed empty-state wrappers.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
