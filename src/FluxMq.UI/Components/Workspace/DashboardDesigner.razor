@@ -9,7 +9,7 @@
     <div class="dashboard-toolbar" role="toolbar" aria-label="Dashboard toolbar">
         <div class="dashboard-heading">
             <span class="dashboard-heading-icon-tile" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" />
+                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" aria-hidden="true" />
             </span>
             <div class="dashboard-heading-copy">
                 <div class="dashboard-title">@DashboardTitle</div>
@@ -158,7 +158,7 @@
         <div class="dashboard-empty">
             <div class="dashboard-empty-panel" role="status" aria-live="polite">
                 <span class="dashboard-empty-icon-tile" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="dashboard-empty-icon" />
+                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="dashboard-empty-icon" aria-hidden="true" />
                 </span>
                 <div class="dashboard-empty-copy">
                     <span>@EmptyDashboardTitle</span>
@@ -204,7 +204,7 @@
                                 aria-label="@TrackHandleLabel(ColumnAxis, c, _layout.Columns[c], padding)"
                                 @onclick="() => OpenTrackEditorAsync(ColumnAxis, c)">
                             <span class="dashboard-track-icon" aria-hidden="true">
-                                <MudIcon Icon="@TrackHandleIcon(ColumnAxis)" Size="Size.Small" />
+                                <MudIcon Icon="@TrackHandleIcon(ColumnAxis)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <span class="dashboard-track-main">
                                 <span class="dashboard-track-name">@TrackShortLabel(ColumnAxis, c)</span>
@@ -228,7 +228,7 @@
                                 aria-label="@TrackHandleLabel(RowAxis, r, _layout.Rows[r], padding)"
                                 @onclick="() => OpenTrackEditorAsync(RowAxis, r)">
                             <span class="dashboard-track-icon" aria-hidden="true">
-                                <MudIcon Icon="@TrackHandleIcon(RowAxis)" Size="Size.Small" />
+                                <MudIcon Icon="@TrackHandleIcon(RowAxis)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <span class="dashboard-track-main">
                                 <span class="dashboard-track-name">@TrackShortLabel(RowAxis, r)</span>
@@ -246,7 +246,7 @@
                     {
                         <div class="dashboard-grid-empty-note @(HasActiveDashboardDrag ? "dragging" : null)" role="status" aria-live="polite">
                             <span class="dashboard-grid-empty-icon" aria-hidden="true">
-                                <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <div>
                                 <span>@EmptyGridTitle</span>
@@ -299,21 +299,21 @@
                                                     title="Edit widget settings"
                                                     aria-label="@($"Edit {WidgetLabel(currentCell.Widget)} settings")"
                                                     @onclick="@(() => OpenWidgetEditorAsync(currentCell.Widget))">
-                                                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action simulate"
                                                     title="Simulate widget data"
                                                     aria-label="Simulate widget data"
                                                     @onclick="@(() => SimulateWidgetPreview(currentCell.Widget))">
-                                                <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action danger"
                                                     title="Delete widget"
                                                     aria-label="Delete widget"
                                                     @onclick="@(() => RemoveWidget(currentCell.Widget))">
-                                                <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                         </div>
                                     }
@@ -347,7 +347,7 @@
                 <div class="dashboard-live-head">
                     <div class="dashboard-live-title">
                         <span class="dashboard-live-icon" aria-hidden="true">
-                            <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <div>
                             <span>Live preview</span>
@@ -372,7 +372,7 @@
                     {
                         <div class="dashboard-live-empty-note" role="status" aria-live="polite">
                             <span class="dashboard-live-empty-icon" aria-hidden="true">
-                                <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <div>
                                 <span>No widgets in live preview</span>
@@ -1257,7 +1257,7 @@
                 <span class="dashboard-cell-span">@CellSpan(cell)</span>
             }
             <span class="dashboard-cell-drop-mark" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
             </span>
         </div>
     </text>;

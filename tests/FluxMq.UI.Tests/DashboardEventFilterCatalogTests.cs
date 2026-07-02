@@ -5239,6 +5239,11 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("dashboard-meta-strip");
         razor.ShouldContain("@DashboardSummaryLabel");
         razor.ShouldNotContain("@DashboardStatusLabel");
+        razor.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         razor.ShouldContain("@GridSizeLabel");
         razor.ShouldContain("@CellCountLabel");
         razor.ShouldContain("@WidgetCountLabel");
