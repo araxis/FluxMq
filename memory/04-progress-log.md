@@ -4949,3 +4949,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Component Catalog icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Workspace Log decorative icon accessibility result:
+  - Added hidden decorative semantics to direct title, fixed-scope, empty-state, and row severity `MudIcon` glyphs in `WorkspaceLogPanel`.
+  - Preserved visible title/subtitle copy, scope/level/search filters, copy/export/reset/clear actions, visible-row export scope, row aria labels, log details/context, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Workspace Log guard to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Workspace Log icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

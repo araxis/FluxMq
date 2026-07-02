@@ -4984,6 +4984,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Logs.Count > 0");
         markup.ShouldContain("role=\"search\" aria-label=\"Log filters\"");
         markup.ShouldContain("workspace-log-stats");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("WorkspaceLogFilter.Problems");
         markup.ShouldContain("workspace-log-segment");
         markup.ShouldContain("[Parameter] public WorkspaceLogQuery? InitialQuery { get; set; }");
