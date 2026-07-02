@@ -3,8 +3,8 @@
 <section class="payload-inspector" aria-label="@Title">
     <div class="payload-inspector-header">
         <div class="payload-inspector-title">
-            <span class="payload-format-marker @FormatMarkerClass">
-                <MudIcon Icon="@FormatIcon" Size="Size.Small" />
+            <span class="payload-format-marker @FormatMarkerClass" aria-hidden="true">
+                <MudIcon Icon="@FormatIcon" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="payload-title-copy">
                 <strong>@Title</strong>
@@ -30,7 +30,7 @@
                 class="@ViewButtonClass(FormattedView)"
                 title="Formatted"
                 @onclick="@(() => _activeView = FormattedView)">
-            <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Small" aria-hidden="true" />
             <span>Formatted</span>
         </button>
         <button type="button"
@@ -41,7 +41,7 @@
                 class="@ViewButtonClass(RawView)"
                 title="Raw"
                 @onclick="@(() => _activeView = RawView)">
-            <MudIcon Icon="@Icons.Material.Filled.Subject" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Subject" Size="Size.Small" aria-hidden="true" />
             <span>Raw</span>
         </button>
         <button type="button"
@@ -52,7 +52,7 @@
                 class="@ViewButtonClass(HexView)"
                 title="Hex"
                 @onclick="@(() => _activeView = HexView)">
-            <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" aria-hidden="true" />
             <span>Hex</span>
         </button>
         <button type="button"
@@ -63,7 +63,7 @@
                 class="@ViewButtonClass(MetaView)"
                 title="Metadata"
                 @onclick="@(() => _activeView = MetaView)">
-            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" aria-hidden="true" />
             <span>Meta</span>
         </button>
     </div>

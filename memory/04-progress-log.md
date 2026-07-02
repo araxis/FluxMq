@@ -4757,3 +4757,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Session Panel icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Payload Inspector decorative icon accessibility result:
+  - Added hidden decorative semantics to the payload format marker and payload view tab icons in `PayloadInspectorPanel`.
+  - Preserved visible title/topic/meta copy, tab labels, tab/panel ids, active view switching, formatted/raw/hex/meta payload views, payload inspection behavior, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused `PayloadInspectorPanel_UsesFlatCompactInspectorChrome` guard to require hidden decorative icon treatment and reject the old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~PayloadInspectorPanel_UsesFlatCompactInspectorChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only Payload Inspector icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

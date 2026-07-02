@@ -4729,9 +4729,19 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("<section class=\"payload-inspector\" aria-label=\"@Title\">");
         markup.ShouldContain("payload-inspector-header");
-        markup.ShouldContain("payload-format-marker @FormatMarkerClass");
+        markup.ShouldContain("class=\"payload-format-marker @FormatMarkerClass\" aria-hidden=\"true\"");
+        markup.ShouldContain("<MudIcon Icon=\"@FormatIcon\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@FormatIcon\" Size=\"Size.Small\" />");
         markup.ShouldContain("payload-meta-strip");
         markup.ShouldContain("payload-view-switch");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Subject\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Tag\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Subject\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Tag\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"Size.Small\" />");
         markup.ShouldContain("id=\"@PayloadViewTabId(FormattedView)\"");
         markup.ShouldContain("role=\"tab\"");
         markup.ShouldContain("aria-selected=\"@IsActiveView(FormattedView)\"");
