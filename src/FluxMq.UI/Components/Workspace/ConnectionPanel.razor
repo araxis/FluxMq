@@ -6,7 +6,7 @@
     <div class="connections-head">
         <div class="connections-title">
             <span class="connections-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="connections-title-copy">
                 <strong>Connections</strong>
@@ -25,7 +25,7 @@
     @if (VisibleConnections.Count == 0)
     {
         <div class="connections-empty" role="status" aria-live="polite">
-            <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" aria-hidden="true" />
             <div>
                 <div class="connections-empty-title">No connections</div>
                 <div class="connections-empty-copy">Add a broker connection to start live traffic.</div>

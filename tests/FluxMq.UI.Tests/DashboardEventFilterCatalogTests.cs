@@ -12626,6 +12626,9 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("aria-label=\"Connections panel\"");
         markup.ShouldContain("connections-title-icon");
+        markup.ShouldContain("class=\"connections-title-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" />");
         markup.ShouldContain("<strong>Connections</strong>");
         markup.ShouldContain("@ConnectionCountLabel");
         markup.ShouldContain("VisibleConnections");
