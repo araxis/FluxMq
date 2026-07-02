@@ -23,8 +23,10 @@
 
     <div class="payload-view-switch" role="tablist" aria-label="Payload views">
         <button type="button"
+                id="@PayloadViewTabId(FormattedView)"
                 role="tab"
                 aria-selected="@IsActiveView(FormattedView)"
+                aria-controls="@PayloadViewPanelId"
                 class="@ViewButtonClass(FormattedView)"
                 title="Formatted"
                 @onclick="@(() => _activeView = FormattedView)">
@@ -32,8 +34,10 @@
             <span>Formatted</span>
         </button>
         <button type="button"
+                id="@PayloadViewTabId(RawView)"
                 role="tab"
                 aria-selected="@IsActiveView(RawView)"
+                aria-controls="@PayloadViewPanelId"
                 class="@ViewButtonClass(RawView)"
                 title="Raw"
                 @onclick="@(() => _activeView = RawView)">
@@ -41,8 +45,10 @@
             <span>Raw</span>
         </button>
         <button type="button"
+                id="@PayloadViewTabId(HexView)"
                 role="tab"
                 aria-selected="@IsActiveView(HexView)"
+                aria-controls="@PayloadViewPanelId"
                 class="@ViewButtonClass(HexView)"
                 title="Hex"
                 @onclick="@(() => _activeView = HexView)">
@@ -50,8 +56,10 @@
             <span>Hex</span>
         </button>
         <button type="button"
+                id="@PayloadViewTabId(MetaView)"
                 role="tab"
                 aria-selected="@IsActiveView(MetaView)"
+                aria-controls="@PayloadViewPanelId"
                 class="@ViewButtonClass(MetaView)"
                 title="Metadata"
                 @onclick="@(() => _activeView = MetaView)">
@@ -62,19 +70,35 @@
 
     @if (_activeView == FormattedView)
     {
-        <pre class="payload-inspector-body">@DisplayFormatted()</pre>
+        <pre id="@PayloadViewPanelId"
+             class="payload-inspector-body"
+             role="tabpanel"
+             aria-labelledby="@PayloadViewTabId(_activeView)"
+             tabindex="0">@DisplayFormatted()</pre>
     }
     else if (_activeView == RawView)
     {
-        <pre class="payload-inspector-body">@DisplayRaw()</pre>
+        <pre id="@PayloadViewPanelId"
+             class="payload-inspector-body"
+             role="tabpanel"
+             aria-labelledby="@PayloadViewTabId(_activeView)"
+             tabindex="0">@DisplayRaw()</pre>
     }
     else if (_activeView == HexView)
     {
-        <pre class="payload-inspector-body">@_inspection.HexDump</pre>
+        <pre id="@PayloadViewPanelId"
+             class="payload-inspector-body"
+             role="tabpanel"
+             aria-labelledby="@PayloadViewTabId(_activeView)"
+             tabindex="0">@_inspection.HexDump</pre>
     }
     else
     {
-        <div class="payload-inspector-meta-list">
+        <div id="@PayloadViewPanelId"
+             class="payload-inspector-meta-list"
+             role="tabpanel"
+             aria-labelledby="@PayloadViewTabId(_activeView)"
+             tabindex="0">
             <div>
                 <span>Type</span>
                 <strong>@_inspection.DisplayTypeLabel</strong>
@@ -96,6 +120,8 @@
     private const string RawView = "raw";
     private const string HexView = "hex";
     private const string MetaView = "meta";
+
+    private readonly string _payloadViewIdPrefix = $"payload-inspector-{Guid.NewGuid():N}";
 
     [Parameter] public string Title { get; set; } = "Payload Inspector";
     [Parameter] public string? Topic { get; set; }
@@ -140,6 +166,10 @@
         : "Binary payload. Use the hex view.";
 
     private bool IsActiveView(string view) => string.Equals(_activeView, view, StringComparison.Ordinal);
+
+    private string PayloadViewPanelId => $"{_payloadViewIdPrefix}-panel";
+
+    private string PayloadViewTabId(string view) => $"{_payloadViewIdPrefix}-{view}-tab";
 
     private string ViewButtonClass(string view) => IsActiveView(view)
         ? "payload-view-button active"

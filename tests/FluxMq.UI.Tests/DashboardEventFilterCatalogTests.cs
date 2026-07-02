@@ -4630,10 +4630,18 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("payload-format-marker @FormatMarkerClass");
         markup.ShouldContain("payload-meta-strip");
         markup.ShouldContain("payload-view-switch");
+        markup.ShouldContain("id=\"@PayloadViewTabId(FormattedView)\"");
         markup.ShouldContain("role=\"tab\"");
         markup.ShouldContain("aria-selected=\"@IsActiveView(FormattedView)\"");
+        markup.ShouldContain("aria-controls=\"@PayloadViewPanelId\"");
+        markup.ShouldContain("role=\"tabpanel\"");
+        markup.ShouldContain("aria-labelledby=\"@PayloadViewTabId(_activeView)\"");
+        markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("payload-inspector-meta-list");
         markup.ShouldContain("private const string FormattedView = \"formatted\";");
+        markup.ShouldContain("private readonly string _payloadViewIdPrefix");
+        markup.ShouldContain("private string PayloadViewPanelId");
+        markup.ShouldContain("private string PayloadViewTabId(string view)");
         markup.ShouldContain("private string FormatMarkerClass");
         markup.ShouldContain("private string FormatIcon");
         markup.ShouldNotContain("payload-format-state");
