@@ -1045,7 +1045,7 @@ h3 {
 
 .topic-monitor-dot {
     background: var(--flux-text-subtle);
-    border-radius: 999px;
+    border-radius: 50%;
     height: 7px;
     width: 7px;
 }

@@ -3195,10 +3195,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".topic-no-traffic-copy");
         css.ShouldContain(".topic-monitor-list");
         css.ShouldContain(".topic-monitor-row");
+        css.ShouldContain(".topic-monitor-dot");
+        css.ShouldContain("border-radius: 50%;");
         css.ShouldContain("grid-template-columns: 8px minmax(92px, 0.3fr) minmax(140px, 1fr) auto auto;");
         css.ShouldContain(".topic-monitor-row.live .topic-monitor-connection");
         css.ShouldNotContain(".topic-broker-state");
         css.ShouldNotContain(".topic-monitor-state");
+        css.ShouldNotContain("border-radius: 999px;");
         css.ShouldContain(".topic-history-panel");
         css.ShouldContain(".topic-history-header");
         css.ShouldContain(".topic-history-toolbar");
