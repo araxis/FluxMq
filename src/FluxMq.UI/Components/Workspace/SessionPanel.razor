@@ -2,7 +2,7 @@
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 
-<div class="sessions-panel" aria-label="Recorded sessions panel">
+<div class="sessions-panel" aria-label="@SessionsPanelLabel">
     @if (Live.IsRecording)
     {
         <div class="session-recording-strip" role="status" aria-live="polite">
@@ -151,6 +151,10 @@
         1 => "1 recording",
         _ => $"{AllSessions.Count} recordings"
     };
+
+    private string SessionsPanelLabel => Live.IsRecording
+        ? $"Recordings, {SessionCountLabel}, recording {RecordingName}"
+        : $"Recordings, {SessionCountLabel}";
 
     private string RecordingName => string.IsNullOrWhiteSpace(Live.ActiveRecordingSession?.Name)
         ? "Recording"

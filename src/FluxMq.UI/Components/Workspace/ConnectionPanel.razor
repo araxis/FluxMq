@@ -2,7 +2,7 @@
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 
-<div class="connections-panel" aria-label="Connections panel">
+<div class="connections-panel" aria-label="@ConnectionsPanelLabel">
     <div class="connections-head">
         <div class="connections-title">
             <span class="connections-title-icon" aria-hidden="true">
@@ -96,6 +96,8 @@
     private string ConnectionCountLabel => VisibleConnections.Count == 1
         ? "1 connection"
         : $"{VisibleConnections.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)} connections";
+
+    private string ConnectionsPanelLabel => $"Connections, {ConnectionCountLabel}";
 
     private async Task AddConnectionAsync()
     {

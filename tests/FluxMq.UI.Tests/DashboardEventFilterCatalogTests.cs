@@ -13354,7 +13354,9 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "AppsPanel.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Open apps panel\"");
+        markup.ShouldContain("aria-label=\"@AppsPanelLabel\"");
+        markup.ShouldContain("private string AppsPanelLabel => $\"Open apps, {ProjectCountLabel}\";");
+        markup.ShouldNotContain("aria-label=\"Open apps panel\"");
         markup.ShouldContain("apps-panel-title-icon");
         System.Text.RegularExpressions.Regex.Matches(
                 markup,
@@ -13441,7 +13443,9 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "ConnectionPanel.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Connections panel\"");
+        markup.ShouldContain("aria-label=\"@ConnectionsPanelLabel\"");
+        markup.ShouldContain("private string ConnectionsPanelLabel => $\"Connections, {ConnectionCountLabel}\";");
+        markup.ShouldNotContain("aria-label=\"Connections panel\"");
         markup.ShouldContain("connections-title-icon");
         markup.ShouldContain("class=\"connections-title-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");
@@ -13521,7 +13525,11 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "SessionPanel.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Recorded sessions panel\"");
+        markup.ShouldContain("aria-label=\"@SessionsPanelLabel\"");
+        markup.ShouldContain("private string SessionsPanelLabel => Live.IsRecording");
+        markup.ShouldContain("$\"Recordings, {SessionCountLabel}, recording {RecordingName}\"");
+        markup.ShouldContain("$\"Recordings, {SessionCountLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Recorded sessions panel\"");
         markup.ShouldContain("session-recording-strip");
         markup.ShouldContain("session-recording-strip\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.FiberManualRecord\" Size=\"Size.Small\" aria-hidden=\"true\" />");

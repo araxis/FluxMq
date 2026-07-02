@@ -5585,3 +5585,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Metric Designer stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace side-panel label specificity result:
+  - Replaced static side-panel accessible names in Open Apps, Connections, and Recordings with count/state-backed labels.
+  - Preserved visible panel copy, app selection and close behavior, connection add/connect/disconnect/remove behavior, recording start/stop/session selection behavior, filters, services, saved app data, runtime behavior, schemas, ids, ports, and contracts.
+  - Extended the focused Apps, Connections, and Sessions guards to require the new label helpers and reject the old static panel labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppsPanel|FullyQualifiedName~ConnectionPanel|FullyQualifiedName~SessionPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only side-panel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

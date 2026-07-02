@@ -1,7 +1,7 @@
 @implements IDisposable
 @inject ProjectManagerService Projects
 
-<div class="apps-panel" aria-label="Open apps panel">
+<div class="apps-panel" aria-label="@AppsPanelLabel">
     <div class="apps-panel-head">
         <div class="apps-panel-title">
             <span class="apps-panel-title-icon" aria-hidden="true">
@@ -84,6 +84,8 @@
     private string ProjectCountLabel => Projects.Projects.Count == 1
         ? "1 app"
         : $"{Projects.Projects.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)} apps";
+
+    private string AppsPanelLabel => $"Open apps, {ProjectCountLabel}";
 
     private Task CloseAsync(FlowWorkspaceService app) => Projects.CloseProjectAsync(app).AsTask();
 
