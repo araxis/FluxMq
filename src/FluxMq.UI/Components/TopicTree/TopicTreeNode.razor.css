@@ -30,7 +30,7 @@
 
 .topic-node-branch {
     background: var(--flux-border-strong);
-    border-radius: 999px;
+    border-radius: 1px;
     bottom: 8px;
     left: calc(7px + (var(--topic-depth) * 14px));
     opacity: 0.42;

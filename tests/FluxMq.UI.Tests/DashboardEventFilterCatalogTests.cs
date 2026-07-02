@@ -3363,6 +3363,37 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void TopicTreeNode_UsesCompactBranchLineChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "TopicTree",
+            "TopicTreeNode.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "TopicTree",
+            "TopicTreeNode.razor.css"));
+
+        markup.ShouldContain("topic-node-branch");
+        markup.ShouldContain("style=\"@($\"--topic-depth:{Node.Depth};\")\"");
+        markup.ShouldContain("TopicSelected.InvokeAsync(Node.FullPath)");
+        markup.ShouldContain("Node.Children.Values.OrderBy(n => n.Name)");
+
+        css.ShouldContain(".topic-node-branch");
+        css.ShouldContain("border-radius: 1px;");
+        css.ShouldContain("width: 1px;");
+        css.ShouldContain("left: calc(7px + (var(--topic-depth) * 14px));");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
     public void TestStudio_UsesFlatCompactWorkspaceChrome()
     {
         var root = FindRepositoryRoot();
