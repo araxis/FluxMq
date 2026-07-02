@@ -30,6 +30,7 @@
                         disabled="@option.Disabled"
                         role="option"
                         aria-selected="@IsSelected(option)"
+                        @onclick="@(() => SelectOptionAsync(option))"
                         @onmousedown="@(() => SelectOptionAsync(option))">
                     @option.Label
                 </button>
