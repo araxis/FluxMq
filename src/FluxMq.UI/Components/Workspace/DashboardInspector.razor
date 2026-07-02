@@ -17,7 +17,7 @@
         </div>
         <div class="dashboard-inspector-heading">
             <span class="dashboard-inspector-title">@InspectorTitle</span>
-            <div class="dashboard-inspector-meta-strip" aria-label="Inspector selection summary">
+            <div class="dashboard-inspector-meta-strip" aria-label="@InspectorMetaSummaryLabel">
                 <span>@InspectorModeLabel</span>
                 <span>@InspectorSubtitle</span>
                 <span>@InspectorGroupCountLabel(propertyGroups.Count)</span>
@@ -26,11 +26,11 @@
         </div>
         @if (Widget is not null)
         {
-            <div class="dashboard-inspector-actions" aria-label="Widget commands">
-                <MudTooltip Text="Reset widget properties to defaults">
+            <div class="dashboard-inspector-actions" aria-label="@WidgetCommandGroupLabel">
+                <MudTooltip Text="@ResetWidgetPropertiesLabel">
                     <button type="button"
                             class="dashboard-inspector-command dashboard-inspector-reset-command"
-                            aria-label="Reset widget properties"
+                            aria-label="@ResetWidgetPropertiesLabel"
                             @onclick="@ResetWidgetPropertiesAsync">
                         <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" aria-hidden="true" />
                         <span>Reset</span>
@@ -134,6 +134,12 @@
     private string InspectorSubtitle => Widget is null
         ? Layout is null ? "No dashboard loaded" : $"{Layout.Columns.Count} columns / {Layout.Rows.Count} rows"
         : Widget.Type;
+
+    private string InspectorMetaSummaryLabel => $"{InspectorTitle} selection summary";
+
+    private string WidgetCommandGroupLabel => $"Commands for {InspectorTitle}";
+
+    private string ResetWidgetPropertiesLabel => $"Reset {InspectorTitle} properties to defaults";
 
     private string InspectorModeLabel => Widget is null
         ? SelectedCells.Count switch

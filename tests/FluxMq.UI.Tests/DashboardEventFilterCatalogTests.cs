@@ -2614,6 +2614,13 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldContain("var propertyGroups = PropertyGroups;");
         inspector.ShouldContain("class=\"@InspectorHeaderClass\"");
         inspector.ShouldContain("dashboard-inspector-meta-strip");
+        inspector.ShouldContain("aria-label=\"@InspectorMetaSummaryLabel\"");
+        inspector.ShouldContain("private string InspectorMetaSummaryLabel");
+        inspector.ShouldContain("private string WidgetCommandGroupLabel");
+        inspector.ShouldContain("private string ResetWidgetPropertiesLabel");
+        inspector.ShouldContain("aria-label=\"@WidgetCommandGroupLabel\"");
+        inspector.ShouldContain("Text=\"@ResetWidgetPropertiesLabel\"");
+        inspector.ShouldContain("aria-label=\"@ResetWidgetPropertiesLabel\"");
         inspector.ShouldContain("dashboard-inspector-reset-command");
         inspector.ShouldContain("@InspectorModeLabel");
         inspector.ShouldContain("@InspectorGroupCountLabel(propertyGroups.Count)");
@@ -2633,6 +2640,10 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("Widget edits apply immediately");
         inspector.ShouldNotContain("Cell edits apply immediately");
         inspector.ShouldNotContain("Select a target to edit");
+        inspector.ShouldNotContain("aria-label=\"Inspector selection summary\"");
+        inspector.ShouldNotContain("aria-label=\"Widget commands\"");
+        inspector.ShouldNotContain("aria-label=\"Reset widget properties\"");
+        inspector.ShouldNotContain("Text=\"Reset widget properties to defaults\"");
         inspector.ShouldContain("private static string InspectorPropertyCountLabel");
         inspectorCss.ShouldContain("flex: 0 0 324px;");
         inspectorCss.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) auto;");

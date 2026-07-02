@@ -5513,3 +5513,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only App JSON label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Inspector header-label specificity result:
+  - Replaced generic inspector metadata and widget command accessible names with title-backed labels for the selected inspector target.
+  - Replaced the widget reset tooltip and accessible name with `Reset {target} properties to defaults` while keeping the visible `Reset` command unchanged.
+  - Preserved property groups, widget reset behavior, cell/widget selection editing, metric binding rows, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector guard to require the new label helpers and reject the old generic header/reset labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Inspector label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
