@@ -4658,3 +4658,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Live Publisher decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the decorative MQTT publisher title icon wrapper in `LiveInspectorPanel`.
+  - Preserved the visible title, active app label, connection marker, publish form controls, retain toggle, diagnostics panel, manual publish recording, MQTT behavior, saved app schema, services, schemas, ids, ports, and contracts.
+  - Updated the focused Live Inspector guard to require the hidden decorative publisher icon wrapper.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~LiveInspectorPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - The first parallel build attempt hit the known transient XAML compiler file lock; the serial rerun passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

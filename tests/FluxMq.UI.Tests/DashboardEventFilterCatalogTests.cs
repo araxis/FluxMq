@@ -2621,6 +2621,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("Icons.Material.Filled.Send");
         markup.ShouldContain("MQTT Publisher");
+        markup.ShouldContain("class=\"publisher-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("MQTT client");
         markup.ShouldContain("MQTT connection");
         markup.ShouldContain("ActiveAppLabel");
