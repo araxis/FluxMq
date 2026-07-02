@@ -22,7 +22,7 @@
 
     @if (bars.Count == 0)
     {
-        <div class="dashboard-widget-empty">@EmptyText(widget)</div>
+        <div class="dashboard-widget-empty" role="status" aria-live="polite">@EmptyText(widget)</div>
     }
     else
     {

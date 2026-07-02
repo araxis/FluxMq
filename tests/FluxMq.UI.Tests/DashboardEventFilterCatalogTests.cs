@@ -6338,6 +6338,25 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardWidgets_ExposeEmptyStatesAsStatusMessages()
+    {
+        var root = FindRepositoryRoot();
+        var widgetsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgets");
+        var widgetFiles = Directory.GetFiles(widgetsPath, "*.razor");
+        var emptyWidgets = widgetFiles
+            .Select(static file => (File: file, Markup: File.ReadAllText(file)))
+            .Where(static widget => widget.Markup.Contains("dashboard-widget-empty", StringComparison.Ordinal))
+            .ToArray();
+
+        emptyWidgets.Length.ShouldBeGreaterThanOrEqualTo(8);
+        foreach (var (_, markup) in emptyWidgets)
+        {
+            System.Text.RegularExpressions.Regex.Matches(markup, "dashboard-widget-empty").Count
+                .ShouldBe(System.Text.RegularExpressions.Regex.Matches(markup, "class=\"dashboard-widget-empty\" role=\"status\" aria-live=\"polite\"").Count);
+        }
+    }
+
+    [Fact]
     public void FlowWorkspaceService_DelegatesDashboardMetricResolutionToBridge()
     {
         var root = FindRepositoryRoot();

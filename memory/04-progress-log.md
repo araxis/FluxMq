@@ -5210,3 +5210,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace controls for concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Dashboard widget empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to shared `dashboard-widget-empty` placeholders across chart, table, topic activity, latest event, and unknown widget views.
+  - Preserved widget rendering, empty text configuration, sample/live snapshot data, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Added a focused dashboard widget guard to require status semantics for every shared dashboard widget empty placeholder.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgets_ExposeEmptyStatesAsStatusMessages" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
