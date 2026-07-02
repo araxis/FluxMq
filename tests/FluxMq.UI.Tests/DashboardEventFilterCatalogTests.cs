@@ -2598,7 +2598,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("MQTT status");
         markup.ShouldContain("ActiveAppLabel");
         markup.ShouldContain("ClientCountLabel");
-        markup.ShouldContain("ConnectionBadgeClass");
+        markup.ShouldContain("ConnectionStateClass");
         markup.ShouldContain("EnsureLiveConnectionsForActiveProject");
         markup.ShouldContain("Live.AddConnectionIfAbsent(profile, subscription, name)");
         markup.ShouldContain("Live.ConnectAsync(connection.Id)");
@@ -2634,13 +2634,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("select-pill");
         markup.ShouldNotContain("pill-button");
         markup.ShouldNotContain("section-badge");
+        markup.ShouldNotContain("ConnectionBadgeClass");
+        markup.ShouldNotContain("connection-badge");
 
         css.ShouldContain(".publisher-header");
         css.ShouldContain(".publisher-title-lockup");
         css.ShouldContain(".publisher-icon");
-        css.ShouldContain(".connection-badge.connected");
-        css.ShouldContain(".connection-badge.pending");
-        css.ShouldContain(".connection-badge.faulted");
+        css.ShouldContain(".connection-state.connected");
+        css.ShouldContain(".connection-state.pending");
+        css.ShouldContain(".connection-state.faulted");
         css.ShouldContain(".publisher-panel");
         css.ShouldContain(".publish-form-grid");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
@@ -2674,6 +2676,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".select-pill");
         css.ShouldNotContain(".pill-button");
         css.ShouldNotContain(".section-badge");
+        css.ShouldNotContain(".connection-badge");
         css.ShouldNotContain("border-radius: 999px;");
     }
 

@@ -18,7 +18,7 @@
                 <span>@ActiveAppLabel</span>
             </span>
         </div>
-        <span class="@ConnectionBadgeClass">@ConnectionBadgeLabel</span>
+        <span class="@ConnectionStateClass">@ConnectionStateLabel</span>
     </header>
 
     <section class="publisher-panel publish-form-panel">
@@ -146,14 +146,14 @@
         var count => $"{count} clients"
     };
 
-    private string ConnectionBadgeLabel => SelectedConnection?.State.ToString() ?? "No client";
+    private string ConnectionStateLabel => SelectedConnection?.State.ToString() ?? "No client";
 
-    private string ConnectionBadgeClass => SelectedConnection?.State switch
+    private string ConnectionStateClass => SelectedConnection?.State switch
     {
-        MqttClientState.Connected => "connection-badge connected",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-badge pending",
-        MqttClientState.Faulted => "connection-badge faulted",
-        _ => "connection-badge"
+        MqttClientState.Connected => "connection-state connected",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-state pending",
+        MqttClientState.Faulted => "connection-state faulted",
+        _ => "connection-state"
     };
 
     private string LatestDiagnosticClass => LatestDiagnostic?.Severity switch

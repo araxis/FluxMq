@@ -69,7 +69,7 @@
     white-space: nowrap;
 }
 
-.connection-badge {
+.connection-state {
     align-items: center;
     background: var(--flux-surface-2);
     border: 1px solid var(--flux-border);
@@ -83,19 +83,19 @@
     padding: 0 8px;
 }
 
-.connection-badge.connected {
+.connection-state.connected {
     background: color-mix(in srgb, var(--mud-palette-success) 11%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-success) 34%, transparent);
     color: var(--mud-palette-success);
 }
 
-.connection-badge.pending {
+.connection-state.pending {
     background: color-mix(in srgb, var(--mud-palette-warning) 11%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-warning) 34%, transparent);
     color: var(--mud-palette-warning);
 }
 
-.connection-badge.faulted {
+.connection-state.faulted {
     background: color-mix(in srgb, var(--mud-palette-error) 11%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-error) 34%, transparent);
     color: var(--mud-palette-error);
