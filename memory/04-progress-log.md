@@ -5473,3 +5473,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale placement-copy scans, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Component Catalog item-title specificity result:
+  - Replaced the shared catalog item title with item-specific title text for pipeline, dashboard, and test catalog rows.
+  - Preserved catalog search/grouping, click-to-add, keyboard add, drag metadata, dashboard widget placement, test step add behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard catalog handoff guard to require `CatalogItemTitle(item)` and reject the old shared dashboard title path.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardCatalogHandoff_UsesDirectWidgetEditAndPlacementCues" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale catalog-title scans, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

@@ -75,7 +75,7 @@
         @<div class="@CatalogItemClass(item)"
               role="button"
               tabindex="@(!CanUseItem ? "-1" : "0")"
-              title="@CatalogItemTitle"
+              title="@CatalogItemTitle(item)"
               aria-label="@CatalogItemAriaLabel(item)"
               aria-disabled="@CatalogItemDisabled"
               aria-grabbed="@CatalogItemGrabbed(item)"
@@ -234,13 +234,16 @@
             _ => "No component definitions are available."
         };
 
-    private string CatalogItemTitle => ArtifactKind switch
-    {
-        WorkspaceArtifactKind.Pipeline when CanUseItem => "Drag to add component",
-        WorkspaceArtifactKind.Dashboard when CanUseItem => "Click to place in the selected cell, or drag to choose a cell",
-        WorkspaceArtifactKind.Test when CanUseItem => "Add test step",
-        _ => "Unavailable in this tab"
-    };
+    private string CatalogItemTitle(CatalogEntry item)
+        => CanUseItem
+            ? ArtifactKind switch
+            {
+                WorkspaceArtifactKind.Pipeline => $"Add {item.DisplayName} to pipeline",
+                WorkspaceArtifactKind.Dashboard => $"Click to place {item.DisplayName} in the selected cell, or drag to choose a cell",
+                WorkspaceArtifactKind.Test => $"Add {item.DisplayName} to scenario",
+                _ => $"{item.DisplayName} unavailable in this tab"
+            }
+            : $"{item.DisplayName} unavailable in this tab";
 
     private string CatalogItemClass(CatalogEntry item)
     {

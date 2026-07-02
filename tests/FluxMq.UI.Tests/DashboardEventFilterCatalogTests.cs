@@ -5797,8 +5797,12 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "DashboardDesigner.razor.css"));
 
-        catalog.ShouldContain("Click to place in the selected cell, or drag to choose a cell");
+        catalog.ShouldContain("title=\"@CatalogItemTitle(item)\"");
+        catalog.ShouldContain("private string CatalogItemTitle(CatalogEntry item)");
+        catalog.ShouldContain("WorkspaceArtifactKind.Dashboard => $\"Click to place {item.DisplayName} in the selected cell, or drag to choose a cell\"");
         catalog.ShouldContain("Use the edit action on the placed widget to configure it.");
+        catalog.ShouldNotContain("title=\"@CatalogItemTitle\"");
+        catalog.ShouldNotContain("WorkspaceArtifactKind.Dashboard when CanUseItem => \"Click to place in the selected cell, or drag to choose a cell\"");
         catalogCss.ShouldContain(".component-catalog.dashboard .catalog-add-button");
         catalogCss.ShouldContain(".component-catalog.dashboard .catalog-drag-grip");
 
