@@ -4818,3 +4818,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only dashboard-dialog icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Scenario dialog decorative icon accessibility result:
+  - Added hidden decorative semantics to title, validation, report-summary, metric, issue, and empty-state `MudIcon` instances in `ScenarioStepEditorDialog` and `ScenarioRunReportDialog`.
+  - Preserved visible titles, subtitles, validation copy, report metadata, copy/export actions, close behavior, scenario definitions, report content, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused scenario dialog guards to require hidden decorative icon treatment and reject old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepEditorDialog|FullyQualifiedName~ScenarioRunReportDialog" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only scenario-dialog icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

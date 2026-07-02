@@ -5,7 +5,7 @@
 <MudDialog Options="@EditorDialogOptions">
     <TitleContent>
         <div class="scenario-step-editor-title">
-            <MudIcon Icon="@StepDescriptor.Icon" Size="Size.Small" />
+            <MudIcon Icon="@StepDescriptor.Icon" Size="Size.Small" aria-hidden="true" />
             <div class="scenario-step-editor-title-copy">
                 <MudText Typo="Typo.h6">@DialogTitle</MudText>
                 <MudText Typo="Typo.caption" Color="Color.Secondary">@Step.Type</MudText>
@@ -293,7 +293,7 @@
             @if (HasValidationIssues)
             {
                 <div class="scenario-step-editor-validation invalid" role="status" aria-live="polite">
-                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" aria-hidden="true" />
                     <span>@ValidationSummaryText</span>
                 </div>
             }

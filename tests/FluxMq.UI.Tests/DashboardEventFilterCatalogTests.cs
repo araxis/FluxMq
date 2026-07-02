@@ -3987,6 +3987,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("scenario-step-editor-title");
         markup.ShouldContain("scenario-step-editor-title-copy");
+        markup.ShouldContain("Icon=\"@StepDescriptor.Icon\" Size=\"Size.Small\" aria-hidden=\"true\"");
         markup.ShouldContain("Class=\"scenario-step-editor\"");
         markup.ShouldContain("aria-label=\"@DialogTitle\"");
         markup.ShouldContain("Class=\"scenario-step-editor-toggle\"");
@@ -4004,6 +4005,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Apply step edit\"");
         markup.ShouldContain("class=\"scenario-step-editor-validation invalid\"");
         markup.ShouldContain("ValidationSummaryText");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.ErrorOutline\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldNotContain("Icon=\"@StepDescriptor.Icon\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.ErrorOutline\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("ValidationStateText");
         markup.ShouldNotContain("ValidationStateClass");
         markup.ShouldNotContain("Ready to apply");
@@ -4069,12 +4073,22 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("scenario-report-title");
         markup.ShouldContain("scenario-report-toolbar");
         markup.ShouldContain("scenario-report-meta-strip");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@RunScopeIcon\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.FactCheck\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.FormatListNumbered\" Size=\"Size.Small\" aria-hidden=\"true\"");
         markup.ShouldContain("scenario-report-summary-grid");
         markup.ShouldContain("IssueMetricClass");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Tag\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Schedule\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Timer\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@IssueIcon\" Size=\"Size.Small\" aria-hidden=\"true\"");
         markup.ShouldContain("scenario-report-viewer");
         markup.ShouldContain("HasSummaryReport");
         markup.ShouldContain("HasJsonReport");
         markup.ShouldContain("scenario-report-empty");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Medium\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Medium\" aria-hidden=\"true\"");
         markup.ShouldContain("<pre>@TextReport</pre>");
         markup.ShouldContain("<pre>@JsonReport</pre>");
         markup.ShouldContain("scenario-report-action-group");
@@ -4088,6 +4102,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("AvailableReportFormatCount");
         markup.ShouldNotContain("formats ready");
         markup.ShouldNotContain("No export content");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@RunScopeIcon\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.FactCheck\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.FormatListNumbered\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Tag\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Schedule\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Timer\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@IssueIcon\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Medium\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Medium\" />");
         markup.ShouldNotContain("aria-live=\"polite\"");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("MudTextField");
