@@ -5,7 +5,7 @@
 @inject DragStateService DragState
 @inject DashboardWidgetRegistry DashboardWidgets
 
-<div class="dashboard-designer" role="region" aria-label="Dashboard designer">
+<div class="dashboard-designer" role="region" aria-label="@DashboardDesignerLabel">
     <div class="dashboard-toolbar" role="toolbar" aria-label="@DashboardToolbarLabel">
         <div class="dashboard-heading">
             <span class="dashboard-heading-icon-tile" aria-hidden="true">
@@ -529,6 +529,10 @@
     private string DashboardTitle => string.IsNullOrWhiteSpace(Project.ActiveDashboardName)
         ? "Dashboards"
         : Project.ActiveDashboardName;
+
+    private string DashboardDesignerLabel => string.IsNullOrWhiteSpace(Project.ActiveDashboardName)
+        ? "Dashboard designer with no active dashboard"
+        : $"{DashboardTitle} dashboard designer";
 
     private string DashboardToolbarLabel => $"{DashboardTitle} dashboard toolbar";
 

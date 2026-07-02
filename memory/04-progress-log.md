@@ -5717,3 +5717,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only TopicTreeView stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Designer root label specificity result:
+  - Replaced the static Dashboard Designer root region accessible name with an active-dashboard-aware label.
+  - Preserved toolbar copy, mode switching, grid/split controls, edit/live grids, drag/drop handling, inspector routing, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused dashboard toolbar guard to require the root label helper and reject the old static region label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

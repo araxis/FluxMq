@@ -5520,7 +5520,10 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "DashboardDesigner.razor.css"));
 
-        razor.ShouldContain("role=\"region\" aria-label=\"Dashboard designer\"");
+        razor.ShouldContain("role=\"region\" aria-label=\"@DashboardDesignerLabel\"");
+        razor.ShouldContain("private string DashboardDesignerLabel => string.IsNullOrWhiteSpace(Project.ActiveDashboardName)");
+        razor.ShouldContain("$\"{DashboardTitle} dashboard designer\"");
+        razor.ShouldNotContain("role=\"region\" aria-label=\"Dashboard designer\"");
         razor.ShouldContain("class=\"dashboard-toolbar\" role=\"toolbar\" aria-label=\"@DashboardToolbarLabel\"");
         razor.ShouldContain("private string DashboardToolbarLabel => $\"{DashboardTitle} dashboard toolbar\";");
         razor.ShouldNotContain("aria-label=\"Dashboard toolbar\"");
