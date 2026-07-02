@@ -5758,3 +5758,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only TestScenarioDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Scenario run history label specificity result:
+  - Replaced generic recent-run panel labels in Test Scenario Designer and Test Runner Console with active-scenario-aware labels.
+  - Replaced generic show-latest-run command labels/titles with active-scenario-aware labels while preserving visible command copy.
+  - Preserved run history selection, latest-run reset behavior, report actions, designer/runner layout, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Scenario Designer and Test Runner Console guards to require the label helpers and reject the old generic run-history labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome|FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only scenario run-history stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

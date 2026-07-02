@@ -96,7 +96,7 @@
                              AnchorOrigin="Origin.BottomLeft"
                              TransformOrigin="Origin.TopLeft">
                         <ChildContent>
-                            <div class="test-run-history-panel" aria-label="Recent scenario runs">
+                            <div class="test-run-history-panel" aria-label="@RunHistoryPanelLabel">
                                 <div class="test-run-history-head">
                                     <span>Recent runs</span>
                                     <strong>@RunHistorySummaryLabel</strong>
@@ -117,7 +117,7 @@
                                     {
                                         <MudMenuItem Class="test-run-history-reset"
                                                      OnClick="@ShowLatestRun"
-                                                     aria-label="Show latest scenario run">
+                                                     aria-label="@ShowLatestRunLabel">
                                             <div class="test-run-history-reset-row">
                                                 <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" aria-hidden="true" />
                                                 <span>
@@ -390,6 +390,16 @@
 
     private string RunHistorySummaryLabel
         => FormatCount(RecentRuns.Count, "recent run");
+
+    private string RunHistoryPanelLabel
+        => Scenario is { } scenario
+            ? $"Recent runs for {scenario.Name}"
+            : "Recent runs with no active scenario";
+
+    private string ShowLatestRunLabel
+        => Scenario is { } scenario
+            ? $"Show latest run for {scenario.Name}"
+            : "Show latest scenario run";
 
     private string ScenarioRunnerMetaLabel
         => Scenario is { } scenario

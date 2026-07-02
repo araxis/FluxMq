@@ -3846,6 +3846,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@ScenarioStepLabel");
         markup.ShouldContain("@ScenarioPhaseLabel");
         markup.ShouldContain("@RunHistorySummaryLabel");
+        markup.ShouldContain("aria-label=\"@RunHistoryPanelLabel\"");
+        markup.ShouldContain("private string RunHistoryPanelLabel");
+        markup.ShouldContain("Recent runs for {scenario.Name}");
+        markup.ShouldContain("Recent runs with no active scenario");
+        markup.ShouldContain("aria-label=\"@ShowLatestRunLabel\"");
+        markup.ShouldContain("private string ShowLatestRunLabel");
+        markup.ShouldContain("Show latest run for {scenario.Name}");
+        markup.ShouldContain("Show latest scenario run");
+        markup.ShouldNotContain("aria-label=\"Recent scenario runs\"");
+        markup.ShouldNotContain("aria-label=\"Show latest scenario run\"");
         markup.ShouldContain("RunMarkerClass(result.Status)");
         markup.ShouldContain("aria-label=\"@($\"Run result {result.Status}\")\"");
         markup.ShouldContain("ActiveRunMarkerClass");
@@ -4081,6 +4091,19 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ReportActionsClass");
         markup.ShouldContain("ReportActionsLabel");
         markup.ShouldContain("test-run-history-panel");
+        markup.ShouldContain("aria-label=\"@RunHistoryPanelLabel\"");
+        markup.ShouldContain("private string RunHistoryPanelLabel");
+        markup.ShouldContain("Recent runs for {scenario.Name}");
+        markup.ShouldContain("Recent runs with no active scenario");
+        markup.ShouldContain("aria-label=\"@ShowLatestRunLabel\"");
+        markup.ShouldContain("title=\"@ShowLatestRunLabel\"");
+        markup.ShouldContain("private string ShowLatestRunLabel");
+        markup.ShouldContain("Show latest run for {scenario.Name}");
+        markup.ShouldContain("Show latest scenario run");
+        markup.ShouldNotContain("aria-label=\"Recent scenario runs\"");
+        markup.ShouldNotContain("aria-label=\"Show latest run\"");
+        markup.ShouldNotContain("title=\"Show latest run\"");
+        markup.ShouldNotContain("aria-label=\"Show latest scenario run\"");
         markup.ShouldContain("No run history");
         markup.ShouldContain("test-run-history-row");
         markup.ShouldContain("RunHistoryItemClass(historyRun)");
@@ -4111,7 +4134,6 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ReplaceLineEndings("\n")
             .ShouldContain("class=\"@StepCardClass(step, stepResult)\"\n                                             role=\"group\"");
         markup.ShouldContain("StepCardLabel(step, stepResult)");
-        markup.ShouldContain("aria-label=\"Show latest run\"");
         markup.ShouldContain("MoveStepEarlierLabel(step)");
         markup.ShouldContain("MoveStepLaterLabel(step)");
         markup.ShouldContain("EditStepLabel(step)");
