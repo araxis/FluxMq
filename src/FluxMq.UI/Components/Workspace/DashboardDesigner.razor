@@ -241,7 +241,7 @@
                         </button>
                     }
                 </div>
-                <div class="dashboard-grid" style="@GridStyle" role="grid" aria-label="Dashboard layout grid" aria-multiselectable="true">
+                <div class="dashboard-grid" style="@GridStyle" role="grid" aria-label="@DashboardLayoutGridLabel" aria-multiselectable="true">
                     @if (!HasDashboardWidgets)
                     {
                         <div class="dashboard-grid-empty-note @(HasActiveDashboardDrag ? "dragging" : null)" role="status" aria-live="polite">
@@ -382,7 +382,7 @@
                             </div>
                         </div>
                     }
-                    <div class="dashboard-live-grid" style="@GridStyle" role="grid" aria-label="Live dashboard grid">
+                    <div class="dashboard-live-grid" style="@GridStyle" role="grid" aria-label="@LiveDashboardGridLabel">
                         @foreach (var cell in VisibleCells)
                         {
                             var currentCell = cell;
@@ -565,6 +565,10 @@
     private string LivePreviewFrameLabel => $"{DashboardTitle} live dashboard preview";
 
     private string LivePreviewSummaryLabel => $"{DashboardTitle} live preview facts";
+
+    private string DashboardLayoutGridLabel => $"{DashboardTitle} editable dashboard layout grid";
+
+    private string LiveDashboardGridLabel => $"{DashboardTitle} live dashboard grid";
 
     private string GridSizeLabel => _layout is null
         ? "No grid"

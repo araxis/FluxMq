@@ -5552,9 +5552,13 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("dashboard-tool-group dashboard-tool-group-grid");
         razor.ShouldContain("dashboard-tool-group dashboard-tool-group-selection");
         razor.ShouldContain("aria-label=\"Dashboard layout editor\"");
-        razor.ShouldContain("role=\"grid\" aria-label=\"Dashboard layout grid\"");
+        razor.ShouldContain("role=\"grid\" aria-label=\"@DashboardLayoutGridLabel\"");
+        razor.ShouldContain("private string DashboardLayoutGridLabel => $\"{DashboardTitle} editable dashboard layout grid\";");
+        razor.ShouldNotContain("aria-label=\"Dashboard layout grid\"");
         razor.ShouldContain("aria-multiselectable=\"true\"");
-        razor.ShouldContain("aria-label=\"Live dashboard grid\"");
+        razor.ShouldContain("aria-label=\"@LiveDashboardGridLabel\"");
+        razor.ShouldContain("private string LiveDashboardGridLabel => $\"{DashboardTitle} live dashboard grid\";");
+        razor.ShouldNotContain("aria-label=\"Live dashboard grid\"");
         razor.ShouldContain("aria-label=\"@CellAriaLabel(currentCell)\"");
         razor.ShouldContain("title=\"@CellAriaLabel(currentCell)\"");
         razor.ShouldContain("tabindex=\"0\"");
