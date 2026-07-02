@@ -5441,3 +5441,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Direct status-live scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard widget command-label specificity result:
+  - Replaced generic dashboard widget action labels with widget-specific command labels in the edit-grid cell toolbar and inspector layout actions.
+  - Preserved widget edit, simulate, duplicate, delete, drag/drop, cell selection, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard catalog handoff and Dashboard Inspector layout guards to require widget-specific titles/aria labels.
+  - Extended the source-wide command-title guard to reject stale widget command copy such as `Edit widget settings`, `Simulate widget data`, `Duplicate widget`, and `Delete widget`.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardCatalogHandoff_UsesDirectWidgetEditAndPlacementCues|FullyQualifiedName~DashboardInspector_UsesFocusedLayoutAndStyleRowComponents|FullyQualifiedName~WorkspaceCommandTitles_UseSpecificLabels" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Direct stale-widget-command scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

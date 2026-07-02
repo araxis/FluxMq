@@ -19,15 +19,15 @@
         <div class="property-grid-inline property-grid-action-strip">
             <button type="button"
                     class="property-grid-icon-action"
-                    title="Duplicate widget"
-                    aria-label="Duplicate widget"
+                    title="@($"Duplicate {WidgetActionLabel}")"
+                    aria-label="@($"Duplicate {WidgetActionLabel}")"
                     @onclick="@(() => DuplicateWidget.InvokeAsync())">
                 <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-hidden="true" />
             </button>
             <button type="button"
                     class="property-grid-icon-action danger"
-                    title="Delete widget"
-                    aria-label="Delete widget"
+                    title="@($"Delete {WidgetActionLabel}")"
+                    aria-label="@($"Delete {WidgetActionLabel}")"
                     @onclick="@(() => DeleteWidget.InvokeAsync())">
                 <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
             </button>
@@ -74,4 +74,8 @@
     private string LayoutWidgetValue => Widget?.Name ??
         PrimarySelectedCell?.Widget ??
         "-";
+
+    private string WidgetActionLabel => string.IsNullOrWhiteSpace(Widget?.Name)
+        ? "widget"
+        : Widget.Name;
 }

@@ -5803,8 +5803,19 @@ public sealed class DashboardEventFilterCatalogTests
         catalogCss.ShouldContain(".component-catalog.dashboard .catalog-drag-grip");
 
         designer.ShouldContain("Drag to move widget; use toolbar to edit");
+        designer.ShouldContain("var currentWidgetLabel = WidgetLabel(currentCell.Widget);");
         designer.ShouldContain("class=\"dashboard-cell-widget-action edit\"");
-        designer.ShouldContain("Edit {WidgetLabel(currentCell.Widget)} settings");
+        designer.ShouldContain("title=\"@($\"Edit {currentWidgetLabel} settings\")\"");
+        designer.ShouldContain("aria-label=\"@($\"Edit {currentWidgetLabel} settings\")\"");
+        designer.ShouldContain("title=\"@($\"Simulate {currentWidgetLabel} data\")\"");
+        designer.ShouldContain("aria-label=\"@($\"Simulate {currentWidgetLabel} data\")\"");
+        designer.ShouldContain("title=\"@($\"Delete {currentWidgetLabel}\")\"");
+        designer.ShouldContain("aria-label=\"@($\"Delete {currentWidgetLabel}\")\"");
+        designer.ShouldNotContain("title=\"Edit widget settings\"");
+        designer.ShouldNotContain("title=\"Simulate widget data\"");
+        designer.ShouldNotContain("aria-label=\"Simulate widget data\"");
+        designer.ShouldNotContain("title=\"Delete widget\"");
+        designer.ShouldNotContain("aria-label=\"Delete widget\"");
         designer.ShouldContain("Icons.Material.Filled.Settings");
         designer.ShouldContain("OpenWidgetEditorAsync(currentCell.Widget)");
         designer.ShouldContain("SelectSingleCell(targetCellName)");
@@ -5968,6 +5979,15 @@ public sealed class DashboardEventFilterCatalogTests
         layoutRows.ShouldContain("DeleteWidget");
         layoutRows.ShouldContain("property-grid-action-strip");
         layoutRows.ShouldContain("property-grid-icon-action");
+        layoutRows.ShouldContain("title=\"@($\"Duplicate {WidgetActionLabel}\")\"");
+        layoutRows.ShouldContain("aria-label=\"@($\"Duplicate {WidgetActionLabel}\")\"");
+        layoutRows.ShouldContain("title=\"@($\"Delete {WidgetActionLabel}\")\"");
+        layoutRows.ShouldContain("aria-label=\"@($\"Delete {WidgetActionLabel}\")\"");
+        layoutRows.ShouldContain("private string WidgetActionLabel");
+        layoutRows.ShouldNotContain("title=\"Duplicate widget\"");
+        layoutRows.ShouldNotContain("aria-label=\"Duplicate widget\"");
+        layoutRows.ShouldNotContain("title=\"Delete widget\"");
+        layoutRows.ShouldNotContain("aria-label=\"Delete widget\"");
         layoutRows.ShouldContain("Icons.Material.Filled.ContentCopy");
         layoutRows.ShouldContain("Icons.Material.Filled.DeleteOutline");
         layoutRows.ShouldNotContain("layout-action-strip");
@@ -13685,7 +13705,11 @@ public sealed class DashboardEventFilterCatalogTests
             "Reload",
             "Search",
             "Move up",
-            "Move down"
+            "Move down",
+            "Edit widget settings",
+            "Simulate widget data",
+            "Duplicate widget",
+            "Delete widget"
         };
         var violations = new List<string>();
 

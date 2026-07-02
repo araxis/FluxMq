@@ -282,6 +282,7 @@
                                     if (widget is not null)
                                     {
                                         var previewSample = PreviewSample(widget.Name);
+                                        var currentWidgetLabel = WidgetLabel(currentCell.Widget);
                                         <div class="dashboard-cell-widget-preview"
                                              draggable="true"
                                              title="Drag to move widget; use toolbar to edit"
@@ -297,22 +298,22 @@
                                              @onclick:stopPropagation="true">
                                             <button type="button"
                                                     class="dashboard-cell-widget-action edit"
-                                                    title="Edit widget settings"
-                                                    aria-label="@($"Edit {WidgetLabel(currentCell.Widget)} settings")"
+                                                    title="@($"Edit {currentWidgetLabel} settings")"
+                                                    aria-label="@($"Edit {currentWidgetLabel} settings")"
                                                     @onclick="@(() => OpenWidgetEditorAsync(currentCell.Widget))">
                                                 <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action simulate"
-                                                    title="Simulate widget data"
-                                                    aria-label="Simulate widget data"
+                                                    title="@($"Simulate {currentWidgetLabel} data")"
+                                                    aria-label="@($"Simulate {currentWidgetLabel} data")"
                                                     @onclick="@(() => SimulateWidgetPreview(currentCell.Widget))">
                                                 <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action danger"
-                                                    title="Delete widget"
-                                                    aria-label="Delete widget"
+                                                    title="@($"Delete {currentWidgetLabel}")"
+                                                    aria-label="@($"Delete {currentWidgetLabel}")"
                                                     @onclick="@(() => RemoveWidget(currentCell.Widget))">
                                                 <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" aria-hidden="true" />
                                             </button>
