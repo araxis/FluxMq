@@ -5062,3 +5062,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Workspace Log filter label scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace control surfaces for concise accessible names and stale selectors without broadening runtime or schema scope.
+- Publish retain control accessibility result:
+  - Added explicit accessible labels to the Live Publisher and Topics publish retain toggles so their pressed state is announced with publish context instead of the short visible `Retain` text alone.
+  - Preserved retain toggling, QoS controls, publish submit behavior, app-broker targeting, manual publish recording, MQTT behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Live Inspector and Topic Explorer guards to require the retain toggle accessible label while keeping existing pressed-state assertions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~LiveInspectorPanel|FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only publish retain label scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for concise accessible names and stale selectors without broadening runtime or schema scope.

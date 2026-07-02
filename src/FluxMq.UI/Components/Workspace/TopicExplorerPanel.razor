@@ -354,6 +354,7 @@
 
                         <button type="button"
                                 class="topic-publish-retain @(_publishRetain ? "active" : null)"
+                                aria-label="Publish retained message"
                                 aria-pressed="@(_publishRetain ? "true" : "false")"
                                 @onclick="@(() => _publishRetain = !_publishRetain)">
                             <span>Retain</span>
