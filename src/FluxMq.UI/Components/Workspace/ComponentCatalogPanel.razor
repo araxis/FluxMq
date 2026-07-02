@@ -12,10 +12,10 @@
             </span>
             <span class="catalog-title-copy">
                 <span class="catalog-title-label">@CatalogTitle</span>
-                <span class="catalog-meta-strip" aria-label="Catalog mode and availability">
+                <span class="catalog-meta-strip" aria-label="Catalog mode, availability, and filter">
                     <span>@CatalogModeLabel</span>
                     <span class="@CatalogUseAvailabilityClass">@CatalogUseAvailabilityLabel</span>
-                    <span>@CatalogSearchStateLabel</span>
+                    <span>@CatalogFilterScopeLabel</span>
                 </span>
             </span>
             <span class="catalog-count" title="@CatalogCountTitle">@CatalogCountLabel</span>
@@ -179,7 +179,7 @@
     private string CatalogUseAvailabilityClass
         => CanUseItem ? "catalog-use-availability available" : "catalog-use-availability inactive";
 
-    private string CatalogSearchStateLabel
+    private string CatalogFilterScopeLabel
         => SearchResult.HasSearch ? "Filtered" : "All";
 
     private string EmptyLabel => HasSearch

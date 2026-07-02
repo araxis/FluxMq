@@ -6052,10 +6052,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("catalog-title-copy");
         markup.ShouldContain("catalog-title-label");
         markup.ShouldContain("catalog-meta-strip");
-        markup.ShouldContain("aria-label=\"Catalog mode and availability\"");
+        markup.ShouldContain("aria-label=\"Catalog mode, availability, and filter\"");
         markup.ShouldContain("@CatalogModeLabel");
         markup.ShouldContain("@CatalogUseAvailabilityLabel");
-        markup.ShouldContain("@CatalogSearchStateLabel");
+        markup.ShouldContain("@CatalogFilterScopeLabel");
         markup.ShouldContain("CatalogUseAvailabilityClass");
         markup.ShouldContain("aria-label=\"@SearchPlaceholder\"");
         markup.ShouldContain("aria-label=\"@CatalogListLabel\"");
@@ -6075,6 +6075,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("descriptor.DefaultPhase");
         markup.ShouldContain("descriptor.Fields.Count");
         markup.ShouldNotContain("CatalogUseState");
+        markup.ShouldNotContain("CatalogSearchStateLabel");
         markup.ShouldNotContain("Catalog state");
         markup.ShouldNotContain("catalog-step-badges");
         markup.ShouldNotContain("StepPhaseBadgeClass(item)");
