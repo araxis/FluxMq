@@ -3686,6 +3686,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("role=\"tablist\"");
         markup.ShouldContain("id=\"@DesignerTabId\"");
         markup.ShouldContain("aria-controls=\"@DesignerPanelId\"");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(2);
         markup.ShouldContain("ModeButtonClass(TestStudioMode.Designer)");
         markup.ShouldContain("id=\"@RunnerTabId\"");
         markup.ShouldContain("aria-controls=\"@RunnerPanelId\"");

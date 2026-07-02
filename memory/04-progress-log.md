@@ -5192,3 +5192,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace tab controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Test Studio mode tab keyboard hint result:
+  - Added explicit Enter/Space keyboard shortcut hints to Test Studio's Design and Run mode tabs.
+  - Preserved native button activation, mode switching, tab/panel ownership, scenario designer/runner composition, project state, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Test Studio guard to require both mode tab shortcut hints.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace tab controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
