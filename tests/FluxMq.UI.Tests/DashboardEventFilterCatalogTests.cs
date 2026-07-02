@@ -3735,6 +3735,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Test studio workspace\"");
         markup.ShouldContain("test-studio-title-icon");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Science\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("aria-label=\"@TestStudioMetaLabel\"");
+        markup.ShouldContain("Test studio counts for {scenario.Name}");
+        markup.ShouldContain("Test studio counts with no active scenario");
         markup.ShouldContain("@TestCountLabel");
         markup.ShouldContain("@ActiveScenarioLabel");
         markup.ShouldContain("@RunCountLabel");
@@ -3766,6 +3769,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("TestRunnerConsole Project=\"@Project\"");
         markup.ShouldNotContain("MudToggleGroup");
         markup.ShouldNotContain("MudToggleItem");
+        markup.ShouldNotContain("aria-label=\"Test studio summary\"");
 
         css.ShouldContain(".test-studio-title-icon");
         css.ShouldContain(".test-studio-meta span");
@@ -3813,8 +3817,11 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeEmpty();
         markup.ShouldContain("@NoTestEmptyTitle");
         markup.ShouldContain("@NoTestSelectionHint");
-        markup.ShouldContain("test-runner-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"Test runner setup state\"");
+        markup.ShouldContain("test-runner-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"Test runner scenario setup state\"");
         markup.ShouldContain("test-runner-empty-cues");
+        markup.ShouldContain("aria-label=\"@ScenarioRunnerMetaLabel\"");
+        markup.ShouldContain("Scenario runner facts for {scenario.Name}");
+        markup.ShouldContain("Scenario runner facts with no active scenario");
         markup.ShouldContain("@ScenarioStepLabel");
         markup.ShouldContain("@ScenarioPhaseLabel");
         markup.ShouldContain("@RunHistorySummaryLabel");
@@ -3832,6 +3839,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("RunHistoryMarkerClass(historyRun)");
         markup.ShouldContain("RunHistoryIssueLabel(historyRun)");
         markup.ShouldContain("test-runner-report-actions");
+        markup.ShouldContain("aria-label=\"@ReportActionsLabel\"");
+        markup.ShouldContain("private string ReportActionsLabel");
+        markup.ShouldContain("Scenario report actions for {ActiveRunScopeText} run");
         markup.ShouldContain("Class=\"test-runner-icon-action\"");
         markup.ShouldContain("aria-label=\"@ViewReportTooltip\"");
         markup.ShouldContain("aria-label=\"@CopyReportTooltip\"");
@@ -3979,6 +3989,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".test-runner-step-state");
         css.ShouldNotContain(".test-runner-result-strip.empty.ready");
         css.ShouldNotContain("border-radius: 999px;");
+        markup.ShouldNotContain("aria-label=\"Test runner setup state\"");
+        markup.ShouldNotContain("aria-label=\"Scenario runner summary\"");
+        markup.ShouldNotContain("aria-label=\"Scenario report actions\"");
     }
 
     [Fact]
@@ -4011,7 +4024,7 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeEmpty();
         markup.ShouldContain("@NoTestEmptyTitle");
         markup.ShouldContain("@NoTestSelectionHint");
-        markup.ShouldContain("test-scenario-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"Test scenario setup state\"");
+        markup.ShouldContain("test-scenario-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"Test scenario designer setup state\"");
         markup.ShouldContain("test-scenario-empty-cues");
         markup.ShouldContain("@NoStepsEmptyTitle");
         markup.ShouldContain("@NoStepsEmptyText");
@@ -4020,8 +4033,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@PhaseCountText");
         markup.ShouldContain("@RunModeText");
         markup.ShouldContain("@RecentRunCountText");
+        markup.ShouldContain("aria-label=\"@ScenarioDesignerMetaLabel\"");
+        markup.ShouldContain("Scenario designer facts for {scenario.Name}");
+        markup.ShouldContain("Scenario designer facts with no active scenario");
         markup.ShouldContain("test-scenario-workspace");
         markup.ShouldContain("test-scenario-builder-strip");
+        markup.ShouldContain("aria-label=\"@ScenarioBuilderFactsLabel\"");
+        markup.ShouldContain("Scenario builder facts for {scenario.Name}");
+        markup.ShouldContain("Scenario builder facts with no active scenario");
         markup.ShouldContain("BuilderMetricClass");
         markup.ShouldContain("@ActivePhaseCountText");
         markup.ShouldContain("@RunnerSummaryText");
@@ -4047,6 +4066,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("PhaseLaneClass(phase)");
         markup.ShouldContain("test-scenario-report-actions");
         markup.ShouldContain("test-scenario-build-actions");
+        markup.ShouldContain("aria-label=\"@ScenarioBuildActionsLabel\"");
+        markup.ShouldContain("Scenario build actions for {scenario.Name}");
+        markup.ShouldContain("Scenario build actions with no active scenario");
         markup.ShouldContain("Class=\"test-scenario-icon-action\"");
         markup.ShouldContain("aria-label=\"@ViewReportTooltip\"");
         markup.ShouldContain("aria-label=\"@CopyReportTooltip\"");
@@ -4098,6 +4120,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("var ready = await Live.EnsureConnectionsAsync");
         markup.ShouldNotContain("if (!ready)");
         markup.ShouldNotContain("? \"Running\" : \"Ready\"");
+        markup.ShouldNotContain("aria-label=\"Test scenario setup state\"");
+        markup.ShouldNotContain("aria-label=\"Scenario designer summary\"");
+        markup.ShouldNotContain("aria-label=\"Scenario build actions\"");
+        markup.ShouldNotContain("aria-label=\"Scenario build summary\"");
 
         css.ShouldContain(".test-scenario-heading-icon");
         css.ShouldContain(".test-scenario-meta-strip span");

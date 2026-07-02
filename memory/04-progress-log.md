@@ -5555,3 +5555,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Scenario Run Report label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Studio label specificity result:
+  - Replaced generic Test Studio, runner, and scenario-designer group accessible names with scenario/count/run-specific labels for workspace counts, runner facts, report actions, designer facts, build actions, and builder facts.
+  - Preserved visible copy, mode switching, scenario selection, run/report actions, builder controls, history selection, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Studio, Test Runner Console, and Test Scenario Designer guards to require the new label helpers and reject the old generic setup/summary/action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome|FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome|FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Test Studio stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

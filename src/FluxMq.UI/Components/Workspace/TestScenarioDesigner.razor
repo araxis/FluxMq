@@ -16,7 +16,7 @@
      @onpointerleave="HandleDesignerPointerLeave">
     @if (Scenario is null)
     {
-        <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="Test scenario setup state">
+        <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="Test scenario designer setup state">
             <div class="test-scenario-empty-panel">
                 <span class="test-scenario-empty-icon" aria-hidden="true">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
@@ -48,7 +48,7 @@
                 </span>
                 <div class="test-scenario-title-copy">
                     <div class="test-scenario-title">@Scenario.Name</div>
-                    <div class="test-scenario-meta-strip" aria-label="Scenario designer summary">
+                    <div class="test-scenario-meta-strip" aria-label="@ScenarioDesignerMetaLabel">
                         <span>@StepCountText</span>
                         <span>@PhaseCountText</span>
                         <span>@RunModeText</span>
@@ -175,7 +175,7 @@
                         </ChildContent>
                     </MudMenu>
                 </div>
-                <div class="test-scenario-build-actions" aria-label="Scenario build actions">
+                <div class="test-scenario-build-actions" aria-label="@ScenarioBuildActionsLabel">
                     <MudMenu Dense="true"
                              Icon="@Icons.Material.Filled.Add"
                              Size="Size.Small"
@@ -205,7 +205,7 @@
         </div>
 
         <div class="test-scenario-workspace">
-            <div class="test-scenario-builder-strip" aria-label="Scenario build summary">
+            <div class="test-scenario-builder-strip" aria-label="@ScenarioBuilderFactsLabel">
                 <div class="@BuilderMetricClass(Scenario.StepCount > 0)">
                     <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" aria-hidden="true" />
                     <span>Steps</span>
@@ -442,6 +442,21 @@
 
     private string RecentRunCountText
         => FormatRecentRunCount(RecentRuns.Count);
+
+    private string ScenarioDesignerMetaLabel
+        => Scenario is { } scenario
+            ? $"Scenario designer facts for {scenario.Name}"
+            : "Scenario designer facts with no active scenario";
+
+    private string ScenarioBuildActionsLabel
+        => Scenario is { } scenario
+            ? $"Scenario build actions for {scenario.Name}"
+            : "Scenario build actions with no active scenario";
+
+    private string ScenarioBuilderFactsLabel
+        => Scenario is { } scenario
+            ? $"Scenario builder facts for {scenario.Name}"
+            : "Scenario builder facts with no active scenario";
 
     private string ActivePhaseCountText
         => Scenario is { } scenario

@@ -11,7 +11,7 @@
 <div class="test-runner-console" aria-label="Test runner console">
     @if (Scenario is null)
     {
-        <div class="test-runner-empty" role="status" aria-live="polite" aria-label="Test runner setup state">
+        <div class="test-runner-empty" role="status" aria-live="polite" aria-label="Test runner scenario setup state">
             <div class="test-runner-empty-panel">
                 <span class="test-runner-empty-icon" aria-hidden="true">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
@@ -43,7 +43,7 @@
                 </span>
                 <div class="test-runner-title-copy">
                     <div class="test-runner-title">@Scenario.Name</div>
-                    <div class="test-runner-meta-strip" aria-label="Scenario runner summary">
+                    <div class="test-runner-meta-strip" aria-label="@ScenarioRunnerMetaLabel">
                         <span>@ScenarioStepLabel</span>
                         <span>@ScenarioPhaseLabel</span>
                         <span>@RunHistorySummaryLabel</span>
@@ -64,7 +64,7 @@
                         </span>
                     </MudTooltip>
                 }
-                <div class="test-runner-report-actions" aria-label="Scenario report actions">
+                <div class="test-runner-report-actions" aria-label="@ReportActionsLabel">
                     <MudTooltip Text="@ViewReportTooltip">
                         <MudIconButton Icon="@Icons.Material.Filled.Article"
                                        Size="Size.Small"
@@ -385,6 +385,13 @@
 
     private string RunHistorySummaryLabel
         => FormatCount(RecentRuns.Count, "recent run");
+
+    private string ScenarioRunnerMetaLabel
+        => Scenario is { } scenario
+            ? $"Scenario runner facts for {scenario.Name}"
+            : "Scenario runner facts with no active scenario";
+
+    private string ReportActionsLabel => $"Scenario report actions for {ActiveRunScopeText} run";
 
     private string RuntimeEventCountLabel
         => Project.RuntimeEvents.Count == 0 ? "No events" : FormatCount(Project.RuntimeEvents.Count, "event");
