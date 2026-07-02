@@ -14,7 +14,7 @@
         <div class="topic-explorer-header">
             <div class="topic-explorer-title">
                 <span class="topic-explorer-title-icon" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <div>
                     <h2>Topics</h2>
@@ -31,7 +31,7 @@
         @if (Live.SelectedStoredSession is not null)
         {
             <div class="topic-session-note">
-                <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" aria-hidden="true" />
                 <span>@Live.SelectedStoredSession.Name</span>
                 <MudTooltip Text="Switch to live traffic">
                     <MudIconButton Icon="@Icons.Material.Filled.Sensors"
@@ -71,7 +71,7 @@
             @if (VisibleBrokerGroups.Count == 0)
             {
                 <div class="topic-empty-panel">
-                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" aria-hidden="true" />
                     <strong>@TreeEmptyTitle</strong>
                     <span>@TreeEmptyText</span>
                 </div>
@@ -87,7 +87,7 @@
                                     aria-label="@($"Select broker {group.Name}")"
                                     @onclick="@(() => OnBrokerSelected(group.Name))">
                                 <span class="topic-broker-icon" aria-hidden="true">
-                                    <MudIcon Icon="@Icons.Material.Filled.Hub" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Hub" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <span class="topic-broker-copy">
                                     <strong>@group.Name</strong>
@@ -148,7 +148,7 @@
             {
                 <div class="topic-no-traffic" role="status" aria-live="polite">
                     <div class="topic-no-traffic-copy">
-                        <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Small" aria-hidden="true" />
                         <strong>@MessageEmptyTitle</strong>
                         <span>@MessageEmptyText</span>
                     </div>
@@ -190,7 +190,7 @@
                                             class="@PayloadViewButtonClass(_lastPayloadView, view)"
                                             title="@PayloadViewLabel(view)"
                                             @onclick="@(() => _lastPayloadView = view)">
-                                        <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" />
+                                        <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" aria-hidden="true" />
                                         <span>@PayloadViewLabel(view)</span>
                                     </button>
                                 }
@@ -363,7 +363,7 @@
                                 class="topic-publish-submit"
                                 disabled="@(!CanPublish)"
                                 @onclick="PublishTopicMessageAsync">
-                            <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" aria-hidden="true" />
                             <span>@PublishButtonLabel</span>
                         </button>
                     </div>
@@ -377,7 +377,7 @@
                                 disabled="@(!CanUseLatestPublishSource)"
                                 title='@PublishSourceHint(LastMessage, LastInspection, "latest")'
                                 @onclick="@(() => ApplyMessagePublishSource(LastMessage))">
-                            <MudIcon Icon="@Icons.Material.Filled.NorthEast" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.NorthEast" Size="Size.Small" aria-hidden="true" />
                             <span>Use latest</span>
                         </button>
                         <button type="button"
@@ -385,7 +385,7 @@
                                 disabled="@(!CanUseSelectedPublishSource)"
                                 title='@PublishSourceHint(SelectedHistoryMessage, SelectedHistoryInspection, "selected")'
                                 @onclick="@(() => ApplyMessagePublishSource(SelectedHistoryMessage))">
-                            <MudIcon Icon="@Icons.Material.Filled.SubdirectoryArrowRight" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.SubdirectoryArrowRight" Size="Size.Small" aria-hidden="true" />
                             <span>Use selected</span>
                         </button>
                     </div>
@@ -528,7 +528,7 @@
                         </RowTemplate>
                         <NoRecordsContent>
                             <div class="topic-history-empty" role="status" aria-live="polite">
-                                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" aria-hidden="true" />
                                 <span>No history for the current selection.</span>
                             </div>
                         </NoRecordsContent>
@@ -544,7 +544,7 @@
                     @if (SelectedHistoryMessage is null)
                     {
                         <div class="topic-history-detail-empty" role="status" aria-live="polite">
-                            <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" aria-hidden="true" />
                             <strong>No message selected</strong>
                             <span>Select a history row to inspect MQTT metadata and payload.</span>
                         </div>
@@ -592,7 +592,7 @@
                                                     class="@PayloadViewButtonClass(_selectedHistoryPayloadView, view)"
                                                     title="@PayloadViewLabel(view)"
                                                     @onclick="@(() => _selectedHistoryPayloadView = view)">
-                                                <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" />
+                                                <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" aria-hidden="true" />
                                                 <span>@PayloadViewLabel(view)</span>
                                             </button>
                                         }

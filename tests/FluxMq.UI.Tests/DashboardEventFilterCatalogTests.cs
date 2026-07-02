@@ -2980,6 +2980,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("topic-broker-group");
         markup.ShouldContain("topic-broker-row");
         markup.ShouldContain("topic-broker-main");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("class=\"topic-explorer-title-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("class=\"topic-broker-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("topic-broker-connection");

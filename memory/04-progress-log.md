@@ -4899,3 +4899,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Metric Designer icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Topic Explorer decorative icon accessibility result:
+  - Added hidden decorative semantics to direct title, stored-session, empty-state, broker, no-traffic, payload-view, publish, history-empty, and selected-message empty `MudIcon` markers in `TopicExplorerPanel`.
+  - Preserved visible labels, button labels, tooltips, broker tree, latest payload controls, publish composer, publish reuse actions, history filters/export, payload diff, stats, monitor resolution, publish behavior, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Topic Explorer guard to reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel|FullyQualifiedName~TopicExplorerMonitorResolver|FullyQualifiedName~LiveMqttWorkspaceService" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Topic Explorer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
