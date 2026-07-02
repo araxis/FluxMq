@@ -4964,6 +4964,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"Size.Small\" />");
         markup.ShouldContain("id=\"@PayloadViewTabId(FormattedView)\"");
         markup.ShouldContain("role=\"tab\"");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(4);
         markup.ShouldContain("aria-selected=\"@IsActiveView(FormattedView)\"");
         markup.ShouldContain("aria-controls=\"@PayloadViewPanelId\"");
         markup.ShouldContain("role=\"tabpanel\"");

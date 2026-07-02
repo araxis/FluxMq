@@ -27,6 +27,7 @@
                 role="tab"
                 aria-selected="@IsActiveView(FormattedView)"
                 aria-controls="@PayloadViewPanelId"
+                aria-keyshortcuts="Enter Space"
                 class="@ViewButtonClass(FormattedView)"
                 title="Formatted"
                 @onclick="@(() => _activeView = FormattedView)">
@@ -38,6 +39,7 @@
                 role="tab"
                 aria-selected="@IsActiveView(RawView)"
                 aria-controls="@PayloadViewPanelId"
+                aria-keyshortcuts="Enter Space"
                 class="@ViewButtonClass(RawView)"
                 title="Raw"
                 @onclick="@(() => _activeView = RawView)">
@@ -49,6 +51,7 @@
                 role="tab"
                 aria-selected="@IsActiveView(HexView)"
                 aria-controls="@PayloadViewPanelId"
+                aria-keyshortcuts="Enter Space"
                 class="@ViewButtonClass(HexView)"
                 title="Hex"
                 @onclick="@(() => _activeView = HexView)">
@@ -60,6 +63,7 @@
                 role="tab"
                 aria-selected="@IsActiveView(MetaView)"
                 aria-controls="@PayloadViewPanelId"
+                aria-keyshortcuts="Enter Space"
                 class="@ViewButtonClass(MetaView)"
                 title="Metadata"
                 @onclick="@(() => _activeView = MetaView)">
