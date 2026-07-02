@@ -4945,6 +4945,7 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("dashboard-tool-group dashboard-tool-group-selection");
         razor.ShouldContain("aria-label=\"Dashboard layout editor\"");
         razor.ShouldContain("role=\"grid\" aria-label=\"Dashboard layout grid\"");
+        razor.ShouldContain("aria-multiselectable=\"true\"");
         razor.ShouldContain("aria-label=\"Live dashboard grid\"");
         razor.ShouldContain("aria-label=\"@CellAriaLabel(currentCell)\"");
         razor.ShouldContain("title=\"@CellAriaLabel(currentCell)\"");

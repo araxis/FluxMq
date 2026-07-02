@@ -241,7 +241,7 @@
                         </button>
                     }
                 </div>
-                <div class="dashboard-grid" style="@GridStyle" role="grid" aria-label="Dashboard layout grid">
+                <div class="dashboard-grid" style="@GridStyle" role="grid" aria-label="Dashboard layout grid" aria-multiselectable="true">
                     @if (!HasDashboardWidgets)
                     {
                         <div class="dashboard-grid-empty-note @(HasActiveDashboardDrag ? "dragging" : null)" role="status" aria-live="polite">
