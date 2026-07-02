@@ -218,7 +218,7 @@
                 <div class="@BuilderMetricClass(!Project.IsScenarioRunning)">
                     <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" />
                     <span>Runner</span>
-                    <strong>@RunnerStateText</strong>
+                    <strong>@RunnerSummaryText</strong>
                 </div>
             </div>
 
@@ -295,14 +295,14 @@
                                                     <span class="@StepTypeClass(step)">@StepTypeLabel(step)</span>
                                                     @if (stepResult is not null)
                                                     {
-                                                        <span class="@StepStatusClass(stepResult.Status)">
+                                                        <span class="@StepResultMarkerClass(stepResult.Status)">
                                                             <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
                                                             <span>@stepResult.Status</span>
                                                         </span>
                                                     }
                                                     else
                                                     {
-                                                        <span class="test-step-state idle">
+                                                        <span class="test-step-result-marker idle">
                                                             <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
                                                             <span>Not run</span>
                                                         </span>
@@ -442,7 +442,7 @@
             ? FormatActivePhaseCount(scenario.Phases.Count(phase => phase.Steps.Count > 0))
             : "0 active";
 
-    private string RunnerStateText
+    private string RunnerSummaryText
         => Project.IsScenarioRunning ? "Running" : "Idle";
 
     private IReadOnlyList<ScenarioRunResult> RecentRuns
@@ -627,8 +627,8 @@
     private string StepTypeClass(ScenarioStepSnapshot step)
         => ScenarioStepDisplay.StepTypeClass(step, ScenarioSteps);
 
-    private static string StepStatusClass(ScenarioStepRunStatus status)
-        => ScenarioStepDisplay.StepStatusClass(status);
+    private static string StepResultMarkerClass(ScenarioStepRunStatus status)
+        => ScenarioStepDisplay.StepResultMarkerClass(status);
 
     private static string StepStatusIcon(ScenarioStepResult? result)
         => result?.Status switch

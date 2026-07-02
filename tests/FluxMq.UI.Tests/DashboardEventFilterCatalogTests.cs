@@ -3628,7 +3628,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-scenario-builder-strip");
         markup.ShouldContain("BuilderMetricClass");
         markup.ShouldContain("@ActivePhaseCountText");
-        markup.ShouldContain("@RunnerStateText");
+        markup.ShouldContain("@RunnerSummaryText");
         markup.ShouldContain("? \"Running\" : \"Idle\"");
         markup.ShouldContain("RunContextClass(result)");
         markup.ShouldContain("RunContextAriaLabel(result)");
@@ -3668,12 +3668,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("StepCardLabel(step, stepResult)");
         markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("StepStatusIcon(stepResult)");
+        markup.ShouldContain("StepResultMarkerClass(stepResult.Status)");
         markup.ShouldContain("test-step-result-strip");
         markup.ShouldContain("StepResultMetaLabel(stepResult)");
         markup.ShouldContain("StepResultScopeLabel");
         markup.ShouldContain("FormatRunIdText");
         markup.ShouldContain("StepResultEventLabel(stepResult)");
-        markup.ShouldContain("test-step-state idle");
+        markup.ShouldContain("test-step-result-marker idle");
         markup.ShouldContain("var connectionsAvailable = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("ActiveRunChip");
@@ -3683,10 +3684,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("ActiveRunStateIcon");
         markup.ShouldNotContain("ActiveRunStateText");
         markup.ShouldNotContain("ActiveRunStateColor");
+        markup.ShouldNotContain("@RunnerStateText");
+        markup.ShouldNotContain("StepStatusClass(stepResult.Status)");
         markup.ShouldNotContain("test-step-badges");
         markup.ShouldNotContain("test-run-context-status");
         markup.ShouldNotContain("test-run-context-state");
         markup.ShouldNotContain("test-step-status idle");
+        markup.ShouldNotContain("test-step-state idle");
         markup.ShouldNotContain("Designer ready");
         markup.ShouldNotContain("var ready = await Live.EnsureConnectionsAsync");
         markup.ShouldNotContain("if (!ready)");
@@ -3733,6 +3737,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-step-card.selected");
         css.ShouldContain(".test-step-card.history");
         css.ShouldContain(".test-step-meta");
+        css.ShouldContain(".test-step-result-marker");
         css.ShouldNotContain(".test-step-badges");
         css.ShouldNotContain(".test-run-status");
         css.ShouldNotContain(".test-run-history-status");
@@ -3740,6 +3745,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".test-run-context-state");
         css.ShouldNotContain(".test-run-history-state");
         css.ShouldNotContain(".test-step-status");
+        css.ShouldNotContain(".test-step-state");
         css.ShouldNotContain("border-radius: 999px;");
         css.ShouldContain(".test-step-card.configured .test-step-index");
         css.ShouldContain(".test-step-card.issue");

@@ -938,7 +938,7 @@
     color: var(--mud-palette-info);
 }
 
-.test-step-state {
+.test-step-result-marker {
     align-items: center;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
@@ -951,24 +951,24 @@
     white-space: nowrap;
 }
 
-.test-step-state.idle {
+.test-step-result-marker.idle {
     color: var(--mud-palette-text-secondary);
 }
 
-.test-step-state.passed {
+.test-step-result-marker.passed {
     color: var(--flux-accent);
 }
 
-.test-step-state.skipped {
+.test-step-result-marker.skipped {
     color: var(--mud-palette-info);
 }
 
-.test-step-state.failed,
-.test-step-state.timed-out {
+.test-step-result-marker.failed,
+.test-step-result-marker.timed-out {
     color: var(--mud-palette-error);
 }
 
-.test-step-state.canceled {
+.test-step-result-marker.canceled {
     color: var(--mud-palette-warning);
 }
 
