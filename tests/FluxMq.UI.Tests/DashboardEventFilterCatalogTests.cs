@@ -2994,6 +2994,16 @@ public sealed class DashboardEventFilterCatalogTests
                 !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
             .ToArray()
             .ShouldBeEmpty();
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIconButton\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static iconButton => !iconButton.Contains("aria-label=", StringComparison.Ordinal) &&
+                !iconButton.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("class=\"topic-explorer-title-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("class=\"topic-broker-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("topic-broker-connection");
@@ -3007,6 +3017,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("topic-session-note");
         markup.ShouldContain("Class=\"topic-session-live-button\"");
         markup.ShouldContain("aria-label=\"Switch to live traffic\"");
+        markup.ShouldContain("aria-label=\"Clear topic selection\"");
         markup.ShouldContain("OnClick=\"@Live.ClearStoredSessionSelection\"");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Sensors\"");
         markup.ShouldNotContain("<button type=\"button\" @onclick=\"@Live.ClearStoredSessionSelection\">Switch to live</button>");
@@ -8108,6 +8119,16 @@ public sealed class DashboardEventFilterCatalogTests
             .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
             .ToArray()
             .ShouldBeEmpty();
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIconButton\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static iconButton => !iconButton.Contains("aria-label=", StringComparison.Ordinal) &&
+                !iconButton.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
@@ -8148,6 +8169,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Label=\"JSON Schema file\"");
         markup.ShouldContain("ValueChanged=\"@SetOutputSchemaPath\"");
         markup.ShouldContain("PickOutputSchemaFileAsync");
+        markup.ShouldContain("aria-label=\"Select schema file\"");
         markup.ShouldContain("dynamic-mapper-workspace");
         markup.ShouldContain("dynamic-mapper-input-workspace");
         markup.ShouldContain("dynamic-mapper-expression-workspace");
@@ -8164,6 +8186,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Preview is not ready.");
         markup.ShouldNotContain("OutputShapeLabel");
         markup.ShouldContain("ReloadWorkspaceSample");
+        markup.ShouldContain("aria-label=\"Reload sample input\"");
         markup.ShouldContain("dynamic-mapper-input-error");
         markup.ShouldContain("role=\"alert\"");
         markup.ShouldContain("private string? ValidateEditor()");

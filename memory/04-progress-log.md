@@ -4999,3 +4999,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Dynamic Mapper icon scan and workspace-wide direct `MudIcon` scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: audit the workspace for the next concrete accessibility or stale-selector polish gap now that direct exposed `MudIcon` glyphs are cleared.
+- MudIconButton command label accessibility result:
+  - Added explicit accessible labels to the Dynamic Mapper schema-file picker and sample reload icon commands, plus the Topic Explorer clear-topic-selection icon command.
+  - Preserved existing tooltips, click handlers, schema selection, sample reload, topic selection clearing, workflow JSON, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Topic Explorer and Dynamic Mapper guards to require accessible labels on complete `MudIconButton` command tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel|FullyQualifiedName~DynamicMapperNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Workspace-wide `MudIconButton` label scan passed; the initial parallel focused-test attempt hit the known XAML intermediate-file lock, then both guards passed on serial rerun.
+  - Flow Designer canvas chrome was rechecked as already accepted: `FlowDesigner` still uses `Pipeline loaded`, and the focused guard still rejects generic readiness canvas chrome.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
