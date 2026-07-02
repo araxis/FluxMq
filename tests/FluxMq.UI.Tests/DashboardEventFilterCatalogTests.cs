@@ -4350,7 +4350,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("<section class=\"payload-inspector\" aria-label=\"@Title\">");
         markup.ShouldContain("payload-inspector-header");
-        markup.ShouldContain("payload-format-badge @FormatClass");
+        markup.ShouldContain("payload-format-state @FormatClass");
         markup.ShouldContain("payload-meta-strip");
         markup.ShouldContain("payload-view-switch");
         markup.ShouldContain("role=\"tab\"");
@@ -4359,11 +4359,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private const string FormattedView = \"formatted\";");
         markup.ShouldContain("private string FormatClass");
         markup.ShouldContain("private string FormatIcon");
+        markup.ShouldNotContain("payload-format-badge");
         markup.ShouldNotContain("MudToggleGroup");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("<MudPaper");
 
         css.ShouldContain("border-radius: 5px;");
+        css.ShouldContain(".payload-format-state");
+        css.ShouldContain(".payload-format-state.scalar");
+        css.ShouldContain(".payload-format-state.structured");
+        css.ShouldContain(".payload-format-state.binary");
         css.ShouldContain(".payload-inspector-header");
         css.ShouldContain("min-height: 38px;");
         css.ShouldContain(".payload-view-switch");
@@ -4374,6 +4379,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".payload-inspector-meta-list div");
         css.ShouldContain("grid-template-columns: 76px minmax(0, 1fr);");
         css.ShouldContain("@media (max-width: 520px)");
+        css.ShouldNotContain(".payload-format-badge");
     }
 
     [Fact]
