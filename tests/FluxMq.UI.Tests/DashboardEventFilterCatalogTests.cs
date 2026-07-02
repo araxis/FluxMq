@@ -12055,6 +12055,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SelectDashboardFromKeyboardAsync(args, a, d)");
         markup.ShouldContain("SelectTestFromKeyboardAsync(args, a, t)");
         markup.ShouldContain("aria-expanded=\"@AriaExpanded(isCollapsed)\"");
+        markup.ShouldContain("aria-controls=\"@TreeSectionBodyId(app, section)\"");
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, BrokerSection)\"");
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, PipelineSection)\"");
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, MetricSection)\"");
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, DashboardSection)\"");
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, TestSection)\"");
+        markup.ShouldContain("private static string TreeSectionBodyId");
+        markup.ShouldContain("private static string SanitizeIdToken");
         markup.ShouldContain("aria-label=\"@addTooltip\"");
         markup.ShouldContain("private static bool IsActivationKey");
         markup.ShouldContain("private static Task RunFromKeyboardAsync");
