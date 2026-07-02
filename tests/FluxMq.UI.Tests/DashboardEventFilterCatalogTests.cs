@@ -3631,6 +3631,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Test runner console\"");
         markup.ShouldContain("test-runner-title-icon");
         markup.ShouldContain("test-runner-meta-strip");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("@NoTestEmptyTitle");
         markup.ShouldContain("@NoTestSelectionHint");
         markup.ShouldContain("test-runner-empty-cues");
