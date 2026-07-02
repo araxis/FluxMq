@@ -2712,7 +2712,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Publish retained message\"");
         markup.ShouldContain("aria-pressed=\"@(_retain ? \"true\" : \"false\")\"");
         markup.ShouldContain("publish-submit");
-        markup.ShouldContain("publish-empty");
+        markup.ShouldContain("publish-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("No MQTT clients");
         markup.ShouldNotContain("Selected client");
         markup.ShouldNotContain("ConnectSelectedAsync");

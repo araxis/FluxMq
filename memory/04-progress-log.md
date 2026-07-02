@@ -5273,3 +5273,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome|FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Live Publisher empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the Live Publisher no-client placeholder.
+  - Preserved app-level broker targeting, connection sync, topic/payload/QoS/retain inputs, publish submission, manual publish recording, diagnostics display, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Live Inspector guard to require the status-backed no-client placeholder.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~LiveInspectorPanel_UsesAppLevelMqttPublisherPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
