@@ -3733,6 +3733,9 @@ public sealed class DashboardEventFilterCatalogTests
             "TestStudio.razor.css"));
 
         markup.ShouldContain("aria-label=\"Test studio workspace\"");
+        markup.ShouldContain("aria-label=\"@TestStudioToolbarLabel\"");
+        markup.ShouldContain("Test studio toolbar for {scenario.Name}");
+        markup.ShouldContain("Test studio toolbar with no active scenario");
         markup.ShouldContain("test-studio-title-icon");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Science\" Size=\"Size.Small\" aria-hidden=\"true\"");
         markup.ShouldContain("aria-label=\"@TestStudioMetaLabel\"");
@@ -3743,6 +3746,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@RunCountLabel");
         markup.ShouldContain("test-studio-mode-switch");
         markup.ShouldContain("role=\"tablist\"");
+        markup.ShouldContain("aria-label=\"@TestStudioModeLabel\"");
+        markup.ShouldContain("Test studio mode for {scenario.Name}");
+        markup.ShouldContain("Test studio mode with no active scenario");
         markup.ShouldContain("id=\"@DesignerTabId\"");
         markup.ShouldContain("aria-controls=\"@DesignerPanelId\"");
         System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space ArrowLeft ArrowRight Home End\"").Count.ShouldBe(2);
@@ -3770,6 +3776,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("MudToggleGroup");
         markup.ShouldNotContain("MudToggleItem");
         markup.ShouldNotContain("aria-label=\"Test studio summary\"");
+        markup.ShouldNotContain("aria-label=\"Test studio toolbar\"");
+        markup.ShouldNotContain("aria-label=\"Test studio mode\"");
 
         css.ShouldContain(".test-studio-title-icon");
         css.ShouldContain(".test-studio-meta span");

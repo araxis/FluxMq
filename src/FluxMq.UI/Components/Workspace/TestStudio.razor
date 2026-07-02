@@ -1,7 +1,7 @@
 @using FluxMq.UI.Services
 
 <div class="test-studio" aria-label="Test studio workspace">
-    <header class="test-studio-toolbar" aria-label="Test studio toolbar">
+    <header class="test-studio-toolbar" aria-label="@TestStudioToolbarLabel">
         <div class="test-studio-heading">
             <span class="test-studio-title-icon" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Small" aria-hidden="true" />
@@ -16,7 +16,7 @@
                 <span>@RunCountLabel</span>
             </div>
         </div>
-        <div class="test-studio-mode-switch" role="tablist" aria-label="Test studio mode">
+        <div class="test-studio-mode-switch" role="tablist" aria-label="@TestStudioModeLabel">
             <button type="button"
                     id="@DesignerTabId"
                     class="@ModeButtonClass(TestStudioMode.Designer)"
@@ -111,6 +111,16 @@
         => Project.GetActiveTestScenario() is { } scenario
             ? $"Test studio counts for {scenario.Name}"
             : "Test studio counts with no active scenario";
+
+    private string TestStudioToolbarLabel
+        => Project.GetActiveTestScenario() is { } scenario
+            ? $"Test studio toolbar for {scenario.Name}"
+            : "Test studio toolbar with no active scenario";
+
+    private string TestStudioModeLabel
+        => Project.GetActiveTestScenario() is { } scenario
+            ? $"Test studio mode for {scenario.Name}"
+            : "Test studio mode with no active scenario";
 
     private static string FormatCount(int count, string singular)
         => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
