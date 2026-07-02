@@ -5386,3 +5386,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only expanded-control and group-name scans, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Topic tree item navigation semantics result:
+  - Mirrored expanded/collapsed state onto expandable recursive topic treeitems while keeping leaf and filtered flat topic rows unchanged.
+  - Preserved topic selection, chevron toggling, branch child groups, message counts, tree indexing, monitor behavior, storage, services, schemas, ids, ports, and contracts.
+  - Extended the focused TopicTree guard to require treeitem expansion semantics.
+  - Added a source-wide UI guard that scans custom `role="treeitem"` tags for accessible name, level, selected state, focusability, keyboard shortcut, and key handling.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome|FullyQualifiedName~WorkspaceTreeItems_ExposeNavigationSemantics" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only treeitem navigation scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.

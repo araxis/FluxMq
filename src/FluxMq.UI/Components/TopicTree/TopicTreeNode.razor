@@ -9,6 +9,7 @@
          aria-label="@Node.FullPath"
          aria-level="@TopicNodeLevel()"
          aria-selected="@TopicNodeSelected()"
+         aria-expanded="@TopicNodeExpanded()"
          aria-keyshortcuts="Enter Space"
          @onkeydown="SelectFromKeyboardAsync"
          @onclick="Select">
@@ -116,6 +117,9 @@
 
     private string TopicNodeSelected()
         => string.Equals(Node.FullPath, SelectedTopic, StringComparison.Ordinal) ? "true" : "false";
+
+    private string? TopicNodeExpanded()
+        => Node.HasChildren ? (_expanded ? "true" : "false") : null;
 
     private void Toggle() => _expanded = !_expanded;
     private static bool IsActivationKey(KeyboardEventArgs args)

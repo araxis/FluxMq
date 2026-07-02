@@ -3561,6 +3561,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@Node.FullPath\"");
         markup.ShouldContain("aria-level=\"@TopicNodeLevel()\"");
         markup.ShouldContain("aria-selected=\"@TopicNodeSelected()\"");
+        markup.ShouldContain("aria-expanded=\"@TopicNodeExpanded()\"");
         markup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
         markup.ShouldContain("@onkeydown=\"SelectFromKeyboardAsync\"");
         markup.ShouldContain("id=\"@TopicNodeChildrenId()\"");
@@ -3582,6 +3583,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static string ToElementIdPart(string value)");
         markup.ShouldContain("private int TopicNodeLevel()");
         markup.ShouldContain("private string TopicNodeSelected()");
+        markup.ShouldContain("private string? TopicNodeExpanded()");
         markup.ShouldContain("private Task SelectFromKeyboardAsync(KeyboardEventArgs args)");
         markup.ShouldNotContain("IgnoreChevronClick");
         markup.ShouldNotContain("@onclick=\"IgnoreChevronClick\"");
@@ -13521,6 +13523,41 @@ public sealed class DashboardEventFilterCatalogTests
                 var tag = match.Value;
                 if (System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-label\s*=") ||
                     System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-labelledby\s*="))
+                {
+                    continue;
+                }
+
+                var line = markup.Take(match.Index).Count(static value => value == '\n') + 1;
+                violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceTreeItems_ExposeNavigationSemantics()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<[A-Za-z][A-Za-z0-9:.]*\b[^>]*\brole\s*=\s*""treeitem""[^>]*>",
+                System.Text.RegularExpressions.RegexOptions.Singleline))
+            {
+                var tag = match.Value;
+                if ((System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-label\s*=") ||
+                        System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-labelledby\s*=")) &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-level\s*=") &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-selected\s*=") &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\btabindex\s*=") &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-keyshortcuts\s*=") &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"@onkeydown\s*="))
                 {
                     continue;
                 }
