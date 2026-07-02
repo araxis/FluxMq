@@ -152,7 +152,7 @@
                             <span class="metrics-cell metrics-cell-latest">
                                 @if (current.Latest is { } latest)
                                 {
-                                    <span class="metrics-latest-state live">
+                                    <span class="metrics-latest-marker live">
                                         <span class="metrics-live-dot"></span>
                                         <strong>@latest.FormattedValue</strong>
                                         @if (!string.IsNullOrWhiteSpace(latest.Unit))
@@ -163,7 +163,7 @@
                                 }
                                 else
                                 {
-                                    <span class="metrics-latest-state muted">
+                                    <span class="metrics-latest-marker muted">
                                         <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
                                         <small>No reading</small>
                                     </span>
@@ -373,7 +373,7 @@
                                 @if (hasDraftPreview)
                                 {
                                     <div class="metrics-preview-card live">
-                                        <div class="metrics-preview-state">
+                                        <div class="metrics-preview-marker">
                                             <span class="metrics-live-dot"></span>
                                             <span>Reading</span>
                                         </div>

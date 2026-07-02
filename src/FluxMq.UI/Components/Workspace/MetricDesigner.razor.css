@@ -413,7 +413,7 @@
     width: 13px;
 }
 
-.metrics-latest-state {
+.metrics-latest-marker {
     align-items: center;
     border: 1px solid var(--flux-border);
     border-radius: 5px;
@@ -425,12 +425,12 @@
     padding: 1px 5px;
 }
 
-.metrics-latest-state.live {
+.metrics-latest-marker.live {
     background: color-mix(in srgb, var(--mud-palette-success) 8%, var(--flux-surface-2));
     border-color: color-mix(in srgb, var(--mud-palette-success) 24%, var(--flux-border));
 }
 
-.metrics-latest-state.muted {
+.metrics-latest-marker.muted {
     background: transparent;
     border-color: transparent;
     color: var(--mud-palette-text-secondary);
@@ -438,7 +438,7 @@
     padding-left: 0;
 }
 
-.metrics-latest-state ::deep .mud-icon-root {
+.metrics-latest-marker ::deep .mud-icon-root {
     font-size: 14px;
     height: 14px;
     width: 14px;
@@ -1401,7 +1401,7 @@
     background: transparent;
 }
 
-.metrics-preview-state {
+.metrics-preview-marker {
     align-items: center;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
@@ -1878,12 +1878,12 @@ a.metrics-validation-line:focus-visible {
         min-width: 21px;
     }
 
-    .metrics-latest-state {
+    .metrics-latest-marker {
         min-height: 17px;
     }
 
-    .metrics-latest-state.muted small,
-    .metrics-latest-state.live small {
+    .metrics-latest-marker.muted small,
+    .metrics-latest-marker.live small {
         display: none;
     }
 

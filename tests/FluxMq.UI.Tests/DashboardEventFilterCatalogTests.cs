@@ -4061,7 +4061,7 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
-    public void MetricDesigner_UsesNeutralMetricStateHooks()
+    public void MetricDesigner_UsesNeutralMetricMarkerHooks()
     {
         var root = FindRepositoryRoot();
         var markup = File.ReadAllText(Path.Combine(
@@ -4080,11 +4080,13 @@ public sealed class DashboardEventFilterCatalogTests
             "MetricDesigner.razor.css"));
 
         markup.ShouldContain("metrics-type-summary");
-        markup.ShouldContain("metrics-latest-state live");
-        markup.ShouldContain("metrics-latest-state muted");
+        markup.ShouldContain("metrics-latest-marker live");
+        markup.ShouldContain("metrics-latest-marker muted");
         markup.ShouldContain("metrics-side-indicator live");
         markup.ShouldContain("metrics-side-indicator danger");
-        markup.ShouldContain("metrics-preview-state");
+        markup.ShouldContain("metrics-preview-marker");
+        markup.ShouldNotContain("metrics-latest-state");
+        markup.ShouldNotContain("metrics-preview-state");
         markup.ShouldNotContain("metrics-type-pill");
         markup.ShouldNotContain("metrics-latest-pill");
         markup.ShouldNotContain("metrics-side-badge");
@@ -4092,13 +4094,15 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".metrics-type-summary");
         css.ShouldContain(".metrics-type-summary ::deep .mud-icon-root");
-        css.ShouldContain(".metrics-latest-state");
-        css.ShouldContain(".metrics-latest-state.live");
-        css.ShouldContain(".metrics-latest-state.muted");
+        css.ShouldContain(".metrics-latest-marker");
+        css.ShouldContain(".metrics-latest-marker.live");
+        css.ShouldContain(".metrics-latest-marker.muted");
         css.ShouldContain(".metrics-side-indicator");
         css.ShouldContain(".metrics-side-indicator.live");
         css.ShouldContain(".metrics-side-indicator.danger");
-        css.ShouldContain(".metrics-preview-state");
+        css.ShouldContain(".metrics-preview-marker");
+        css.ShouldNotContain(".metrics-latest-state");
+        css.ShouldNotContain(".metrics-preview-state");
         css.ShouldNotContain(".metrics-type-pill");
         css.ShouldNotContain(".metrics-latest-pill");
         css.ShouldNotContain(".metrics-side-badge");
