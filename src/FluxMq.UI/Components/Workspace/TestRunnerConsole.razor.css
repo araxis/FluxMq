@@ -25,7 +25,7 @@
 .test-runner-actions,
 .test-runner-section-title,
 .test-runner-preflight-item,
-.test-runner-run-state,
+.test-runner-run-marker,
 .test-runner-report-actions,
 .test-runner-result-strip,
 .test-runner-phase-title,
@@ -117,7 +117,7 @@
     overflow: hidden;
 }
 
-.test-runner-run-state {
+.test-runner-run-marker {
     color: var(--mud-palette-text-secondary);
     flex: 0 1 auto;
     font-size: 10.5px;
@@ -130,29 +130,29 @@
     white-space: nowrap;
 }
 
-.test-runner-run-state span {
+.test-runner-run-marker span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.test-runner-run-state.passed {
+.test-runner-run-marker.passed {
     color: var(--mud-palette-success);
 }
 
-.test-runner-run-state.failed {
+.test-runner-run-marker.failed {
     color: var(--mud-palette-error);
 }
 
-.test-runner-run-state.canceled {
+.test-runner-run-marker.canceled {
     color: var(--mud-palette-warning);
 }
 
-.test-runner-run-state.history {
+.test-runner-run-marker.history {
     color: var(--mud-palette-info);
 }
 
-.test-runner-run-state.latest {
+.test-runner-run-marker.latest {
     color: var(--mud-palette-text-primary);
 }
 
@@ -328,7 +328,7 @@
     font-weight: 700;
 }
 
-.test-run-history-state {
+.test-run-history-marker {
     color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
     font-size: 9.5px;
@@ -336,15 +336,15 @@
     line-height: 1;
 }
 
-.test-run-history-state.passed {
+.test-run-history-marker.passed {
     color: var(--flux-accent);
 }
 
-.test-run-history-state.failed {
+.test-run-history-marker.failed {
     color: var(--mud-palette-error);
 }
 
-.test-run-history-state.canceled {
+.test-run-history-marker.canceled {
     color: var(--mud-palette-warning);
 }
 

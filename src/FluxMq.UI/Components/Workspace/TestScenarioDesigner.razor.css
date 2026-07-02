@@ -38,7 +38,7 @@
 .test-scenario-report-actions,
 .test-scenario-build-actions,
 .test-run-context,
-.test-run-context-state,
+.test-run-context-marker,
 .test-run-context-reset {
     align-items: center;
     display: flex;
@@ -157,13 +157,13 @@
     border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, var(--flux-border));
 }
 
-.test-run-context-state {
+.test-run-context-marker {
     flex: 0 0 auto;
     gap: 4px;
     min-width: 0;
 }
 
-.test-run-context-state strong {
+.test-run-context-marker strong {
     color: var(--mud-palette-text-primary);
     font-size: 11px;
     font-weight: 850;
@@ -392,7 +392,7 @@
     font-weight: 700;
 }
 
-.test-run-history-state {
+.test-run-history-marker {
     color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
     font-size: 9.5px;
@@ -400,15 +400,15 @@
     line-height: 1;
 }
 
-.test-run-history-state.passed {
+.test-run-history-marker.passed {
     color: var(--flux-accent);
 }
 
-.test-run-history-state.failed {
+.test-run-history-marker.failed {
     color: var(--mud-palette-error);
 }
 
-.test-run-history-state.canceled {
+.test-run-history-marker.canceled {
     color: var(--mud-palette-warning);
 }
 

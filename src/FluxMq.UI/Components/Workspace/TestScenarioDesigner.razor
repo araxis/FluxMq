@@ -62,11 +62,11 @@
                 {
                     <MudTooltip Text="@ActiveRunTooltip">
                         <div class="@RunContextClass(result)" aria-label="@RunContextAriaLabel(result)">
-                            <span class="test-run-context-state">
+                            <span class="test-run-context-marker">
                                 <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
                                 <strong>@result.Status</strong>
                             </span>
-                            <span class="test-run-context-meta">@ActiveRunStateText</span>
+                            <span class="test-run-context-meta">@ActiveRunMarkerText</span>
                             @if (IsViewingHistoricalRun)
                             {
                                 <button type="button"
@@ -154,7 +154,7 @@
                                                 <div class="test-run-history-main">
                                                     <span class="test-run-history-primary">
                                                         <strong>@RunHistoryPrefix(historyRun)</strong>
-                                                        <span class="@RunHistoryStateClass(historyRun)">@historyRun.Status</span>
+                                                        <span class="@RunHistoryMarkerClass(historyRun)">@historyRun.Status</span>
                                                     </span>
                                                     <span class="test-run-history-secondary">
                                                         <span>@RunHistoryTimeLabel(historyRun)</span>
@@ -345,7 +345,7 @@
                                             {
                                                 <div class="test-step-result-strip" aria-label="@StepResultMetaLabel(stepResult)">
                                                     <span class="@StepResultScopeClass">
-                                                        <MudIcon Icon="@ActiveRunStateIcon" Size="Size.Small" />
+                                                        <MudIcon Icon="@ActiveRunMarkerIcon" Size="Size.Small" />
                                                         <span>@StepResultScopeLabel</span>
                                                     </span>
                                                     <span>@StepResultClockLabel(stepResult)</span>
@@ -477,15 +477,15 @@
                 ? "test-scenario-report-actions history"
                 : "test-scenario-report-actions latest";
 
-    private string ActiveRunStateText
+    private string ActiveRunMarkerText
         => Project.LastScenarioRunResult is { } result
             ? $"{(IsViewingHistoricalRun ? "History" : "Latest")} {FormatRunTime(result)}"
             : "No run";
 
-    private string ActiveRunStateIcon
+    private string ActiveRunMarkerIcon
         => IsViewingHistoricalRun ? Icons.Material.Filled.History : Icons.Material.Filled.Schedule;
 
-    private Color ActiveRunStateColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
+    private Color ActiveRunMarkerColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
 
     private string StepResultScopeClass
         => IsViewingHistoricalRun ? "test-step-result-run history" : "test-step-result-run latest";
@@ -704,8 +704,8 @@
         return string.Join(' ', classes);
     }
 
-    private static string RunHistoryStateClass(ScenarioRunResult result)
-        => $"test-run-history-state {result.Status.ToString().ToLowerInvariant()}";
+    private static string RunHistoryMarkerClass(ScenarioRunResult result)
+        => $"test-run-history-marker {result.Status.ToString().ToLowerInvariant()}";
 
     private static string RunHistoryTimeLabel(ScenarioRunResult result)
         => result.FinishedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture);
@@ -849,8 +849,8 @@
             {
                 [nameof(ScenarioRunReportDialog.Title)] = $"Scenario report: {result.Name}",
                 [nameof(ScenarioRunReportDialog.RunScopeText)] = IsViewingHistoricalRun ? "Historical run" : "Latest run",
-                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunStateIcon,
-                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunStateColor,
+                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunMarkerIcon,
+                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunMarkerColor,
                 [nameof(ScenarioRunReportDialog.RunIdText)] = FormatRunIdText(report.RunId),
                 [nameof(ScenarioRunReportDialog.RunStatusText)] = result.Status.ToString(),
                 [nameof(ScenarioRunReportDialog.RunStatusColor)] = RunStatusColor(result.Status),

@@ -53,14 +53,14 @@
             <div class="test-runner-actions">
                 @if (Project.LastScenarioRunResult is { } result)
                 {
-                    <span class="@RunStateClass(result.Status)" aria-label="@($"Run state {result.Status}")">
+                    <span class="@RunMarkerClass(result.Status)" aria-label="@($"Run result {result.Status}")">
                         <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
                         <span>@result.Status</span>
                     </span>
                     <MudTooltip Text="@ActiveRunTooltip">
-                        <span class="@ActiveRunStateClass" aria-label="@ActiveRunTooltip">
-                            <MudIcon Icon="@ActiveRunStateIcon" Size="Size.Small" />
-                            <span>@ActiveRunStateText</span>
+                        <span class="@ActiveRunMarkerClass" aria-label="@ActiveRunTooltip">
+                            <MudIcon Icon="@ActiveRunMarkerIcon" Size="Size.Small" />
+                            <span>@ActiveRunMarkerText</span>
                         </span>
                     </MudTooltip>
                 }
@@ -139,7 +139,7 @@
                                                 <div class="test-run-history-main">
                                                     <span class="test-run-history-primary">
                                                         <strong>@RunHistoryPrefix(historyRun)</strong>
-                                                        <span class="@RunHistoryStateClass(historyRun)">@historyRun.Status</span>
+                                                        <span class="@RunHistoryMarkerClass(historyRun)">@historyRun.Status</span>
                                                     </span>
                                                     <span class="test-run-history-secondary">
                                                         <span>@RunHistoryTimeLabel(historyRun)</span>
@@ -198,7 +198,7 @@
                     </span>
                     <div class="test-runner-result-copy">
                         <span class="@RunResultScopeClass">
-                            <MudIcon Icon="@ActiveRunStateIcon" Size="Size.Small" />
+                            <MudIcon Icon="@ActiveRunMarkerIcon" Size="Size.Small" />
                             <span>@RunResultScopeLabel</span>
                         </span>
                         <strong>@latest.Status</strong>
@@ -443,18 +443,18 @@
 
     private string SaveReportTooltip => $"Save {ActiveRunScopeText} scenario report";
 
-    private string ActiveRunStateText
+    private string ActiveRunMarkerText
         => Project.LastScenarioRunResult is { } result
             ? $"{(IsViewingHistoricalRun ? "History" : "Latest")} {FormatRunTime(result)}"
             : "No run";
 
-    private string ActiveRunStateIcon
+    private string ActiveRunMarkerIcon
         => IsViewingHistoricalRun ? Icons.Material.Filled.History : Icons.Material.Filled.Schedule;
 
-    private Color ActiveRunStateColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
+    private Color ActiveRunMarkerColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
 
-    private string ActiveRunStateClass
-        => IsViewingHistoricalRun ? "test-runner-run-state history" : "test-runner-run-state latest";
+    private string ActiveRunMarkerClass
+        => IsViewingHistoricalRun ? "test-runner-run-marker history" : "test-runner-run-marker latest";
 
     private string RunResultScopeClass
         => IsViewingHistoricalRun ? "test-runner-result-scope history" : "test-runner-result-scope latest";
@@ -549,8 +549,8 @@
             _ => Color.Default
         };
 
-    private static string RunStateClass(ScenarioRunStatus status)
-        => $"test-runner-run-state {status.ToString().ToLowerInvariant()}";
+    private static string RunMarkerClass(ScenarioRunStatus status)
+        => $"test-runner-run-marker {status.ToString().ToLowerInvariant()}";
 
     private string RunSummaryClass(ScenarioRunResult result)
         => $"test-runner-result-strip {result.Status.ToString().ToLowerInvariant()} {(IsViewingHistoricalRun ? "history" : "latest")}";
@@ -618,8 +618,8 @@
         return string.Join(' ', classes);
     }
 
-    private static string RunHistoryStateClass(ScenarioRunResult result)
-        => $"test-run-history-state {result.Status.ToString().ToLowerInvariant()}";
+    private static string RunHistoryMarkerClass(ScenarioRunResult result)
+        => $"test-run-history-marker {result.Status.ToString().ToLowerInvariant()}";
 
     private static string RunHistoryTimeLabel(ScenarioRunResult result)
         => result.FinishedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture);
@@ -836,8 +836,8 @@
             {
                 [nameof(ScenarioRunReportDialog.Title)] = $"Scenario report: {result.Name}",
                 [nameof(ScenarioRunReportDialog.RunScopeText)] = IsViewingHistoricalRun ? "Historical run" : "Latest run",
-                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunStateIcon,
-                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunStateColor,
+                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunMarkerIcon,
+                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunMarkerColor,
                 [nameof(ScenarioRunReportDialog.RunIdText)] = FormatRunIdText(report.RunId),
                 [nameof(ScenarioRunReportDialog.RunStatusText)] = result.Status.ToString(),
                 [nameof(ScenarioRunReportDialog.RunStatusColor)] = RunStatusColor(result.Status),
