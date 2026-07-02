@@ -6727,6 +6727,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dashboard-widget-editor-section-head");
         markup.ShouldContain("dashboard-widget-editor-action-spacer");
         markup.ShouldContain("dashboard-widget-editor-actions");
+        markup.ShouldContain("dashboard-widget-editor-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("<MudIcon Icon=\"@Profile.Icon\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Speed\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.ShowChart\" Size=\"Size.Small\" aria-hidden=\"true\" />");

@@ -161,7 +161,7 @@
                             @if (_draft.CurrentEventType.Fields.Count == 0)
                             {
                                 <MudItem xs="12">
-                                    <div class="dashboard-widget-editor-empty">
+                                    <div class="dashboard-widget-editor-empty" role="status" aria-live="polite">
                                         <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                                         <span>No filters for this event type</span>
                                     </div>
