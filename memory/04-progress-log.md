@@ -5375,3 +5375,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only focusable-role scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Topic tree ARIA relationship result:
+  - Connected each topic branch chevron's expanded state to its child group with `aria-controls`, and gave the recursive child topic group a concise accessible label.
+  - Added deterministic child-group ids derived from the topic path without changing topic selection, expansion behavior, message counts, tree indexing, monitor behavior, storage, services, schemas, ids, ports, or contracts.
+  - Extended the focused TopicTree guard to require the controlled child group and label.
+  - Added source-wide UI guards for `aria-expanded` controls and named custom `role="group"` containers.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome|FullyQualifiedName~WorkspaceExpandedElements_ReferenceControlledContent|FullyQualifiedName~WorkspaceGroups_ExposeAccessibleNames" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only expanded-control and group-name scans, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.

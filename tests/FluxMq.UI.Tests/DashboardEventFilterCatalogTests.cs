@@ -3563,16 +3563,23 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-selected=\"@TopicNodeSelected()\"");
         markup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
         markup.ShouldContain("@onkeydown=\"SelectFromKeyboardAsync\"");
-        markup.ShouldContain("class=\"topic-node-children\" role=\"group\"");
+        markup.ShouldContain("id=\"@TopicNodeChildrenId()\"");
+        markup.ShouldContain("class=\"topic-node-children\"");
+        markup.ShouldContain("role=\"group\"");
+        markup.ShouldContain("aria-label=\"@TopicNodeChildrenLabel()\"");
         markup.ShouldContain("<button type=\"button\"");
         markup.ShouldContain("class=\"topic-node-chevron\"");
         markup.ShouldContain("aria-label=\"@TopicNodeChevronLabel()\"");
         markup.ShouldContain("aria-expanded=\"@(_expanded ? \"true\" : \"false\")\"");
+        markup.ShouldContain("aria-controls=\"@TopicNodeChildrenId()\"");
         markup.ShouldContain("@onclick=\"Toggle\"");
         markup.ShouldContain("@onclick:stopPropagation");
         markup.ShouldContain("topic-node-chevron-static");
         markup.ShouldContain("aria-hidden=\"true\"");
         markup.ShouldContain("private string TopicNodeChevronLabel()");
+        markup.ShouldContain("private string TopicNodeChildrenId()");
+        markup.ShouldContain("private string TopicNodeChildrenLabel()");
+        markup.ShouldContain("private static string ToElementIdPart(string value)");
         markup.ShouldContain("private int TopicNodeLevel()");
         markup.ShouldContain("private string TopicNodeSelected()");
         markup.ShouldContain("private Task SelectFromKeyboardAsync(KeyboardEventArgs args)");
@@ -13455,6 +13462,65 @@ public sealed class DashboardEventFilterCatalogTests
                 }
 
                 if (System.Text.RegularExpressions.Regex.IsMatch(tag, @"\brole\s*="))
+                {
+                    continue;
+                }
+
+                var line = markup.Take(match.Index).Count(static value => value == '\n') + 1;
+                violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceExpandedElements_ReferenceControlledContent()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<[A-Za-z][A-Za-z0-9:.]*\b[^>]*\baria-expanded\s*=\s*""[^""]*""[^>]*>",
+                System.Text.RegularExpressions.RegexOptions.Singleline))
+            {
+                var tag = match.Value;
+                if (System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-controls\s*="))
+                {
+                    continue;
+                }
+
+                var line = markup.Take(match.Index).Count(static value => value == '\n') + 1;
+                violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceGroups_ExposeAccessibleNames()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<[A-Za-z][A-Za-z0-9:.]*\b[^>]*\brole\s*=\s*""group""[^>]*>",
+                System.Text.RegularExpressions.RegexOptions.Singleline))
+            {
+                var tag = match.Value;
+                if (System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-label\s*=") ||
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-labelledby\s*="))
                 {
                     continue;
                 }

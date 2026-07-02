@@ -20,6 +20,7 @@
                     class="topic-node-chevron"
                     aria-label="@TopicNodeChevronLabel()"
                     aria-expanded="@(_expanded ? "true" : "false")"
+                    aria-controls="@TopicNodeChildrenId()"
                     @onclick="Toggle"
                     @onclick:stopPropagation>
                 <MudIcon Icon="@(_expanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
@@ -51,7 +52,10 @@
 
     @if (_expanded && Node.HasChildren)
     {
-        <div class="topic-node-children" role="group">
+        <div id="@TopicNodeChildrenId()"
+             class="topic-node-children"
+             role="group"
+             aria-label="@TopicNodeChildrenLabel()">
             @foreach (var child in Node.Children.Values.OrderBy(n => n.Name))
             {
                 <TopicTreeNode Node="child"
@@ -86,6 +90,26 @@
 
     private string TopicNodeChevronLabel()
         => _expanded ? "Collapse topic branch" : "Expand topic branch";
+
+    private string TopicNodeChildrenId()
+        => $"topic-node-children-{ToElementIdPart(Node.FullPath)}";
+
+    private string TopicNodeChildrenLabel()
+        => $"Child topics for {Node.FullPath}";
+
+    private static string ToElementIdPart(string value)
+    {
+        const uint offsetBasis = 2166136261;
+        const uint prime = 16777619;
+        var hash = offsetBasis;
+        foreach (var character in value)
+        {
+            hash ^= character;
+            hash *= prime;
+        }
+
+        return hash.ToString("x8", System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     private int TopicNodeLevel()
         => Node.Depth + 1;
