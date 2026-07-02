@@ -16,7 +16,7 @@
      @onpointerleave="HandleDesignerPointerLeave">
     @if (Scenario is null)
     {
-        <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="Test scenario designer setup state">
+        <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="@TestScenarioSetupStateLabel">
             <div class="test-scenario-empty-panel">
                 <span class="test-scenario-empty-icon" aria-hidden="true">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
@@ -25,7 +25,7 @@
                     <span>@NoTestEmptyTitle</span>
                     <small>@NoTestEmptyText</small>
                 </div>
-                <div class="test-scenario-empty-cues" aria-label="Scenario designer setup">
+                <div class="test-scenario-empty-cues" aria-label="@ScenarioDesignerSetupLabel">
                     <span>
                         <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                         @NoTestSelectionHint
@@ -225,7 +225,7 @@
 
             @if (Scenario.Steps.Count == 0)
             {
-                <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="Empty scenario">
+                <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="@EmptyScenarioLabel">
                     <div class="test-scenario-empty-panel compact">
                         <span class="test-scenario-empty-icon timeline" aria-hidden="true">
                             <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" aria-hidden="true" />
@@ -234,7 +234,7 @@
                             <span>@NoStepsEmptyTitle</span>
                             <small>@NoStepsEmptyText</small>
                         </div>
-                        <div class="test-scenario-empty-cues" aria-label="Scenario starter cues">
+                        <div class="test-scenario-empty-cues" aria-label="@ScenarioStarterCuesLabel">
                             <span>
                                 <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                                 @ScenarioStepTypeCountText
@@ -447,6 +447,26 @@
         => Scenario is { } scenario
             ? $"{scenario.Name} test scenario designer"
             : "Test scenario designer with no active scenario";
+
+    private string TestScenarioSetupStateLabel
+        => Project.TestNames.Count == 0
+            ? "Test scenario designer setup with no tests"
+            : $"Test scenario designer setup with {FormatTestCount(Project.TestNames.Count)}";
+
+    private string ScenarioDesignerSetupLabel
+        => Project.TestNames.Count == 0
+            ? "Scenario designer setup with no tests"
+            : $"Scenario designer setup with {FormatTestCount(Project.TestNames.Count)}";
+
+    private string EmptyScenarioLabel
+        => Scenario is { } scenario
+            ? $"{scenario.Name} has no steps"
+            : "Empty scenario with no active scenario";
+
+    private string ScenarioStarterCuesLabel
+        => Scenario is { } scenario
+            ? $"Starter cues for {scenario.Name}"
+            : "Scenario starter cues with no active scenario";
 
     private string ScenarioDesignerMetaLabel
         => Scenario is { } scenario

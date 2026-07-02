@@ -5779,3 +5779,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only TestRunnerConsole section-label stale scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Scenario Designer empty-state label specificity result:
+  - Replaced static setup-state, setup-cue, empty-scenario, and starter-cue accessible labels with test-count and active-scenario-aware labels.
+  - Preserved designer empty states, new-test action, starter cues, phase/step facts, scenario editing, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Scenario Designer guard to require the empty-state label helpers and reject the old static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TestScenarioDesigner empty-state stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
