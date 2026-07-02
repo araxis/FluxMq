@@ -117,7 +117,7 @@
 
                 <MudTooltip Text="@AppRuntimeTooltip">
                     <div class="@AppRuntimeMarkerClass">
-                        <span class="flux-app-runtime-dot"></span>
+                        <span class="flux-app-runtime-dot" aria-hidden="true"></span>
                         <span>@AppRuntimeSummaryLabel</span>
                     </div>
                 </MudTooltip>
@@ -125,7 +125,7 @@
                 <span class="flux-toolbar-divider"></span>
 
                 <div class="@LiveConnectionMarkerClass">
-                    <span class="flux-live-connection-dot"></span>
+                    <span class="flux-live-connection-dot" aria-hidden="true"></span>
                     <span>@Live.State</span>
                 </div>
 
@@ -165,7 +165,7 @@
     {
         <footer class="flux-bottom-bar">
             <div class="flux-bottom-group">
-                <span class="@LiveConnectionDotClass"></span>
+                <span class="@LiveConnectionDotClass" aria-hidden="true"></span>
                 <span>@Live.State</span>
                 @if (Live.Connections.Count > 0)
                 {

@@ -4788,3 +4788,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only MainLayout accessibility scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App shell marker accessibility result:
+  - Added hidden decorative semantics to the topbar app runtime dot, topbar live connection dot, and bottom-bar live dot in `MainLayout`.
+  - Preserved adjacent visible app/runtime/live labels, tooltips, state classes, footer facts, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused `MainLayout_RemovesSessionOnlyLeftRail` guard to require hidden marker dots and reject the old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MainLayout_RemovesSessionOnlyLeftRail" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only MainLayout marker scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

@@ -2776,10 +2776,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AppRuntimeMarkerClass");
         markup.ShouldContain("AppRuntimeSummaryLabel");
         markup.ShouldContain("AppRuntimeTooltip");
-        markup.ShouldContain("flux-app-runtime-dot");
+        markup.ShouldContain("<span class=\"flux-app-runtime-dot\" aria-hidden=\"true\"></span>");
         markup.ShouldContain("LiveConnectionMarkerClass");
-        markup.ShouldContain("flux-live-connection-dot");
+        markup.ShouldContain("<span class=\"flux-live-connection-dot\" aria-hidden=\"true\"></span>");
         markup.ShouldContain("LiveConnectionDotClass");
+        markup.ShouldContain("<span class=\"@LiveConnectionDotClass\" aria-hidden=\"true\"></span>");
         markup.ShouldNotContain("flux-statusbar");
         markup.ShouldNotContain("FlowStateClass");
         markup.ShouldNotContain("ActiveProjectStateLabel");
@@ -2796,6 +2797,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("No active project");
         markup.ShouldNotContain("Class=\"flux-command-spin-icon\" />");
         markup.ShouldNotContain("<MudIcon Icon=\"@DragPreviewIcon(activeDrag.TargetKind)\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<span class=\"flux-app-runtime-dot\"></span>");
+        markup.ShouldNotContain("<span class=\"flux-live-connection-dot\"></span>");
+        markup.ShouldNotContain("<span class=\"@LiveConnectionDotClass\"></span>");
         markup.ShouldNotContain("flux-rail");
         markup.ShouldNotContain("flux-left-panel");
         markup.ShouldNotContain("left-collapsed");
