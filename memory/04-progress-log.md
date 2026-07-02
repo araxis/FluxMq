@@ -4599,3 +4599,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Next implementation order:
   1. Continue the next small designer-polish backlog item from remaining high-use workspace noise, starting with remaining compact node-summary naming noise where a focused guard already exists.
+
+- Flow Designer Canvas Chrome verification result:
+  - Confirmed the existing Flow Designer canvas header uses `Pipeline loaded` for the loaded-pipeline subtitle while preserving `Unsaved changes` and `No active pipeline`.
+  - Confirmed the focused guard requires the neutral loaded subtitle path and rejects the generic `Ready` canvas chrome.
+  - Workflow JSON, saved app schema, node ids, ports, diagram behavior, runtime behavior, services, logs, diagnostics, metrics, navigator, and link-condition editing are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
