@@ -4889,3 +4889,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only App Structure menu icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Metric Designer decorative icon accessibility result:
+  - Added hidden decorative semantics to direct filter, command, empty-state, list-row, editor-header, section, preview, reference, validation, select-cue, and parameter-help `MudIcon` markers in `MetricDesigner`.
+  - Preserved visible labels, button labels, tooltips, metric filtering, metric creation/editing, type changes, preview/readout facts, reference summaries, validation links, dashboard bindings, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Metric Designer guard to reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Metric Designer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

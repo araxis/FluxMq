@@ -19,7 +19,7 @@
         <section class="metrics-list-pane" aria-label="Metric resources">
             <div class="metrics-list-toolbar">
                 <label class="metrics-filter-field metrics-search-field">
-                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" aria-hidden="true" />
                     <input value="@_search"
                            placeholder="Search metrics"
                            aria-label="Search metrics"
@@ -31,13 +31,13 @@
                                 title="Clear search"
                                 aria-label="Clear search"
                                 @onclick="@ClearSearch">
-                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                         </button>
                     }
                 </label>
 
                 <div class="metrics-filter-field metrics-type-field">
-                    <MudIcon Class="metrics-type-filter-icon" Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" />
+                    <MudIcon Class="metrics-type-filter-icon" Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" aria-hidden="true" />
                     <MudSelect T="string"
                                Class="metrics-type-select"
                                PopoverClass="metrics-type-select-popover"
@@ -69,7 +69,7 @@
                                 class="metrics-filter-reset"
                                 aria-label="Reset filters"
                                 @onclick="@ResetFilters">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                         </button>
                     </MudTooltip>
                 }
@@ -77,7 +77,7 @@
                 <button type="button"
                         class="metrics-new-button"
                         @onclick="@OpenNewMetricDialogAsync">
-                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                     <span>New metric</span>
                 </button>
             </div>
@@ -94,7 +94,7 @@
                 {
                     <div class="metrics-list-empty create-empty">
                         <span class="metrics-empty-icon" aria-hidden="true">
-                            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <span class="metrics-empty-copy">
                             <strong>No metrics yet</strong>
@@ -103,7 +103,7 @@
                         <button type="button"
                                 class="metrics-empty-action"
                                 @onclick="@OpenNewMetricDialogAsync">
-                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                             <span>New metric</span>
                         </button>
                     </div>
@@ -112,7 +112,7 @@
                 {
                     <div class="metrics-list-empty filter-empty">
                         <span class="metrics-empty-icon muted" aria-hidden="true">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <span class="metrics-empty-copy">
                             <strong>No matching metrics</strong>
@@ -121,7 +121,7 @@
                         <button type="button"
                                 class="metrics-empty-action secondary"
                                 @onclick="@ResetFilters">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                             <span>Reset filters</span>
                         </button>
                     </div>
@@ -141,7 +141,7 @@
                             </span>
                             <span class="metrics-cell metrics-cell-type">
                                 <span class="metrics-type-summary" title="@current.TypeName">
-                                    <MudIcon Icon="@TypeIcon(current.TypeId)" Size="Size.Small" />
+                                    <MudIcon Icon="@TypeIcon(current.TypeId)" Size="Size.Small" aria-hidden="true" />
                                     <span>@current.TypeName</span>
                                 </span>
                             </span>
@@ -164,7 +164,7 @@
                                 else
                                 {
                                     <span class="metrics-latest-marker muted">
-                                        <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" aria-hidden="true" />
                                         <small>No reading</small>
                                     </span>
                                 }
@@ -180,7 +180,7 @@
             {
                 <div class="metrics-editor-empty">
                     <span class="metrics-empty-icon" aria-hidden="true">
-                        <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
                     </span>
                     <span class="metrics-empty-copy">
                         <strong>@EditorEmptyTitle</strong>
@@ -193,7 +193,7 @@
                 <div class="metrics-editor-header">
                     <div class="metrics-editor-title">
                         <span class="metrics-editor-icon">
-                            <MudIcon Icon="@EditorIcon" Size="Size.Small" />
+                            <MudIcon Icon="@EditorIcon" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <div class="metrics-editor-copy">
                             <div class="metrics-editor-name">@(_draft.DisplayName.Length == 0 ? _draft.Id : _draft.DisplayName)</div>
@@ -220,7 +220,7 @@
                                             class="metrics-header-icon-button"
                                             aria-label="Cancel changes"
                                             @onclick="@CancelEdit">
-                                        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                                     </button>
                                 </MudTooltip>
                             }
@@ -229,7 +229,7 @@
                                         class="metrics-header-icon-button"
                                         aria-label="Duplicate metric"
                                         @onclick="@DuplicateSelectedMetricAsync">
-                                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-hidden="true" />
                                 </button>
                             </MudTooltip>
                             <MudTooltip Text="Delete metric">
@@ -237,7 +237,7 @@
                                         class="metrics-header-icon-button danger"
                                         aria-label="Delete metric"
                                         @onclick="@DeleteSelectedMetricAsync">
-                                    <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
                                 </button>
                             </MudTooltip>
                         </div>
@@ -249,7 +249,7 @@
                                     title="@SaveButtonTitle"
                                     aria-label="@SaveButtonTitle"
                                     @onclick="@SaveMetricAsync">
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" aria-hidden="true" />
                                 <span>Save</span>
                             </button>
                         }
@@ -261,7 +261,7 @@
                         <div class="metrics-editor-main-panel">
                             <div class="metrics-compact-section">
                                 <div class="metrics-section-heading">
-                                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                     <span>Edit metric</span>
                                 </div>
                                 <div class="metrics-form-grid compact">
@@ -279,7 +279,7 @@
                                                     title="Rename metric"
                                                     aria-label="Rename metric"
                                                     @onclick="@RenameMetricAsync">
-                                                <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                         }
                                     </div>
@@ -301,7 +301,7 @@
                                          aria-invalid="@AriaState(HasValidationMessage(MetricTypeValidationMessage))"
                                          aria-errormessage="@MetricTypeErrorElementId">
                                         <span class="metrics-type-picker-icon">
-                                            <MudIcon Icon="@EditorIcon" Size="Size.Small" />
+                                            <MudIcon Icon="@EditorIcon" Size="Size.Small" aria-hidden="true" />
                                         </span>
                                         <div class="metrics-type-picker-copy">
                                             <span>Metric type</span>
@@ -311,7 +311,7 @@
                                         <button type="button"
                                                 aria-label="Change metric type"
                                                 @onclick="@OpenMetricTypeDialogAsync">
-                                            <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                                            <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                             <span>Change</span>
                                         </button>
                                     </div>
@@ -327,7 +327,7 @@
 
                             <div class="metrics-compact-section">
                                 <div class="metrics-section-heading">
-                                    <MudIcon Icon="@Icons.Material.Filled.ManageSearch" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.ManageSearch" Size="Size.Small" aria-hidden="true" />
                                     <span>Parameters</span>
                                 </div>
                                 @if (CurrentDescriptor is not { } descriptorForParameters)
@@ -363,7 +363,7 @@
                             }
                             <div class="metrics-side-card preview-context">
                                 <div class="metrics-section-heading">
-                                    <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" aria-hidden="true" />
                                     <span>Live preview</span>
                                     @if (hasDraftPreview)
                                     {
@@ -391,7 +391,7 @@
                                 {
                                     <div class="metrics-preview-card muted" title="Stopped or not emitted.">
                                         <div class="metrics-preview-empty">
-                                            <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+                                            <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" aria-hidden="true" />
                                             <span>
                                                 <strong>No reading</strong>
                                                 <small>Stopped or not emitted</small>
@@ -403,7 +403,7 @@
 
                             <div class="metrics-side-card references-context">
                                 <div class="metrics-section-heading">
-                                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" aria-hidden="true" />
                                     <span>References</span>
                                     @if (ReferenceSummaries.Count > 0)
                                     {
@@ -413,7 +413,7 @@
                                 @if (ReferenceSummaries.Count == 0)
                                 {
                                     <div class="metrics-reference-empty">
-                                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" aria-hidden="true" />
                                         <span>
                                             <strong>No references</strong>
                                             <small>No dashboard bindings</small>
@@ -460,7 +460,7 @@
                             {
                                 <div class="metrics-side-card danger">
                                     <div class="metrics-section-heading">
-                                        <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" aria-hidden="true" />
                                         <span>Validation</span>
                                         <span class="metrics-side-indicator danger">@validationItems.Count</span>
                                     </div>
@@ -470,7 +470,7 @@
                                             @if (string.IsNullOrWhiteSpace(item.TargetId))
                                             {
                                                 <div class="metrics-validation-line" id="@item.MessageId">
-                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" aria-hidden="true" />
                                                     <span>@item.Message</span>
                                                 </div>
                                             }
@@ -480,7 +480,7 @@
                                                    id="@item.MessageId"
                                                    href="#@item.TargetId"
                                                    title="Show field">
-                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" aria-hidden="true" />
                                                     <span>@item.Message</span>
                                                 </a>
                                             }
@@ -1046,7 +1046,7 @@
                             <option value="@option.Value">@option.Label</option>
                         }
                     </select>
-                    <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" aria-hidden="true" />
                 </span>
             </label>;
         }
@@ -1120,7 +1120,7 @@
                 {
                     <MudTooltip Text="@assistiveText">
                         <span class="metrics-param-help" tabindex="0" aria-label="@assistiveText">
-                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" aria-hidden="true" />
                         </span>
                     </MudTooltip>
                 }

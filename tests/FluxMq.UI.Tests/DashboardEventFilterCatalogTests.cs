@@ -4459,6 +4459,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-preview-marker");
         markup.ShouldContain("metrics-list-empty create-empty");
         markup.ShouldContain("metrics-list-empty filter-empty");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("Class=\"metrics-heading-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("class=\"metrics-empty-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("class=\"metrics-empty-icon muted\" aria-hidden=\"true\"");
