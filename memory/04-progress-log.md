@@ -4747,3 +4747,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Connection Panel icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Session Panel decorative icon accessibility result:
+  - Added hidden decorative semantics to the recording strip icon, Recordings title icon, selected-session strip icon, and empty-state icon in `SessionPanel`.
+  - Preserved visible recording/session copy, search, live switching, session grouping, row selection, markers, recording actions, session behavior, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused `SessionPanel_UsesFlatGroupedSessionRows` guard to require hidden decorative icon treatment and reject the old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~SessionPanel_UsesFlatGroupedSessionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only Session Panel icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

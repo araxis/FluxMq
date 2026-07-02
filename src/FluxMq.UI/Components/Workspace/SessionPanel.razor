@@ -6,7 +6,7 @@
     @if (Live.IsRecording)
     {
         <div class="session-recording-strip" role="status" aria-live="polite">
-            <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" aria-hidden="true" />
             <div class="session-recording-copy">
                 <strong>@RecordingName</strong>
                 <span>@RecordedMessageLabel</span>
@@ -24,7 +24,7 @@
     <div class="sessions-head">
         <div class="sessions-title">
             <span class="sessions-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="sessions-title-copy">
                 <strong>Recordings</strong>
@@ -45,7 +45,7 @@
     @if (Live.SelectedStoredSession is not null)
     {
         <div class="session-live-strip">
-            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" aria-hidden="true" />
             <span>@Live.SelectedStoredSession.Name</span>
             <MudTooltip Text="Switch to live traffic">
                 <MudIconButton Size="Size.Small"
@@ -80,7 +80,7 @@
     @if (projectGroups.Count == 0)
     {
         <div class="sessions-empty" role="status" aria-live="polite">
-            <MudIcon Icon="@EmptyIcon" Size="Size.Medium" />
+            <MudIcon Icon="@EmptyIcon" Size="Size.Medium" aria-hidden="true" />
             <strong class="sessions-empty-title">@EmptyTitle</strong>
             <span class="sessions-empty-copy">@EmptyText</span>
             @if (HasSearch)
