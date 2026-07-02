@@ -7,7 +7,7 @@
 <div class="app-structure">
     @if (Projects.ActiveProject is not { } active)
     {
-        <span class="app-structure-empty">
+        <span class="app-structure-empty" role="status" aria-live="polite">
             <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" aria-hidden="true" />
             <span>No app open</span>
         </span>
@@ -306,7 +306,7 @@
 @code {
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
 
-    private static RenderFragment MenuEmptyRow(string icon, string title, string hint) => @<div class="app-menu-empty-row">
+    private static RenderFragment MenuEmptyRow(string icon, string title, string hint) => @<div class="app-menu-empty-row" role="status" aria-live="polite">
         <span class="app-menu-empty-icon" aria-hidden="true">
             <MudIcon Icon="@icon" Size="Size.Small" aria-hidden="true" />
         </span>

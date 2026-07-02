@@ -12779,7 +12779,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("app-menu-artifact-row");
         markup.ShouldContain("app-menu-artifact-name");
         markup.ShouldContain("app-menu-empty");
+        markup.ShouldContain("app-structure-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("app-menu-empty-row");
+        markup.ShouldContain("app-menu-empty-row\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("app-menu-empty-icon");
         markup.ShouldContain("app-menu-empty-copy");
         markup.ShouldContain("app-menu-empty-text");

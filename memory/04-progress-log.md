@@ -5264,6 +5264,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- App Structure menu empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the no-app App Structure header placeholder and compact menu empty rows.
+  - Preserved app structure navigation, artifact rows, menu commands, inline artifact actions, project/app selection, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App Structure menu guard to require both status-backed empty-state surfaces.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only empty-state scan, neutral added-text scan, and `git diff --check` passed.
+  - The first parallel focused test attempt collided with the concurrent build on a shared intermediate DLL; the serial rerun passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
 - Test Studio empty-state accessibility result:
   - Added `role="status"` and polite live semantics to the Test Runner no-test state and the Test Scenario Designer no-test and no-steps states.
   - Preserved scenario selection, scenario editing, run controls, report actions, run history, phase and step rendering, saved scenario data, runtime events/logs, services, schemas, ids, ports, and contracts.
