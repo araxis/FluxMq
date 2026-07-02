@@ -57,9 +57,9 @@
                                     <span>@c.ResourceName</span>
                                     <small>@BrokerEndpointLabel(c)</small>
                                 </span>
-                                <span class="@BrokerStateClass(c)"
+                                <span class="@BrokerConnectionClass(c)"
                                       aria-label="@BrokerActionLabel(c)">
-                                    <span>@BrokerStateText(c)</span>
+                                    <span>@BrokerConnectionText(c)</span>
                                 </span>
                             </div>
                         </MudMenuItem>
@@ -478,7 +478,7 @@
     private static string BrokerItemTitle(ManagedConnection connection)
         => $"{BrokerActionLabel(connection)} at {BrokerEndpointLabel(connection)}";
 
-    private static string BrokerStateText(ManagedConnection connection) => connection.State switch
+    private static string BrokerConnectionText(ManagedConnection connection) => connection.State switch
     {
         MqttClientState.Connected => "Live",
         MqttClientState.Connecting or MqttClientState.Reconnecting => "Pending",
@@ -494,12 +494,12 @@
         _ => "app-menu-broker-row idle"
     };
 
-    private static string BrokerStateClass(ManagedConnection connection) => connection.State switch
+    private static string BrokerConnectionClass(ManagedConnection connection) => connection.State switch
     {
-        MqttClientState.Connected => "app-menu-broker-state live",
-        MqttClientState.Faulted => "app-menu-broker-state faulted",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-broker-state pending",
-        _ => "app-menu-broker-state idle"
+        MqttClientState.Connected => "app-menu-broker-connection live",
+        MqttClientState.Faulted => "app-menu-broker-connection faulted",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-broker-connection pending",
+        _ => "app-menu-broker-connection idle"
     };
 
     private static string BrokerItemClass(ManagedConnection connection) => connection.State switch

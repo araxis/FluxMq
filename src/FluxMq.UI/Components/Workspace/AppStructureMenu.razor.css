@@ -272,7 +272,7 @@
     white-space: nowrap;
 }
 
-.app-menu-broker-state {
+.app-menu-broker-connection {
     align-items: center;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
@@ -283,15 +283,15 @@
     white-space: nowrap;
 }
 
-.app-menu-broker-state.live {
+.app-menu-broker-connection.live {
     color: var(--flux-accent);
 }
 
-.app-menu-broker-state.faulted {
+.app-menu-broker-connection.faulted {
     color: var(--mud-palette-warning);
 }
 
-.app-menu-broker-state.pending {
+.app-menu-broker-connection.pending {
     color: var(--mud-palette-info);
 }
 
