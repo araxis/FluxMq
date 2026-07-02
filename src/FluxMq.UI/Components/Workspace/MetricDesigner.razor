@@ -133,6 +133,7 @@
                         var current = row;
                         <button type="button"
                                 class="@RowClass(current)"
+                                aria-label="@MetricRowLabel(current)"
                                 @key="current.Id"
                                 @onclick="@(() => SelectMetricAsync(current.Id))">
                             <span class="metrics-cell metrics-cell-name" title="@current.Id">
@@ -1180,6 +1181,21 @@
         => string.Equals(row.Id, _selectedMetricName, StringComparison.Ordinal)
             ? "metrics-row selected"
             : "metrics-row";
+
+    private static string MetricRowLabel(MetricDesignerRow row)
+    {
+        var referenceCount = row.ReferenceCount.ToString(CultureInfo.InvariantCulture);
+        var referenceLabel = row.ReferenceCount == 1
+            ? "1 reference"
+            : $"{referenceCount} references";
+        var latestLabel = row.Latest is null
+            ? "no latest reading"
+            : string.IsNullOrWhiteSpace(row.Latest.Unit)
+                ? $"latest {row.Latest.FormattedValue}"
+                : $"latest {row.Latest.FormattedValue} {row.Latest.Unit}";
+
+        return $"Select metric {row.DisplayName} ({row.Id}), {row.TypeName}, {referenceLabel}, {latestLabel}";
+    }
 
     private static string ReferenceCountClass(int count)
         => count > 0 ? "metrics-ref-count active" : "metrics-ref-count";

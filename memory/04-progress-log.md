@@ -5042,3 +5042,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Strict custom-button source scan passed after the placeholder cleanup.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue stale-selector and custom-control audit across high-use workspace chrome without broadening runtime or schema scope.
+- Metric Designer row accessibility result:
+  - Added explicit row-level accessible labels to Metric Designer metric row buttons so dense table-like rows announce the metric display name, id, type, reference count, and latest reading state.
+  - Preserved row selection, metric filtering, metric editing, latest-value display, reference counts, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Metric Designer guard to require the row label helper and row `aria-label` binding.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Metric row label scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace control surfaces for concise accessible names and stale selectors without broadening runtime or schema scope.

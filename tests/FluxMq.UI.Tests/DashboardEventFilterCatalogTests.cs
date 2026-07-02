@@ -4509,6 +4509,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-preview-marker");
         markup.ShouldContain("metrics-list-empty create-empty");
         markup.ShouldContain("metrics-list-empty filter-empty");
+        markup.ShouldContain("aria-label=\"@MetricRowLabel(current)\"");
+        markup.ShouldContain("private static string MetricRowLabel(MetricDesignerRow row)");
+        markup.ShouldContain("Select metric {row.DisplayName} ({row.Id})");
         markup.Split('\n')
             .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
                 !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
