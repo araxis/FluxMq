@@ -7,7 +7,7 @@
     <div class="app-json-toolbar" aria-label="Application JSON toolbar">
         <div class="app-json-title">
             <span class="app-json-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="app-json-title-copy">
                 <strong>App JSON</strong>
@@ -36,7 +36,7 @@
         @if (string.IsNullOrWhiteSpace(_fullJson))
         {
             <div class="app-json-empty" role="status" aria-live="polite">
-                <MudIcon Icon="@Icons.Material.Filled.CodeOff" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.CodeOff" Size="Size.Small" aria-hidden="true" />
                 <strong>No JSON available</strong>
                 <span>Update the app definition to generate the full JSON view.</span>
             </div>

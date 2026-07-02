@@ -4959,3 +4959,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Workspace Log icon scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App JSON direct icon accessibility result:
+  - Added hidden decorative semantics to direct title and empty-state `MudIcon` glyphs in `AppJsonPanel`.
+  - Preserved visible title/file copy, JSON summary, unsaved indicator, copy action, Monaco viewer setup/sync, app JSON generation, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused App JSON guard to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App JSON icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
