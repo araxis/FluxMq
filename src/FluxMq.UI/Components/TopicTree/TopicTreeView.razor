@@ -46,7 +46,7 @@
                          aria-selected="@TopicNodeSelected(node)"
                          @onkeydown="@((KeyboardEventArgs args) => SelectTopicFromKeyboardAsync(args, node.FullPath))"
                          @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
-                        <span class="topic-node-flat-icon">
+                        <span class="topic-node-flat-icon" aria-hidden="true">
                             <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" />
                         </span>
                         <MudText Typo="Typo.body2" Class="topic-path">@node.FullPath</MudText>

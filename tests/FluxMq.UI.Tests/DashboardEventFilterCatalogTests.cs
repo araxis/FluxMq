@@ -3441,6 +3441,7 @@ public sealed class DashboardEventFilterCatalogTests
             "TopicTreeView.razor.css"));
 
         markup.ShouldContain("topic-node-branch");
+        markup.ShouldContain("class=\"topic-node-branch\" aria-hidden=\"true\"");
         markup.ShouldContain("style=\"@($\"--topic-depth:{Node.Depth};\")\"");
         markup.ShouldContain("TopicSelected.InvokeAsync(Node.FullPath)");
         markup.ShouldContain("Node.Children.Values.OrderBy(n => n.Name)");
@@ -3483,6 +3484,7 @@ public sealed class DashboardEventFilterCatalogTests
         viewMarkup.ShouldContain("aria-label=\"@node.FullPath\"");
         viewMarkup.ShouldContain("aria-level=\"@TopicNodeLevel(node)\"");
         viewMarkup.ShouldContain("aria-selected=\"@TopicNodeSelected(node)\"");
+        viewMarkup.ShouldContain("class=\"topic-node-flat-icon\" aria-hidden=\"true\"");
         viewMarkup.ShouldContain("@onkeydown=\"@((KeyboardEventArgs args) => SelectTopicFromKeyboardAsync(args, node.FullPath))\"");
         viewMarkup.ShouldContain("private static int TopicNodeLevel(TopicNode node)");
         viewMarkup.ShouldContain("private string TopicNodeSelected(TopicNode node)");

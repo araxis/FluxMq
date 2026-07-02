@@ -11,7 +11,7 @@
          aria-selected="@TopicNodeSelected()"
          @onkeydown="SelectFromKeyboardAsync"
          @onclick="Select">
-        <span class="topic-node-branch"></span>
+        <span class="topic-node-branch" aria-hidden="true"></span>
 
         @if (Node.HasChildren)
         {

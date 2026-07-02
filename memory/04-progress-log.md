@@ -4639,3 +4639,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+
+- Topic Tree decorative marker accessibility result:
+  - Added `aria-hidden="true"` to the recursive topic-tree branch guide and filtered-result topic icon wrapper.
+  - Preserved row labels, treeitem semantics, selection, keyboard activation, branch expansion, compact mode, message counts, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused Topic Tree guard to require hidden decorative markers in recursive and filtered topic rows.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
