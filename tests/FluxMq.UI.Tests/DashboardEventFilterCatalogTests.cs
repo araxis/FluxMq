@@ -5979,6 +5979,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Pipeline diagram canvas\"");
         markup.ShouldContain("flow-canvas-title-copy");
         markup.ShouldContain("flow-canvas-meta-strip");
+        markup.ShouldContain("Pipeline loaded");
         markup.ShouldContain("@WorkflowModeLabel");
         markup.ShouldContain("@WorkflowSelectionLabel");
         markup.ShouldContain("flow-canvas-metrics");
@@ -5999,6 +6000,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("ViewStrokeColor=\"#FBBF24\"");
         markup.ShouldNotContain("flow-link-condition-meta");
         markup.ShouldNotContain("Icons.Material.Filled.Link");
+        markup.ShouldNotContain(">Ready<");
         markup.IndexOf("class=\"flow-canvas-header\"", StringComparison.Ordinal)
             .ShouldBeLessThan(markup.IndexOf("class=\"flow-canvas\" role=\"group\"", StringComparison.Ordinal));
 
