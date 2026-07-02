@@ -11783,8 +11783,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("TestRunMeta(latestTestRun)");
         markup.ShouldContain("TestRunSummaryClass(latestTestRun)");
         markup.ShouldContain("TestRunDetailText(latestTestRun)");
-        markup.ShouldContain("TestRunStateClass(latestTestRun)");
+        markup.ShouldContain("TestRunMarkerClass(latestTestRun)");
         markup.ShouldContain("No run yet");
+        markup.ShouldNotContain("TestRunStateClass(latestTestRun)");
+        markup.ShouldNotContain("test-run-state");
         markup.ShouldContain("tree-item-actions");
         markup.ShouldContain("tree-delete-button");
         markup.ShouldContain("RemoveTestAsync(a, t)");
@@ -11822,7 +11824,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-artifact-copy small");
         css.ShouldContain(".test-run-summary");
         css.ShouldContain(".test-run-summary-meta");
-        css.ShouldContain(".test-run-state");
+        css.ShouldContain(".test-run-marker");
+        css.ShouldNotContain(".test-run-state");
         css.ShouldContain(".tree-item-actions");
         css.ShouldContain("opacity: 0.58;");
         css.ShouldContain(".tree-item-actions ::deep .tree-delete-button");

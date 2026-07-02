@@ -293,7 +293,7 @@ else
                                 </div>
                                 <div class="@TestRunSummaryClass(latestTestRun)"
                                      aria-label="@TestRunStateLabel(latestTestRun)">
-                                    <span class="@TestRunStateClass(latestTestRun)">
+                                    <span class="@TestRunMarkerClass(latestTestRun)">
                                         <MudIcon Icon="@TestRunIcon(latestTestRun)" Size="Size.Small" />
                                         <span>@TestRunText(latestTestRun)</span>
                                     </span>
@@ -570,13 +570,13 @@ else
             _ => "test-run-summary idle"
         };
 
-    private static string TestRunStateClass(ScenarioRunResult? latestRun)
+    private static string TestRunMarkerClass(ScenarioRunResult? latestRun)
         => latestRun?.Status switch
         {
-            ScenarioRunStatus.Passed => "test-run-state passed",
-            ScenarioRunStatus.Failed => "test-run-state failed",
-            ScenarioRunStatus.Canceled => "test-run-state canceled",
-            _ => "test-run-state idle"
+            ScenarioRunStatus.Passed => "test-run-marker passed",
+            ScenarioRunStatus.Failed => "test-run-marker failed",
+            ScenarioRunStatus.Canceled => "test-run-marker canceled",
+            _ => "test-run-marker idle"
         };
 
     private static string TestRunIcon(ScenarioRunResult? latestRun)
