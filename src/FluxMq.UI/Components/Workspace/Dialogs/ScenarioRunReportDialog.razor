@@ -118,7 +118,7 @@
                     <div class="scenario-report-viewer" aria-label="Text report">
                         @if (HasSummaryReport)
                         {
-                            <pre>@TextReport</pre>
+                            <pre aria-label="Text scenario report">@TextReport</pre>
                         }
                         else
                         {
@@ -134,7 +134,7 @@
                     <div class="scenario-report-viewer" aria-label="JSON report">
                         @if (HasJsonReport)
                         {
-                            <pre>@JsonReport</pre>
+                            <pre aria-label="Scenario report JSON">@JsonReport</pre>
                         }
                         else
                         {

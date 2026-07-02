@@ -5331,6 +5331,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgets_ExposeEmptyStatesAsStatusMessages" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Workspace preformatted content label result:
+  - Added accessible labels to the Dashboard latest-event payload preview and Scenario Run Report text/JSON preformatted report blocks.
+  - Preserved dashboard widget rendering, scenario report copy/export behavior, report data, saved app/schema data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the Scenario Run Report guard to require accepted empty-state live regions instead of rejecting all `aria-live` usage.
+  - Added a source-wide UI guard that scans Razor `<pre>` blocks and requires either `aria-label` or `aria-labelledby`.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunReportDialog_UsesFlatCompactReviewChrome|FullyQualifiedName~DashboardWidgets_HideDecorativeHeaderIcons|FullyQualifiedName~WorkspacePreformattedBlocks_ExposeAccessibleNames" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only preformatted block label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for keyboard semantics, concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
 - Workspace listbox option relationship result:
   - Added option ids and `aria-activedescendant` wiring to custom listboxes in `PropertyGridSelect`, `MetricCreateDialog`, and `MetricTypeChangeDialog`.
   - Preserved property-grid selection behavior, metric type selection, filtering, validation, dialog results, metric defaults, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.

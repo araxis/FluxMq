@@ -4230,8 +4230,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("scenario-report-empty");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Medium\" aria-hidden=\"true\"");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Medium\" aria-hidden=\"true\"");
-        markup.ShouldContain("<pre>@TextReport</pre>");
-        markup.ShouldContain("<pre>@JsonReport</pre>");
+        markup.ShouldContain("<pre aria-label=\"Text scenario report\">@TextReport</pre>");
+        markup.ShouldContain("<pre aria-label=\"Scenario report JSON\">@JsonReport</pre>");
         markup.ShouldContain("scenario-report-action-group");
         markup.ShouldContain("Disabled=\"@(!HasSummaryReport)\"");
         markup.ShouldContain("Disabled=\"@(!HasJsonReport)\"");
@@ -4253,7 +4253,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Icon=\"@IssueIcon\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Medium\" />");
         markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Medium\" />");
-        markup.ShouldNotContain("aria-live=\"polite\"");
+        markup.ShouldContain("scenario-report-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("MudTextField");
 
@@ -6369,6 +6369,9 @@ public sealed class DashboardEventFilterCatalogTests
 
             markup.ShouldNotContain("<div class=\"dashboard-widget-icon\">");
         }
+
+        File.ReadAllText(Path.Combine(widgetsPath, "DashboardLatestEventWidget.razor"))
+            .ShouldContain("class=\"dashboard-widget-payload\" aria-label=\"Latest event payload\"");
     }
 
     [Fact]
@@ -12524,6 +12527,34 @@ public sealed class DashboardEventFilterCatalogTests
             .ToArray();
 
         listboxViolations.Concat(optionViolations).ToArray().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspacePreformattedBlocks_ExposeAccessibleNames()
+    {
+        var root = FindRepositoryRoot();
+        var componentDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components");
+        var violations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<pre\b[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("aria-label=", StringComparison.Ordinal) &&
+                        !item.Tag.Contains("aria-labelledby=", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+
+        violations.ShouldBeEmpty();
     }
 
     [Fact]

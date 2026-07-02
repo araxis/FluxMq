@@ -43,7 +43,7 @@
 
             @if (ShowPayload(widget) && !string.IsNullOrWhiteSpace(latest.PayloadPreview))
             {
-                <pre class="dashboard-widget-payload">@latest.PayloadPreview</pre>
+                <pre class="dashboard-widget-payload" aria-label="Latest event payload">@latest.PayloadPreview</pre>
             }
         </div>
     }
