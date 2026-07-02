@@ -5404,6 +5404,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Widget preview");
         markup.ShouldContain("Current style and draft query");
         markup.ShouldContain("Refresh sample");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("PreviewSourceClass");
         markup.ShouldContain("dashboard-query-preview-frame-source live");
         markup.ShouldContain("dashboard-query-preview-frame-source sample");
@@ -6239,14 +6248,30 @@ public sealed class DashboardEventFilterCatalogTests
         var widgetFiles = Directory
             .GetFiles(widgetsPath, "*.razor")
             .Append(Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgetView.razor"))
+            .ToArray();
+        var headerIconFiles = widgetFiles
             .Where(static file => File.ReadAllText(file).Contains("dashboard-widget-icon", StringComparison.Ordinal))
             .ToArray();
 
         widgetFiles.Length.ShouldBeGreaterThanOrEqualTo(10);
+        headerIconFiles.Length.ShouldBeGreaterThanOrEqualTo(10);
         foreach (var file in widgetFiles)
         {
             var markup = File.ReadAllText(file);
-            markup.ShouldContain("class=\"dashboard-widget-icon\" aria-hidden=\"true\"");
+            System.Text.RegularExpressions.Regex.Matches(
+                    markup,
+                    @"<MudIcon\b(?:(?!/>).)*?/>",
+                    System.Text.RegularExpressions.RegexOptions.Singleline)
+                .Cast<System.Text.RegularExpressions.Match>()
+                .Select(static match => match.Value)
+                .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+                .ToArray()
+                .ShouldBeEmpty();
+            if (headerIconFiles.Contains(file, StringComparer.Ordinal))
+            {
+                markup.ShouldContain("class=\"dashboard-widget-icon\" aria-hidden=\"true\"");
+            }
+
             markup.ShouldNotContain("<div class=\"dashboard-widget-icon\">");
         }
     }

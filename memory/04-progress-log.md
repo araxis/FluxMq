@@ -4979,3 +4979,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Apps and Live Inspector icon scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning dashboard widget surfaces and remaining node chrome for decorative icon/accessibility gaps without broadening runtime or schema scope.
+- Dashboard display direct icon accessibility result:
+  - Added hidden decorative semantics to direct refresh, widget header, metric tile, empty topic, and visualization `MudIcon` glyphs across `DashboardQueryPreviewFrame`, `DashboardWidgetView`, and dashboard widget components.
+  - Preserved visible preview action text, widget titles/subtitles, metric values, chart/table/topic rendering, dashboard data/query behavior, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused dashboard query preview and dashboard widget guards to reject exposed direct `MudIcon` tags across complete tags and all dashboard widget Razor files.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardQueryPreviewFrame|FullyQualifiedName~DashboardWidgets" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only dashboard display icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning remaining node chrome for decorative icon/accessibility gaps without broadening runtime or schema scope.
