@@ -5264,6 +5264,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Workspace status message live semantics result:
+  - Added explicit `aria-live="polite"` to the remaining component status messages that already used `role="status"` without a live-region attribute.
+  - Covered fallback node port placeholders, message filter patterns, generated/session/metric source empty prompts, MQTT metrics waiting state, test runner/designer history and stream empty states, and scenario report empty panes.
+  - Preserved all runtime behavior, saved app/workflow/schema data, node ids, ports, services, logs, reports, test execution, metric behavior, MQTT behavior, and component contracts.
+  - Added a source-wide UI guard that scans Razor component tags with `role="status"` and requires explicit polite live semantics, including split-attribute tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceStatusMessages_UseExplicitPoliteLiveSemantics" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only component status scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining concise accessible names, keyboard semantics, stale selectors, and visible noise without broadening runtime or schema scope.
 - App Structure menu empty-state accessibility result:
   - Added `role="status"` and polite live semantics to the no-app App Structure header placeholder and compact menu empty rows.
   - Preserved app structure navigation, artifact rows, menu commands, inline artifact actions, project/app selection, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.

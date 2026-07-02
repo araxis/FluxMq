@@ -103,7 +103,7 @@
                                 </div>
                                 @if (RecentRuns.Count == 0)
                                 {
-                                    <div class="test-run-history-empty" role="status">
+                                    <div class="test-run-history-empty" role="status" aria-live="polite">
                                         <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" aria-hidden="true" />
                                         <span>
                                             <strong>No run history</strong>
@@ -314,7 +314,7 @@
                                 }
                                 @if (Project.RuntimeEvents.Count == 0)
                                 {
-                                    <div class="test-runner-stream-empty" role="status">
+                                    <div class="test-runner-stream-empty" role="status" aria-live="polite">
                                         <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Small" aria-hidden="true" />
                                         <strong>No live events</strong>
                                         <span>Runtime events will appear while the app is running.</span>
@@ -345,7 +345,7 @@
                                 }
                                 @if (!Project.Logs.Any(IsRunnerLog))
                                 {
-                                    <div class="test-runner-stream-empty" role="status">
+                                    <div class="test-runner-stream-empty" role="status" aria-live="polite">
                                         <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" aria-hidden="true" />
                                         <strong>No runner logs</strong>
                                         <span>Scenario runner messages will appear here.</span>

@@ -12252,6 +12252,33 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void WorkspaceStatusMessages_UseExplicitPoliteLiveSemantics()
+    {
+        var root = FindRepositoryRoot();
+        var componentDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components");
+        var violations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<[^>]*\brole\s*=\s*""status""[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("aria-live=\"polite\"", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void FlowDesigner_UsesCompactDiagnosticSurface()
     {
         var root = FindRepositoryRoot();
