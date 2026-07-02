@@ -83,7 +83,7 @@
                                    Size="Size.Small"
                                    Class="flow-canvas-icon-button"
                                    OnClick="@ZoomToFit"
-                                   aria-label="Zoom to fit" />
+                                   aria-label="@ZoomToFitLabel" />
                 </MudTooltip>
             </div>
         </div>
@@ -228,6 +228,10 @@
     private string PipelineCanvasCommandLabel => Flow.ActiveWorkflowName is null
         ? "Pipeline canvas commands, no active pipeline"
         : $"{Flow.ActiveWorkflowName} canvas commands";
+
+    private string ZoomToFitLabel => Flow.ActiveWorkflowName is null
+        ? "Zoom pipeline canvas to fit"
+        : $"Zoom {Flow.ActiveWorkflowName} pipeline canvas to fit";
 
     private string WorkflowSubtitle => Flow.HasUnsavedChanges
         ? "Unsaved changes"

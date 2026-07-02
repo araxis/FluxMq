@@ -7174,6 +7174,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private string PipelineCanvasCommandLabel => Flow.ActiveWorkflowName is null");
         markup.ShouldContain("$\"{Flow.ActiveWorkflowName} canvas commands\"");
         markup.ShouldNotContain("aria-label=\"Pipeline canvas commands\"");
+        markup.ShouldContain("aria-label=\"@ZoomToFitLabel\"");
+        markup.ShouldContain("private string ZoomToFitLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"Zoom {Flow.ActiveWorkflowName} pipeline canvas to fit\"");
+        markup.ShouldNotContain("aria-label=\"Zoom to fit\"");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("@EmptyCanvasHint");
         markup.ShouldContain("flow-canvas-empty-icon");

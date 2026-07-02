@@ -5696,3 +5696,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Flow Designer link-condition stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer zoom command label specificity result:
+  - Replaced the static Flow Designer zoom-to-fit button accessible name with an active-pipeline-aware label.
+  - Preserved visible tooltip copy, zoom-to-fit behavior, diagram state, canvas rendering, navigator, workflow JSON, saved app data, runtime behavior, services, diagnostics, schemas, ids, ports, and contracts.
+  - Extended the focused Flow Designer canvas guard to require the zoom label helper and reject the old static zoom command label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer zoom-label stale scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
