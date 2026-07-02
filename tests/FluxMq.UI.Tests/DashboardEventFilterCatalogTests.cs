@@ -3737,7 +3737,11 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "TestStudio.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Test studio workspace\"");
+        markup.ShouldContain("aria-label=\"@TestStudioLabel\"");
+        markup.ShouldContain("private string TestStudioLabel");
+        markup.ShouldContain("{scenario.Name} test studio workspace");
+        markup.ShouldContain("Test studio workspace with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Test studio workspace\"");
         markup.ShouldContain("aria-label=\"@TestStudioToolbarLabel\"");
         markup.ShouldContain("Test studio toolbar for {scenario.Name}");
         markup.ShouldContain("Test studio toolbar with no active scenario");

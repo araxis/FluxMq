@@ -1,6 +1,6 @@
 @using FluxMq.UI.Services
 
-<div class="test-studio" aria-label="Test studio workspace">
+<div class="test-studio" aria-label="@TestStudioLabel">
     <header class="test-studio-toolbar" aria-label="@TestStudioToolbarLabel">
         <div class="test-studio-heading">
             <span class="test-studio-title-icon" aria-hidden="true">
@@ -106,6 +106,11 @@
         => Project.GetActiveTestScenario() is { } scenario
             ? FormatCount(Project.ScenarioRunHistory.Count(result => string.Equals(result.Name, scenario.Name, StringComparison.Ordinal)), "run")
             : "No runs";
+
+    private string TestStudioLabel
+        => Project.GetActiveTestScenario() is { } scenario
+            ? $"{scenario.Name} test studio workspace"
+            : "Test studio workspace with no active scenario";
 
     private string TestStudioMetaLabel
         => Project.GetActiveTestScenario() is { } scenario

@@ -5727,3 +5727,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Studio root label specificity result:
+  - Replaced the static Test Studio root accessible name with an active-scenario-aware label.
+  - Preserved toolbar copy, scenario count facts, mode switching, tab keyboard behavior, designer/runner routing, scenario editing, run/report behavior, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Studio workspace guard to require the root label helper and reject the old static workspace label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TestStudio stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
