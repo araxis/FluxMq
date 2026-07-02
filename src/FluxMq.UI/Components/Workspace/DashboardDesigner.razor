@@ -58,7 +58,10 @@
 
                                 @if (_isGridPickerOpen)
                                 {
-                                    <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseGridPicker"></button>
+                                    <button type="button"
+                                            class="dashboard-picker-backdrop"
+                                            aria-label="Close grid layout picker"
+                                            @onclick="@CloseGridPicker"></button>
                                     <div class="dashboard-grid-picker-popover">
                                         <div class="dashboard-grid-picker-cells">
                                             @foreach (var row in PickerRows)
@@ -106,7 +109,10 @@
 
                                 @if (_isSplitPickerOpen)
                                 {
-                                    <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseSplitPicker"></button>
+                                    <button type="button"
+                                            class="dashboard-picker-backdrop"
+                                            aria-label="Close split picker"
+                                            @onclick="@CloseSplitPicker"></button>
                                     <div class="dashboard-grid-picker-popover">
                                         <div class="dashboard-grid-picker-cells split-picker-cells">
                                             @foreach (var row in SplitPickerRows)
