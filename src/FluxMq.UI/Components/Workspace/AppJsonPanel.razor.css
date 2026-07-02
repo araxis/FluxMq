@@ -93,7 +93,7 @@
 
 .app-json-unsaved-indicator::before {
     background: var(--mud-palette-warning);
-    border-radius: 999px;
+    border-radius: 50%;
     content: "";
     display: inline-block;
     height: 6px;

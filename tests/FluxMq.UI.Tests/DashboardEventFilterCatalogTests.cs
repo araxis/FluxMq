@@ -4716,6 +4716,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-json-meta span,");
         css.ShouldContain(".app-json-unsaved-indicator");
         css.ShouldContain(".app-json-unsaved-indicator::before");
+        css.ShouldContain("border-radius: 50%;");
+        css.ShouldNotContain("border-radius: 999px;");
         css.ShouldNotContain(".app-json-state");
         css.ShouldContain(".app-json-toolbar ::deep .mud-icon-button");
         css.ShouldContain(".app-json-editor-shell ::deep .app-json-monaco-editor");
