@@ -11731,7 +11731,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private void ToggleJsonView()");
         markup.ShouldContain("private void OpenJsonView()");
         markup.ShouldContain("private void CloseJsonView()");
-        markup.ShouldContain("SyncActiveArtifactState();");
+        markup.ShouldContain("SyncActiveArtifactSelection();");
+        markup.ShouldContain("private void SyncActiveArtifactSelection()");
+        markup.ShouldNotContain("SyncActiveArtifactState");
         markup.ShouldNotContain("private string JsonToggleTitle");
         markup.ShouldNotContain("project-tabbar-app-toggle");
         markup.ShouldNotContain("project-tab-json-active");

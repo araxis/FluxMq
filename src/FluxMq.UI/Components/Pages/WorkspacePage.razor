@@ -258,24 +258,24 @@
     {
         Projects.Changed += OnProjectsChanged;
         SyncSubscriptions();
-        SyncActiveArtifactState();
+        SyncActiveArtifactSelection();
         _ = OpenStartupFileAsync();
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e)
     {
         SyncSubscriptions();
-        SyncActiveArtifactState();
+        SyncActiveArtifactSelection();
         InvokeAsync(StateHasChanged);
     }
 
     private void OnProjectChanged(object? sender, EventArgs e)
     {
-        SyncActiveArtifactState();
+        SyncActiveArtifactSelection();
         InvokeAsync(StateHasChanged);
     }
 
-    private void SyncActiveArtifactState()
+    private void SyncActiveArtifactSelection()
     {
         var active = Projects.ActiveProject;
         var kind = active?.ActiveArtifactKind;
@@ -523,14 +523,14 @@
 
     private void OpenJsonView()
     {
-        SyncActiveArtifactState();
+        SyncActiveArtifactSelection();
         _jsonView = true;
     }
 
     private void CloseJsonView()
     {
         _jsonView = false;
-        SyncActiveArtifactState();
+        SyncActiveArtifactSelection();
     }
 
     private async Task RemoveWorkflowAsync(string name)
