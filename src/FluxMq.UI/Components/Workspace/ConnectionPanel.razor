@@ -41,13 +41,13 @@
                      role="listitem"
                      aria-label="@ConnectionRowLabel(conn)"
                      @key="conn.Id">
-                    <span class="@StateDotClass(conn.State)" aria-hidden="true"></span>
+                    <span class="@ConnectionDotClass(conn.State)" aria-hidden="true"></span>
 
                     <div class="connection-main">
                         <div class="connection-name-line">
                             <span class="connection-name">@ConnectionDisplayName(conn)</span>
-                            <span class="@StateClass(conn.State)" title="@StateLabel(conn.State)">
-                                @StateLabel(conn.State)
+                            <span class="@ConnectionMarkerClass(conn.State)" title="@ConnectionMarkerLabel(conn.State)">
+                                @ConnectionMarkerLabel(conn.State)
                             </span>
                         </div>
                         <div class="connection-endpoint">@ConnectionEndpoint(conn)</div>
@@ -132,14 +132,14 @@
         => $"{connection.Profile.Host}:{connection.Profile.Port.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
 
     private static string ConnectionRowLabel(ManagedConnection connection)
-        => $"{ConnectionDisplayName(connection)}, {ConnectionEndpoint(connection)}, {StateLabel(connection.State)}";
+        => $"{ConnectionDisplayName(connection)}, {ConnectionEndpoint(connection)}, {ConnectionMarkerLabel(connection.State)}";
 
     private static string SubscriptionLabel(ManagedConnection connection)
         => string.IsNullOrWhiteSpace(connection.Subscription)
             ? "Sub #"
             : $"Sub {connection.Subscription}";
 
-    private static string StateLabel(MqttClientState state) => state switch
+    private static string ConnectionMarkerLabel(MqttClientState state) => state switch
     {
         MqttClientState.Connected => "Connected",
         MqttClientState.Connecting => "Connecting",
@@ -148,15 +148,15 @@
         _ => "Disconnected"
     };
 
-    private static string StateClass(MqttClientState state) => state switch
+    private static string ConnectionMarkerClass(MqttClientState state) => state switch
     {
-        MqttClientState.Connected => "connection-state live",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-state pending",
-        MqttClientState.Faulted => "connection-state faulted",
-        _ => "connection-state"
+        MqttClientState.Connected => "connection-marker live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-marker pending",
+        MqttClientState.Faulted => "connection-marker faulted",
+        _ => "connection-marker"
     };
 
-    private static string StateDotClass(MqttClientState state) => state switch
+    private static string ConnectionDotClass(MqttClientState state) => state switch
     {
         MqttClientState.Connected => "connection-dot live",
         MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-dot pending",
