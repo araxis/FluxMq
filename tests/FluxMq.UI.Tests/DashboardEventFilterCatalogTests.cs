@@ -2824,7 +2824,8 @@ public sealed class DashboardEventFilterCatalogTests
             "TopicExplorerMonitorResolver.cs"));
 
         markup.ShouldContain("aria-label=\"Topic tree\"");
-        markup.ShouldContain("aria-label=\"Topic last state and history\"");
+        markup.ShouldContain("aria-label=\"Topic latest message and history\"");
+        markup.ShouldNotContain("aria-label=\"Topic last state and history\"");
         markup.ShouldContain("aria-label=\"Latest topic message\"");
         markup.ShouldContain("aria-label=\"Publish MQTT message\"");
         markup.ShouldContain("aria-label=\"Topic message history\"");
@@ -3040,7 +3041,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Copy selected payload view\"");
         markup.ShouldContain("Select a history row to inspect MQTT metadata and payload.");
         markup.ShouldContain("LastMessage is null");
-        markup.ShouldContain("topic-last-state");
+        markup.ShouldContain("topic-latest-message");
+        markup.ShouldContain("LatestMessageSubtitle");
+        markup.ShouldNotContain("topic-last-state");
+        markup.ShouldNotContain("LastStateSubtitle");
         markup.ShouldContain("topic-last-payload");
         markup.ShouldContain("topic-last-meta");
         markup.ShouldContain("topic-no-traffic");
@@ -3093,7 +3097,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".topic-broker-row.live .topic-broker-state");
         css.ShouldContain(".topic-broker-tree");
         css.ShouldContain(".topic-broker-empty");
-        css.ShouldContain(".topic-last-state");
+        css.ShouldContain(".topic-latest-message");
+        css.ShouldNotContain(".topic-last-state");
         css.ShouldContain("flex: 0 0 clamp(218px, 38%, 360px);");
         css.ShouldContain(".topic-last-body");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);");

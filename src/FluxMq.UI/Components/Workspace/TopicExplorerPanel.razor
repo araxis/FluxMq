@@ -125,12 +125,12 @@
         </div>
     </section>
 
-    <section class="topic-explorer-detail" aria-label="Topic last state and history">
-        <section class="topic-last-state" aria-label="Latest topic message">
+    <section class="topic-explorer-detail" aria-label="Topic latest message and history">
+        <section class="topic-latest-message" aria-label="Latest topic message">
             <div class="topic-last-header">
                 <div class="topic-detail-heading">
                     <h3>@SelectedTopicLabel</h3>
-                    <div class="topic-explorer-subtitle">@LastStateSubtitle</div>
+                    <div class="topic-explorer-subtitle">@LatestMessageSubtitle</div>
                 </div>
                 <div class="topic-explorer-stats">
                     <span>@FilteredMessages.Count messages</span>
@@ -1079,7 +1079,7 @@
         var count => $"{count} broker monitors are subscribed to #. Topics appear when retained or live messages arrive."
     };
 
-    private string LastStateSubtitle => LastMessage is null
+    private string LatestMessageSubtitle => LastMessage is null
         ? SelectedTopicMeta
         : $"{BrokerLabel(LastMessage)} / {LastMessage.Topic}";
 

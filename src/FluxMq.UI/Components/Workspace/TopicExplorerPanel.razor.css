@@ -349,7 +349,7 @@ h3 {
     padding: 8px 0 4px 12px;
 }
 
-.topic-last-state {
+.topic-latest-message {
     background: var(--flux-surface);
     border-bottom: 1px solid var(--flux-border);
     display: flex;
@@ -1572,7 +1572,7 @@ h3 {
         gap: 8px;
     }
 
-    .topic-last-state {
+    .topic-latest-message {
         flex-basis: clamp(260px, 44%, 392px);
     }
 
@@ -1618,7 +1618,7 @@ h3 {
         border-right: 0;
     }
 
-    .topic-last-state {
+    .topic-latest-message {
         flex-basis: clamp(252px, 40vh, 360px);
     }
 
