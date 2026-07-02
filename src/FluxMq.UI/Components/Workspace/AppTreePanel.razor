@@ -34,6 +34,7 @@ else
                      tabindex="0"
                      aria-label="@AppRowLabel(a, isActive)"
                      aria-current="@TreeItemCurrent(isActive)"
+                     aria-keyshortcuts="Enter Space"
                      title="@AppRowLabel(a, isActive)"
                      @onclick="@(() => SelectApp(a))"
                      @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboardAsync(args, a))">
@@ -157,6 +158,7 @@ else
                                      tabindex="0"
                                      aria-label="@($"Open pipeline {w}")"
                                      aria-current="@TreeItemCurrent(isPipeActive)"
+                                     aria-keyshortcuts="Enter Space"
                                      @onclick="@(() => SelectPipeline(a, w))"
                                      @onkeydown="@((KeyboardEventArgs args) => SelectPipelineFromKeyboardAsync(args, a, w))">
                                     <MudIcon Icon="@Icons.Material.Filled.Timeline"
@@ -196,6 +198,7 @@ else
                                  tabindex="0"
                                  aria-label="Open metric designer"
                                  aria-current="@TreeItemCurrent(isMetricsActive)"
+                                 aria-keyshortcuts="Enter Space"
                                  @onclick="@(() => SelectMetrics(a))"
                                  @onkeydown="@((KeyboardEventArgs args) => SelectMetricsFromKeyboardAsync(args, a))">
                                 <MudIcon Icon="@Icons.Material.Filled.QueryStats"
@@ -238,6 +241,7 @@ else
                                      tabindex="0"
                                      aria-label="@($"Open dashboard {d}")"
                                      aria-current="@TreeItemCurrent(isDashboardActive)"
+                                     aria-keyshortcuts="Enter Space"
                                      @onclick="@(() => SelectDashboard(a, d))"
                                      @onkeydown="@((KeyboardEventArgs args) => SelectDashboardFromKeyboardAsync(args, a, d))">
                                     <MudIcon Icon="@Icons.Material.Filled.Dashboard"
@@ -270,6 +274,7 @@ else
                                  role="button"
                                  tabindex="0"
                                  aria-label="Create test scenario"
+                                 aria-keyshortcuts="Enter Space"
                                  @onclick="@(() => AddTestAsync(a))"
                                  @onkeydown="@((KeyboardEventArgs args) => AddTestFromKeyboardAsync(args, a))">
                                 <MudIcon Icon="@Icons.Material.Filled.FactCheck"
@@ -305,6 +310,7 @@ else
                                      title="@TestArtifactTitle(t, latestTestRun)"
                                      aria-label="@TestArtifactTitle(t, latestTestRun)"
                                      aria-current="@TreeItemCurrent(isTestActive)"
+                                     aria-keyshortcuts="Enter Space"
                                      @onclick="@(() => SelectTest(a, t))"
                                      @onkeydown="@((KeyboardEventArgs args) => SelectTestFromKeyboardAsync(args, a, t))">
                                     <span class="test-artifact-icon-frame" aria-hidden="true">
@@ -371,6 +377,7 @@ else
             aria-expanded="@AriaExpanded(isCollapsed)"
             aria-controls="@TreeSectionBodyId(app, section)"
             aria-label="@SectionHeaderLabel(title, count, isCollapsed)"
+            aria-keyshortcuts="Enter Space"
             @onclick="@(() => ToggleSection(app, section))"
             @onkeydown="@((KeyboardEventArgs args) => ToggleSectionFromKeyboardAsync(args, app, section))">
             <div class="tree-section-title">

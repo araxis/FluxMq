@@ -12571,6 +12571,7 @@ public sealed class DashboardEventFilterCatalogTests
         System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""app-row-icon""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("private static string AppRowLabel");
         markup.ShouldContain("private static string? TreeItemCurrent");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(7);
         markup.ShouldContain("aria-label=\"@($\"Close app {a.Name}\")\"");
         markup.ShouldContain("tree-empty-artifact-row tests");
         markup.ShouldContain("role=\"button\"");
