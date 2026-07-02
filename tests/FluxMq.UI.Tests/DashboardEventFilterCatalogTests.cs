@@ -11723,9 +11723,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("<span class=\"project-tab-name\">App JSON</span>");
         markup.ShouldContain("<span class=\"project-tabbar-app-name\">@active.Name</span>");
         markup.ShouldContain("aria-label=\"@($\"Close app {active.Name}\")\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Close\"");
         markup.ShouldContain("@onclick:stopPropagation=\"true\"");
         markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
         markup.ShouldContain("@onclick=\"@ToggleJsonView\"");
+        markup.ShouldNotContain(">x</button>");
         markup.ShouldContain("private void ToggleJsonView()");
         markup.ShouldContain("private void OpenJsonView()");
         markup.ShouldContain("private void CloseJsonView()");
@@ -11932,8 +11934,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".workspace-artifact-shell-pipeline .workspace-artifact-tools");
         css.ShouldContain("padding: 6px;");
         css.ShouldContain(".workspace-artifact-tools:focus-within");
+        css.ShouldContain(".project-tab-close ::deep .mud-icon-root");
         css.ShouldNotContain(".workspace-artifact-region:focus-within");
         css.ShouldNotContain(".workspace-designer-region:focus-within");
+        css.ShouldNotContain(".artifact-workspace-state");
+        css.ShouldNotContain(".artifact-workspace-icon");
+        css.ShouldNotContain(".artifact-workspace-title");
+        css.ShouldNotContain(".artifact-workspace-meta");
         css.ShouldNotContain("box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 34%, var(--flux-border));");
     }
 

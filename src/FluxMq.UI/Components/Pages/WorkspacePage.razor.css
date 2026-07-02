@@ -292,6 +292,10 @@
     color: var(--mud-palette-error);
 }
 
+.project-tab-close ::deep .mud-icon-root {
+    font-size: 15px;
+}
+
 .project-tabbar-app {
     align-items: center;
     border-left: 1px solid var(--flux-border);
@@ -365,38 +369,4 @@
         max-width: 38px;
         min-width: 38px;
     }
-}
-
-.artifact-workspace-state {
-    align-items: center;
-    color: var(--mud-palette-text-secondary);
-    display: flex;
-    flex: 1 1 auto;
-    gap: 14px;
-    justify-content: center;
-    min-height: 0;
-}
-
-.artifact-workspace-icon {
-    font-size: 42px;
-    opacity: 0.65;
-}
-
-.artifact-workspace-icon.dashboard {
-    color: var(--mud-palette-info);
-}
-
-.artifact-workspace-icon.test {
-    color: var(--mud-palette-warning);
-}
-
-.artifact-workspace-title {
-    color: var(--mud-palette-text-primary);
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.artifact-workspace-meta {
-    font-size: 12px;
-    margin-top: 2px;
 }

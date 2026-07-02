@@ -153,7 +153,9 @@
                         aria-label="@($"Close app {active.Name}")"
                         @onclick:stopPropagation="true"
                         @onmousedown:stopPropagation="true"
-                        @onclick="@CloseActiveAsync">x</button>
+                        @onclick="@CloseActiveAsync">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
             </div>
         </div>
 
