@@ -7535,7 +7535,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("height: 100%;");
         css.ShouldContain("min-height: 0;");
         css.ShouldContain(".dynamic-mapper-workspace-actions");
-        css.ShouldContain(".dynamic-mapper-result-status");
+        markup.ShouldContain("PreviewResultStateClass");
+        markup.ShouldContain("PreviewResultStateText");
+        markup.ShouldNotContain("PreviewStatusClass");
+        markup.ShouldNotContain("PreviewStatusText");
+        css.ShouldContain(".dynamic-mapper-result-state");
+        css.ShouldNotContain(".dynamic-mapper-result-status");
         css.ShouldContain("min-height: 27px;");
         css.ShouldContain("min-height: 25px;");
         css.ShouldContain("font-size: 0.58rem;");
