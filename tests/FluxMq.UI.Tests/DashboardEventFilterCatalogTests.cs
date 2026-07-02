@@ -2589,8 +2589,12 @@ public sealed class DashboardEventFilterCatalogTests
         selectMarkup.ShouldContain("aria-controls=\"@_listboxId\"");
         selectMarkup.ShouldContain("id=\"@_listboxId\"");
         selectMarkup.ShouldContain("role=\"listbox\"");
+        selectMarkup.ShouldContain("aria-activedescendant=\"@SelectedOptionId\"");
         selectMarkup.ShouldContain("aria-label=\"@ResolvedAriaLabel\"");
+        selectMarkup.ShouldContain("id=\"@OptionId(index)\"");
         selectMarkup.ShouldContain("private readonly string _listboxId");
+        selectMarkup.ShouldContain("private string? SelectedOptionId");
+        selectMarkup.ShouldContain("private string OptionId(int index)");
         selectMarkup.ShouldContain("string.Equals(args.Key, \"Spacebar\", StringComparison.Ordinal)");
         selectMarkup.ShouldContain("@onclick=\"@(() => SelectOptionAsync(option))\"");
         selectMarkup.ShouldContain("@onmousedown=\"@(() => SelectOptionAsync(option))\"");
@@ -4613,8 +4617,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("role=\"form\" aria-label=\"Create metric\"");
         markup.ShouldContain("role=\"search\"");
+        markup.ShouldContain("aria-activedescendant=\"@SelectedMetricTypeOptionId\"");
+        markup.ShouldContain("id=\"@MetricTypeOptionId(current)\"");
         markup.ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
         markup.ShouldContain("MetricTypeOptionLabel(MetricDescriptor descriptor)");
+        markup.ShouldContain("private string? SelectedMetricTypeOptionId");
+        markup.ShouldContain("MetricTypeOptionId(MetricDescriptor descriptor)");
+        markup.ShouldContain("SanitizeIdToken(string value)");
         System.Text.RegularExpressions.Regex.Matches(
                 markup,
                 @"<MudIcon\b(?:(?!/>).)*?/>",
@@ -4772,9 +4781,19 @@ public sealed class DashboardEventFilterCatalogTests
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldContain("metric-type-change-empty-defaults\" role=\"status\" aria-live=\"polite\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-activedescendant=\"@SelectedMetricTypeOptionId\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("id=\"@MetricTypeOptionId(current)\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldContain("MetricTypeOptionLabel(MetricDescriptor descriptor)");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("private string? SelectedMetricTypeOptionId");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("MetricTypeOptionId(MetricDescriptor descriptor)");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("SanitizeIdToken(string value)");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldNotContain("TypeChangeStatusText");
         File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor.css"))
@@ -12464,6 +12483,47 @@ public sealed class DashboardEventFilterCatalogTests
             .ToArray();
 
         violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceListboxes_ExposeActiveOptionRelationships()
+    {
+        var root = FindRepositoryRoot();
+        var componentDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components");
+        var listboxViolations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<[^>]*\brole\s*=\s*""listbox""[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("aria-activedescendant=", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+        var optionViolations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<[^>]*\brole\s*=\s*""option""[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("id=", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+
+        listboxViolations.Concat(optionViolations).ToArray().ShouldBeEmpty();
     }
 
     [Fact]

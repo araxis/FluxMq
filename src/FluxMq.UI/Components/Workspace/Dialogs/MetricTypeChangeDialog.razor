@@ -35,11 +35,12 @@
             </div>
 
             <div class="metric-type-change-layout">
-                <div class="metric-type-change-list" role="listbox" aria-label="Metric type">
+                <div class="metric-type-change-list" role="listbox" aria-label="Metric type" aria-activedescendant="@SelectedMetricTypeOptionId">
                     @foreach (var descriptor in FilteredDescriptors)
                     {
                         var current = descriptor;
                         <button type="button"
+                                id="@MetricTypeOptionId(current)"
                                 class="@TypeButtonClass(current)"
                                 role="option"
                                 aria-selected="@IsSelected(current)"
@@ -166,6 +167,11 @@
     private MetricDescriptor? SelectedDescriptor =>
         SortedDescriptors.FirstOrDefault(descriptor => string.Equals(descriptor.TypeId, _selectedTypeId, StringComparison.Ordinal));
 
+    private string? SelectedMetricTypeOptionId =>
+        SelectedDescriptor is { } descriptor && FilteredDescriptors.Any(IsSelected)
+            ? MetricTypeOptionId(descriptor)
+            : null;
+
     private IReadOnlyList<KeyValuePair<string, string>> DefaultParameterPreview =>
         SelectedDescriptor is { } descriptor
             ? [.. MetricDesignerState.DefaultParameters(descriptor)]
@@ -227,6 +233,17 @@
     {
         var currentText = IsCurrent(descriptor) ? ", current type" : string.Empty;
         return $"Select metric type {descriptor.DisplayName}, {descriptor.TypeId}, {descriptor.ValueKind}, {ParameterCountText(descriptor)}{currentText}";
+    }
+
+    private static string MetricTypeOptionId(MetricDescriptor descriptor)
+        => $"metric-type-change-option-{SanitizeIdToken(descriptor.TypeId)}";
+
+    private static string SanitizeIdToken(string value)
+    {
+        var token = new string(value
+            .Select(static character => char.IsLetterOrDigit(character) ? char.ToLowerInvariant(character) : '-')
+            .ToArray()).Trim('-');
+        return string.IsNullOrWhiteSpace(token) ? "metric" : token;
     }
 
     private static string IconFor(MetricDescriptor descriptor)

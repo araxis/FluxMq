@@ -5331,6 +5331,17 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgets_ExposeEmptyStatesAsStatusMessages" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Workspace listbox option relationship result:
+  - Added option ids and `aria-activedescendant` wiring to custom listboxes in `PropertyGridSelect`, `MetricCreateDialog`, and `MetricTypeChangeDialog`.
+  - Preserved property-grid selection behavior, metric type selection, filtering, validation, dialog results, metric defaults, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused property-grid and metric-dialog guards to require the active-option relationships.
+  - Added a source-wide UI guard that scans custom `role="listbox"` and `role="option"` tags for active-descendant and option-id relationships.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls|FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome|FullyQualifiedName~WorkspaceListboxes_ExposeActiveOptionRelationships" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only listbox relationship scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for keyboard semantics, concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
 - Workspace project-tab label accessibility result:
   - Added explicit accessible labels to the custom project-tab role buttons for pipeline, metrics, dashboard, test, topics, logs, and App JSON navigation.
   - Preserved project-tab routing, active `aria-current` state, keyboard activation, delete buttons, diagnostics-to-logs routing, App JSON view toggling, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.

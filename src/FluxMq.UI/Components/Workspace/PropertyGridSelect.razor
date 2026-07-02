@@ -22,10 +22,13 @@
         <div id="@_listboxId"
              class="property-grid-select-menu"
              role="listbox"
+             aria-activedescendant="@SelectedOptionId"
              aria-label="@ResolvedAriaLabel">
-            @foreach (var option in Options)
+            @for (var index = 0; index < Options.Count; index++)
             {
+                var option = Options[index];
                 <button type="button"
+                        id="@OptionId(index)"
                         class="@OptionClass(option)"
                         disabled="@option.Disabled"
                         role="option"
@@ -73,6 +76,22 @@
         (string.IsNullOrWhiteSpace(Placeholder) ? "Select" : Placeholder);
 
     private PropertyGridSelectOption? SelectedOption => Options.FirstOrDefault(option => IsSelected(option));
+
+    private string? SelectedOptionId
+    {
+        get
+        {
+            for (var index = 0; index < Options.Count; index++)
+            {
+                if (IsSelected(Options[index]))
+                {
+                    return OptionId(index);
+                }
+            }
+
+            return null;
+        }
+    }
 
     private Task ToggleAsync()
     {
@@ -133,6 +152,8 @@
 
     private bool IsSelected(PropertyGridSelectOption option)
         => string.Equals(Value ?? string.Empty, option.Value, StringComparison.Ordinal);
+
+    private string OptionId(int index) => $"{_listboxId}-option-{index}";
 
     private string OptionClass(PropertyGridSelectOption option)
     {
