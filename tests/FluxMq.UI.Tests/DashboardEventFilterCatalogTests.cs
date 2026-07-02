@@ -7422,7 +7422,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dynamic-mapper-meta");
         markup.ShouldContain("dynamic-mapper-meta-item input");
         markup.ShouldContain("EngineCaption");
-        markup.ShouldContain("OutputContractCaption");
+        markup.ShouldContain("OutputModeCaption");
         markup.ShouldContain("dynamic-mapper-fields");
         markup.ShouldContain("dynamic-mapper-field-label");
         markup.ShouldContain("aria-label=\"Mapper input variables\"");
@@ -7446,7 +7446,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Class=\"dynamic-mapper-result-mode-field\"");
         markup.ShouldNotContain("Label=\"Result contract\"");
         markup.ShouldNotContain("Class=\"dynamic-mapper-contract-field\"");
-        markup.ShouldContain("ValueChanged=\"@SetOutputContract\"");
+        markup.ShouldContain("ValueChanged=\"@SetOutputMode\"");
+        markup.ShouldNotContain("OutputContractCaption");
+        markup.ShouldNotContain("OutputContractLabel");
+        markup.ShouldNotContain("SetOutputContract");
         markup.ShouldContain("Label=\"Typed schema\"");
         markup.ShouldContain("ValueChanged=\"@SetOutputType\"");
         markup.ShouldContain("Label=\"JSON Schema file\"");

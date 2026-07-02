@@ -28,7 +28,7 @@
                 </div>
                 <div class="dynamic-mapper-meta-item output node-ui-fact">
                     <span>Output</span>
-                    <strong title="@OutputContractCaption">@OutputContractCaption</strong>
+                    <strong title="@OutputModeCaption">@OutputModeCaption</strong>
                 </div>
                 <div class="dynamic-mapper-meta-item node-ui-fact">
                     <span>Engine</span>
@@ -36,7 +36,7 @@
                 </div>
                 <div class="dynamic-mapper-meta-item node-ui-fact">
                     <span>Mode</span>
-                    <strong>@OutputContractLabel</strong>
+                    <strong>@OutputModeLabel</strong>
                 </div>
             </div>
 
@@ -84,8 +84,8 @@
 
                 <MudSelect T="string"
                            Label="Result mode"
-                           Value="@_outputContract"
-                           ValueChanged="@SetOutputContract"
+                           Value="@_outputMode"
+                           ValueChanged="@SetOutputMode"
                            Variant="Variant.Outlined"
                            Margin="Margin.Dense"
                            Class="dynamic-mapper-result-mode-field">
@@ -95,7 +95,7 @@
                 </MudSelect>
 
                 <div @key="SchemaControlKey" class="dynamic-mapper-schema-control">
-                    @if (IsTypedOutputContract)
+                    @if (IsTypedOutputMode)
                     {
                         <MudSelect T="string"
                                    Label="Typed schema"
@@ -112,7 +112,7 @@
                             <MudSelectItem Value="@("StateReducerInput")">StateReducerInput</MudSelectItem>
                         </MudSelect>
                     }
-                    else if (IsJsonSchemaFileContract)
+                    else if (IsJsonSchemaFileMode)
                     {
                         <div class="dynamic-mapper-schema-file">
                             <MudTextField T="string"
@@ -230,7 +230,7 @@
     private string _engine = "jsonata";
     private string _inputType = "MqttEnvelope";
     private string _outputType = "MqttPublishRequest";
-    private string _outputContract = DynamicMapperNodeModel.OutputContractTyped;
+    private string _outputMode = DynamicMapperNodeModel.OutputContractTyped;
     private string _outputSchemaPath = string.Empty;
     private string _expression = string.Empty;
     private StandaloneCodeEditor? _editor;
@@ -262,25 +262,25 @@
     private string EditorId => $"mapper-expression-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private string InputEditorId => $"mapper-input-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
     private string ResultEditorId => $"mapper-result-{Node.NodeName.Replace('.', '-').Replace(' ', '-')}";
-    private string SchemaControlKey => $"{_outputContract}:{_schemaControlVersion}";
-    private bool IsTypedOutputContract => string.Equals(_outputContract, DynamicMapperNodeModel.OutputContractTyped, StringComparison.Ordinal);
-    private bool IsJsonSchemaFileContract => string.Equals(_outputContract, DynamicMapperNodeModel.OutputContractJsonSchemaFile, StringComparison.Ordinal);
-    private string OutputFieldsKey => IsTypedOutputContract
+    private string SchemaControlKey => $"{_outputMode}:{_schemaControlVersion}";
+    private bool IsTypedOutputMode => string.Equals(_outputMode, DynamicMapperNodeModel.OutputContractTyped, StringComparison.Ordinal);
+    private bool IsJsonSchemaFileMode => string.Equals(_outputMode, DynamicMapperNodeModel.OutputContractJsonSchemaFile, StringComparison.Ordinal);
+    private string OutputFieldsKey => IsTypedOutputMode
         ? _outputType
-        : IsJsonSchemaFileContract ? "JsonSchema" : "Any";
-    private string OutputContractLabel => IsTypedOutputContract
+        : IsJsonSchemaFileMode ? "JsonSchema" : "Any";
+    private string OutputModeLabel => IsTypedOutputMode
         ? "typed"
-        : IsJsonSchemaFileContract ? "json schema" : "any";
-    private string OutputContractCaption => IsTypedOutputContract
+        : IsJsonSchemaFileMode ? "json schema" : "any";
+    private string OutputModeCaption => IsTypedOutputMode
         ? _outputType
-        : IsJsonSchemaFileContract ? "JSON Schema" : "Any JSON";
+        : IsJsonSchemaFileMode ? "JSON Schema" : "Any JSON";
     private bool IsMqttInput => string.Equals(_inputType, "MqttEnvelope", StringComparison.Ordinal);
     private string EngineCaption => string.Equals(_engine, "jsonata", StringComparison.OrdinalIgnoreCase)
         ? "JSONata"
         : "Dynamic Expresso";
-    private string ResultPreviewTitle => IsTypedOutputContract
+    private string ResultPreviewTitle => IsTypedOutputMode
         ? _outputType
-        : IsJsonSchemaFileContract ? "JSON Schema result" : "Any JSON";
+        : IsJsonSchemaFileMode ? "JSON Schema result" : "Any JSON";
     private string PreviewResultStateClass => _previewResult.Success
         ? "dynamic-mapper-result-state ok"
         : "dynamic-mapper-result-state error";
@@ -383,7 +383,7 @@
         _engine = string.IsNullOrWhiteSpace(Model.Engine) ? "jsonata" : Model.Engine;
         _inputType = DynamicMapperNodeModel.NormalizeInputType(Model.InputType);
         _outputType = string.IsNullOrWhiteSpace(Model.OutputType) ? "MqttPublishRequest" : Model.OutputType;
-        _outputContract = DynamicMapperNodeModel.NormalizeOutputContract(Model.OutputContract);
+        _outputMode = DynamicMapperNodeModel.NormalizeOutputContract(Model.OutputContract);
         _outputSchemaPath = Model.OutputSchemaPath;
         _schemaControlVersion++;
         _expression = string.IsNullOrWhiteSpace(Model.Expression)
@@ -541,15 +541,15 @@
         return RefreshEditorsAndRenderAsync();
     }
 
-    private async Task SetOutputContract(string value)
+    private async Task SetOutputMode(string value)
     {
         var normalized = DynamicMapperNodeModel.NormalizeOutputContract(value);
-        if (string.Equals(_outputContract, normalized, StringComparison.Ordinal))
+        if (string.Equals(_outputMode, normalized, StringComparison.Ordinal))
         {
             return;
         }
 
-        _outputContract = normalized;
+        _outputMode = normalized;
         _schemaControlVersion++;
         RefreshWorkbench();
         await RefreshEditorsAndRenderAsync(syncInput: false);
@@ -797,7 +797,7 @@
         Model.Engine = string.IsNullOrWhiteSpace(_engine) ? "jsonata" : _engine.Trim();
         Model.InputType = DynamicMapperNodeModel.NormalizeInputType(_inputType);
         Model.OutputType = string.IsNullOrWhiteSpace(_outputType) ? "MqttPublishRequest" : _outputType.Trim();
-        Model.OutputContract = DynamicMapperNodeModel.NormalizeOutputContract(_outputContract);
+        Model.OutputContract = DynamicMapperNodeModel.NormalizeOutputContract(_outputMode);
         Model.OutputSchemaPath = _outputSchemaPath.Trim();
         Model.Expression = string.IsNullOrWhiteSpace(_expression)
             ? DynamicMapperNodeModel.DefaultExpression(Model.OutputType, Model.Engine, Model.InputType)
@@ -827,7 +827,7 @@
             return ErrorPreview(ResultPreviewTitle, _inputJsonError);
         }
 
-        return IsTypedOutputContract
+        return IsTypedOutputMode
             ? DynamicMapperWorkbenchPreview.Preview(_engine, _outputType, _expression, _inputType, _sampleEnvelope)
             : DynamicMapperWorkbenchPreview.PreviewAny(_engine, _expression, _inputType, _sampleEnvelope, ResultPreviewTitle);
     }
