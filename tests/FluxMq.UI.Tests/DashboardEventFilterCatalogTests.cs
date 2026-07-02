@@ -4171,6 +4171,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metrics-unsaved-indicator");
         css.ShouldContain(".metrics-unsaved-indicator.dirty");
         css.ShouldContain(".metrics-unsaved-dot");
+        css.ShouldContain("border-radius: 50%;");
         css.ShouldContain(".metrics-side-indicator");
         css.ShouldContain(".metrics-side-indicator.live");
         css.ShouldContain(".metrics-side-indicator.danger");
@@ -4186,6 +4187,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".metrics-latest-pill");
         css.ShouldNotContain(".metrics-side-badge");
         css.ShouldNotContain(".metrics-preview-status");
+        css.ShouldNotContain("border-radius: 999px;");
     }
 
     [Fact]

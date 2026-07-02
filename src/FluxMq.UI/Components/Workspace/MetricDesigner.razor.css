@@ -729,7 +729,7 @@
 
 .metrics-unsaved-dot {
     background: var(--mud-palette-text-disabled);
-    border-radius: 999px;
+    border-radius: 50%;
     height: 6px;
     width: 6px;
 }
