@@ -6054,6 +6054,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("top: 10px;");
         markup.ShouldNotContain("flow-canvas-chip");
         css.ShouldNotContain(".flow-canvas-chip");
+        css.ShouldNotContain("[class$=\"-contract-label\"]");
+        css.ShouldNotContain("[class$=\"-contracts\"]");
+        css.ShouldNotContain("[class$=\"-contract\"]");
     }
 
     [Fact]

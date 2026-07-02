@@ -682,8 +682,7 @@
 
 .flow-designer-root ::deep .flow-node :is(
     .node-ui-fact-label,
-    [class$="-meta-item"] span,
-    [class$="-contract-label"]) {
+    [class$="-meta-item"] span) {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
     font-weight: 750;
@@ -713,8 +712,7 @@
 }
 
 .flow-designer-root ::deep .flow-node :is(
-    .node-ui-token-group,
-    [class$="-contracts"]) {
+    .node-ui-token-group) {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
     display: grid;
     gap: 5px;
@@ -723,8 +721,7 @@
 }
 
 .flow-designer-root ::deep .flow-node :is(
-    .node-ui-token-row,
-    [class$="-contract"]) {
+    .node-ui-token-row) {
     align-items: center;
     display: flex;
     flex-wrap: wrap;
