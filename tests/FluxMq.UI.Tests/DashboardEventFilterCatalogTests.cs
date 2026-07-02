@@ -2763,6 +2763,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("no-active-project");
         markup.ShouldContain("Hide MQTT publisher");
         markup.ShouldContain("Show MQTT publisher");
+        markup.ShouldContain("aria-label=\"New project\"");
+        markup.ShouldContain("aria-label=\"Open file\"");
+        markup.ShouldContain("aria-label=\"Save project\"");
+        markup.ShouldContain("aria-label=\"Save project as\"");
+        markup.ShouldContain("aria-label=\"@_themeLabel\"");
+        markup.ShouldContain("aria-label=\"@(_rightOpen ? \"Hide MQTT publisher\" : \"Show MQTT publisher\")\"");
+        markup.ShouldContain("Class=\"flux-command-spin-icon\"");
+        markup.ShouldContain("aria-hidden=\"true\"");
+        markup.ShouldContain("<MudIcon Icon=\"@DragPreviewIcon(activeDrag.TargetKind)\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("flux-bottom-bar");
         markup.ShouldContain("AppRuntimeMarkerClass");
         markup.ShouldContain("AppRuntimeSummaryLabel");
@@ -2785,6 +2794,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("brokersReady");
         markup.ShouldNotContain("Workspace navigation");
         markup.ShouldNotContain("No active project");
+        markup.ShouldNotContain("Class=\"flux-command-spin-icon\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@DragPreviewIcon(activeDrag.TargetKind)\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("flux-rail");
         markup.ShouldNotContain("flux-left-panel");
         markup.ShouldNotContain("left-collapsed");

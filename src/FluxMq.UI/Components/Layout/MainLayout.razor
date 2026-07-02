@@ -34,6 +34,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.NoteAdd"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="New project"
                                    Disabled="@_busy"
                                    OnClick="@NewProject" />
                 </MudTooltip>
@@ -41,6 +42,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="Open file"
                                    Disabled="@_busy"
                                    OnClick="@OpenAsync" />
                 </MudTooltip>
@@ -48,6 +50,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Save"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="Save project"
                                    Disabled="@(_busy || Projects.ActiveProject is null)"
                                    OnClick="@SaveAsync" />
                 </MudTooltip>
@@ -55,6 +58,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.SaveAs"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="Save project as"
                                    Disabled="@(_busy || Projects.ActiveProject is null)"
                                    OnClick="@SaveAsAsync" />
                 </MudTooltip>
@@ -99,7 +103,8 @@
                             <span class="flux-command-loading">
                                 <MudIcon Icon="@Icons.Material.Filled.Sync"
                                          Size="Size.Small"
-                                         Class="flux-command-spin-icon" />
+                                         Class="flux-command-spin-icon"
+                                         aria-hidden="true" />
                                 <span class="flux-command-text">Stop</span>
                             </span>
                         }
@@ -128,6 +133,7 @@
                     <MudIconButton Icon="@_themeIcon"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="@_themeLabel"
                                    OnClick="@CycleTheme" />
                 </MudTooltip>
                 @if (CanUseLiveTools)
@@ -136,6 +142,7 @@
                         <MudIconButton Icon="@(_rightOpen ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
                                        Size="Size.Small"
                                        Class="flux-icon-button"
+                                       aria-label="@(_rightOpen ? "Hide MQTT publisher" : "Show MQTT publisher")"
                                        OnClick="@(() => _rightOpen = !_rightOpen)" />
                     </MudTooltip>
                 }
@@ -181,7 +188,7 @@
     @if (DragState.ActiveComponentDrag is { DidDrag: true } activeDrag)
     {
         <div class="@DragPreviewClass" style="@DragPreviewStyle">
-            <MudIcon Icon="@DragPreviewIcon(activeDrag.TargetKind)" Size="Size.Small" />
+            <MudIcon Icon="@DragPreviewIcon(activeDrag.TargetKind)" Size="Size.Small" aria-hidden="true" />
             <span>@activeDrag.DisplayName</span>
         </div>
     }
