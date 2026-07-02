@@ -50,6 +50,7 @@
                                Size="Size.Small"
                                Class="workspace-log-icon-button"
                                Disabled="@(!HasActiveFilters)"
+                               aria-label="Reset log filters"
                                OnClick="ResetFilters" />
             </MudTooltip>
             <MudTooltip Text="Clear logs">
@@ -57,6 +58,7 @@
                                Size="Size.Small"
                                Class="workspace-log-icon-button danger"
                                Disabled="@(Logs.Count == 0)"
+                               aria-label="Clear logs"
                                OnClick="ClearAsync" />
             </MudTooltip>
         </div>

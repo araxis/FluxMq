@@ -4775,6 +4775,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("_search = InitialQuery.Search");
         markup.ShouldContain("Copy visible logs");
         markup.ShouldContain("Export visible logs");
+        markup.ShouldContain("aria-label=\"Copy visible logs\"");
+        markup.ShouldContain("aria-label=\"Export visible logs\"");
+        markup.ShouldContain("aria-label=\"Reset log filters\"");
+        markup.ShouldContain("aria-label=\"Clear logs\"");
         markup.ShouldContain("Disabled=\"@(FilteredLogs.Count == 0)\"");
         markup.ShouldContain("CopyVisibleLogsAsync");
         markup.ShouldContain("ExportVisibleLogsAsync");
