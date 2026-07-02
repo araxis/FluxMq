@@ -52,17 +52,6 @@
                         <span class="dynamic-mapper-token overflow node-ui-token">+@SummaryVariableOverflow</span>
                     }
                 </div>
-                <div class="dynamic-mapper-field-row node-ui-token-row" aria-label="Mapper output fields">
-                    <span class="dynamic-mapper-field-label node-ui-fact-label">Output fields</span>
-                    @foreach (var field in SummaryOutputFields)
-                    {
-                        <span class="dynamic-mapper-token node-ui-token">@field.Name</span>
-                    }
-                    @if (SummaryOutputOverflow > 0)
-                    {
-                        <span class="dynamic-mapper-token overflow node-ui-token">+@SummaryOutputOverflow</span>
-                    }
-                </div>
             </div>
         </div>
     </Body>
@@ -303,11 +292,6 @@
             .ToArray();
     private int SummaryVariableOverflow
         => Math.Max(0, _variables.Count(static variable => variable.Depth == 0) - MaxSummaryTokens);
-    private IReadOnlyList<DynamicMapperOutputField> SummaryOutputFields
-        => _outputFields.Take(MaxSummaryTokens).ToArray();
-    private int SummaryOutputOverflow
-        => Math.Max(0, _outputFields.Count - MaxSummaryTokens);
-
     private const int MaxSummaryTokens = 4;
 
     protected override void OnInitialized()

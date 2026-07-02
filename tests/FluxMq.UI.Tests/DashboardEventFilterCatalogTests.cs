@@ -7388,10 +7388,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dynamic-mapper-fields");
         markup.ShouldContain("dynamic-mapper-field-label");
         markup.ShouldContain("aria-label=\"Mapper input variables\"");
-        markup.ShouldContain("aria-label=\"Mapper output fields\"");
         markup.ShouldContain("SummaryVariables");
-        markup.ShouldContain("SummaryOutputFields");
         markup.ShouldContain("dynamic-mapper-token");
+        markup.ShouldNotContain("aria-label=\"Mapper output fields\"");
+        markup.ShouldNotContain("Output fields");
+        markup.ShouldNotContain("SummaryOutputFields");
+        markup.ShouldNotContain("SummaryOutputOverflow");
         markup.ShouldNotContain("dynamic-mapper-contracts");
         markup.ShouldNotContain("dynamic-mapper-contract-label");
         markup.ShouldContain("dynamic-mapper-editor");
