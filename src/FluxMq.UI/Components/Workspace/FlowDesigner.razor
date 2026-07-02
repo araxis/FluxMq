@@ -21,7 +21,7 @@
             </span>
             <div class="flow-canvas-title-copy">
                 <h2>@WorkflowTitle</h2>
-                <div class="flow-canvas-meta-strip" aria-label="Pipeline canvas summary">
+                <div class="flow-canvas-meta-strip" aria-label="@PipelineCanvasSummaryLabel">
                     <span>@WorkflowSubtitle</span>
                     <span>@WorkflowModeLabel</span>
                     @if (_selectedWorkflowLink is not null)
@@ -31,7 +31,7 @@
                 </div>
             </div>
         </div>
-        <div class="flow-canvas-actions" aria-label="Pipeline canvas runtime and commands">
+        <div class="flow-canvas-actions" aria-label="@PipelineCanvasActionsLabel">
             @if (ShowRuntimeState)
             {
                 <span class="flow-runtime-marker @RuntimeMarkerClass">
@@ -77,7 +77,7 @@
                     }
                 }
             </div>
-            <div class="flow-canvas-command-group" aria-label="Pipeline canvas commands">
+            <div class="flow-canvas-command-group" aria-label="@PipelineCanvasCommandLabel">
                 <MudTooltip Text="Zoom to fit">
                     <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong"
                                    Size="Size.Small"
@@ -204,6 +204,18 @@
     private string _selectedLinkCondition = string.Empty;
 
     private string WorkflowTitle => Flow.ActiveWorkflowName ?? "Pipeline";
+
+    private string PipelineCanvasSummaryLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline canvas summary, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} pipeline summary";
+
+    private string PipelineCanvasActionsLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline canvas runtime and commands, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} runtime and canvas commands";
+
+    private string PipelineCanvasCommandLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline canvas commands, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} canvas commands";
 
     private string WorkflowSubtitle => Flow.HasUnsavedChanges
         ? "Unsaved changes"

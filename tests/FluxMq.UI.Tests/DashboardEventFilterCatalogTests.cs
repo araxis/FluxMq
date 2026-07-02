@@ -7113,6 +7113,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Pipeline diagram canvas\"");
         markup.ShouldContain("flow-canvas-title-copy");
         markup.ShouldContain("flow-canvas-meta-strip");
+        markup.ShouldContain("aria-label=\"@PipelineCanvasSummaryLabel\"");
+        markup.ShouldContain("private string PipelineCanvasSummaryLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} pipeline summary\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas summary\"");
         markup.Split('\n')
             .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
                 !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
@@ -7121,13 +7125,20 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Pipeline loaded");
         markup.ShouldContain("@WorkflowModeLabel");
         markup.ShouldContain("@WorkflowSelectionLabel");
-        markup.ShouldContain("aria-label=\"Pipeline canvas runtime and commands\"");
+        markup.ShouldContain("aria-label=\"@PipelineCanvasActionsLabel\"");
+        markup.ShouldContain("private string PipelineCanvasActionsLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} runtime and canvas commands\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas runtime and commands\"");
         markup.ShouldContain("flow-runtime-marker @RuntimeMarkerClass");
         markup.ShouldContain("flow-runtime-marker-dot");
         markup.ShouldContain("@RuntimeMarkerLabel");
         markup.ShouldContain("flow-canvas-metrics");
         markup.ShouldContain("flow-canvas-stat");
         markup.ShouldContain("flow-canvas-command-group");
+        markup.ShouldContain("aria-label=\"@PipelineCanvasCommandLabel\"");
+        markup.ShouldContain("private string PipelineCanvasCommandLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} canvas commands\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas commands\"");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("@EmptyCanvasHint");
         markup.ShouldContain("flow-canvas-empty-icon");
