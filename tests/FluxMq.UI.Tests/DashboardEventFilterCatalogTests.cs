@@ -12234,7 +12234,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("session-project-head");
         markup.ShouldContain("SessionRowClass(session)");
         markup.ShouldContain("SessionDotClass(session)");
-        markup.ShouldContain("SessionStateClass(session)");
+        markup.ShouldContain("SessionMarkerClass(session)");
+        markup.ShouldNotContain("SessionStateClass(session)");
         markup.ShouldContain("SessionRowLabel(session)");
         markup.ShouldContain("session-row-name-line");
         markup.ShouldContain("DurationLabel(session)");
@@ -12271,8 +12272,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("justify-items: center;");
         css.ShouldContain("text-align: center;");
         css.ShouldContain("overflow-wrap: anywhere;");
-        css.ShouldContain(".session-state.selected");
-        css.ShouldContain(".session-state.recording");
+        css.ShouldContain(".session-marker.selected");
+        css.ShouldContain(".session-marker.recording");
+        css.ShouldNotContain(".session-state");
         css.ShouldContain(".session-search ::deep .mud-input-outlined-border");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldNotContain(".session-recording-pulse");

@@ -116,7 +116,7 @@
                                 <span class="session-row-main">
                                     <span class="session-row-name-line">
                                         <span class="session-row-name">@session.Name</span>
-                                        <span class="@SessionStateClass(session)">@SessionStateLabel(session)</span>
+                                        <span class="@SessionMarkerClass(session)">@SessionMarkerLabel(session)</span>
                                     </span>
                                     <span class="session-row-meta">
                                         <span>@ProfileLabel(session)</span>
@@ -230,16 +230,16 @@
 
     private string SessionRowClass(StoredSession session)
     {
-        var state = SessionStateKey(session);
+        var marker = SessionMarkerKey(session);
         var selected = IsSelected(session) ? " selected" : string.Empty;
-        return $"session-row {state}{selected}";
+        return $"session-row {marker}{selected}";
     }
 
-    private string SessionDotClass(StoredSession session) => $"session-dot {SessionStateKey(session)}";
+    private string SessionDotClass(StoredSession session) => $"session-dot {SessionMarkerKey(session)}";
 
-    private string SessionStateClass(StoredSession session) => $"session-state {SessionStateKey(session)}";
+    private string SessionMarkerClass(StoredSession session) => $"session-marker {SessionMarkerKey(session)}";
 
-    private string SessionStateKey(StoredSession session)
+    private string SessionMarkerKey(StoredSession session)
     {
         if (IsRecordingSession(session))
         {
@@ -249,7 +249,7 @@
         return IsSelected(session) ? "selected" : "stored";
     }
 
-    private string SessionStateLabel(StoredSession session)
+    private string SessionMarkerLabel(StoredSession session)
     {
         if (IsRecordingSession(session))
         {
@@ -260,7 +260,7 @@
     }
 
     private string SessionRowLabel(StoredSession session)
-        => $"Load {SessionStateLabel(session).ToLowerInvariant()} session {session.Name} from {ProjectName(session)}, {ProfileLabel(session)}, {DurationLabel(session)}, started {StartedLabel(session)}";
+        => $"Load {SessionMarkerLabel(session).ToLowerInvariant()} session {session.Name} from {ProjectName(session)}, {ProfileLabel(session)}, {DurationLabel(session)}, started {StartedLabel(session)}";
 
     private bool IsSelected(StoredSession session)
         => Live.SelectedStoredSession?.Id == session.Id;

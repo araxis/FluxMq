@@ -365,7 +365,7 @@
     flex: 1 1 auto;
 }
 
-.session-state {
+.session-marker {
     flex: 0 0 auto;
     font-size: 10px;
     font-weight: 820;
@@ -376,15 +376,15 @@
     white-space: nowrap;
 }
 
-.session-state.stored {
+.session-marker.stored {
     color: var(--mud-palette-text-secondary);
 }
 
-.session-state.selected {
+.session-marker.selected {
     color: var(--flux-accent);
 }
 
-.session-state.recording {
+.session-marker.recording {
     color: var(--mud-palette-error);
 }
 
@@ -439,7 +439,7 @@
         gap: 3px;
     }
 
-    .session-state {
+    .session-marker {
         max-width: 100%;
     }
 }
