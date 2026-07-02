@@ -5226,6 +5226,10 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeEmpty();
         markup.ShouldContain("WorkspaceLogFilter.Problems");
         markup.ShouldContain("workspace-log-segment");
+        markup.ShouldContain("aria-label=\"Workspace log scope filter\"");
+        markup.ShouldContain("aria-label=\"Workspace log level filter\"");
+        markup.ShouldNotContain("aria-label=\"Scope filter\"");
+        markup.ShouldNotContain("aria-label=\"Level filter\"");
         markup.ShouldContain("aria-label=\"@ScopeFilterButtonLabel(scope)\"");
         markup.ShouldContain("aria-label=\"@SeverityFilterButtonLabel(severity)\"");
         markup.ShouldContain("private static string ScopeFilterButtonLabel(string scope)");
