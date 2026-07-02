@@ -4828,3 +4828,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only scenario-dialog icon scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Test Studio shell decorative icon accessibility result:
+  - Added hidden decorative semantics to the Test Studio title and mode-tab `MudIcon` instances.
+  - Preserved visible title/subtitle, test/run summary text, tablist semantics, designer/runner switching, scenario designer and runner composition, project state, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Test Studio guard to require hidden decorative icon treatment and reject old exposed snippets.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Test Studio icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning Test Runner and Test Scenario Designer chrome for remaining decorative icon/accessibility gaps without broadening runtime or schema scope.

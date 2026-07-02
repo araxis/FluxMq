@@ -4,7 +4,7 @@
     <header class="test-studio-toolbar" aria-label="Test studio toolbar">
         <div class="test-studio-heading">
             <span class="test-studio-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="test-studio-title-copy">
                 <strong>@Title</strong>
@@ -25,7 +25,7 @@
                     aria-controls="@DesignerPanelId"
                     aria-label="@ModeButtonLabel(TestStudioMode.Designer)"
                     @onclick="@(() => SetMode(TestStudioMode.Designer))">
-                <MudIcon Icon="@Icons.Material.Filled.EditNote" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.EditNote" Size="Size.Small" aria-hidden="true" />
                 <span>Design</span>
             </button>
             <button type="button"
@@ -36,7 +36,7 @@
                     aria-controls="@RunnerPanelId"
                     aria-label="@ModeButtonLabel(TestStudioMode.Runner)"
                     @onclick="@(() => SetMode(TestStudioMode.Runner))">
-                <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" aria-hidden="true" />
                 <span>Run</span>
             </button>
         </div>

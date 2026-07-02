@@ -3565,6 +3565,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("aria-label=\"Test studio workspace\"");
         markup.ShouldContain("test-studio-title-icon");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Science\" Size=\"Size.Small\" aria-hidden=\"true\"");
         markup.ShouldContain("@TestCountLabel");
         markup.ShouldContain("@ActiveScenarioLabel");
         markup.ShouldContain("@RunCountLabel");
@@ -3581,8 +3582,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-labelledby=\"@RunnerTabId\"");
         markup.ShouldContain("private const string DesignerPanelId");
         markup.ShouldContain("private const string RunnerPanelId");
-        markup.ShouldContain("Icons.Material.Filled.EditNote");
-        markup.ShouldContain("Icons.Material.Filled.PlayCircle");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.EditNote\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.PlayCircle\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Science\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.EditNote\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.PlayCircle\" Size=\"Size.Small\" />");
         markup.ShouldContain("TestScenarioDesigner Project=\"@Project\"");
         markup.ShouldContain("TestRunnerConsole Project=\"@Project\"");
         markup.ShouldNotContain("MudToggleGroup");
