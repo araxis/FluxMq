@@ -3478,6 +3478,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-runner-stream-block");
         markup.ShouldContain("TimelineStepLabel(step, stepResult)");
         markup.ShouldContain("TimelineStepMeta(stepResult)");
+        markup.ShouldContain("test-runner-step-marker");
         markup.ShouldContain("test-runner-step-copy");
         markup.ShouldContain("StepStatusIcon(stepResult)");
         markup.ShouldContain("stepResult?.Status.ToString() ?? \"Idle\"");
@@ -3518,6 +3519,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("DiagnosisStateLabel");
         markup.ShouldNotContain("PreflightStateLabel");
         markup.ShouldNotContain("FirstRunStateLabel");
+        markup.ShouldNotContain("test-runner-step-state");
         markup.ShouldNotContain("ActiveRunPillClass");
         markup.ShouldNotContain("test-runner-status-pill");
         markup.ShouldNotContain("test-runner-status-strip");
@@ -3561,6 +3563,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-runner-first-run-cues span");
         css.ShouldContain(".test-runner-main");
         css.ShouldContain("grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.35fr);");
+        css.ShouldContain(".test-runner-step-marker");
         css.ShouldContain(".test-runner-step-copy");
         css.ShouldContain(".test-runner-step-copy small");
         css.ShouldContain(".test-runner-timeline-step.passed strong");
@@ -3588,6 +3591,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".test-run-history-status");
         css.ShouldNotContain(".test-runner-run-state");
         css.ShouldNotContain(".test-run-history-state");
+        css.ShouldNotContain(".test-runner-step-state");
         css.ShouldNotContain(".test-runner-result-strip.empty.ready");
         css.ShouldNotContain("border-radius: 999px;");
     }

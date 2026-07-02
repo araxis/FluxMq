@@ -695,24 +695,24 @@
     border-bottom: 0;
 }
 
-.test-runner-step-state {
+.test-runner-step-marker {
     align-items: center;
     color: var(--flux-text-subtle);
     display: inline-flex;
     justify-content: center;
 }
 
-.test-runner-timeline-step.passed .test-runner-step-state {
+.test-runner-timeline-step.passed .test-runner-step-marker {
     color: var(--mud-palette-success);
 }
 
-.test-runner-timeline-step.failed .test-runner-step-state,
-.test-runner-timeline-step.timedout .test-runner-step-state,
-.test-runner-timeline-step.timed-out .test-runner-step-state {
+.test-runner-timeline-step.failed .test-runner-step-marker,
+.test-runner-timeline-step.timedout .test-runner-step-marker,
+.test-runner-timeline-step.timed-out .test-runner-step-marker {
     color: var(--mud-palette-error);
 }
 
-.test-runner-timeline-step.skipped .test-runner-step-state {
+.test-runner-timeline-step.skipped .test-runner-step-marker {
     color: var(--mud-palette-info);
 }
 
