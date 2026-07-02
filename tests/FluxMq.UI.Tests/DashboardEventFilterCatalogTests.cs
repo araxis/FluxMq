@@ -5025,6 +5025,7 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "EmptyView.razor"));
 
+        markup.ShouldContain("<div class=\"empty-view\" role=\"status\" aria-live=\"polite\">");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Outlined.Inbox\" Color=\"Color.Secondary\" Size=\"Size.Large\" aria-hidden=\"true\" />");
         markup.ShouldContain("@(Message ?? \"No data\")");
         markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Outlined.Inbox\" Color=\"Color.Secondary\" Size=\"Size.Large\" />");

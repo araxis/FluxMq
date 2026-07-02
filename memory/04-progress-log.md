@@ -5237,3 +5237,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Shared EmptyView accessibility result:
+  - Added `role="status"` and polite live semantics to the reusable `EmptyView` wrapper used by Topic Tree empty output.
+  - Preserved custom empty content projection, default message fallback, decorative inbox icon hiding, topic tree filtering/selection, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused `EmptyView` guard to require the shared status wrapper.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~EmptyView_HidesDecorativeInboxIcon" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
