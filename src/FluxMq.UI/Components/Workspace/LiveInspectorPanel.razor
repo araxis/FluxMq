@@ -68,6 +68,7 @@
                 </label>
                 <button type="button"
                         class="publish-retain-toggle @(_retain ? "active" : null)"
+                        aria-pressed="@(_retain ? "true" : "false")"
                         @onclick="@(() => _retain = !_retain)">
                     <span>Retain</span>
                     <strong>@(_retain ? "On" : "Off")</strong>

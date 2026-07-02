@@ -2617,6 +2617,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("publish-field payload");
         markup.ShouldContain("publish-qos-select");
         markup.ShouldContain("publish-retain-toggle");
+        markup.ShouldContain("aria-pressed=\"@(_retain ? \"true\" : \"false\")\"");
         markup.ShouldContain("publish-submit");
         markup.ShouldContain("publish-empty");
         markup.ShouldContain("No MQTT clients");
@@ -2981,6 +2982,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Publish quality of service\"");
         markup.ShouldContain("MqttQualityOfServiceLevel.AtMostOnce");
         markup.ShouldContain("topic-publish-retain");
+        markup.ShouldContain("aria-pressed=\"@(_publishRetain ? \"true\" : \"false\")\"");
         markup.ShouldContain("topic-publish-submit");
         markup.ShouldContain("No app brokers");
         markup.ShouldContain("<MudTh>Broker</MudTh>");

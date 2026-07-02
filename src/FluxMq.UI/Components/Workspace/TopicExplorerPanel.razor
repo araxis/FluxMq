@@ -348,6 +348,7 @@
 
                         <button type="button"
                                 class="topic-publish-retain @(_publishRetain ? "active" : null)"
+                                aria-pressed="@(_publishRetain ? "true" : "false")"
                                 @onclick="@(() => _publishRetain = !_publishRetain)">
                             <span>Retain</span>
                             <strong>@(_publishRetain ? "On" : "Off")</strong>
