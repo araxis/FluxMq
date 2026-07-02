@@ -392,7 +392,7 @@
     font-weight: 700;
 }
 
-.test-run-history-status {
+.test-run-history-state {
     color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
     font-size: 9.5px;
@@ -400,15 +400,15 @@
     line-height: 1;
 }
 
-.test-run-history-status.passed {
+.test-run-history-state.passed {
     color: var(--flux-accent);
 }
 
-.test-run-history-status.failed {
+.test-run-history-state.failed {
     color: var(--mud-palette-error);
 }
 
-.test-run-history-status.canceled {
+.test-run-history-state.canceled {
     color: var(--mud-palette-warning);
 }
 

@@ -139,7 +139,7 @@
                                                 <div class="test-run-history-main">
                                                     <span class="test-run-history-primary">
                                                         <strong>@RunHistoryPrefix(historyRun)</strong>
-                                                        <span class="@RunHistoryStatusClass(historyRun)">@historyRun.Status</span>
+                                                        <span class="@RunHistoryStateClass(historyRun)">@historyRun.Status</span>
                                                     </span>
                                                     <span class="test-run-history-secondary">
                                                         <span>@RunHistoryTimeLabel(historyRun)</span>
@@ -628,8 +628,8 @@
         return string.Join(' ', classes);
     }
 
-    private static string RunHistoryStatusClass(ScenarioRunResult result)
-        => $"test-run-history-status {result.Status.ToString().ToLowerInvariant()}";
+    private static string RunHistoryStateClass(ScenarioRunResult result)
+        => $"test-run-history-state {result.Status.ToString().ToLowerInvariant()}";
 
     private static string RunHistoryTimeLabel(ScenarioRunResult result)
         => result.FinishedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture);

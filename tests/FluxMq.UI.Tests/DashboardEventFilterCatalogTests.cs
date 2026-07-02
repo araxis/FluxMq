@@ -3395,7 +3395,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-run-history-row");
         markup.ShouldContain("RunHistoryItemClass(historyRun)");
         markup.ShouldContain("RunHistoryAriaLabel(historyRun)");
-        markup.ShouldContain("RunHistoryStatusClass(historyRun)");
+        markup.ShouldContain("RunHistoryStateClass(historyRun)");
         markup.ShouldContain("RunHistoryIssueLabel(historyRun)");
         markup.ShouldContain("test-runner-report-actions");
         markup.ShouldContain("Class=\"test-runner-icon-action\"");
@@ -3458,6 +3458,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("RunStatusPillClass(result.Status)");
         markup.ShouldNotContain("RunStatusClass(result.Status)");
         markup.ShouldNotContain("aria-label=\"@($\"Run status {result.Status}\")\"");
+        markup.ShouldNotContain("RunHistoryStatusClass");
         markup.ShouldNotContain("ActiveRunPillClass");
         markup.ShouldNotContain("test-runner-status-pill");
         markup.ShouldNotContain("test-runner-status-strip");
@@ -3480,7 +3481,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-run-history-empty strong");
         css.ShouldContain(".test-run-history-empty small");
         css.ShouldContain(".test-run-history-row");
-        css.ShouldContain(".test-run-history-status");
+        css.ShouldContain(".test-run-history-state");
         css.ShouldContain("::deep .test-run-history-item.selected .test-run-history-row");
         css.ShouldContain(".test-runner-report-actions");
         css.ShouldContain(".test-runner-report-actions ::deep .mud-icon-button");
@@ -3525,6 +3526,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".test-runner-status-state");
         css.ShouldNotContain(".test-runner-status-strip");
         css.ShouldNotContain(".test-runner-status-item");
+        css.ShouldNotContain(".test-run-history-status");
         css.ShouldNotContain(".test-runner-result-strip.empty.ready");
         css.ShouldNotContain("border-radius: 999px;");
     }
@@ -3582,7 +3584,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-run-history-row");
         markup.ShouldContain("RunHistoryItemClass(historyRun)");
         markup.ShouldContain("RunHistoryAriaLabel(historyRun)");
-        markup.ShouldContain("RunHistoryStatusClass(historyRun)");
+        markup.ShouldContain("RunHistoryStateClass(historyRun)");
         markup.ShouldContain("RunHistoryIssueLabel(historyRun)");
         markup.ShouldContain("PhaseLanesClass");
         markup.ShouldContain("PhaseLaneClass(phase)");
@@ -3615,6 +3617,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("ActiveRunChip");
         markup.ShouldNotContain("FormatRunIdChip");
+        markup.ShouldNotContain("RunHistoryStatusClass");
         markup.ShouldNotContain("test-step-badges");
         markup.ShouldNotContain("test-run-context-status");
         markup.ShouldNotContain("test-step-status idle");
@@ -3634,7 +3637,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-run-history-empty strong");
         css.ShouldContain(".test-run-history-empty small");
         css.ShouldContain(".test-run-history-row");
-        css.ShouldContain(".test-run-history-status");
+        css.ShouldContain(".test-run-history-state");
         css.ShouldContain("::deep .test-run-history-item.selected .test-run-history-row");
         css.ShouldContain(".test-scenario-empty-cues");
         css.ShouldContain(".test-scenario-empty-cues span");
@@ -3666,6 +3669,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-step-meta");
         css.ShouldNotContain(".test-step-badges");
         css.ShouldNotContain(".test-run-status");
+        css.ShouldNotContain(".test-run-history-status");
         css.ShouldNotContain(".test-run-context-status");
         css.ShouldNotContain(".test-step-status");
         css.ShouldNotContain("border-radius: 999px;");
