@@ -5246,3 +5246,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~EmptyView_HidesDecorativeInboxIcon" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Topic Explorer empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the Topic Explorer tree-empty panel and recent-publishes empty placeholder.
+  - Preserved topic monitor resolution, broker/topic selection, latest/history payload controls, publish composer behavior, recent publish reuse, history filters/export, payload diff, stats, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Topic Explorer guard to require the empty-state status wrappers.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.

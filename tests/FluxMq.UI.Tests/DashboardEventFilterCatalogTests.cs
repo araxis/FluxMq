@@ -3401,7 +3401,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, min(320px, 100%));");
         css.ShouldContain("justify-items: center;");
         css.ShouldContain("text-align: center;");
-        markup.ShouldContain("topic-empty-panel");
+        markup.ShouldContain("topic-empty-panel\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("topic-publish-recent-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldNotContain("topic-empty-state");
         css.ShouldContain(".topic-empty-panel ::deep .mud-icon-root");
         css.ShouldContain("overflow-wrap: anywhere;");

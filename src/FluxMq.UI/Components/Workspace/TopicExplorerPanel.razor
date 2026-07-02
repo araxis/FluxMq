@@ -71,7 +71,7 @@
         <div class="topic-tree-frame">
             @if (VisibleBrokerGroups.Count == 0)
             {
-                <div class="topic-empty-panel">
+                <div class="topic-empty-panel" role="status" aria-live="polite">
                     <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" aria-hidden="true" />
                     <strong>@TreeEmptyTitle</strong>
                     <span>@TreeEmptyText</span>
@@ -396,7 +396,7 @@
                     <div class="topic-publish-recent" aria-label="Recent publishes">
                         @if (_recentPublishes.Count == 0)
                         {
-                            <div class="topic-publish-recent-empty">No recent publishes</div>
+                            <div class="topic-publish-recent-empty" role="status" aria-live="polite">No recent publishes</div>
                         }
                         else
                         {
