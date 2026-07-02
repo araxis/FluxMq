@@ -2368,6 +2368,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AutoClose=\"true\"");
         markup.ShouldContain("OnClosed=\"@ClosePicker\"");
         markup.ShouldContain("<MudPopover");
+        markup.ShouldContain("aria-haspopup=\"dialog\"");
+        markup.ShouldContain("aria-expanded=\"@_pickerOpen\"");
+        markup.ShouldContain("aria-controls=\"@_popoverId\"");
+        markup.ShouldContain("id=\"@_popoverId\"");
+        markup.ShouldContain("role=\"dialog\"");
+        markup.ShouldContain("private readonly string _popoverId");
         markup.ShouldContain("ShowAlpha=\"true\"");
         markup.ShouldContain("ShowColorField=\"true\"");
         markup.ShouldContain("ShowInputs=\"true\"");

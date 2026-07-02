@@ -9,6 +9,9 @@
             style="@SwatchStyle"
             title="@PickerTitle"
             aria-label="@PickerTitle"
+            aria-haspopup="dialog"
+            aria-expanded="@_pickerOpen"
+            aria-controls="@_popoverId"
             @onclick="@TogglePicker">
         <span class="property-grid-color-swatch" aria-hidden="true"></span>
     </button>
@@ -24,6 +27,9 @@
             class="property-grid-color-picker-button"
             title="@PickerTitle"
             aria-label="@PickerTitle"
+            aria-haspopup="dialog"
+            aria-expanded="@_pickerOpen"
+            aria-controls="@_popoverId"
             @onclick="@TogglePicker">
         <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Small" />
     </button>
@@ -40,7 +46,11 @@
                 TransformOrigin="Origin.TopRight"
                 Class="property-grid-color-popover"
                 Style="z-index: 1290;">
-        <div class="property-grid-color-popover-content" @onclick:stopPropagation="true">
+        <div id="@_popoverId"
+             class="property-grid-color-popover-content"
+             role="dialog"
+             aria-label="@PickerTitle"
+             @onclick:stopPropagation="true">
             <MudColorPicker Value="@MudValue"
                             ValueChanged="@SetMudColorAsync"
                             ShowAlpha="true"
@@ -61,6 +71,7 @@
     private string? _textValue;
     private string? _lastCommittedColor;
     private bool _pickerOpen;
+    private readonly string _popoverId = $"property-grid-color-popover-{Guid.NewGuid():N}";
 
     [Parameter]
     public string? Value { get; set; }
