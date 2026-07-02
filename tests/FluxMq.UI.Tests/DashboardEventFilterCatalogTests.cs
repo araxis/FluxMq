@@ -2521,6 +2521,9 @@ public sealed class DashboardEventFilterCatalogTests
         colorPickerCss.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) 24px;");
         colorPickerCss.ShouldContain("width: calc(100% - 4px);");
         alignmentPadCss.ShouldContain("grid-template-columns: repeat(3, 16px);");
+        alignmentPadCss.ShouldContain(".property-grid-alignment-pad-button span");
+        alignmentPadCss.ShouldContain("border-radius: 50%;");
+        alignmentPadCss.ShouldNotContain("border-radius: 999px;");
         inspector.ShouldContain("role=\"complementary\" aria-label=\"Dashboard inspector\"");
         inspector.ShouldContain("var propertyGroups = PropertyGroups;");
         inspector.ShouldContain("class=\"@InspectorHeaderClass\"");
