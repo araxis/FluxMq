@@ -27,7 +27,10 @@
         }
         else
         {
-            <span class="topic-node-chevron topic-node-chevron-static" @onclick="IgnoreChevronClick" @onclick:stopPropagation>
+            <span class="topic-node-chevron topic-node-chevron-static"
+                  aria-hidden="true"
+                  @onclick="IgnoreChevronClick"
+                  @onclick:stopPropagation>
                 <span class="topic-node-chevron-placeholder"></span>
             </span>
         }

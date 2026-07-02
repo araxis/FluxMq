@@ -3458,6 +3458,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@onclick=\"Toggle\"");
         markup.ShouldContain("@onclick:stopPropagation");
         markup.ShouldContain("topic-node-chevron-static");
+        markup.ShouldContain("aria-hidden=\"true\"");
         markup.ShouldContain("private string TopicNodeChevronLabel()");
         markup.ShouldContain("private int TopicNodeLevel()");
         markup.ShouldContain("private string TopicNodeSelected()");
