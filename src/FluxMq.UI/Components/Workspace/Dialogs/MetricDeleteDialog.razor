@@ -8,7 +8,7 @@
                 <strong>Delete metric</strong>
                 <small>Remove the metric resource</small>
             </span>
-            <span class="metric-delete-status" role="status" aria-live="polite">@DeleteStatusText</span>
+            <span class="metric-delete-tone" role="status" aria-live="polite">@DeleteToneText</span>
         </div>
     </TitleContent>
     <DialogContent>
@@ -90,7 +90,7 @@
     private string ReferenceCountText =>
         References.Count == 1 ? "1 binding" : $"{References.Count} bindings";
 
-    private string DeleteStatusText =>
+    private string DeleteToneText =>
         References.Count == 0 ? "No bindings" : ReferenceCountText;
 
     private static string ReferenceCellLabel(MetricReferenceSummary reference)

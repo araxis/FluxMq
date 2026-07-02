@@ -60,7 +60,7 @@
     line-height: 1.1;
 }
 
-.metric-confirm-status {
+.metric-confirm-tone {
     align-items: center;
     background: color-mix(in srgb, var(--mud-palette-warning) 8%, var(--flux-surface-2));
     border: 1px solid color-mix(in srgb, var(--mud-palette-warning) 22%, var(--flux-border-soft));
@@ -76,7 +76,7 @@
     white-space: nowrap;
 }
 
-.metric-confirm-status.danger {
+.metric-confirm-tone.danger {
     background: color-mix(in srgb, var(--mud-palette-error) 8%, var(--flux-surface-2));
     border-color: color-mix(in srgb, var(--mud-palette-error) 24%, var(--flux-border-soft));
     color: var(--mud-palette-error);
@@ -143,7 +143,7 @@
         grid-template-columns: 26px minmax(0, 1fr);
     }
 
-    .metric-confirm-status {
+    .metric-confirm-tone {
         grid-column: 2;
         justify-self: start;
     }

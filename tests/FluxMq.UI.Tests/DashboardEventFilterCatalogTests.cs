@@ -4287,10 +4287,12 @@ public sealed class DashboardEventFilterCatalogTests
             css.ShouldContain($".{prefix}-title-copy");
             if (prefix is "metric-confirm" or "metric-delete")
             {
-                markup.ShouldContain($"{prefix}-status");
+                markup.ShouldContain($"{prefix}-tone");
+                markup.ShouldNotContain($"{prefix}-status");
                 markup.ShouldContain("role=\"status\"");
                 markup.ShouldContain("aria-live=\"polite\"");
-                css.ShouldContain($".{prefix}-status");
+                css.ShouldContain($".{prefix}-tone");
+                css.ShouldNotContain($".{prefix}-status");
                 css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
             }
             else
@@ -4309,13 +4311,19 @@ public sealed class DashboardEventFilterCatalogTests
         }
 
         File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
-            .ShouldContain("metric-confirm-status");
+            .ShouldContain("metric-confirm-tone");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldNotContain("metric-confirm-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
             .ShouldContain("role=\"status\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
             .ShouldContain("role=\"alert\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
-            .ShouldContain("metric-delete-status");
+            .ShouldContain("metric-delete-tone");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldNotContain("metric-delete-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldNotContain("DeleteStatusText");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldContain("role=\"status\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
