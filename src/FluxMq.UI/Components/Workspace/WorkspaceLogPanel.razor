@@ -74,6 +74,7 @@
                     {
                         <button type="button"
                                 class="@FilterButtonClass(_scope, scope)"
+                                aria-label="@ScopeFilterButtonLabel(scope)"
                                 aria-pressed="@AriaPressed(IsScopeSelected(scope))"
                                 @onclick="@(() => SetScope(scope))">
                             @ScopeLabel(scope)
@@ -97,6 +98,7 @@
                 {
                     <button type="button"
                             class="@FilterButtonClass(_severity, severity)"
+                            aria-label="@SeverityFilterButtonLabel(severity)"
                             aria-pressed="@AriaPressed(IsSeveritySelected(severity))"
                             @onclick="@(() => SetSeverity(severity))">
                         @SeverityOptionLabel(severity)
@@ -396,6 +398,11 @@
             _ => "All"
         };
 
+    private static string ScopeFilterButtonLabel(string scope)
+        => scope == WorkspaceLogFilter.All
+            ? "Show all log scopes"
+            : $"Show {ScopeLabel(scope)} logs";
+
     private static string SeverityOptionLabel(string severity)
         => severity switch
         {
@@ -403,6 +410,11 @@
             WorkspaceLogFilter.Problems => "Problems",
             _ => severity
         };
+
+    private static string SeverityFilterButtonLabel(string severity)
+        => severity == WorkspaceLogFilter.All
+            ? "Show all log levels"
+            : $"Show {SeverityOptionLabel(severity)} logs";
 
     private static string FormatLogTime(WorkspaceLogEntry entry)
         => entry.Timestamp.ToLocalTime().ToString("HH:mm:ss");

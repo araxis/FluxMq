@@ -5043,6 +5043,10 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeEmpty();
         markup.ShouldContain("WorkspaceLogFilter.Problems");
         markup.ShouldContain("workspace-log-segment");
+        markup.ShouldContain("aria-label=\"@ScopeFilterButtonLabel(scope)\"");
+        markup.ShouldContain("aria-label=\"@SeverityFilterButtonLabel(severity)\"");
+        markup.ShouldContain("private static string ScopeFilterButtonLabel(string scope)");
+        markup.ShouldContain("private static string SeverityFilterButtonLabel(string severity)");
         markup.ShouldContain("[Parameter] public WorkspaceLogQuery? InitialQuery { get; set; }");
         markup.ShouldContain("InitialQuery.Equals(_appliedInitialQuery)");
         markup.ShouldContain("_severity = string.IsNullOrWhiteSpace(InitialQuery.Severity)");

@@ -5052,3 +5052,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Metric row label scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace control surfaces for concise accessible names and stale selectors without broadening runtime or schema scope.
+- Workspace Log filter accessibility result:
+  - Added explicit accessible labels to the scope and level segmented filter buttons so short visible options such as `All` announce their filter context.
+  - Preserved scope/level filtering, search, visible-row copy/export, reset/clear actions, row rendering, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Workspace Log guard to require the filter label helpers and bindings.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Workspace Log filter label scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace control surfaces for concise accessible names and stale selectors without broadening runtime or schema scope.
