@@ -143,14 +143,14 @@
                                Size="Size.Small"
                                Color="Color.Primary"
                                Class="flow-link-condition-action apply"
-                               aria-label="Apply link condition"
+                               aria-label="@ApplyLinkConditionLabel"
                                OnClick="@ApplySelectedLinkCondition" />
             </MudTooltip>
             <MudTooltip Text="Clear condition">
                 <MudIconButton Icon="@Icons.Material.Filled.Clear"
                                Size="Size.Small"
                                Class="flow-link-condition-action"
-                               aria-label="Clear link condition"
+                               aria-label="@ClearLinkConditionLabel"
                                OnClick="@ClearSelectedLinkCondition" />
             </MudTooltip>
         </div>
@@ -314,6 +314,14 @@
     private string SelectedLinkLabel => _selectedWorkflowLink is { } link
         ? $"{link.SourceNodeName}.{link.SourcePortName} -> {link.TargetNodeName}.{link.TargetPortName}"
         : string.Empty;
+
+    private string ApplyLinkConditionLabel => _selectedWorkflowLink is null
+        ? "Apply link condition"
+        : $"Apply condition to {SelectedLinkLabel}";
+
+    private string ClearLinkConditionLabel => _selectedWorkflowLink is null
+        ? "Clear link condition"
+        : $"Clear condition from {SelectedLinkLabel}";
 
     private string DiagnosticLogsAriaLabel => $"{DiagnosticLogsTitle} for {WorkflowTitle}";
 
