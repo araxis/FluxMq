@@ -2549,6 +2549,7 @@ public sealed class DashboardEventFilterCatalogTests
         propertyGrid.ShouldContain("MaxNameColumnWidth = 176");
         propertyGrid.ShouldContain("--property-grid-name-width: min({_nameColumnWidth.ToString(\"0\", CultureInfo.InvariantCulture)}px, 39%);");
         propertyGrid.ShouldContain("aria-label=\"Dashboard property editor\"");
+        propertyGrid.ShouldContain("aria-keyshortcuts=\"ArrowLeft ArrowRight Home End Enter\"");
         propertyGrid.ShouldContain("role=\"rowgroup\"");
         propertyGrid.ShouldContain("aria-label=\"@GroupAriaLabel(group, collapsed)\"");
         propertyGrid.ShouldContain("aria-controls=\"@GroupBodyId(group)\"");

@@ -5165,3 +5165,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Property grid resize keyboard hint result:
+  - Added an explicit keyboard shortcut hint to the focusable `PropertyGrid` name-column resize separator for ArrowLeft, ArrowRight, Home, End, and Enter.
+  - Preserved existing pointer resize, double-click reset, keyboard resize/reset behavior, property group collapse/expand behavior, dashboard inspector bindings, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Dashboard Inspector property-grid guard to require the resize separator keyboard shortcut hint.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
