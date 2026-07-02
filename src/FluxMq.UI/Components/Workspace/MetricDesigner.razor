@@ -7,7 +7,7 @@
 <div class="metrics-workbench">
     <div class="metrics-commandbar">
         <div class="metrics-heading">
-            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="metrics-heading-icon" />
+            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="metrics-heading-icon" aria-hidden="true" />
             <div>
                 <div class="metrics-title">Metrics</div>
                 <div class="@MetricsMetaClass">@MetricCountText</div>
@@ -93,7 +93,7 @@
                 @if (Rows.Count == 0)
                 {
                     <div class="metrics-list-empty create-empty">
-                        <span class="metrics-empty-icon">
+                        <span class="metrics-empty-icon" aria-hidden="true">
                             <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
                         </span>
                         <span class="metrics-empty-copy">
@@ -111,7 +111,7 @@
                 else if (FilteredRows.Count == 0)
                 {
                     <div class="metrics-list-empty filter-empty">
-                        <span class="metrics-empty-icon muted">
+                        <span class="metrics-empty-icon muted" aria-hidden="true">
                             <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
                         </span>
                         <span class="metrics-empty-copy">
@@ -179,7 +179,7 @@
             @if (_draft is null || _selectedMetricName is null)
             {
                 <div class="metrics-editor-empty">
-                    <span class="metrics-empty-icon">
+                    <span class="metrics-empty-icon" aria-hidden="true">
                         <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
                     </span>
                     <span class="metrics-empty-copy">
@@ -426,7 +426,7 @@
                                         @foreach (var reference in ReferenceSummaries)
                                         {
                                             <div class="metrics-reference-row" role="listitem" title="@ReferenceTitle(reference)">
-                                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="metrics-reference-icon" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="metrics-reference-icon" aria-hidden="true" />
                                                 <span class="metrics-reference-main">
                                                     <strong>@reference.WidgetName</strong>
                                                     <span>@ReferenceLocationLine(reference)</span>

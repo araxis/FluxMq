@@ -4331,6 +4331,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-preview-marker");
         markup.ShouldContain("metrics-list-empty create-empty");
         markup.ShouldContain("metrics-list-empty filter-empty");
+        markup.ShouldContain("Class=\"metrics-heading-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("class=\"metrics-empty-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("class=\"metrics-empty-icon muted\" aria-hidden=\"true\"");
+        markup.ShouldContain("Class=\"metrics-reference-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("role=\"radiogroup\"");
         markup.ShouldContain("aria-orientation=\"horizontal\"");
         markup.ShouldContain("aria-label=\"@parameter.DisplayName\"");
@@ -4347,6 +4351,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("metrics-latest-pill");
         markup.ShouldNotContain("metrics-side-badge");
         markup.ShouldNotContain("metrics-preview-status");
+        markup.ShouldNotContain("Class=\"metrics-heading-icon\" />");
+        markup.ShouldNotContain("class=\"metrics-empty-icon\">");
+        markup.ShouldNotContain("class=\"metrics-empty-icon muted\">");
+        markup.ShouldNotContain("Class=\"metrics-reference-icon\" />");
 
         css.ShouldContain(".metrics-type-summary");
         css.ShouldContain(".metrics-type-summary ::deep .mud-icon-root");
