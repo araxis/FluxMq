@@ -48,7 +48,7 @@
         {
             @HeaderState
         }
-        else if (ShowCategoryChip)
+        else if (ShowCategoryToken)
         {
             <span class="flow-node-category-token">@Node.Category</span>
         }
@@ -136,7 +136,7 @@
     [Parameter] public Color CategoryColor { get; set; } = Color.Default;
     [Parameter] public bool ShowHeaderIcon { get; set; } = true;
     [Parameter] public bool ShowDisplayName { get; set; } = true;
-    [Parameter] public bool ShowCategoryChip { get; set; } = true;
+    [Parameter] public bool ShowCategoryToken { get; set; } = true;
     [Parameter] public RenderFragment? HeaderState { get; set; }
     [Parameter] public string? EditDialogContentClass { get; set; }
 

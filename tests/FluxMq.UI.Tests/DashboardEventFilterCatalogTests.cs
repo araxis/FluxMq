@@ -6185,7 +6185,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"@MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldNotContain("<HeaderBadge>");
         markup.ShouldNotContain("mqtt-trigger-component-badge");
         markup.ShouldNotContain("mqtt-trigger-component-icon");
@@ -6363,7 +6363,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("connection-state-trigger-summary");
@@ -6499,7 +6499,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("state-reducer-summary");
         markup.ShouldContain("state-reducer-meta");
         markup.ShouldContain("EngineCaption");
@@ -6718,7 +6718,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@implements IDisposable");
         markup.ShouldContain("@inject AppThemeService ThemeService");
         markup.ShouldContain("@inject IJSRuntime JsRuntime");
@@ -6950,7 +6950,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@implements IDisposable");
         markup.ShouldContain("@inject AppThemeService ThemeService");
         markup.ShouldContain("@inject IJSRuntime JsRuntime");
@@ -7180,7 +7180,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogContentClass=\"json-schema-validator-dialog\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("json-schema-validator-summary");
@@ -7362,7 +7362,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogContentClass=\"dynamic-mapper-dialog\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("dynamic-mapper-summary");
         markup.ShouldContain("dynamic-mapper-meta");
@@ -7573,7 +7573,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldNotContain("EditDialogMaxWidth=");
@@ -7663,7 +7663,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldNotContain("EditDialogMaxWidth=");
@@ -7743,7 +7743,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldNotContain("EditDialogMaxWidth=");
@@ -7832,7 +7832,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("condition-router-summary");
         markup.ShouldContain("condition-router-meta");
         markup.ShouldContain("InputTypeCaption");
@@ -8037,7 +8037,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject AppThemeService ThemeService");
         markup.ShouldContain("@inject IJSRuntime JsRuntime");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
@@ -8350,7 +8350,7 @@ public sealed class DashboardEventFilterCatalogTests
         forkMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         forkMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
         forkMarkup.ShouldContain("ShowDisplayName=\"true\"");
-        forkMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        forkMarkup.ShouldContain("ShowCategoryToken=\"false\"");
         forkMarkup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         forkMarkup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         forkMarkup.ShouldContain("routing-fork-summary");
@@ -8523,7 +8523,7 @@ public sealed class DashboardEventFilterCatalogTests
         mergeMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         mergeMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
         mergeMarkup.ShouldContain("ShowDisplayName=\"true\"");
-        mergeMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        mergeMarkup.ShouldContain("ShowCategoryToken=\"false\"");
         mergeMarkup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         mergeMarkup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         mergeMarkup.ShouldContain("routing-merge-summary");
@@ -8722,7 +8722,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("routing-window-summary");
@@ -8916,7 +8916,7 @@ public sealed class DashboardEventFilterCatalogTests
         correlationMarkup.ShouldContain("@inject IJSRuntime JsRuntime");
         correlationMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
         correlationMarkup.ShouldContain("ShowDisplayName=\"true\"");
-        correlationMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        correlationMarkup.ShouldContain("ShowCategoryToken=\"false\"");
         correlationMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         correlationMarkup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         correlationMarkup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
@@ -9123,7 +9123,7 @@ public sealed class DashboardEventFilterCatalogTests
         joinMarkup.ShouldContain("@inject IJSRuntime JsRuntime");
         joinMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
         joinMarkup.ShouldContain("ShowDisplayName=\"true\"");
-        joinMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        joinMarkup.ShouldContain("ShowCategoryToken=\"false\"");
         joinMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         joinMarkup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         joinMarkup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
@@ -9335,7 +9335,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("http-client-summary");
         markup.ShouldContain("http-client-meta");
         markup.ShouldContain("http-client-meta-item target");
@@ -9457,7 +9457,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("payload-inspector-node-summary");
         markup.ShouldContain("payload-inspector-node-meta");
         markup.ShouldContain("payload-inspector-node-meta-item behavior");
@@ -9638,7 +9638,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("default-node-summary");
         markup.ShouldContain("default-node-description");
         markup.ShouldContain("SummaryCaption");
@@ -9741,7 +9741,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("generic-node-summary");
         markup.ShouldContain("generic-node-description");
         markup.ShouldContain("SummaryCaption");
@@ -9884,7 +9884,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
@@ -10114,7 +10114,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("payload-inspect-summary");
         markup.ShouldContain("payload-inspect-meta");
         markup.ShouldContain("payload-inspect-meta-item input");
@@ -10237,7 +10237,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("metric-source-summary");
@@ -10433,7 +10433,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("generated-source-summary");
         markup.ShouldContain("generated-source-meta");
@@ -10639,7 +10639,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("private string? ValidateEditor()");
@@ -10799,7 +10799,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("private string? ValidateEditor()");
@@ -10983,7 +10983,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("CategoryColor=\"@Color.Warning\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("timer-node-summary");
@@ -11237,7 +11237,7 @@ public sealed class DashboardEventFilterCatalogTests
         shellMarkup.ShouldContain("flow-node-action flow-node-toggle");
         shellMarkup.ShouldContain("ShowHeaderIcon");
         shellMarkup.ShouldContain("ShowDisplayName");
-        shellMarkup.ShouldContain("ShowCategoryChip");
+        shellMarkup.ShouldContain("ShowCategoryToken");
         shellMarkup.ShouldContain("HeaderState");
         shellMarkup.ShouldNotContain("HeaderBadge");
         shellMarkup.ShouldContain("EditDialogContentClass");
@@ -11327,7 +11327,7 @@ public sealed class DashboardEventFilterCatalogTests
             markup.ShouldNotContain("flow-node-filters");
             markup.ShouldNotContain("d-flex flex-wrap gap-1");
             markup.ShouldNotContain("ShowHeaderIcon=\"true\"");
-            markup.ShouldNotContain("ShowCategoryChip=\"true\"");
+            markup.ShouldNotContain("ShowCategoryToken=\"true\"");
 
             if (markup.Contains("<Body>", StringComparison.Ordinal))
             {
