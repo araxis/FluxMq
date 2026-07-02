@@ -207,10 +207,6 @@
     </DialogContent>
     <DialogActions>
         <div class="dashboard-widget-editor-actions">
-            <div class="dashboard-widget-editor-action-status" aria-live="polite">
-                <MudIcon Icon="@ActionStatusIcon" Size="Size.Small" />
-                <span>@ActionStatusLabel</span>
-            </div>
             <MudButton OnClick="@Reset"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.RestartAlt"
@@ -288,12 +284,6 @@
                 : "Display";
 
     private bool HasChanges => !ConfigurationEquals(_draft.BuildConfiguration(), _initialConfiguration);
-
-    private string ActionStatusLabel => HasChanges ? "Unsaved changes" : "No changes";
-
-    private string ActionStatusIcon => HasChanges
-        ? Icons.Material.Filled.Settings
-        : Icons.Material.Filled.CheckCircle;
 
     protected override void OnInitialized()
     {
