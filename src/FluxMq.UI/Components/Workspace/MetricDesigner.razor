@@ -92,7 +92,7 @@
             <div class="metrics-list">
                 @if (Rows.Count == 0)
                 {
-                    <div class="metrics-list-empty create-state">
+                    <div class="metrics-list-empty create-empty">
                         <span class="metrics-empty-icon">
                             <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
                         </span>
@@ -110,7 +110,7 @@
                 }
                 else if (FilteredRows.Count == 0)
                 {
-                    <div class="metrics-list-empty filter-state">
+                    <div class="metrics-list-empty filter-empty">
                         <span class="metrics-empty-icon muted">
                             <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
                         </span>
