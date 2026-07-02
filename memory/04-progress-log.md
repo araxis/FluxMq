@@ -4677,3 +4677,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Workspace tab decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the seven decorative project tab icons in `WorkspacePage`.
+  - Preserved visible tab labels, button semantics, keyboard activation, active `aria-current` markers, delete/close actions, artifact routing, JSON view toggling, diagnostics-to-logs navigation, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused WorkspacePage guard to require all project tab icons to use the hidden decorative treatment.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only tab-icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

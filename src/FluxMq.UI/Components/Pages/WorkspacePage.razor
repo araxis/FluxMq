@@ -39,7 +39,7 @@
                      title="@($"Pipeline {w}")"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveWorkflow(w); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
-                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" Class="project-tab-icon" />
+                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
                     <span class="project-tab-name">@w</span>
                     <button type="button"
                             class="project-tab-delete"
@@ -62,7 +62,7 @@
                  title="Metrics"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveMetrics(); _jsonView = false; }))"
                  @onclick="@(() => { active.SetActiveMetrics(); _jsonView = false; })">
-                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="project-tab-icon" />
+                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
                 <span class="project-tab-name">Metrics</span>
                 <span class="project-tab-count">@active.MetricNames.Count</span>
             </div>
@@ -79,7 +79,7 @@
                      title="@($"Dashboard {d}")"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveDashboard(d); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveDashboard(d); _jsonView = false; })">
-                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="project-tab-icon" />
+                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
                     <span class="project-tab-name">@d</span>
                     <button type="button"
                             class="project-tab-delete"
@@ -105,7 +105,7 @@
                      title="@($"Test {t}")"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveTest(t); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveTest(t); _jsonView = false; })">
-                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" Class="project-tab-icon" />
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
                     <span class="project-tab-name">@t</span>
                     <button type="button"
                             class="project-tab-delete"
@@ -128,7 +128,7 @@
                  title="Topics"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveTopics(); _jsonView = false; }))"
                  @onclick="@(() => { active.SetActiveTopics(); _jsonView = false; })">
-                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" Class="project-tab-icon" />
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
                 <span class="project-tab-name">Topics</span>
                 <span class="project-tab-count">@Live.RecentMessages.Select(m => m.Topic).Distinct(StringComparer.Ordinal).Count()</span>
             </div>
@@ -142,7 +142,7 @@
                  title="Logs"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, SelectLogs))"
                  @onclick="@(() => SelectLogs())">
-                <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" Class="project-tab-icon" />
+                <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
                 <span class="project-tab-name">Logs</span>
             </div>
             <div class="project-tab project-tab-json-view @(_jsonView ? "project-tab-active" : "")"
@@ -152,7 +152,7 @@
                  title="App JSON"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, ToggleJsonView))"
                  @onclick="@ToggleJsonView">
-                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" Class="project-tab-icon" />
+                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
                 <span class="project-tab-name">App JSON</span>
             </div>
             <MudMenu Dense="true"

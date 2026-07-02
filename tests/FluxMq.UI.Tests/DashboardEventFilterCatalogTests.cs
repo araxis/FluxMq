@@ -11873,6 +11873,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("RunFromKeyboardAsync(args, ToggleJsonView)");
         markup.ShouldContain("title=\"App JSON\"");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Code\"");
+        markup.Split("Class=\"project-tab-icon\" aria-hidden=\"true\"", StringSplitOptions.None).Length.ShouldBe(8);
         markup.ShouldContain("<span class=\"project-tab-name\">App JSON</span>");
         markup.ShouldContain("<span class=\"project-tabbar-app-name\">@active.Name</span>");
         markup.ShouldContain("aria-label=\"@($\"Close app {active.Name}\")\"");
