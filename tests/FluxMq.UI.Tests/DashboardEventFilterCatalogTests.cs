@@ -2427,6 +2427,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridRow.razor.css"));
+        var selectMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridSelect.razor"));
         var selectCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2512,6 +2519,13 @@ public sealed class DashboardEventFilterCatalogTests
         rowCss.ShouldContain("width: calc(100% - 4px);");
         rowCss.ShouldContain(".property-grid-help ::deep .mud-icon-root");
         rowCss.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        selectMarkup.ShouldContain("aria-haspopup=\"listbox\"");
+        selectMarkup.ShouldContain("aria-expanded=\"@_isOpen\"");
+        selectMarkup.ShouldContain("aria-controls=\"@_listboxId\"");
+        selectMarkup.ShouldContain("id=\"@_listboxId\"");
+        selectMarkup.ShouldContain("role=\"listbox\"");
+        selectMarkup.ShouldContain("aria-label=\"@ResolvedAriaLabel\"");
+        selectMarkup.ShouldContain("private readonly string _listboxId");
         selectCss.ShouldContain("max-height: 160px;");
         selectCss.ShouldContain("right: 5px;");
         iconSegmentCss.ShouldContain("min-height: 19px;");
