@@ -5254,6 +5254,7 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeEmpty();
         markup.ShouldContain("<strong>App JSON</strong>");
         markup.ShouldContain("@FileLabel");
+        markup.ShouldContain("aria-label=\"Application JSON line and size summary\"");
         markup.ShouldContain("@JsonLineCount lines");
         markup.ShouldContain("@JsonSizeLabel");
         markup.ShouldContain("app-json-unsaved-indicator");
@@ -5288,6 +5289,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("MudStack Row=\"true\"");
         markup.ShouldNotContain("Visual view");
         markup.ShouldNotContain("app-json-view-button");
+        markup.ShouldNotContain("aria-label=\"JSON summary\"");
         markup.ShouldNotContain("ReturnToVisualViewAsync");
 
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto auto;");

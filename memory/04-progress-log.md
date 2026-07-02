@@ -5503,3 +5503,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Flow Designer subtitle scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App JSON meta-label specificity result:
+  - Replaced the App JSON toolbar metadata group label with `Application JSON line and size summary` so the accessible name matches the visible line count and size facts.
+  - Preserved the visible title, file label, line/size facts, unsaved indicator, copy action, read-only code viewer, generated JSON source, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App JSON guard to require the line/size-specific label while rejecting the old vague summary label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel_UsesFlatCompactCodeViewerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App JSON label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
