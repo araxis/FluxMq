@@ -2615,9 +2615,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("publish-qos-select");
         markup.ShouldContain("publish-retain-toggle");
         markup.ShouldContain("publish-submit");
+        markup.ShouldContain("publish-empty");
         markup.ShouldContain("No MQTT clients");
         markup.ShouldNotContain("Selected client");
         markup.ShouldNotContain("ConnectSelectedAsync");
+        markup.ShouldNotContain("publish-static-state");
         markup.ShouldNotContain("publisher-empty-state");
         markup.ShouldNotContain("client-summary");
         markup.ShouldNotContain("Add an app MQTT connection to publish messages.");
@@ -2660,6 +2662,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-column: 1 / -1;");
         css.ShouldContain("text-transform: none;");
         css.ShouldContain("height: 30px;");
+        css.ShouldContain(".publish-empty");
         css.ShouldContain("min-height: 88px;");
         css.ShouldContain("max-height: 150px;");
         css.ShouldContain(".publish-qos-select");
@@ -2674,6 +2677,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".client-state-dot");
         css.ShouldNotContain(".client-action");
         css.ShouldNotContain(".client-error");
+        css.ShouldNotContain(".publish-static-state");
         css.ShouldNotContain(".publisher-empty-state");
         css.ShouldNotContain(".inspector-tabs");
         css.ShouldNotContain(".inspector-tab");

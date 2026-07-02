@@ -155,7 +155,7 @@
 
 .publish-input,
 .publish-textarea,
-.publish-static-state {
+.publish-empty {
     background: var(--flux-canvas);
     border: 1px solid var(--flux-border);
     border-radius: 5px;
@@ -166,12 +166,12 @@
 }
 
 .publish-input,
-.publish-static-state {
+.publish-empty {
     height: 30px;
     padding: 5px 8px;
 }
 
-.publish-static-state {
+.publish-empty {
     color: var(--flux-text-subtle);
     display: flex;
     font-size: 11.5px;
