@@ -30,7 +30,6 @@
         {
             <span class="topic-node-chevron topic-node-chevron-static"
                   aria-hidden="true"
-                  @onclick="IgnoreChevronClick"
                   @onclick:stopPropagation>
                 <span class="topic-node-chevron-placeholder"></span>
             </span>
@@ -94,7 +93,6 @@
         => string.Equals(Node.FullPath, SelectedTopic, StringComparison.Ordinal) ? "true" : "false";
 
     private void Toggle() => _expanded = !_expanded;
-    private static void IgnoreChevronClick() { }
     private static bool IsActivationKey(KeyboardEventArgs args)
         => args.Key is "Enter" or " " or "Spacebar";
 

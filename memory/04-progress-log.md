@@ -5032,3 +5032,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Full `src\FluxMq.UI` direct `MudIcon` accessibility scan and `MudIconButton` label scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: audit remaining custom role/button surfaces for accessible keyboard semantics and stale selectors now that direct icon scans pass across UI Razor files.
+- Topic Tree static placeholder accessibility result:
+  - Removed the no-op click handler from the non-interactive static topic chevron placeholder while keeping it hidden from assistive output and propagation-isolated inside the tree row.
+  - Preserved branch chevron button behavior, treeitem selection, keyboard activation, compact branch-line chrome, topic filtering, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused TopicTree guard to reject the stale `IgnoreChevronClick` placeholder handler.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Strict custom-button source scan passed after the placeholder cleanup.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue stale-selector and custom-control audit across high-use workspace chrome without broadening runtime or schema scope.

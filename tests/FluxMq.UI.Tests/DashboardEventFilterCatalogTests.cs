@@ -3563,7 +3563,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private int TopicNodeLevel()");
         markup.ShouldContain("private string TopicNodeSelected()");
         markup.ShouldContain("private Task SelectFromKeyboardAsync(KeyboardEventArgs args)");
-        markup.ShouldContain("private static void IgnoreChevronClick()");
+        markup.ShouldNotContain("IgnoreChevronClick");
+        markup.ShouldNotContain("@onclick=\"IgnoreChevronClick\"");
         markup.ShouldNotContain("<span class=\"topic-node-chevron\" @onclick=\"Toggle\"");
         System.Text.RegularExpressions.Regex.Matches(
                 markup,
