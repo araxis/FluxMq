@@ -5,7 +5,7 @@
     <div class="apps-panel-head">
         <div class="apps-panel-title">
             <span class="apps-panel-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="apps-panel-title-copy">
                 <strong>Open Apps</strong>
@@ -17,7 +17,7 @@
     @if (Projects.Projects.Count == 0)
     {
         <div class="apps-empty" role="status" aria-live="polite">
-            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" aria-hidden="true" />
             <div>
                 <div class="apps-empty-title">No apps open</div>
                 <div class="apps-empty-copy">Use New or Open from the toolbar.</div>
@@ -43,7 +43,8 @@
                          @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboard(args, a))">
                         <span class="app-tile-icon" aria-hidden="true">
                             <MudIcon Icon="@(isActive ? Icons.Material.Filled.FolderOpen : Icons.Material.Filled.Article)"
-                                     Size="Size.Small" />
+                                     Size="Size.Small"
+                                     aria-hidden="true" />
                         </span>
                         <span class="app-tile-copy">
                             <span class="app-tile-name">@a.Name</span>

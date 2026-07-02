@@ -2676,6 +2676,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Icons.Material.Filled.Send");
         markup.ShouldContain("MQTT Publisher");
         markup.ShouldContain("class=\"publisher-icon\" aria-hidden=\"true\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("MQTT client");
         markup.ShouldContain("MQTT connection");
         markup.ShouldContain("ActiveAppLabel");
@@ -12810,6 +12819,15 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("aria-label=\"Open apps panel\"");
         markup.ShouldContain("apps-panel-title-icon");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("<strong>Open Apps</strong>");
         markup.ShouldContain("@ProjectCountLabel");
         markup.ShouldContain("apps-empty\" role=\"status\" aria-live=\"polite\"");

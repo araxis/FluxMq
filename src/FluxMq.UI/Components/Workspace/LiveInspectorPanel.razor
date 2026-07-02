@@ -11,7 +11,7 @@
     <header class="publisher-header">
         <div class="publisher-title-lockup">
             <span class="publisher-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="publisher-title-text">
                 <strong>MQTT Publisher</strong>
@@ -77,7 +77,7 @@
                         class="publish-submit"
                         disabled="@(!CanPublish)"
                         @onclick="PublishAsync">
-                    <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" aria-hidden="true" />
                     <span>@PublishButtonLabel</span>
                 </button>
             </div>
@@ -100,7 +100,7 @@
         else
         {
             <div class="@LatestDiagnosticClass">
-                <MudIcon Icon="@LatestDiagnosticIcon" Size="Size.Small" />
+                <MudIcon Icon="@LatestDiagnosticIcon" Size="Size.Small" aria-hidden="true" />
                 <span>@LatestDiagnostic.Message</span>
             </div>
         }

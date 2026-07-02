@@ -4969,3 +4969,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only App JSON icon scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Apps and Live Publisher panel direct icon accessibility result:
+  - Added hidden decorative semantics to direct title, empty-state, app-row, publish-button, and diagnostic `MudIcon` glyphs in `AppsPanel` and `LiveInspectorPanel`.
+  - Preserved visible app rows, row labels, active/unsaved markers, close app actions, MQTT publisher form controls, retain toggle, diagnostics copy, manual publish recording, MQTT behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Apps and Live Inspector guards to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppsPanel|FullyQualifiedName~LiveInspectorPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Apps and Live Inspector icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning dashboard widget surfaces and remaining node chrome for decorative icon/accessibility gaps without broadening runtime or schema scope.
