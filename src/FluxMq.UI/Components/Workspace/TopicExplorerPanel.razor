@@ -88,7 +88,7 @@
                                     <span>@group.Endpoint</span>
                                 </span>
                             </button>
-                            <span class="topic-broker-state">@BrokerStateLabel(group)</span>
+                            <span class="topic-broker-connection">@BrokerConnectionLabel(group)</span>
                             <span class="topic-broker-count">@group.TopicCount</span>
                             @if (CanEditBrokerMonitor(group))
                             {
@@ -157,7 +157,7 @@
                                     <span class="topic-monitor-name" title="@broker.Name">@broker.Name</span>
                                     <span class="topic-monitor-endpoint" title="@broker.Endpoint">@broker.Endpoint</span>
                                     <span class="topic-monitor-subscription">Sub # + $SYS/#</span>
-                                    <span class="topic-monitor-state">@BrokerStateLabel(broker)</span>
+                                    <span class="topic-monitor-connection">@BrokerConnectionLabel(broker)</span>
                                 </div>
                             }
                         </div>
@@ -978,7 +978,7 @@
     };
 
     private string PublishConnectionLabel => SelectedPublishConnection is { } connection
-        ? $"{connection.ResourceName} / {BrokerStateLabel(connection.State)}"
+        ? $"{connection.ResourceName} / {BrokerConnectionLabel(connection.State)}"
         : "No app broker";
 
     private string PublishPayloadMeta
@@ -1873,12 +1873,12 @@
            string.IsNullOrWhiteSpace(_selectedTopic);
 
     private string BrokerRowClass(TopicBrokerGroup group)
-        => $"topic-broker-row {BrokerStateClass(group)}{(IsBrokerSelected(group.Name) ? " selected" : string.Empty)}";
+        => $"topic-broker-row {BrokerConnectionClass(group)}{(IsBrokerSelected(group.Name) ? " selected" : string.Empty)}";
 
     private string MonitorRowClass(TopicBrokerGroup group)
-        => $"topic-monitor-row {BrokerStateClass(group)}";
+        => $"topic-monitor-row {BrokerConnectionClass(group)}";
 
-    private string BrokerStateClass(TopicBrokerGroup group)
+    private string BrokerConnectionClass(TopicBrokerGroup group)
         => group.State switch
         {
             MqttClientState.Connected => "live",
@@ -1887,7 +1887,7 @@
             _ => "idle"
         };
 
-    private static string BrokerStateLabel(TopicBrokerGroup group)
+    private static string BrokerConnectionLabel(TopicBrokerGroup group)
         => group.State switch
         {
             MqttClientState.Connected => "Live",
@@ -1896,7 +1896,7 @@
             _ => "Idle"
         };
 
-    private static string BrokerStateLabel(MqttClientState state)
+    private static string BrokerConnectionLabel(MqttClientState state)
         => state switch
         {
             MqttClientState.Connected => "Live",

@@ -2848,6 +2848,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("topic-broker-group");
         markup.ShouldContain("topic-broker-row");
         markup.ShouldContain("topic-broker-main");
+        markup.ShouldContain("topic-broker-connection");
         markup.ShouldContain("topic-broker-edit");
         markup.ShouldContain("Icons.Material.Filled.Settings");
         markup.ShouldContain("OpenBrokerMonitorEditorAsync");
@@ -3053,6 +3054,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("aria-label=\"Broker monitor status\"");
         markup.ShouldContain("NoTrafficBrokerGroups");
         markup.ShouldContain("MonitorRowClass");
+        markup.ShouldContain("topic-monitor-connection");
+        markup.ShouldContain("BrokerConnectionClass");
+        markup.ShouldContain("BrokerConnectionLabel");
+        markup.ShouldNotContain("BrokerStateClass");
+        markup.ShouldNotContain("BrokerStateLabel");
+        markup.ShouldNotContain("topic-broker-state");
+        markup.ShouldNotContain("topic-monitor-state");
         markup.ShouldContain("One broker monitor is subscribed to #.");
         markup.ShouldContain("No history for the current selection.");
         markup.ShouldContain("topic-history-panel");
@@ -3094,7 +3102,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".topic-broker-edit");
         css.ShouldContain(".topic-broker-edit ::deep .mud-icon-root");
         css.ShouldContain("font-size: 16px;");
-        css.ShouldContain(".topic-broker-row.live .topic-broker-state");
+        css.ShouldContain(".topic-broker-row.live .topic-broker-connection");
         css.ShouldContain(".topic-broker-tree");
         css.ShouldContain(".topic-broker-empty");
         css.ShouldContain(".topic-latest-message");
@@ -3154,7 +3162,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".topic-monitor-list");
         css.ShouldContain(".topic-monitor-row");
         css.ShouldContain("grid-template-columns: 8px minmax(92px, 0.3fr) minmax(140px, 1fr) auto auto;");
-        css.ShouldContain(".topic-monitor-row.live .topic-monitor-state");
+        css.ShouldContain(".topic-monitor-row.live .topic-monitor-connection");
+        css.ShouldNotContain(".topic-broker-state");
+        css.ShouldNotContain(".topic-monitor-state");
         css.ShouldContain(".topic-history-panel");
         css.ShouldContain(".topic-history-header");
         css.ShouldContain(".topic-history-toolbar");
