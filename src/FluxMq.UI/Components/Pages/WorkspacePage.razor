@@ -33,7 +33,11 @@
                     string.Equals(w, active.ActiveWorkflowName, StringComparison.Ordinal) &&
                     !_jsonView;
                 <div class="project-tab @(isActive ? "project-tab-active" : "")"
+                     role="button"
+                     tabindex="0"
+                     aria-current="@WorkspaceTabCurrent(isActive)"
                      title="@($"Pipeline {w}")"
+                     @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveWorkflow(w); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@w</span>
@@ -52,7 +56,11 @@
                 var metricsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Metrics && !_jsonView;
             }
             <div class="project-tab project-tab-metrics @(metricsActive ? "project-tab-active" : "")"
+                 role="button"
+                 tabindex="0"
+                 aria-current="@WorkspaceTabCurrent(metricsActive)"
                  title="Metrics"
+                 @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveMetrics(); _jsonView = false; }))"
                  @onclick="@(() => { active.SetActiveMetrics(); _jsonView = false; })">
                 <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="project-tab-icon" />
                 <span class="project-tab-name">Metrics</span>
@@ -65,7 +73,11 @@
                     string.Equals(d, active.ActiveDashboardName, StringComparison.Ordinal) &&
                     !_jsonView;
                 <div class="project-tab project-tab-dashboard @(isActive ? "project-tab-active" : "")"
+                     role="button"
+                     tabindex="0"
+                     aria-current="@WorkspaceTabCurrent(isActive)"
                      title="@($"Dashboard {d}")"
+                     @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveDashboard(d); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveDashboard(d); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@d</span>
@@ -87,7 +99,11 @@
                     string.Equals(t, active.ActiveTestName, StringComparison.Ordinal) &&
                     !_jsonView;
                 <div class="project-tab project-tab-test @(isActive ? "project-tab-active" : "")"
+                     role="button"
+                     tabindex="0"
+                     aria-current="@WorkspaceTabCurrent(isActive)"
                      title="@($"Test {t}")"
+                     @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveTest(t); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveTest(t); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" Class="project-tab-icon" />
                     <span class="project-tab-name">@t</span>
@@ -106,7 +122,11 @@
                 var topicsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Topics && !_jsonView;
             }
             <div class="project-tab project-tab-topics @(topicsActive ? "project-tab-active" : "")"
+                 role="button"
+                 tabindex="0"
+                 aria-current="@WorkspaceTabCurrent(topicsActive)"
                  title="Topics"
+                 @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveTopics(); _jsonView = false; }))"
                  @onclick="@(() => { active.SetActiveTopics(); _jsonView = false; })">
                 <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" Class="project-tab-icon" />
                 <span class="project-tab-name">Topics</span>
@@ -116,13 +136,21 @@
                 var logsActive = active.ActiveArtifactKind == WorkspaceArtifactKind.Logs && !_jsonView;
             }
             <div class="project-tab @(logsActive ? "project-tab-active" : "")"
+                 role="button"
+                 tabindex="0"
+                 aria-current="@WorkspaceTabCurrent(logsActive)"
                  title="Logs"
+                 @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, SelectLogs))"
                  @onclick="@(() => SelectLogs())">
                 <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" Class="project-tab-icon" />
                 <span class="project-tab-name">Logs</span>
             </div>
             <div class="project-tab project-tab-json-view @(_jsonView ? "project-tab-active" : "")"
+                 role="button"
+                 tabindex="0"
+                 aria-current="@WorkspaceTabCurrent(_jsonView)"
                  title="App JSON"
+                 @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, ToggleJsonView))"
                  @onclick="@ToggleJsonView">
                 <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" Class="project-tab-icon" />
                 <span class="project-tab-name">App JSON</span>
@@ -531,6 +559,22 @@
     {
         _jsonView = false;
         SyncActiveArtifactSelection();
+    }
+
+    private static string? WorkspaceTabCurrent(bool isActive)
+        => isActive ? "true" : null;
+
+    private static bool IsActivationKey(KeyboardEventArgs args)
+        => args.Key is "Enter" or " " or "Spacebar";
+
+    private static Task RunFromKeyboardAsync(KeyboardEventArgs args, Action action)
+    {
+        if (IsActivationKey(args))
+        {
+            action();
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task RemoveWorkflowAsync(string name)
