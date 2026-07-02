@@ -9,7 +9,7 @@
             </span>
             <div class="dashboard-widget-editor-title-copy">
                 <MudText Typo="Typo.h6">@Profile.Title settings</MudText>
-                <div class="dashboard-widget-editor-meta-strip" aria-label="Widget summary">
+                <div class="dashboard-widget-editor-meta-strip" aria-label="@WidgetSummaryLabel">
                     <span>@Widget.Name</span>
                     <span>@Widget.Type</span>
                     <span>@EditorModeLabel</span>
@@ -268,6 +268,8 @@
                                                         Class="dashboard-widget-editor-title-field" />;
 
     private string EditorAriaLabel => $"Edit {Profile.Title} widget {Widget.Name}";
+
+    private string WidgetSummaryLabel => $"{Profile.Title} widget facts for {Widget.Name}";
 
     private string EditorModeLabel => Profile.IsTopicTreeWidget
         ? "Topic data"

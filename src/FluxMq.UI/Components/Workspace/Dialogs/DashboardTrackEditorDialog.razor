@@ -9,7 +9,7 @@
             </span>
             <div class="dashboard-track-editor-title-copy">
                 <MudText Typo="Typo.h6">@Title</MudText>
-                <div class="dashboard-track-editor-meta" aria-label="Track summary">
+                <div class="dashboard-track-editor-meta" aria-label="@TrackSummaryLabel">
                     <span>@TrackCode</span>
                     <span>@CurrentSummary</span>
                 </div>
@@ -153,6 +153,8 @@
     private string CurrentSummary => $"{Size} / {FormatPadding(Padding)}";
 
     private string EditorAriaLabel => $"{Title} sizing";
+
+    private string TrackSummaryLabel => $"{Title} sizing facts";
 
     private string ResultSize => BuildTrackSize(_unit, Math.Max(0.001, _value));
 

@@ -5565,3 +5565,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Test Studio stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard dialog label specificity result:
+  - Replaced generic `Widget summary` and `Track summary` accessible names in the dashboard widget and track editor dialogs with widget/track-specific fact labels.
+  - Preserved visible dialog copy, widget settings tabs, track sizing controls, reset/apply/cancel behavior, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused dashboard widget and track dialog guards to require the new label helpers and reject the old static summary labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetEditorDialog_UsesFlatCompactEditorChrome|FullyQualifiedName~DashboardTrackEditorDialog_UsesCompactFlatSizingWorkflow" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only dashboard dialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

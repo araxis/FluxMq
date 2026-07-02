@@ -5797,6 +5797,8 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("SelectionMode=\"SelectionMode.SingleSelection\"");
         razor.ShouldContain("@TrackCode");
         razor.ShouldContain("@CurrentSummary");
+        razor.ShouldContain("aria-label=\"@TrackSummaryLabel\"");
+        razor.ShouldContain("private string TrackSummaryLabel => $\"{Title} sizing facts\"");
         razor.ShouldContain("@ResultSize");
         razor.ShouldContain("@ModeDescription");
         razor.ShouldContain("StartIcon=\"@Icons.Material.Filled.RestartAlt\"");
@@ -5805,6 +5807,7 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.ArrowForward\" Size=\"MudBlazor.Size.Small\" Color=\"Color.Secondary\" />");
         razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Settings\" Size=\"MudBlazor.Size.Small\" />");
         razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"MudBlazor.Size.Small\" />");
+        razor.ShouldNotContain("aria-label=\"Track summary\"");
 
         css.ShouldContain(".dashboard-track-editor-preview");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr);");
@@ -6918,6 +6921,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dashboard-widget-editor-title-icon");
         markup.ShouldContain("dashboard-widget-editor-title-copy");
         markup.ShouldContain("dashboard-widget-editor-meta-strip");
+        markup.ShouldContain("aria-label=\"@WidgetSummaryLabel\"");
+        markup.ShouldContain("private string WidgetSummaryLabel => $\"{Profile.Title} widget facts for {Widget.Name}\"");
         markup.ShouldContain("role=\"form\" aria-label=\"@EditorAriaLabel\"");
         markup.ShouldContain("@EditorModeLabel");
         markup.ShouldContain("@EditorDetailLabel");
@@ -6947,6 +6952,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.FilterAltOff\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("<MudDivider />");
+        markup.ShouldNotContain("aria-label=\"Widget summary\"");
 
         css.ShouldContain(".dashboard-widget-editor-title-icon");
         css.ShouldContain(".dashboard-widget-editor-title-copy");
