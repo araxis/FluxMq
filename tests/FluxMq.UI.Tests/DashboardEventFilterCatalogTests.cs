@@ -2595,7 +2595,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Icons.Material.Filled.Send");
         markup.ShouldContain("MQTT Publisher");
         markup.ShouldContain("MQTT client");
-        markup.ShouldContain("MQTT status");
+        markup.ShouldContain("MQTT state");
         markup.ShouldContain("ActiveAppLabel");
         markup.ShouldContain("ClientCountLabel");
         markup.ShouldContain("ConnectionStateClass");
@@ -2638,6 +2638,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("section-badge");
         markup.ShouldNotContain("ConnectionBadgeClass");
         markup.ShouldNotContain("connection-badge");
+        markup.ShouldNotContain("MQTT status");
         markup.ShouldNotContain("status-line");
 
         css.ShouldContain(".publisher-header");
