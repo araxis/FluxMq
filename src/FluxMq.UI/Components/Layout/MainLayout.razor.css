@@ -337,7 +337,7 @@
         grid-template-areas:
             "top"
             "main"
-            "status";
+            "bottom";
         grid-template-columns: minmax(0, 1fr);
     }
 

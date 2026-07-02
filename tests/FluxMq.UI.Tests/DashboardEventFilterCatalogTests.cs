@@ -2742,6 +2742,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("\"top top\"");
         css.ShouldContain("\"main right\"");
         css.ShouldContain("\"bottom bottom\"");
+        css.ShouldContain("\"bottom\";");
         css.ShouldContain(".flux-breadcrumb");
         css.ShouldContain(".flux-bottom-bar");
         css.ShouldContain(".flux-live-dot");
@@ -2755,6 +2756,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) var(--flux-right-width);");
         css.ShouldNotContain("--flux-status-height");
         css.ShouldNotContain("\"status status\"");
+        css.ShouldNotContain("\"status\";");
         css.ShouldNotContain(".flux-statusbar");
         css.ShouldNotContain(".flux-status-dot");
         css.ShouldNotContain("--flux-rail-width");
