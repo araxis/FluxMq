@@ -18,18 +18,22 @@
         </div>
         <div class="test-studio-mode-switch" role="tablist" aria-label="Test studio mode">
             <button type="button"
+                    id="@DesignerTabId"
                     class="@ModeButtonClass(TestStudioMode.Designer)"
                     role="tab"
                     aria-selected="@(_mode == TestStudioMode.Designer)"
+                    aria-controls="@DesignerPanelId"
                     aria-label="@ModeButtonLabel(TestStudioMode.Designer)"
                     @onclick="@(() => SetMode(TestStudioMode.Designer))">
                 <MudIcon Icon="@Icons.Material.Filled.EditNote" Size="Size.Small" />
                 <span>Design</span>
             </button>
             <button type="button"
+                    id="@RunnerTabId"
                     class="@ModeButtonClass(TestStudioMode.Runner)"
                     role="tab"
                     aria-selected="@(_mode == TestStudioMode.Runner)"
+                    aria-controls="@RunnerPanelId"
                     aria-label="@ModeButtonLabel(TestStudioMode.Runner)"
                     @onclick="@(() => SetMode(TestStudioMode.Runner))">
                 <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" />
@@ -40,7 +44,11 @@
 
     @if (_mode == TestStudioMode.Designer)
     {
-        <div class="test-studio-body designer">
+        <div class="test-studio-body designer"
+             id="@DesignerPanelId"
+             role="tabpanel"
+             aria-labelledby="@DesignerTabId"
+             tabindex="0">
             <aside class="test-studio-tools">
                 <ComponentCatalogPanel ArtifactKind="@WorkspaceArtifactKind.Test" />
             </aside>
@@ -51,7 +59,11 @@
     }
     else
     {
-        <div class="test-studio-body runner">
+        <div class="test-studio-body runner"
+             id="@RunnerPanelId"
+             role="tabpanel"
+             aria-labelledby="@RunnerTabId"
+             tabindex="0">
             <TestRunnerConsole Project="@Project" />
         </div>
     }
@@ -60,6 +72,11 @@
 @code {
     [Parameter, EditorRequired]
     public FlowWorkspaceService Project { get; set; } = null!;
+
+    private const string DesignerTabId = "test-studio-designer-tab";
+    private const string DesignerPanelId = "test-studio-designer-panel";
+    private const string RunnerTabId = "test-studio-runner-tab";
+    private const string RunnerPanelId = "test-studio-runner-panel";
 
     private TestStudioMode _mode = TestStudioMode.Designer;
 

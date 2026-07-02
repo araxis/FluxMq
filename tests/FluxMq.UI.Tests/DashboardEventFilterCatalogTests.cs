@@ -3462,8 +3462,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@RunCountLabel");
         markup.ShouldContain("test-studio-mode-switch");
         markup.ShouldContain("role=\"tablist\"");
+        markup.ShouldContain("id=\"@DesignerTabId\"");
+        markup.ShouldContain("aria-controls=\"@DesignerPanelId\"");
         markup.ShouldContain("ModeButtonClass(TestStudioMode.Designer)");
+        markup.ShouldContain("id=\"@RunnerTabId\"");
+        markup.ShouldContain("aria-controls=\"@RunnerPanelId\"");
         markup.ShouldContain("ModeButtonClass(TestStudioMode.Runner)");
+        markup.ShouldContain("role=\"tabpanel\"");
+        markup.ShouldContain("aria-labelledby=\"@DesignerTabId\"");
+        markup.ShouldContain("aria-labelledby=\"@RunnerTabId\"");
+        markup.ShouldContain("private const string DesignerPanelId");
+        markup.ShouldContain("private const string RunnerPanelId");
         markup.ShouldContain("Icons.Material.Filled.EditNote");
         markup.ShouldContain("Icons.Material.Filled.PlayCircle");
         markup.ShouldContain("TestScenarioDesigner Project=\"@Project\"");
