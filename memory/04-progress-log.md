@@ -4989,3 +4989,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only dashboard display icon scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning remaining node chrome for decorative icon/accessibility gaps without broadening runtime or schema scope.
+- Dynamic Mapper node direct icon accessibility result:
+  - Added hidden decorative semantics to the direct input JSON error `MudIcon` glyph in `DynamicMapperNodeWidget`.
+  - Preserved alert text, editor workspaces, sample reload, schema controls, preview behavior, saved node configuration, workflow JSON, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Dynamic Mapper guard to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DynamicMapperNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dynamic Mapper icon scan and workspace-wide direct `MudIcon` scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: audit the workspace for the next concrete accessibility or stale-selector polish gap now that direct exposed `MudIcon` glyphs are cleared.

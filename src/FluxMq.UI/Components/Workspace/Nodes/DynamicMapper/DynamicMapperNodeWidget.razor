@@ -174,7 +174,7 @@
                     @if (!string.IsNullOrWhiteSpace(_inputJsonError))
                     {
                         <div class="dynamic-mapper-input-error" role="alert">
-                            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" aria-hidden="true" />
                             <span>@_inputJsonError</span>
                         </div>
                     }

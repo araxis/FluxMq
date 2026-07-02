@@ -8099,6 +8099,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.ExtraExtraLarge\"");
         markup.ShouldContain("EditDialogContentClass=\"dynamic-mapper-dialog\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("ShowDisplayName=\"true\"");
         markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
