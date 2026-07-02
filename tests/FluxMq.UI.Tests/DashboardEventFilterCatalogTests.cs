@@ -4682,8 +4682,10 @@ public sealed class DashboardEventFilterCatalogTests
 
         css.ShouldContain(".dashboard-live-head");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto;");
-        css.ShouldContain(".dashboard-live-summary .ready");
+        razor.ShouldContain("HasDashboardWidgets ? \"active\" : \"empty\"");
+        css.ShouldContain(".dashboard-live-summary .active");
         css.ShouldContain(".dashboard-live-summary .empty");
+        css.ShouldNotContain(".dashboard-live-summary .ready");
         css.ShouldContain("::deep .dashboard-live-edit-button");
         css.ShouldContain(".dashboard-live-viewport");
         css.ShouldContain(".dashboard-live-empty-note");

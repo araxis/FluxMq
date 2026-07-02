@@ -1370,7 +1370,7 @@
     white-space: nowrap;
 }
 
-.dashboard-live-summary .ready {
+.dashboard-live-summary .active {
     background: color-mix(in srgb, var(--mud-palette-success) 9%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-success) 22%, var(--flux-border));
     color: var(--mud-palette-success);
