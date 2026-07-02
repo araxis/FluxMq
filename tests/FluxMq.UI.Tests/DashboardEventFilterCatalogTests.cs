@@ -4843,7 +4843,10 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("dashboard-live-head");
         razor.ShouldContain("dashboard-live-summary");
         razor.ShouldContain("@LivePreviewSubtitle");
-        razor.ShouldContain("@LivePreviewStateLabel");
+        razor.ShouldContain("@LivePreviewContentLabel");
+        razor.ShouldContain("LivePreviewContentClass");
+        razor.ShouldNotContain("@LivePreviewStateLabel");
+        razor.ShouldNotContain("LivePreviewStateClass");
         razor.ShouldContain("SwitchToEditMode");
         razor.ShouldContain("dashboard-live-viewport");
         razor.ShouldContain("dashboard-live-empty-note");

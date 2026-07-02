@@ -351,7 +351,7 @@
                     <div class="dashboard-live-summary" aria-label="Live preview summary">
                         <span>@GridSizeLabel</span>
                         <span>@WidgetCountLabel</span>
-                        <span class="@LivePreviewStateClass">@LivePreviewStateLabel</span>
+                        <span class="@LivePreviewContentClass">@LivePreviewContentLabel</span>
                     </div>
                     <MudButton Variant="Variant.Outlined"
                                Size="Size.Small"
@@ -538,9 +538,9 @@
         ? "Read-only runtime view without layout controls."
         : "Read-only view waiting for widgets.";
 
-    private string LivePreviewStateLabel => HasDashboardWidgets ? "Read-only" : "Empty";
+    private string LivePreviewContentLabel => HasDashboardWidgets ? "Read-only" : "Empty";
 
-    private string LivePreviewStateClass => HasDashboardWidgets ? "active" : "empty";
+    private string LivePreviewContentClass => HasDashboardWidgets ? "active" : "empty";
 
     private string GridSizeLabel => _layout is null
         ? "No grid"
