@@ -3980,6 +3980,47 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void MetricDesigner_UsesNeutralMetricStateHooks()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "MetricDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "MetricDesigner.razor.css"));
+
+        markup.ShouldContain("metrics-type-summary");
+        markup.ShouldContain("metrics-latest-state live");
+        markup.ShouldContain("metrics-latest-state muted");
+        markup.ShouldContain("metrics-side-indicator live");
+        markup.ShouldContain("metrics-side-indicator danger");
+        markup.ShouldNotContain("metrics-type-pill");
+        markup.ShouldNotContain("metrics-latest-pill");
+        markup.ShouldNotContain("metrics-side-badge");
+
+        css.ShouldContain(".metrics-type-summary");
+        css.ShouldContain(".metrics-type-summary ::deep .mud-icon-root");
+        css.ShouldContain(".metrics-latest-state");
+        css.ShouldContain(".metrics-latest-state.live");
+        css.ShouldContain(".metrics-latest-state.muted");
+        css.ShouldContain(".metrics-side-indicator");
+        css.ShouldContain(".metrics-side-indicator.live");
+        css.ShouldContain(".metrics-side-indicator.danger");
+        css.ShouldNotContain(".metrics-type-pill");
+        css.ShouldNotContain(".metrics-latest-pill");
+        css.ShouldNotContain(".metrics-side-badge");
+    }
+
+    [Fact]
     public void MetricCreateDialog_UsesFlatCompactCreationChrome()
     {
         var root = FindRepositoryRoot();

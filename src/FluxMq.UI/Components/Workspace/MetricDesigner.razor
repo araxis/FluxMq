@@ -140,7 +140,7 @@
                                 <small>@current.Id</small>
                             </span>
                             <span class="metrics-cell metrics-cell-type">
-                                <span class="metrics-type-pill" title="@current.TypeName">
+                                <span class="metrics-type-summary" title="@current.TypeName">
                                     <MudIcon Icon="@TypeIcon(current.TypeId)" Size="Size.Small" />
                                     <span>@current.TypeName</span>
                                 </span>
@@ -152,7 +152,7 @@
                             <span class="metrics-cell metrics-cell-latest">
                                 @if (current.Latest is { } latest)
                                 {
-                                    <span class="metrics-latest-pill live">
+                                    <span class="metrics-latest-state live">
                                         <span class="metrics-live-dot"></span>
                                         <strong>@latest.FormattedValue</strong>
                                         @if (!string.IsNullOrWhiteSpace(latest.Unit))
@@ -163,7 +163,7 @@
                                 }
                                 else
                                 {
-                                    <span class="metrics-latest-pill muted">
+                                    <span class="metrics-latest-state muted">
                                         <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
                                         <small>No reading</small>
                                     </span>
@@ -367,7 +367,7 @@
                                     <span>Live preview</span>
                                     @if (hasDraftPreview)
                                     {
-                                        <span class="metrics-side-badge live">Live</span>
+                                        <span class="metrics-side-indicator live">Live</span>
                                     }
                                 </div>
                                 @if (hasDraftPreview)
@@ -407,7 +407,7 @@
                                     <span>References</span>
                                     @if (ReferenceSummaries.Count > 0)
                                     {
-                                        <span class="metrics-side-badge">@ReferenceSummaries.Count</span>
+                                        <span class="metrics-side-indicator">@ReferenceSummaries.Count</span>
                                     }
                                 </div>
                                 @if (ReferenceSummaries.Count == 0)
@@ -462,7 +462,7 @@
                                     <div class="metrics-section-heading">
                                         <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
                                         <span>Validation</span>
-                                        <span class="metrics-side-badge danger">@validationItems.Count</span>
+                                        <span class="metrics-side-indicator danger">@validationItems.Count</span>
                                     </div>
                                     <div class="metrics-validation-list">
                                         @foreach (var item in validationItems)
