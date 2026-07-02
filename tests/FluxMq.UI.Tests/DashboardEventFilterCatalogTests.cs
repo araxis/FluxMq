@@ -3369,6 +3369,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("[Parameter] public bool PreserveCandidateExplorerNames { get; set; }");
         markup.ShouldContain("@SaveLabel");
         markup.ShouldContain("PreferredExplorerName(candidate)");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("CA certificate path");
         markup.ShouldContain("Client certificate path");
         markup.ShouldContain("Client certificate password");
@@ -3392,6 +3393,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Typo=\"Typo.subtitle2\">@draft.DisplayName");
         markup.ShouldNotContain("Typo=\"Typo.caption\" Color=\"Color.Secondary\">@draft.Endpoint");
         markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("<MudIconButton Icon=\"@Icons.Material.Filled.FolderOpen\"");
         markup.ShouldNotContain("<input");
         markup.ShouldNotContain("mud-input-root");
@@ -4140,11 +4142,19 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("new-app-dialog-security-row");
         markup.ShouldContain("new-app-dialog-actions");
         markup.ShouldContain("aria-label=\"Create app\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Apps\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Lock\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("_port is >= 1 and <= 65535");
         markup.ShouldNotContain("new-app-dialog-status");
         markup.ShouldNotContain("FormStatusClass");
         markup.ShouldNotContain("FormStatusText");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Apps\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Lock\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("MudDivider");
         markup.ShouldNotContain("HelperText=");
 
@@ -4189,6 +4199,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("add-connection-dialog-checkbox-cell");
         markup.ShouldContain("add-connection-dialog-actions");
         markup.ShouldContain("aria-label=\"Add connection\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Dns\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Lock\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("_port is >= 1 and <= 65535");
         markup.ShouldContain("_keepAliveSeconds > 0");
         markup.ShouldContain("Label=\"Broker name\"");
@@ -4217,6 +4230,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("FormStatusClass");
         markup.ShouldNotContain("FormStatusText");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Dns\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Lock\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("Label=\"TLS\"");
         markup.ShouldNotContain("<input");
 
@@ -4602,10 +4618,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("CancelAriaLabel");
         markup.ShouldContain("SubmitAriaLabel");
         markup.ShouldContain("DialogResult.Ok(_name.Trim())");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AddCircle\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldNotContain("new-pipeline-dialog-status");
         markup.ShouldNotContain("FormStatusClass");
         markup.ShouldNotContain("FormStatusText");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.AddCircle\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("MudGrid");
         markup.ShouldNotContain("MudStack");
 
@@ -4648,10 +4666,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Disabled=\"@(!IsValid)\"");
         markup.ShouldContain("OnKeyDown");
         markup.ShouldContain("DialogResult.Ok(_path.Trim())");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.SaveAs\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldNotContain("save-as-dialog-status");
         markup.ShouldNotContain("FormStatusClass");
         markup.ShouldNotContain("FormStatusText");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.SaveAs\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("HelperText=");
         markup.ShouldNotContain("MudStack");
 
@@ -4702,8 +4722,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ProjectSummaryText");
         markup.ShouldContain("OnKeyDown");
         markup.ShouldContain("StartRecordingResult(project, session)");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.FiberManualRecord\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.FolderOpen\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldNotContain("start-recording-status");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.FiberManualRecord\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.FolderOpen\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("MudStack");
         markup.ShouldNotContain("<MudText Typo=\"Typo.h6\">Start Recording</MudText>");
 

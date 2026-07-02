@@ -4798,3 +4798,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only MainLayout marker scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Setup dialog decorative icon accessibility result:
+  - Added hidden decorative semantics to title, section, and summary `MudIcon` instances in Add Connection, New App, New Pipeline, Save As, Start Recording, and Topic Explorer Setup dialogs.
+  - Preserved dialog validation, Enter handling, file/certificate pickers, default naming, dialog results, saved app schema, runtime behavior, MQTT behavior, services, ids, ports, and contracts.
+  - Updated the focused setup dialog guards to require the hidden decorative icon treatment and reject old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NewAppDialog|FullyQualifiedName~AddConnectionDialog|FullyQualifiedName~NewPipelineDialog|FullyQualifiedName~SaveAsDialog|FullyQualifiedName~StartRecordingDialog|FullyQualifiedName~TopicExplorerSetupDialog" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only setup-dialog icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
