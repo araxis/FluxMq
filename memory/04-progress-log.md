@@ -4649,3 +4649,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Topic Explorer decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the decorative Topics title icon wrapper and broker row icon wrapper in `TopicExplorerPanel`.
+  - Preserved broker selection button labels, broker monitor actions, topic tree selection, publish controls, payload views, history filtering/export, stats, saved app schema, monitor behavior, MQTT behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Topics guard to require the hidden decorative icon wrappers.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

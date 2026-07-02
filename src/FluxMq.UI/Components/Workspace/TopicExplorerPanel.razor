@@ -13,7 +13,7 @@
     <section class="topic-explorer-tree" aria-label="Topic tree">
         <div class="topic-explorer-header">
             <div class="topic-explorer-title">
-                <span class="topic-explorer-title-icon">
+                <span class="topic-explorer-title-icon" aria-hidden="true">
                     <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
                 </span>
                 <div>
@@ -86,7 +86,7 @@
                                     class="topic-broker-main"
                                     aria-label="@($"Select broker {group.Name}")"
                                     @onclick="@(() => OnBrokerSelected(group.Name))">
-                                <span class="topic-broker-icon">
+                                <span class="topic-broker-icon" aria-hidden="true">
                                     <MudIcon Icon="@Icons.Material.Filled.Hub" Size="Size.Small" />
                                 </span>
                                 <span class="topic-broker-copy">

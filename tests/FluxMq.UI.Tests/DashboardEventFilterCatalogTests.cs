@@ -2910,6 +2910,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("topic-broker-group");
         markup.ShouldContain("topic-broker-row");
         markup.ShouldContain("topic-broker-main");
+        markup.ShouldContain("class=\"topic-explorer-title-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("class=\"topic-broker-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("topic-broker-connection");
         markup.ShouldContain("topic-broker-edit");
         markup.ShouldContain("Icons.Material.Filled.Settings");
