@@ -12973,6 +12973,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("aria-label=\"@AppTileLabel(a, isActive)\"");
         markup.ShouldContain("aria-current=\"@AppTileCurrent(isActive)\"");
+        markup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
         markup.ShouldContain("title=\"@AppTileLabel(a, isActive)\"");
         markup.ShouldContain("SelectAppFromKeyboard(args, a)");
         markup.ShouldContain("private static bool IsActivationKey");

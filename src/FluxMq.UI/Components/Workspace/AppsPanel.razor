@@ -38,6 +38,7 @@
                          tabindex="0"
                          aria-label="@AppTileLabel(a, isActive)"
                          aria-current="@AppTileCurrent(isActive)"
+                         aria-keyshortcuts="Enter Space"
                          title="@AppTileLabel(a, isActive)"
                          @onclick="@(() => Projects.SetActive(a))"
                          @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboard(args, a))">
