@@ -220,7 +220,7 @@
                     <div class="test-runner-result-copy">
                         <span class="test-runner-result-scope first-run">
                             <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
-                            <span>@FirstRunStateLabel</span>
+                            <span>@FirstRunSummaryLabel</span>
                         </span>
                         <strong>@FirstRunTitle</strong>
                         <span>@FirstRunDescription</span>
@@ -395,16 +395,6 @@
     private string ActivitySummaryLabel
         => $"{RuntimeEventCountLabel} / {RunnerLogCountLabel}";
 
-    private string DiagnosisStateLabel
-        => Project.LastScenarioRunResult is { } result ? result.Status.ToString() : "No run";
-
-    private string PreflightStateLabel
-        => Project.IsScenarioRunning
-            ? "Running"
-            : Scenario is { StepCount: > 0 }
-                ? "Idle"
-                : "Needs steps";
-
     private string FirstRunStripClass
         => Scenario is { StepCount: > 0 }
             ? "test-runner-result-strip empty runnable"
@@ -413,7 +403,7 @@
     private string FirstRunIcon
         => Scenario is { StepCount: > 0 } ? Icons.Material.Filled.PlayCircle : Icons.Material.Filled.Info;
 
-    private string FirstRunStateLabel
+    private string FirstRunSummaryLabel
         => Scenario is { StepCount: > 0 } ? "Not run yet" : "Needs steps";
 
     private string FirstRunTitle

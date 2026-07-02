@@ -3435,7 +3435,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@FirstRunStripClass");
         markup.ShouldContain("@FirstRunAriaLabel");
         markup.ShouldContain("@FirstRunIcon");
-        markup.ShouldContain("@FirstRunStateLabel");
+        markup.ShouldContain("@FirstRunSummaryLabel");
         markup.ShouldContain("@FirstRunTitle");
         markup.ShouldContain("Run scenario to begin");
         markup.ShouldContain("@FirstRunDescription");
@@ -3484,6 +3484,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("RunStatusClass(result.Status)");
         markup.ShouldNotContain("aria-label=\"@($\"Run status {result.Status}\")\"");
         markup.ShouldNotContain("RunHistoryStatusClass");
+        markup.ShouldNotContain("DiagnosisStateLabel");
+        markup.ShouldNotContain("PreflightStateLabel");
+        markup.ShouldNotContain("FirstRunStateLabel");
         markup.ShouldNotContain("ActiveRunPillClass");
         markup.ShouldNotContain("test-runner-status-pill");
         markup.ShouldNotContain("test-runner-status-strip");
