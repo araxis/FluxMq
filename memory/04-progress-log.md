@@ -4573,5 +4573,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~StateReducerNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Validation Node Summary Hook result:
+  - Renamed the Flow Assertion compact output summary hooks from contract wording to neutral output-field wording while keeping the same visible labels, tokens, expression preview, editor layout, validation, node id, ports, saved configuration, and runtime behavior.
+  - Renamed the JSON Schema Validator compact input/output summary hooks from contract wording to neutral field wording while preserving schema source/id controls, inline/file editor behavior, validation, node id, ports, saved configuration, and runtime behavior.
+  - Updated the focused guards to require the neutral output/field hooks and reject the old validation-node contract summary hooks.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowAssertionNodeWidget|FullyQualifiedName~JsonSchemaValidatorNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Next implementation order:
   1. Continue the next small designer-polish backlog item from remaining high-use workspace noise, starting with remaining compact node-summary naming noise where a focused guard already exists.
