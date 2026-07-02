@@ -5310,7 +5310,11 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "AppJsonPanel.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Application JSON toolbar\"");
+        markup.ShouldContain("aria-label=\"@AppJsonToolbarLabel\"");
+        markup.ShouldContain("private string AppJsonToolbarLabel => Project.HasUnsavedChanges");
+        markup.ShouldContain("$\"Application JSON toolbar for {Project.Name}, unsaved changes\"");
+        markup.ShouldContain("$\"Application JSON toolbar for {Project.Name}\"");
+        markup.ShouldNotContain("aria-label=\"Application JSON toolbar\"");
         markup.ShouldContain("class=\"app-json-title-icon\" aria-hidden=\"true\"");
         System.Text.RegularExpressions.Regex.Matches(
                 markup,

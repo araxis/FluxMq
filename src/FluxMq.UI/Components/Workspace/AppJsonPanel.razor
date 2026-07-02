@@ -4,7 +4,7 @@
 @inject IJSRuntime JsRuntime
 
 <div class="app-json-view">
-    <div class="app-json-toolbar" aria-label="Application JSON toolbar">
+    <div class="app-json-toolbar" aria-label="@AppJsonToolbarLabel">
         <div class="app-json-title">
             <span class="app-json-title-icon" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" aria-hidden="true" />
@@ -59,6 +59,10 @@
     private StandaloneCodeEditor? _editor;
 
     private const string EditorId = "app-json-viewer";
+
+    private string AppJsonToolbarLabel => Project.HasUnsavedChanges
+        ? $"Application JSON toolbar for {Project.Name}, unsaved changes"
+        : $"Application JSON toolbar for {Project.Name}";
 
     private string FileLabel => string.IsNullOrWhiteSpace(Project.CurrentFilePath)
         ? "In memory - not saved"
