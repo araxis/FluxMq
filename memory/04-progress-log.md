@@ -5483,3 +5483,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale catalog-title scans, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Component Catalog metadata-label specificity result:
+  - Replaced generic catalog metadata group labels with item-specific labels: `{widget} data requirements` and `{step} metadata`.
+  - Preserved catalog search/grouping, requirement chips, step metadata chips, click-to-add, keyboard add, drag metadata, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Component Catalog guards to require `CatalogRequirementMetaLabel(item)` and `CatalogStepMetaLabel(item)` while rejecting the old generic labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ComponentCatalogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale metadata-label scans, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

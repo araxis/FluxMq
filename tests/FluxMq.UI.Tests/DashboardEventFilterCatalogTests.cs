@@ -6773,6 +6773,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShouldShowRequirements(item)");
         markup.ShouldContain("catalog-item-meta");
+        markup.ShouldContain("aria-label=\"@CatalogRequirementMetaLabel(item)\"");
+        markup.ShouldContain("CatalogRequirementMetaLabel(CatalogEntry item)");
         markup.ShouldContain("catalog-item-meta-value");
         markup.ShouldContain("RequirementLabel(requirement)");
         markup.ShouldContain("CatalogItemClass(item)");
@@ -6802,6 +6804,7 @@ public sealed class DashboardEventFilterCatalogTests
         appCss.ShouldContain(".flux-drag-preview.over-designer .mud-icon-root");
         markup.ShouldNotContain("catalog-item-badges");
         markup.ShouldNotContain("catalog-item-badge");
+        markup.ShouldNotContain("aria-label=\"Widget data requirements\"");
         css.ShouldNotContain(".catalog-item-badges");
         css.ShouldNotContain(".catalog-item-badge");
     }
@@ -6930,6 +6933,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private string CatalogItemDisabled");
         markup.ShouldContain("ShouldShowStepMetadata(item)");
         markup.ShouldContain("catalog-step-meta");
+        markup.ShouldContain("aria-label=\"@CatalogStepMetaLabel(item)\"");
+        markup.ShouldContain("CatalogStepMetaLabel(CatalogEntry item)");
         markup.ShouldContain("StepPhaseMetaClass(item)");
         markup.ShouldContain("StepKindLabel(item)");
         markup.ShouldContain("StepParameterLabel(item)");
@@ -6940,6 +6945,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("CatalogSearchStateLabel");
         markup.ShouldNotContain("Catalog state");
         markup.ShouldNotContain("catalog-step-badges");
+        markup.ShouldNotContain("aria-label=\"Test step metadata\"");
         markup.ShouldNotContain("StepPhaseBadgeClass(item)");
         markup.ShouldNotContain("catalog-item-badge");
         markup.ShouldNotContain(">Ready<");

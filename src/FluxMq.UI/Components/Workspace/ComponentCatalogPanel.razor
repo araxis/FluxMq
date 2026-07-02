@@ -95,7 +95,7 @@
                 }
                 @if (ShouldShowRequirements(item))
                 {
-                    <span class="catalog-item-meta" aria-label="Widget data requirements">
+                    <span class="catalog-item-meta" aria-label="@CatalogRequirementMetaLabel(item)">
                         @foreach (var requirement in item.DataRequirements.Take(3))
                         {
                             <span class="catalog-item-meta-value">@RequirementLabel(requirement)</span>
@@ -104,7 +104,7 @@
                 }
                 @if (ShouldShowStepMetadata(item))
                 {
-                    <span class="catalog-item-meta catalog-step-meta" aria-label="Test step metadata">
+                    <span class="catalog-item-meta catalog-step-meta" aria-label="@CatalogStepMetaLabel(item)">
                         <span class="@StepPhaseMetaClass(item)">@StepPhaseLabel(item)</span>
                         <span class="catalog-item-meta-value">@StepKindLabel(item)</span>
                         <span class="catalog-item-meta-value muted">@StepParameterLabel(item)</span>
@@ -293,6 +293,12 @@
 
     private bool ShouldShowStepMetadata(CatalogEntry item)
         => ArtifactKind == WorkspaceArtifactKind.Test;
+
+    private static string CatalogRequirementMetaLabel(CatalogEntry item)
+        => $"{item.DisplayName} data requirements";
+
+    private static string CatalogStepMetaLabel(CatalogEntry item)
+        => $"{item.DisplayName} metadata";
 
     private static string StepPhaseLabel(CatalogEntry item)
         => string.IsNullOrWhiteSpace(item.StepPhase) ? "phase" : item.StepPhase;
