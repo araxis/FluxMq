@@ -9901,8 +9901,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("metrics-summary");
-        markup.ShouldContain("metrics-status-line");
-        markup.ShouldContain("metrics-status-item");
+        markup.ShouldContain("metrics-runtime-facts");
+        markup.ShouldContain("metrics-runtime-fact");
+        markup.ShouldContain("aria-label=\"MQTT metrics runtime facts\"");
         markup.ShouldContain("RateWindowCaption");
         markup.ShouldContain("ReadoutLayoutCaption");
         markup.ShouldContain("metrics-readout-strip");
@@ -9918,6 +9919,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-empty");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("metrics-last-line");
+        markup.ShouldNotContain("metrics-status-line");
+        markup.ShouldNotContain("metrics-status-item");
         markup.ShouldNotContain("contract");
         markup.ShouldNotContain("Ready to save");
         markup.ShouldContain("metrics-editor");
@@ -9998,9 +10001,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("metrics-readout-table\" aria-label");
 
         css.ShouldContain(".metrics-summary");
-        css.ShouldContain(".metrics-status-line");
-        css.ShouldContain(".metrics-status-item");
+        css.ShouldContain(".metrics-runtime-facts");
+        css.ShouldContain(".metrics-runtime-fact");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldNotContain(".metrics-status-line");
+        css.ShouldNotContain(".metrics-status-item");
         css.ShouldNotContain("grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);");
         css.ShouldContain(".metrics-readout-strip");
         css.ShouldContain("grid-template-columns: repeat(var(--metric-readout-columns), minmax(0, 1fr));");
