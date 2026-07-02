@@ -53,7 +53,7 @@
             <div class="test-runner-actions">
                 @if (Project.LastScenarioRunResult is { } result)
                 {
-                    <span class="@RunStatusClass(result.Status)" aria-label="@($"Run status {result.Status}")">
+                    <span class="@RunStateClass(result.Status)" aria-label="@($"Run state {result.Status}")">
                         <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
                         <span>@result.Status</span>
                     </span>
@@ -464,7 +464,7 @@
     private Color ActiveRunStateColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
 
     private string ActiveRunStateClass
-        => IsViewingHistoricalRun ? "test-runner-status-state history" : "test-runner-status-state latest";
+        => IsViewingHistoricalRun ? "test-runner-run-state history" : "test-runner-run-state latest";
 
     private string RunResultScopeClass
         => IsViewingHistoricalRun ? "test-runner-result-scope history" : "test-runner-result-scope latest";
@@ -559,8 +559,8 @@
             _ => Color.Default
         };
 
-    private static string RunStatusClass(ScenarioRunStatus status)
-        => $"test-runner-status-state {status.ToString().ToLowerInvariant()}";
+    private static string RunStateClass(ScenarioRunStatus status)
+        => $"test-runner-run-state {status.ToString().ToLowerInvariant()}";
 
     private string RunSummaryClass(ScenarioRunResult result)
         => $"test-runner-result-strip {result.Status.ToString().ToLowerInvariant()} {(IsViewingHistoricalRun ? "history" : "latest")}";

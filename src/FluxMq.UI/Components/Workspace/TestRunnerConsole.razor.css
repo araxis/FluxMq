@@ -25,7 +25,7 @@
 .test-runner-actions,
 .test-runner-section-title,
 .test-runner-preflight-item,
-.test-runner-status-state,
+.test-runner-run-state,
 .test-runner-report-actions,
 .test-runner-result-strip,
 .test-runner-phase-title,
@@ -117,7 +117,7 @@
     overflow: hidden;
 }
 
-.test-runner-status-state {
+.test-runner-run-state {
     color: var(--mud-palette-text-secondary);
     flex: 0 1 auto;
     font-size: 10.5px;
@@ -130,29 +130,29 @@
     white-space: nowrap;
 }
 
-.test-runner-status-state span {
+.test-runner-run-state span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.test-runner-status-state.passed {
+.test-runner-run-state.passed {
     color: var(--mud-palette-success);
 }
 
-.test-runner-status-state.failed {
+.test-runner-run-state.failed {
     color: var(--mud-palette-error);
 }
 
-.test-runner-status-state.canceled {
+.test-runner-run-state.canceled {
     color: var(--mud-palette-warning);
 }
 
-.test-runner-status-state.history {
+.test-runner-run-state.history {
     color: var(--mud-palette-info);
 }
 
-.test-runner-status-state.latest {
+.test-runner-run-state.latest {
     color: var(--mud-palette-text-primary);
 }
 
