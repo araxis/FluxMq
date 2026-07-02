@@ -205,10 +205,10 @@
                     </div>
 
                     <div class="metrics-editor-actions">
-                        @if (ShowEditorState)
+                        @if (ShowUnsavedIndicator)
                         {
-                            <div class="metrics-editor-state dirty" title="This metric has unsaved changes">
-                                <span class="metrics-state-dot"></span>
+                            <div class="metrics-unsaved-indicator dirty" title="This metric has unsaved changes">
+                                <span class="metrics-unsaved-dot"></span>
                                 <span>Unsaved</span>
                             </div>
                         }
@@ -589,7 +589,7 @@
             ? "1 issue needs attention"
             : $"{ValidationErrors.Count} issues need attention";
 
-    private bool ShowEditorState =>
+    private bool ShowUnsavedIndicator =>
         _draft is { IsDirty: true } &&
         ValidationErrors.Count == 0;
 
