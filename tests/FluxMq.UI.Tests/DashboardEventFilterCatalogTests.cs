@@ -5500,6 +5500,7 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("drop-target");
         razor.ShouldContain("move-target");
         razor.ShouldContain("dashboard-cell-drop-mark");
+        razor.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
         razor.ShouldNotContain("drop-ready");
         razor.ShouldContain("role=\"status\" aria-live=\"polite\"");
         razor.ShouldContain("<MudIcon Icon=\"@DashboardDragHintIcon\" Size=\"Size.Small\" aria-hidden=\"true\" />");

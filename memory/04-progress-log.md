@@ -5123,3 +5123,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Apps panel keyboard shortcut scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Dashboard edit-grid keyboard shortcut hint result:
+  - Added `aria-keyshortcuts="Enter Space"` to the focusable Dashboard Designer edit-grid cells that already support Enter/Space selection.
+  - Preserved cell selection, drag/drop targeting, widget placement/edit controls, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Dashboard Designer edit-grid guard to require the cell keyboard shortcut hint.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_EditGridUsesFlatEditingStateAffordances" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard edit-grid keyboard shortcut scan passed.
+  - The initial parallel guard run hit the known platform XAML intermediate-file lock while the build was running; the longer serial rerun passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.

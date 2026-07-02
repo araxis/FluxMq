@@ -264,6 +264,7 @@
                                  aria-label="@CellAriaLabel(currentCell)"
                                  title="@CellAriaLabel(currentCell)"
                                  tabindex="0"
+                                 aria-keyshortcuts="Enter Space"
                                  @onpointerenter="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointermove="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointerleave="@((PointerEventArgs args) => ClearDropCell(currentCell, args))"
