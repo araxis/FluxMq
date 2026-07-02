@@ -11976,6 +11976,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("TestRunMenuMeta(latestTestRun)");
         markup.ShouldContain("TestRunMenuRowClass(latestTestRun)");
         markup.ShouldContain("TestRunMenuSummaryClass(latestTestRun)");
+        markup.ShouldContain("TestRunMenuSummaryLabel(latestTestRun)");
         markup.ShouldContain("TestRunMenuDetailText(latestTestRun)");
         markup.ShouldContain("TestRunMenuMarkerClass(latestTestRun)");
         markup.ShouldContain("app-menu-inline-action");
@@ -12020,6 +12021,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("BrokerStateClass");
         markup.ShouldNotContain("BrokerStateText");
         markup.ShouldNotContain("TestRunMenuStateClass");
+        markup.ShouldNotContain("TestRunMenuStateLabel");
         markup.ShouldNotContain("app-menu-broker-pill");
         markup.ShouldNotContain("app-menu-artifact-token");
         markup.ShouldNotContain("app-menu-test-pill");

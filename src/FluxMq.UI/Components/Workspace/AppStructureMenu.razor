@@ -266,7 +266,7 @@
                                     <span class="app-menu-artifact-meta">@TestRunMenuMeta(latestTestRun)</span>
                                 </span>
                                 <span class="@TestRunMenuSummaryClass(latestTestRun)"
-                                      aria-label="@TestRunMenuStateLabel(latestTestRun)">
+                                      aria-label="@TestRunMenuSummaryLabel(latestTestRun)">
                                     <span class="@TestRunMenuMarkerClass(latestTestRun)">
                                         <MudIcon Icon="@TestRunMenuIcon(latestTestRun)" Size="Size.Small" />
                                         <span>@TestRunMenuText(latestTestRun)</span>
@@ -391,7 +391,7 @@
             ? "No run yet"
             : $"Latest {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}";
 
-    private static string TestRunMenuStateLabel(ScenarioRunResult? latestRun)
+    private static string TestRunMenuSummaryLabel(ScenarioRunResult? latestRun)
         => latestRun is null
             ? "No scenario run history"
             : $"Latest run {latestRun.Status}, {TestRunMenuDetailText(latestRun)}";
