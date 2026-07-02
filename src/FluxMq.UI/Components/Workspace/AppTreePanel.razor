@@ -726,7 +726,7 @@ else
 
     private async Task AddTestFromKeyboardAsync(KeyboardEventArgs args, FlowWorkspaceService app)
     {
-        if (args.Key is "Enter" or " ")
+        if (IsActivationKey(args))
         {
             await AddTestAsync(app);
         }

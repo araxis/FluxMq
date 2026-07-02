@@ -12576,6 +12576,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("role=\"button\"");
         markup.ShouldContain("aria-label=\"Create test scenario\"");
         markup.ShouldContain("AddTestFromKeyboardAsync(args, a)");
+        markup.ShouldContain("if (IsActivationKey(args))");
         System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""tree-empty-artifact-icon""\s+aria-hidden=""true""").ShouldBeTrue();
         System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""tree-empty-artifact-add""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("tree-empty-artifact-copy");

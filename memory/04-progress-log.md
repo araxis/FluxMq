@@ -5083,3 +5083,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Component Catalog keyboard scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- App Tree empty-test keyboard accessibility result:
+  - Routed the empty test-scenario row keyboard activation through App Tree's shared `IsActivationKey` helper so `Spacebar`, `Enter`, and the literal space key all work consistently across custom role-buttons.
+  - Preserved empty test-row click behavior, test creation dialog behavior, section expansion, app/project routing, labels, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused App Tree guard to require the shared activation helper in the empty-test keyboard path.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App Tree keyboard scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
