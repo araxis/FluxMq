@@ -158,7 +158,7 @@
     {
         <footer class="flux-bottom-bar">
             <div class="flux-bottom-group">
-                <span class="@LiveStateDotClass"></span>
+                <span class="@LiveConnectionDotClass"></span>
                 <span>@Live.State</span>
                 @if (Live.Connections.Count > 0)
                 {
@@ -345,7 +345,7 @@
     private bool CanRunActiveProject => !_busy && Projects.ActiveProject is not null && !ActiveProjectIsRunning;
     private bool CanStopActiveProject => !_busy && ActiveProjectIsRunning;
 
-    private string LiveStateDotClass => Live.State switch
+    private string LiveConnectionDotClass => Live.State switch
     {
         MqttClientState.Connected => "flux-live-dot live",
         MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-live-dot pending",

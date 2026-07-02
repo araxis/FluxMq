@@ -2735,8 +2735,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Hide MQTT publisher");
         markup.ShouldContain("Show MQTT publisher");
         markup.ShouldContain("flux-bottom-bar");
-        markup.ShouldContain("LiveStateDotClass");
+        markup.ShouldContain("LiveConnectionDotClass");
         markup.ShouldNotContain("flux-statusbar");
+        markup.ShouldNotContain("LiveStateDotClass");
         markup.ShouldNotContain("StatusDotClass");
         markup.ShouldNotContain("brokersReady");
         markup.ShouldNotContain("Workspace navigation");
