@@ -5011,3 +5011,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Flow Designer canvas chrome was rechecked as already accepted: `FlowDesigner` still uses `Pipeline loaded`, and the focused guard still rejects generic readiness canvas chrome.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Shared node shell accessibility result:
+  - Added explicit accessible labels to the shared diagram node collapse/expand and edit icon commands in `NodeWidgetShell`.
+  - Hid the decorative node-type header glyph from assistive output and gave the diagnostic glyph a meaningful accessible diagnostic label instead of treating it as decorative.
+  - Preserved node selection/collapse behavior, edit dialog opening, diagnostic tooltip text, node title/display/category chrome, ports, link routing, workflow JSON, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused shared node shell guard to require labeled icon commands and accessible direct node-shell icons.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NodeWidgetShell_UsesCompactNodeChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only `NodeWidgetShell` icon command/direct-icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the direct-icon audit for remaining high-use workspace surfaces such as project tab commands and topic tree rows without broadening runtime or schema scope.

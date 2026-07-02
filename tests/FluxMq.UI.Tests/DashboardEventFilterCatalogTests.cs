@@ -12027,6 +12027,8 @@ public sealed class DashboardEventFilterCatalogTests
             "FlowDesigner.razor.css"));
 
         shellMarkup.ShouldContain("flow-node-action flow-node-toggle");
+        shellMarkup.ShouldContain("aria-label=\"@NodeToggleLabel\"");
+        shellMarkup.ShouldContain("private string NodeToggleLabel => Node.IsCollapsed ? \"Expand node\" : \"Collapse node\";");
         shellMarkup.ShouldContain("ShowHeaderIcon");
         shellMarkup.ShouldContain("ShowDisplayName");
         shellMarkup.ShouldContain("ShowCategoryToken");
@@ -12036,11 +12038,37 @@ public sealed class DashboardEventFilterCatalogTests
         shellMarkup.ShouldContain("EditorValidationError");
         shellMarkup.ShouldNotContain("nameof(NodeEditDialog.CategoryColor)");
         shellMarkup.ShouldContain("flow-node-type-icon");
+        shellMarkup.ShouldContain("Class=\"flow-node-type-icon\" aria-hidden=\"true\"");
         shellMarkup.ShouldContain("flow-node-name");
         shellMarkup.ShouldContain("flow-node-display-name");
         shellMarkup.ShouldNotContain("Color=\"Color.Secondary\" Class=\"flow-node-display-name\"");
         shellMarkup.ShouldContain("flow-node-action flow-node-edit");
+        shellMarkup.ShouldContain("aria-label=\"Edit node\"");
         shellMarkup.ShouldContain("Icons.Material.Filled.Settings");
+        shellMarkup.ShouldContain("role=\"img\"");
+        shellMarkup.ShouldContain("aria-label=\"@DiagnosticAccessibilityLabel(diagnostic)\"");
+        shellMarkup.ShouldContain("private static string DiagnosticAccessibilityLabel(WorkspaceDiagnostic diagnostic)");
+        System.Text.RegularExpressions.Regex.Matches(
+                shellMarkup,
+                @"<MudIconButton\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static iconButton => !iconButton.Contains("aria-label=", StringComparison.Ordinal) &&
+                !iconButton.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        System.Text.RegularExpressions.Regex.Matches(
+                shellMarkup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal) &&
+                !icon.Contains("aria-label=", StringComparison.Ordinal) &&
+                !icon.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         shellMarkup.ShouldContain("flow-node-category-token");
         shellMarkup.ShouldContain("flow-node-divider");
         shellMarkup.ShouldContain("flow-node-activity");
