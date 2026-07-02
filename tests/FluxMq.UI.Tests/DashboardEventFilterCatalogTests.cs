@@ -3044,6 +3044,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("topic-last-meta");
         markup.ShouldContain("topic-no-traffic");
         markup.ShouldContain("topic-monitor-list");
+        markup.ShouldContain("aria-label=\"Broker monitors\"");
+        markup.ShouldNotContain("aria-label=\"Broker monitor status\"");
         markup.ShouldContain("NoTrafficBrokerGroups");
         markup.ShouldContain("MonitorRowClass");
         markup.ShouldContain("One broker monitor is subscribed to #.");

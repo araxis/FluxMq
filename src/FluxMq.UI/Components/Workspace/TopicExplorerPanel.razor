@@ -149,7 +149,7 @@
 
                     @if (NoTrafficBrokerGroups.Count > 0)
                     {
-                        <div class="topic-monitor-list" aria-label="Broker monitor status">
+                        <div class="topic-monitor-list" aria-label="Broker monitors">
                             @foreach (var broker in NoTrafficBrokerGroups)
                             {
                                 <div class="@MonitorRowClass(broker)" @key="@broker.Name">
