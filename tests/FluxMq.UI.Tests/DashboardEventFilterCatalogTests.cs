@@ -3401,6 +3401,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("TimelineStepMeta(stepResult)");
         markup.ShouldContain("test-runner-step-copy");
         markup.ShouldContain("StepStatusIcon(stepResult)");
+        markup.ShouldContain("stepResult?.Status.ToString() ?? \"Idle\"");
+        markup.ShouldContain("? \"Idle\"");
         markup.ShouldContain("RuntimeEventRowClass(flowEvent)");
         markup.ShouldContain("RuntimeEventLabel(flowEvent)");
         markup.ShouldContain("RuntimeEventIcon(flowEvent)");
@@ -3426,6 +3428,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Runner ready");
         markup.ShouldNotContain("First run readiness");
         markup.ShouldNotContain("Ready for first run");
+        markup.ShouldNotContain("?? \"Ready\"");
+        markup.ShouldNotContain("? \"Ready\"");
         markup.ShouldNotContain("test-runner-result-strip empty ready");
 
         css.ShouldContain(".test-runner-title-icon");
@@ -3520,6 +3524,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("BuilderMetricClass");
         markup.ShouldContain("@ActivePhaseCountText");
         markup.ShouldContain("@RunnerStateText");
+        markup.ShouldContain("? \"Running\" : \"Idle\"");
         markup.ShouldContain("RunContextClass(result)");
         markup.ShouldContain("RunContextAriaLabel(result)");
         markup.ShouldContain("test-run-context-status");
@@ -3563,6 +3568,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("test-step-badges");
         markup.ShouldNotContain("Designer ready");
+        markup.ShouldNotContain("? \"Running\" : \"Ready\"");
 
         css.ShouldContain(".test-scenario-heading-icon");
         css.ShouldContain(".test-scenario-meta-strip span,");

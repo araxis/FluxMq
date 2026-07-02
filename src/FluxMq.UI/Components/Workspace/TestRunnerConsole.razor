@@ -275,7 +275,7 @@
                                                     <span class="test-runner-step-name">@step.Name</span>
                                                     <small>@TimelineStepMeta(stepResult)</small>
                                                 </span>
-                                                <strong>@(stepResult?.Status.ToString() ?? "Ready")</strong>
+                                                <strong>@(stepResult?.Status.ToString() ?? "Idle")</strong>
                                             </div>
                                         }
                                     }
@@ -402,7 +402,7 @@
         => Project.IsScenarioRunning
             ? "Running"
             : Scenario is { StepCount: > 0 }
-                ? "Ready"
+                ? "Idle"
                 : "Needs steps";
 
     private string FirstRunStripClass

@@ -443,7 +443,7 @@
             : "0 active";
 
     private string RunnerStateText
-        => Project.IsScenarioRunning ? "Running" : "Ready";
+        => Project.IsScenarioRunning ? "Running" : "Idle";
 
     private IReadOnlyList<ScenarioRunResult> RecentRuns
         => Scenario is null
