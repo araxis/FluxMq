@@ -1401,7 +1401,7 @@
     background: transparent;
 }
 
-.metrics-preview-status {
+.metrics-preview-state {
     align-items: center;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;

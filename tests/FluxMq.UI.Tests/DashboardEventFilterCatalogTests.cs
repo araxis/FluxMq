@@ -4031,9 +4031,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-latest-state muted");
         markup.ShouldContain("metrics-side-indicator live");
         markup.ShouldContain("metrics-side-indicator danger");
+        markup.ShouldContain("metrics-preview-state");
         markup.ShouldNotContain("metrics-type-pill");
         markup.ShouldNotContain("metrics-latest-pill");
         markup.ShouldNotContain("metrics-side-badge");
+        markup.ShouldNotContain("metrics-preview-status");
 
         css.ShouldContain(".metrics-type-summary");
         css.ShouldContain(".metrics-type-summary ::deep .mud-icon-root");
@@ -4043,9 +4045,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".metrics-side-indicator");
         css.ShouldContain(".metrics-side-indicator.live");
         css.ShouldContain(".metrics-side-indicator.danger");
+        css.ShouldContain(".metrics-preview-state");
         css.ShouldNotContain(".metrics-type-pill");
         css.ShouldNotContain(".metrics-latest-pill");
         css.ShouldNotContain(".metrics-side-badge");
+        css.ShouldNotContain(".metrics-preview-status");
     }
 
     [Fact]
