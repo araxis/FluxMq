@@ -434,8 +434,8 @@
     {
         if (Projects.ActiveProject is { } project)
         {
-            var brokersReady = await Live.EnsureConnectionsAsync(project.GetConnectionResources());
-            if (!brokersReady)
+            var connectionsAvailable = await Live.EnsureConnectionsAsync(project.GetConnectionResources());
+            if (!connectionsAvailable)
             {
                 return;
             }

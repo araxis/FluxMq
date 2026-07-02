@@ -822,8 +822,8 @@
 
     private async Task RunScenarioAsync()
     {
-        var ready = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());
-        if (!ready)
+        var connectionsAvailable = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());
+        if (!connectionsAvailable)
         {
             return;
         }

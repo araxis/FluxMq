@@ -2716,9 +2716,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("<LiveInspectorPanel />");
         markup.ShouldContain("@if (HasActiveProject)");
         markup.ShouldContain("private bool HasActiveProject => Projects.ActiveProject is not null;");
+        markup.ShouldContain("var connectionsAvailable = await Live.EnsureConnectionsAsync(project.GetConnectionResources());");
         markup.ShouldContain("no-active-project");
         markup.ShouldContain("Hide MQTT publisher");
         markup.ShouldContain("Show MQTT publisher");
+        markup.ShouldNotContain("brokersReady");
         markup.ShouldNotContain("Workspace navigation");
         markup.ShouldNotContain("No active project");
         markup.ShouldNotContain("flux-rail");
@@ -3428,6 +3430,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@RuntimeEventCountLabel");
         markup.ShouldContain("@ActivitySummaryLabel");
         markup.ShouldContain("@RunnerLogCountLabel");
+        markup.ShouldContain("var connectionsAvailable = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("ActiveRunChip");
         markup.ShouldNotContain("FormatRunIdChip");
@@ -3435,6 +3438,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("ActiveRunPillClass");
         markup.ShouldNotContain("test-runner-status-pill");
         markup.ShouldNotContain("Runner ready");
+        markup.ShouldNotContain("var ready = await Live.EnsureConnectionsAsync");
+        markup.ShouldNotContain("if (!ready)");
         markup.ShouldNotContain("First run readiness");
         markup.ShouldNotContain("Ready for first run");
         markup.ShouldNotContain("?? \"Ready\"");
@@ -3578,11 +3583,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("FormatRunIdText");
         markup.ShouldContain("StepResultEventLabel(stepResult)");
         markup.ShouldContain("test-step-status idle");
+        markup.ShouldContain("var connectionsAvailable = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("ActiveRunChip");
         markup.ShouldNotContain("FormatRunIdChip");
         markup.ShouldNotContain("test-step-badges");
         markup.ShouldNotContain("Designer ready");
+        markup.ShouldNotContain("var ready = await Live.EnsureConnectionsAsync");
+        markup.ShouldNotContain("if (!ready)");
         markup.ShouldNotContain("? \"Running\" : \"Ready\"");
 
         css.ShouldContain(".test-scenario-heading-icon");
