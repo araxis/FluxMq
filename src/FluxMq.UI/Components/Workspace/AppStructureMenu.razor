@@ -217,7 +217,7 @@
                                 <span class="app-menu-artifact-name">Metric designer</span>
                                 <span class="app-menu-artifact-meta">@CountLabel(active.MetricNames.Count, "metric")</span>
                             </span>
-                            <span class="app-menu-artifact-state">Open</span>
+                            <span class="app-menu-artifact-action">Open</span>
                         </div>
                     </MudMenuItem>
                 }
@@ -267,7 +267,7 @@
                                 </span>
                                 <span class="@TestRunMenuSummaryClass(latestTestRun)"
                                       aria-label="@TestRunMenuStateLabel(latestTestRun)">
-                                    <span class="@TestRunMenuStateClass(latestTestRun)">
+                                    <span class="@TestRunMenuMarkerClass(latestTestRun)">
                                         <MudIcon Icon="@TestRunMenuIcon(latestTestRun)" Size="Size.Small" />
                                         <span>@TestRunMenuText(latestTestRun)</span>
                                     </span>
@@ -430,13 +430,13 @@
             _ => "app-menu-test-summary idle"
         };
 
-    private static string TestRunMenuStateClass(ScenarioRunResult? latestRun)
+    private static string TestRunMenuMarkerClass(ScenarioRunResult? latestRun)
         => latestRun?.Status switch
         {
-            ScenarioRunStatus.Passed => "app-menu-test-state passed",
-            ScenarioRunStatus.Failed => "app-menu-test-state failed",
-            ScenarioRunStatus.Canceled => "app-menu-test-state canceled",
-            _ => "app-menu-test-state idle"
+            ScenarioRunStatus.Passed => "app-menu-test-marker passed",
+            ScenarioRunStatus.Failed => "app-menu-test-marker failed",
+            ScenarioRunStatus.Canceled => "app-menu-test-marker canceled",
+            _ => "app-menu-test-marker idle"
         };
 
     private static string TestRunMenuIcon(ScenarioRunResult? latestRun)

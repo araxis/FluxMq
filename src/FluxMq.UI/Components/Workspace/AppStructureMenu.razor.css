@@ -413,7 +413,7 @@
     white-space: nowrap;
 }
 
-.app-menu-artifact-state {
+.app-menu-artifact-action {
     align-items: center;
     color: var(--flux-accent);
     display: inline-flex;
@@ -445,7 +445,7 @@
     white-space: nowrap;
 }
 
-.app-menu-test-state {
+.app-menu-test-marker {
     align-items: center;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
@@ -461,20 +461,20 @@
     white-space: nowrap;
 }
 
-.app-menu-test-state span {
+.app-menu-test-marker span {
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.app-menu-test-state.passed {
+.app-menu-test-marker.passed {
     color: var(--flux-accent);
 }
 
-.app-menu-test-state.failed {
+.app-menu-test-marker.failed {
     color: var(--mud-palette-error);
 }
 
-.app-menu-test-state.canceled {
+.app-menu-test-marker.canceled {
     color: var(--mud-palette-warning);
 }
 
