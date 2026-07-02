@@ -5988,6 +5988,26 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardWidgets_HideDecorativeHeaderIcons()
+    {
+        var root = FindRepositoryRoot();
+        var widgetsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgets");
+        var widgetFiles = Directory
+            .GetFiles(widgetsPath, "*.razor")
+            .Append(Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgetView.razor"))
+            .Where(static file => File.ReadAllText(file).Contains("dashboard-widget-icon", StringComparison.Ordinal))
+            .ToArray();
+
+        widgetFiles.Length.ShouldBeGreaterThanOrEqualTo(10);
+        foreach (var file in widgetFiles)
+        {
+            var markup = File.ReadAllText(file);
+            markup.ShouldContain("class=\"dashboard-widget-icon\" aria-hidden=\"true\"");
+            markup.ShouldNotContain("<div class=\"dashboard-widget-icon\">");
+        }
+    }
+
+    [Fact]
     public void FlowWorkspaceService_DelegatesDashboardMetricResolutionToBridge()
     {
         var root = FindRepositoryRoot();
