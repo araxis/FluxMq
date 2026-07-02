@@ -4939,3 +4939,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Metric dialog icon scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Component Catalog decorative icon accessibility result:
+  - Added hidden decorative semantics to direct catalog title, empty-state, item tile, drag-grip, and add-affordance `MudIcon` glyphs in `ComponentCatalogPanel`.
+  - Preserved visible catalog titles, meta strip, count, search, empty labels, item aria labels, drag/click/keyboard add behavior, dashboard widget requirement rows, test step metadata, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Component Catalog guard to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ComponentCatalogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Component Catalog icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

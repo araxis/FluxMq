@@ -8,7 +8,7 @@
     <div class="catalog-head">
         <div class="catalog-title">
             <span class="catalog-title-icon" aria-hidden="true">
-                <MudIcon Icon="@CatalogIcon" Size="Size.Small" />
+                <MudIcon Icon="@CatalogIcon" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="catalog-title-copy">
                 <span class="catalog-title-label">@CatalogTitle</span>
@@ -39,7 +39,7 @@
         @if (SearchResult.VisibleCount == 0)
         {
             <div class="catalog-empty" role="status" aria-live="polite">
-                <MudIcon Icon="@EmptyIcon" Size="Size.Small" />
+                <MudIcon Icon="@EmptyIcon" Size="Size.Small" aria-hidden="true" />
                 <span>@EmptyLabel</span>
                 <small>@EmptyHintLabel</small>
             </div>
@@ -85,7 +85,7 @@
               @onkeydown="@((KeyboardEventArgs args) => AddItemFromKeyboard(args, item))"
               @key="item.Type">
             <span class="@IconTileClass(item.Category)" aria-hidden="true">
-                <MudIcon Icon="@item.Icon" Size="Size.Small" />
+                <MudIcon Icon="@item.Icon" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="catalog-item-main">
                 <span class="catalog-item-name">@item.DisplayName</span>
@@ -113,10 +113,10 @@
             </span>
             <span class="catalog-item-affordance" aria-hidden="true">
                 <span class="catalog-drag-grip">
-                    <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <span class="catalog-add-button">
-                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                 </span>
             </span>
         </div>;

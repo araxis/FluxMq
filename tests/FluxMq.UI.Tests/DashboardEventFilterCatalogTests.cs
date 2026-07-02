@@ -6640,6 +6640,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@CatalogPanelLabel\"");
         markup.ShouldContain("catalog-title-copy");
         markup.ShouldContain("catalog-title-label");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("catalog-meta-strip");
         markup.ShouldContain("aria-label=\"Catalog mode, availability, and filter\"");
         markup.ShouldContain("@CatalogModeLabel");
