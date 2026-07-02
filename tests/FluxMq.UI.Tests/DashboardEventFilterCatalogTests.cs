@@ -2590,6 +2590,7 @@ public sealed class DashboardEventFilterCatalogTests
         selectMarkup.ShouldContain("role=\"listbox\"");
         selectMarkup.ShouldContain("aria-label=\"@ResolvedAriaLabel\"");
         selectMarkup.ShouldContain("private readonly string _listboxId");
+        selectMarkup.ShouldContain("string.Equals(args.Key, \"Spacebar\", StringComparison.Ordinal)");
         selectCss.ShouldContain("max-height: 160px;");
         selectCss.ShouldContain("right: 5px;");
         iconSegmentCss.ShouldContain("min-height: 19px;");
