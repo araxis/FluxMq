@@ -5575,3 +5575,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only dashboard dialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Metric Designer side-panel label specificity result:
+  - Replaced the static Metric Designer side-panel accessible name with a selected-metric-backed label for the preview/reference detail area.
+  - Preserved visible metric editor copy, list filtering, selection, parameter editing, preview/reference rendering, validation, saved metric data, dashboard bindings, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Metric Designer guard to require the label helper and reject the old static `aria-label="Metric details"` markup.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Metric Designer stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

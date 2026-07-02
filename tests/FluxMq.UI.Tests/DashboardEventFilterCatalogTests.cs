@@ -4633,6 +4633,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-side-indicator live");
         markup.ShouldContain("metrics-side-indicator danger");
         markup.ShouldContain("metrics-preview-marker");
+        markup.ShouldContain("aria-label=\"@MetricDetailsLabel\"");
+        markup.ShouldContain("private string MetricDetailsLabel");
+        markup.ShouldContain("Metric details for {(_draft.DisplayName.Length == 0 ? _draft.Id : _draft.DisplayName)}");
         markup.ShouldContain("metrics-list-empty create-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("metrics-list-empty filter-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("metrics-editor-empty\" role=\"status\" aria-live=\"polite\"");
@@ -4667,6 +4670,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("metrics-latest-pill");
         markup.ShouldNotContain("metrics-side-badge");
         markup.ShouldNotContain("metrics-preview-status");
+        markup.ShouldNotContain("aria-label=\"Metric details\"");
         markup.ShouldNotContain("Class=\"metrics-heading-icon\" />");
         markup.ShouldNotContain("class=\"metrics-empty-icon\">");
         markup.ShouldNotContain("class=\"metrics-empty-icon muted\">");
