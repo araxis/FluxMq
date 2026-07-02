@@ -44,6 +44,7 @@
                          aria-label="@node.FullPath"
                          aria-level="@TopicNodeLevel(node)"
                          aria-selected="@TopicNodeSelected(node)"
+                         aria-keyshortcuts="Enter Space"
                          @onkeydown="@((KeyboardEventArgs args) => SelectTopicFromKeyboardAsync(args, node.FullPath))"
                          @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
                         <span class="topic-node-flat-icon" aria-hidden="true">

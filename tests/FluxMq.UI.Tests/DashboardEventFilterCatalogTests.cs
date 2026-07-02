@@ -3551,6 +3551,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@Node.FullPath\"");
         markup.ShouldContain("aria-level=\"@TopicNodeLevel()\"");
         markup.ShouldContain("aria-selected=\"@TopicNodeSelected()\"");
+        markup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
         markup.ShouldContain("@onkeydown=\"SelectFromKeyboardAsync\"");
         markup.ShouldContain("class=\"topic-node-children\" role=\"group\"");
         markup.ShouldContain("<button type=\"button\"");
@@ -3597,6 +3598,7 @@ public sealed class DashboardEventFilterCatalogTests
         viewMarkup.ShouldContain("aria-label=\"@node.FullPath\"");
         viewMarkup.ShouldContain("aria-level=\"@TopicNodeLevel(node)\"");
         viewMarkup.ShouldContain("aria-selected=\"@TopicNodeSelected(node)\"");
+        viewMarkup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
         viewMarkup.ShouldContain("class=\"topic-node-flat-icon\" aria-hidden=\"true\"");
         viewMarkup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.SearchOff\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         viewMarkup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Topic\" Size=\"Size.Small\" aria-hidden=\"true\" />");

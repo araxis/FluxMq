@@ -5134,3 +5134,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - The initial parallel guard run hit the known platform XAML intermediate-file lock while the build was running; the longer serial rerun passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Topic tree keyboard shortcut hint result:
+  - Added `aria-keyshortcuts="Enter Space"` to selectable Topic Tree treeitems in both hierarchical and filtered-result render paths.
+  - Preserved topic selection, branch expansion, filtering, topic counts, latest activity display, MQTT topic data, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Topic Tree guard to require the treeitem keyboard shortcut hints for both paths.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Topic Tree keyboard shortcut scan passed.
+  - The initial parallel guard run hit the known platform XAML intermediate-file lock while the build was running; the serial guard rerun passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
