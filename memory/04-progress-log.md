@@ -4727,3 +4727,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Metric Designer icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Dashboard Designer decorative icon accessibility result:
+  - Added hidden decorative semantics to the selection summary icon, edit-mode drag hint icon, and live fallback widget marker in `DashboardDesigner`.
+  - Preserved visible text/status copy, toolbar commands, grid editing, drag/drop hints, live preview fallback rows, saved dashboard schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated focused Dashboard Designer guards to require the hidden decorative treatment and reject the old unhidden selection/drag snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar|FullyQualifiedName~DashboardDesigner_UsesFlatLivePreviewChrome|FullyQualifiedName~DashboardDesigner_EditGridUsesFlatEditingStateAffordances" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only Dashboard Designer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

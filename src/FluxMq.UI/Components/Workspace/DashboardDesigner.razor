@@ -138,7 +138,7 @@
                                 }
                             </div>
                             <span class="dashboard-selection-summary">
-                                <MudIcon Icon="@Icons.Material.Filled.SelectAll" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.SelectAll" Size="Size.Small" aria-hidden="true" />
                                 <span>@SelectionSummary</span>
                             </span>
                         </div>
@@ -188,7 +188,7 @@
                 @if (HasActiveDashboardDrag)
                 {
                     <div class="dashboard-drop-hint" role="status" aria-live="polite">
-                        <MudIcon Icon="@DashboardDragHintIcon" Size="Size.Small" />
+                        <MudIcon Icon="@DashboardDragHintIcon" Size="Size.Small" aria-hidden="true" />
                         <span>@DashboardDragHintText</span>
                     </div>
                 }
@@ -399,7 +399,7 @@
                                     else
                                     {
                                         <div class="dashboard-live-widget">
-                                            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                                            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" aria-hidden="true" />
                                             <span>@currentCell.Widget</span>
                                         </div>
                                     }

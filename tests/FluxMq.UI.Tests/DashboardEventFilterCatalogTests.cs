@@ -5096,6 +5096,8 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("SplitPickerCellAriaLabel");
         razor.ShouldContain("disabled=\"@IsSplitPickerCellDisabled(r, c)\"");
         razor.ShouldContain("private string CellAriaLabel");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.SelectAll\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.SelectAll\" Size=\"Size.Small\" />");
 
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain(".dashboard-meta-strip span");
@@ -5140,6 +5142,8 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("dashboard-live-empty-note");
         razor.ShouldContain("No widgets in live preview");
         razor.ShouldContain("Read-only runtime view without layout controls.");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Widgets\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldContain("class=\"dashboard-live-widget\"");
 
         css.ShouldContain(".dashboard-live-head");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto;");
@@ -5222,6 +5226,8 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("dashboard-cell-drop-mark");
         razor.ShouldNotContain("drop-ready");
         razor.ShouldContain("role=\"status\" aria-live=\"polite\"");
+        razor.ShouldContain("<MudIcon Icon=\"@DashboardDragHintIcon\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@DashboardDragHintIcon\" Size=\"Size.Small\" />");
         razor.ShouldContain("dashboard-grid-empty-icon");
         razor.ShouldContain("@EmptyGridHint");
         css.ShouldContain("grid-template-columns: 42px minmax(max-content, 1fr);");
