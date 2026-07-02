@@ -33,7 +33,13 @@
             <div class="topic-session-note">
                 <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
                 <span>@Live.SelectedStoredSession.Name</span>
-                <button type="button" @onclick="@Live.ClearStoredSessionSelection">Switch to live</button>
+                <MudTooltip Text="Switch to live traffic">
+                    <MudIconButton Icon="@Icons.Material.Filled.Sensors"
+                                   Size="Size.Small"
+                                   Class="topic-session-live-button"
+                                   aria-label="Switch to live traffic"
+                                   OnClick="@Live.ClearStoredSessionSelection" />
+                </MudTooltip>
             </div>
         }
 

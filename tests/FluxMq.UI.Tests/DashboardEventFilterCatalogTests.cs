@@ -2893,6 +2893,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Open broker monitor settings");
         markup.ShouldContain("PreserveCandidateExplorerNames");
         markup.ShouldContain("topic-broker-tree");
+        markup.ShouldContain("topic-session-note");
+        markup.ShouldContain("Class=\"topic-session-live-button\"");
+        markup.ShouldContain("aria-label=\"Switch to live traffic\"");
+        markup.ShouldContain("OnClick=\"@Live.ClearStoredSessionSelection\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Sensors\"");
+        markup.ShouldNotContain("<button type=\"button\" @onclick=\"@Live.ClearStoredSessionSelection\">Switch to live</button>");
         markup.ShouldContain("BrokerGroups.Count brokers");
         markup.ShouldContain("VisibleBrokerGroups");
         markup.ShouldContain("BrokerLabel(LastMessage)");
@@ -3142,6 +3148,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".topic-broker-row.live .topic-broker-connection");
         css.ShouldContain(".topic-broker-tree");
         css.ShouldContain(".topic-broker-empty");
+        css.ShouldContain(".topic-session-note ::deep .topic-session-live-button");
+        css.ShouldContain(".topic-session-note ::deep .topic-session-live-button .mud-icon-root");
+        css.ShouldNotContain(".topic-session-note button");
         css.ShouldContain(".topic-latest-message");
         css.ShouldNotContain(".topic-last-state");
         css.ShouldContain("flex: 0 0 clamp(218px, 38%, 360px);");
@@ -12480,6 +12489,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Search sessions");
         markup.ShouldContain("session-live-strip");
         markup.ShouldContain("aria-label=\"Switch to live traffic\"");
+        markup.ShouldContain("Class=\"session-live-button\"");
+        markup.ShouldContain("OnClick=\"@Live.ClearStoredSessionSelection\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Sensors\"");
+        markup.ShouldNotContain("@onclick=\"@Live.ClearStoredSessionSelection\"");
         markup.ShouldContain("sessions-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("sessions-empty-title");
         markup.ShouldContain("sessions-list");
@@ -12528,6 +12541,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain(".session-marker.selected");
         css.ShouldContain(".session-marker.recording");
+        css.ShouldContain(".session-live-strip ::deep .session-live-button");
+        css.ShouldContain(".session-live-strip ::deep .session-live-button .mud-icon-root");
+        css.ShouldNotContain(".session-live-strip button");
         css.ShouldNotContain(".session-state");
         css.ShouldContain(".session-search ::deep .mud-input-outlined-border");
         css.ShouldContain("@media (max-width: 760px)");
