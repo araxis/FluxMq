@@ -10,7 +10,7 @@
 @inject ISnackbar Snackbar
 
 <div class="@DesignerClass"
-     aria-label="Test scenario designer"
+     aria-label="@TestScenarioDesignerLabel"
      @onpointerenter="HandleDesignerPointerEnter"
      @onpointermove="HandleDesignerPointerMove"
      @onpointerleave="HandleDesignerPointerLeave">
@@ -313,31 +313,31 @@
                                                 <span class="test-step-actions">
                                                     <button type="button"
                                                             class="test-step-action"
-                                                            aria-label="Move step earlier"
-                                                            title="Move earlier"
+                                                            aria-label="@MoveStepEarlierLabel(step)"
+                                                            title="@MoveStepEarlierLabel(step)"
                                                             disabled="@(index == 0)"
                                                             @onclick="@(() => MoveStep(step.Name, -1))">
                                                         <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                     <button type="button"
                                                             class="test-step-action"
-                                                            aria-label="Move step later"
-                                                            title="Move later"
+                                                            aria-label="@MoveStepLaterLabel(step)"
+                                                            title="@MoveStepLaterLabel(step)"
                                                             disabled="@(index >= phase.Steps.Count - 1)"
                                                             @onclick="@(() => MoveStep(step.Name, 1))">
                                                         <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                     <button type="button"
                                                             class="test-step-action"
-                                                            aria-label="Edit step"
-                                                            title="Edit step"
+                                                            aria-label="@EditStepLabel(step)"
+                                                            title="@EditStepLabel(step)"
                                                             @onclick="@(() => OpenStepEditorAsync(step))">
                                                         <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                     <button type="button"
                                                             class="test-step-action danger"
-                                                            aria-label="Delete step"
-                                                            title="Delete step"
+                                                            aria-label="@DeleteStepLabel(step)"
+                                                            title="@DeleteStepLabel(step)"
                                                             @onclick="@(() => RemoveStep(step.Name))">
                                                         <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" aria-hidden="true" />
                                                     </button>
@@ -442,6 +442,11 @@
 
     private string RecentRunCountText
         => FormatRecentRunCount(RecentRuns.Count);
+
+    private string TestScenarioDesignerLabel
+        => Scenario is { } scenario
+            ? $"{scenario.Name} test scenario designer"
+            : "Test scenario designer with no active scenario";
 
     private string ScenarioDesignerMetaLabel
         => Scenario is { } scenario
@@ -641,6 +646,18 @@
         var status = result?.Status.ToString() ?? "Not run";
         return $"{step.Name}, {StepTypeLabel(step)}, {status}";
     }
+
+    private static string MoveStepEarlierLabel(ScenarioStepSnapshot step)
+        => $"Move {step.Name} earlier";
+
+    private static string MoveStepLaterLabel(ScenarioStepSnapshot step)
+        => $"Move {step.Name} later";
+
+    private static string EditStepLabel(ScenarioStepSnapshot step)
+        => $"Edit {step.Name}";
+
+    private static string DeleteStepLabel(ScenarioStepSnapshot step)
+        => $"Delete {step.Name}";
 
     private string StepResultMetaLabel(ScenarioStepResult result)
         => $"{StepResultScopeLabel}, finished {StepResultClockLabel(result)}, duration {StepResultDurationLabel(result)}, {StepResultEventLabel(result)}";

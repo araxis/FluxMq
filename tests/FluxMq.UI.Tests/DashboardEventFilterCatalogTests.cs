@@ -4034,7 +4034,11 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "TestScenarioDesigner.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Test scenario designer\"");
+        markup.ShouldContain("aria-label=\"@TestScenarioDesignerLabel\"");
+        markup.ShouldContain("private string TestScenarioDesignerLabel");
+        markup.ShouldContain("{scenario.Name} test scenario designer");
+        markup.ShouldContain("Test scenario designer with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Test scenario designer\"");
         markup.ShouldContain("test-scenario-heading-icon");
         markup.ShouldContain("test-scenario-title-copy");
         markup.ShouldContain("test-scenario-meta-strip");
@@ -4108,10 +4112,22 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldContain("class=\"@StepCardClass(step, stepResult)\"\n                                             role=\"group\"");
         markup.ShouldContain("StepCardLabel(step, stepResult)");
         markup.ShouldContain("aria-label=\"Show latest run\"");
-        markup.ShouldContain("aria-label=\"Move step earlier\"");
-        markup.ShouldContain("aria-label=\"Move step later\"");
-        markup.ShouldContain("aria-label=\"Edit step\"");
-        markup.ShouldContain("aria-label=\"Delete step\"");
+        markup.ShouldContain("MoveStepEarlierLabel(step)");
+        markup.ShouldContain("MoveStepLaterLabel(step)");
+        markup.ShouldContain("EditStepLabel(step)");
+        markup.ShouldContain("DeleteStepLabel(step)");
+        markup.ShouldContain("Move {step.Name} earlier");
+        markup.ShouldContain("Move {step.Name} later");
+        markup.ShouldContain("Edit {step.Name}");
+        markup.ShouldContain("Delete {step.Name}");
+        markup.ShouldNotContain("aria-label=\"Move step earlier\"");
+        markup.ShouldNotContain("aria-label=\"Move step later\"");
+        markup.ShouldNotContain("aria-label=\"Edit step\"");
+        markup.ShouldNotContain("aria-label=\"Delete step\"");
+        markup.ShouldNotContain("title=\"Move earlier\"");
+        markup.ShouldNotContain("title=\"Move later\"");
+        markup.ShouldNotContain("title=\"Edit step\"");
+        markup.ShouldNotContain("title=\"Delete step\"");
         markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("StepStatusIcon(stepResult)");
         markup.ShouldContain("StepResultMarkerClass(stepResult.Status)");
