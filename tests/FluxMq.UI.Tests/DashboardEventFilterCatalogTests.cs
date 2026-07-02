@@ -4699,6 +4699,40 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void DashboardQueryPreviewFrame_UsesNeutralPreviewStateChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardQueryPreviewFrame.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardQueryPreviewFrame.razor.css"));
+
+        markup.ShouldContain("Widget preview");
+        markup.ShouldContain("Current style and draft query");
+        markup.ShouldContain("Refresh sample");
+        markup.ShouldContain("DataStateClass");
+        markup.ShouldContain("dashboard-query-preview-frame-state live");
+        markup.ShouldContain("dashboard-query-preview-frame-state sample");
+        markup.ShouldNotContain("BadgeClass");
+        markup.ShouldNotContain("dashboard-query-preview-frame-badge");
+
+        css.ShouldContain(".dashboard-query-preview-frame-state");
+        css.ShouldContain(".dashboard-query-preview-frame-state.live");
+        css.ShouldContain(".dashboard-query-preview-frame-state.sample");
+        css.ShouldNotContain(".dashboard-query-preview-frame-badge");
+    }
+
+    [Fact]
     public void DashboardDesigner_EditGridUsesFlatEditingStateAffordances()
     {
         var root = FindRepositoryRoot();

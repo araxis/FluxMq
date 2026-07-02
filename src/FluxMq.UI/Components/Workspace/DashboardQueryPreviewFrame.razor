@@ -10,7 +10,7 @@
             }
         </div>
         <div class="dashboard-query-preview-frame-actions">
-            <span class="@BadgeClass">@DataLabel</span>
+            <span class="@DataStateClass">@DataLabel</span>
             @if (!IsLive && RefreshSample.HasDelegate)
             {
                 <button type="button"
@@ -55,9 +55,9 @@
     [Parameter]
     public RenderFragment? ResultContent { get; set; }
 
-    private string BadgeClass => IsLive
-        ? "dashboard-query-preview-frame-badge live"
-        : "dashboard-query-preview-frame-badge sample";
+    private string DataStateClass => IsLive
+        ? "dashboard-query-preview-frame-state live"
+        : "dashboard-query-preview-frame-state sample";
 
     private Task RefreshSampleAsync() => RefreshSample.InvokeAsync();
 }
