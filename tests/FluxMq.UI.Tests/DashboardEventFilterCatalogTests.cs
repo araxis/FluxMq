@@ -11224,7 +11224,8 @@ public sealed class DashboardEventFilterCatalogTests
         shellMarkup.ShouldContain("ShowHeaderIcon");
         shellMarkup.ShouldContain("ShowDisplayName");
         shellMarkup.ShouldContain("ShowCategoryChip");
-        shellMarkup.ShouldContain("HeaderBadge");
+        shellMarkup.ShouldContain("HeaderState");
+        shellMarkup.ShouldNotContain("HeaderBadge");
         shellMarkup.ShouldContain("EditDialogContentClass");
         shellMarkup.ShouldContain("EditorValidationError");
         shellMarkup.ShouldContain("flow-node-type-icon");

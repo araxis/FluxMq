@@ -4,7 +4,7 @@
         Editor   = the edit content shown inside a MudDialog (optional).
                    When absent the dialog still lets the user rename the node.
 
-    Common chrome (selection state, expand/collapse, activity badge, ports) lives
+    Common chrome (selection state, expand/collapse, activity state, ports) lives
     here so widgets stay focused on their content.
 *@
 @using FluxMq.UI.Components.Workspace.Dialogs
@@ -44,9 +44,9 @@
                          Class="flow-node-diagnostic-icon" />
             </MudTooltip>
         }
-        @if (HeaderBadge is not null)
+        @if (HeaderState is not null)
         {
-            @HeaderBadge
+            @HeaderState
         }
         else if (ShowCategoryChip)
         {
@@ -137,7 +137,7 @@
     [Parameter] public bool ShowHeaderIcon { get; set; } = true;
     [Parameter] public bool ShowDisplayName { get; set; } = true;
     [Parameter] public bool ShowCategoryChip { get; set; } = true;
-    [Parameter] public RenderFragment? HeaderBadge { get; set; }
+    [Parameter] public RenderFragment? HeaderState { get; set; }
     [Parameter] public string? EditDialogContentClass { get; set; }
 
     /// <summary>Called before the dialog closes with Save, so the widget can flush its draft state.</summary>
