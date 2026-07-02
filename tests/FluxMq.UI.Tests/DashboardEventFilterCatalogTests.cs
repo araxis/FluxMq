@@ -12372,6 +12372,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@AppRowLabel(a, isActive)\"");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isActive)\"");
         markup.ShouldContain("title=\"@AppRowLabel(a, isActive)\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""app-row-icon""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("private static string AppRowLabel");
         markup.ShouldContain("private static string? TreeItemCurrent");

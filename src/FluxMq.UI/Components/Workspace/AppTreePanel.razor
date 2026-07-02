@@ -310,7 +310,8 @@ else
                                     <span class="test-artifact-icon-frame" aria-hidden="true">
                                         <MudIcon Icon="@Icons.Material.Filled.FactCheck"
                                                  Size="Size.Small"
-                                                 Class="artifact-icon test" />
+                                                 Class="artifact-icon test"
+                                                 aria-hidden="true" />
                                     </span>
                                     <div class="artifact-item-copy test-artifact-copy">
                                         <span>@t</span>
@@ -319,7 +320,7 @@ else
                                     <div class="@TestRunSummaryClass(latestTestRun)"
                                          aria-label="@TestRunSummaryLabel(latestTestRun)">
                                         <span class="@TestRunMarkerClass(latestTestRun)">
-                                            <MudIcon Icon="@TestRunIcon(latestTestRun)" Size="Size.Small" />
+                                            <MudIcon Icon="@TestRunIcon(latestTestRun)" Size="Size.Small" aria-hidden="true" />
                                             <span>@TestRunText(latestTestRun)</span>
                                         </span>
                                         <span class="test-run-summary-meta">@TestRunDetailText(latestTestRun)</span>

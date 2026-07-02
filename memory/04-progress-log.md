@@ -4919,3 +4919,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Dashboard Designer icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App Tree decorative icon accessibility result:
+  - Added hidden decorative semantics to direct test artifact and test-run marker `MudIcon` instances in `AppTreePanel`; existing hidden app, pipeline, metric, dashboard, empty, section, and add-row icons remain covered.
+  - Preserved visible labels, row aria labels, selection/routing, keyboard activation, section toggles, test creation/deletion, test run summaries, project state, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused App Tree guard to reject exposed direct `MudIcon` tags across multi-line attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App Tree icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
