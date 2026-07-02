@@ -7,17 +7,24 @@
          @onclick="Select">
         <span class="topic-node-branch"></span>
 
-        <span class="topic-node-chevron" @onclick="Toggle" @onclick:stopPropagation>
-            @if (Node.HasChildren)
-            {
+        @if (Node.HasChildren)
+        {
+            <button type="button"
+                    class="topic-node-chevron"
+                    aria-label="@TopicNodeChevronLabel()"
+                    aria-expanded="@(_expanded ? "true" : "false")"
+                    @onclick="Toggle"
+                    @onclick:stopPropagation>
                 <MudIcon Icon="@(_expanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
                          Size="Size.Small" />
-            }
-            else
-            {
+            </button>
+        }
+        else
+        {
+            <span class="topic-node-chevron topic-node-chevron-static" @onclick="IgnoreChevronClick" @onclick:stopPropagation>
                 <span class="topic-node-chevron-placeholder"></span>
-            }
-        </span>
+            </span>
+        }
 
         <MudText Typo="Typo.body2" Class="topic-node-name">@Node.Name</MudText>
 
@@ -65,6 +72,10 @@
         _initialized = true;
     }
 
+    private string TopicNodeChevronLabel()
+        => _expanded ? "Collapse topic branch" : "Expand topic branch";
+
     private void Toggle() => _expanded = !_expanded;
+    private static void IgnoreChevronClick() { }
     private Task Select() => TopicSelected.InvokeAsync(Node.FullPath);
 }

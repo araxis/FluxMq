@@ -3430,11 +3430,26 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("style=\"@($\"--topic-depth:{Node.Depth};\")\"");
         markup.ShouldContain("TopicSelected.InvokeAsync(Node.FullPath)");
         markup.ShouldContain("Node.Children.Values.OrderBy(n => n.Name)");
+        markup.ShouldContain("<button type=\"button\"");
+        markup.ShouldContain("class=\"topic-node-chevron\"");
+        markup.ShouldContain("aria-label=\"@TopicNodeChevronLabel()\"");
+        markup.ShouldContain("aria-expanded=\"@(_expanded ? \"true\" : \"false\")\"");
+        markup.ShouldContain("@onclick=\"Toggle\"");
+        markup.ShouldContain("@onclick:stopPropagation");
+        markup.ShouldContain("topic-node-chevron-static");
+        markup.ShouldContain("private string TopicNodeChevronLabel()");
+        markup.ShouldContain("private static void IgnoreChevronClick()");
+        markup.ShouldNotContain("<span class=\"topic-node-chevron\" @onclick=\"Toggle\"");
 
         css.ShouldContain(".topic-node-branch");
         css.ShouldContain("border-radius: 1px;");
         css.ShouldContain("width: 1px;");
         css.ShouldContain("left: calc(7px + (var(--topic-depth) * 14px));");
+        css.ShouldContain("appearance: none;");
+        css.ShouldContain("background: transparent;");
+        css.ShouldContain("border: 0;");
+        css.ShouldContain(".topic-node-chevron:focus-visible");
+        css.ShouldContain(".topic-node-chevron-static");
         css.ShouldNotContain("border-radius: 999px;");
     }
 

@@ -41,10 +41,27 @@
 
 .topic-node-chevron {
     align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
     color: color-mix(in srgb, var(--topic-tree-accent-color, var(--mud-palette-info)) 72%, var(--topic-tree-muted-color, var(--mud-palette-text-secondary)));
+    cursor: pointer;
     display: inline-flex;
     flex: 0 0 22px;
+    font: inherit;
+    height: 22px;
     justify-content: center;
+    padding: 0;
+}
+
+.topic-node-chevron:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--flux-accent) 70%, transparent);
+    outline-offset: 1px;
+}
+
+.topic-node-chevron-static {
+    cursor: default;
 }
 
 .topic-node-chevron-placeholder {
