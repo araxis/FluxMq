@@ -3824,7 +3824,11 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "TestRunnerConsole.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Test runner console\"");
+        markup.ShouldContain("aria-label=\"@TestRunnerConsoleLabel\"");
+        markup.ShouldContain("private string TestRunnerConsoleLabel");
+        markup.ShouldContain("{scenario.Name} test runner console");
+        markup.ShouldContain("Test runner console with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Test runner console\"");
         markup.ShouldContain("test-runner-title-icon");
         markup.ShouldContain("test-runner-meta-strip");
         markup.Split('\n')

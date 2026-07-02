@@ -8,7 +8,7 @@
 @inject ScenarioStepCatalog ScenarioSteps
 @inject ISnackbar Snackbar
 
-<div class="test-runner-console" aria-label="Test runner console">
+<div class="test-runner-console" aria-label="@TestRunnerConsoleLabel">
     @if (Scenario is null)
     {
         <div class="test-runner-empty" role="status" aria-live="polite" aria-label="Test runner scenario setup state">
@@ -365,6 +365,11 @@
     public FlowWorkspaceService Project { get; set; } = null!;
 
     private TestScenarioSnapshot? Scenario => Project.GetActiveTestScenario();
+
+    private string TestRunnerConsoleLabel
+        => Scenario is { } scenario
+            ? $"{scenario.Name} test runner console"
+            : "Test runner console with no active scenario";
 
     private string RunButtonText => Project.IsScenarioRunning ? "Running" : "Run scenario";
 
