@@ -5493,3 +5493,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale metadata-label scans, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer canvas chrome re-verification result:
+  - Confirmed the current `FlowDesigner` source already uses neutral `Pipeline loaded` copy for the loaded clean-pipeline subtitle while preserving `Unsaved changes` and `No active pipeline`.
+  - Confirmed the focused guard already requires the neutral loaded subtitle path and rejects generic readiness canvas chrome.
+  - Preserved the compact header, meta strip, editable/no-pipeline mode, link selection state, runtime marker, node/link/resource metrics, diagnostics action, canvas, navigator, link-condition editor, workflow JSON, saved app schema, runtime behavior, services, diagnostics, ids, ports, schemas, and contracts.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer subtitle scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
