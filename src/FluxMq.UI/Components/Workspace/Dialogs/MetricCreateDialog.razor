@@ -4,7 +4,7 @@
     <TitleContent>
         <div class="metric-create-title">
             <span class="metric-create-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-create-title-copy">
                 <strong>New metric</strong>
@@ -16,7 +16,7 @@
         <div class="metric-create-dialog" role="form" aria-label="Create metric">
             <div class="metric-create-topbar">
                 <label class="metric-create-search" role="search">
-                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" aria-hidden="true" />
                     <input value="@_search"
                            placeholder="Search metric types"
                            aria-label="Search metric types"
@@ -27,7 +27,7 @@
                                 title="Clear search"
                                 aria-label="Clear search"
                                 @onclick="@ClearSearch">
-                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                         </button>
                     }
                 </label>
@@ -46,7 +46,7 @@
                                 title="@current.Description"
                                 @onclick="@(() => SelectDescriptor(current))">
                             <span class="metric-create-type-icon">
-                                <MudIcon Icon="@IconFor(current)" Size="Size.Small" />
+                                <MudIcon Icon="@IconFor(current)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <span>
                                 <strong>@current.DisplayName</strong>
@@ -59,7 +59,7 @@
                     @if (FilteredDescriptors.Count == 0)
                     {
                         <div class="metric-create-empty">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                             <span>No metric types match your search</span>
                         </div>
                     }
@@ -70,7 +70,7 @@
                     {
                         <div class="metric-create-selected">
                             <span class="metric-create-selected-icon">
-                                <MudIcon Icon="@IconFor(selectedDescriptor)" Size="Size.Small" />
+                                <MudIcon Icon="@IconFor(selectedDescriptor)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <div>
                                 <strong>@selectedDescriptor.DisplayName</strong>
@@ -90,7 +90,7 @@
                         </label>
 
                         <div class="metric-create-resource-id">
-                            <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" aria-hidden="true" />
                             <span>@MetricIdPreview</span>
                         </div>
 
@@ -116,7 +116,7 @@
                         else
                         {
                             <div class="metric-create-empty-defaults">
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" aria-hidden="true" />
                                 <span>This type has no parameters.</span>
                             </div>
                         }

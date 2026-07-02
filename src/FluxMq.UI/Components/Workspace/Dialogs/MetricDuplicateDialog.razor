@@ -2,7 +2,7 @@
     <TitleContent>
         <div class="metric-duplicate-title">
             <span class="metric-duplicate-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-duplicate-title-copy">
                 <strong>Duplicate metric</strong>
@@ -30,21 +30,21 @@
             </label>
 
             <div class="metric-duplicate-id">
-                <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" aria-hidden="true" />
                 <span>@MetricIdPreview</span>
             </div>
 
             @if (!CanDuplicate)
             {
                 <div class="metric-duplicate-validation" role="alert">
-                    <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" aria-hidden="true" />
                     <span>Display name is required.</span>
                 </div>
             }
             else
             {
                 <div class="metric-duplicate-note">
-                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-hidden="true" />
                     <span>Parameters and metric type will be copied. Dashboard bindings will stay on the original metric.</span>
                 </div>
             }

@@ -4929,3 +4929,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only App Tree icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Metric dialog direct icon accessibility result:
+  - Added hidden decorative semantics to all direct `MudIcon` glyphs in Metric create, rename, duplicate, type-change, confirm, and delete dialogs, extending the earlier title-icon wrapper treatment to search, clear, type, empty, id, validation, note, warning, reference, and reset markers.
+  - Preserved visible labels, button labels, metric type search/counts, validation rows, destructive warnings, tone markers, binding/reference details, dialog results, metric model behavior, dashboard binding behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused metric creation and metric action dialog guards to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Metric dialog icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

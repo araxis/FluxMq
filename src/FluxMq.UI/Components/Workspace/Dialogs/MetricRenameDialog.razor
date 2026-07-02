@@ -4,7 +4,7 @@
     <TitleContent>
         <div class="metric-rename-title">
             <span class="metric-rename-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-rename-title-copy">
                 <strong>Rename metric</strong>
@@ -34,14 +34,14 @@
             @if (!string.IsNullOrWhiteSpace(ValidationMessage))
             {
                 <div class="metric-rename-validation" role="alert">
-                    <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" aria-hidden="true" />
                     <span>@ValidationMessage</span>
                 </div>
             }
             else
             {
                 <div class="metric-rename-note">
-                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" aria-hidden="true" />
                     <span>Dashboard bindings will be updated to the new id.</span>
                 </div>
             }

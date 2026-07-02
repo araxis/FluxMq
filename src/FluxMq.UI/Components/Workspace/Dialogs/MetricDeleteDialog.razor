@@ -2,7 +2,7 @@
     <TitleContent>
         <div class="metric-delete-title">
             <span class="metric-delete-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-delete-title-copy">
                 <strong>Delete metric</strong>
@@ -14,7 +14,7 @@
     <DialogContent>
         <div class="metric-delete-dialog">
             <div class="metric-delete-warning" role="alert">
-                <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" aria-hidden="true" />
                 <div>
                     <strong>Delete @MetricId?</strong>
                     <span>This removes the metric resource from the app. Dashboard bindings that use it will no longer resolve.</span>
@@ -35,7 +35,7 @@
                 @if (References.Count == 0)
                 {
                     <div class="metric-delete-empty">
-                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" aria-hidden="true" />
                         <span>Not used by any dashboard binding.</span>
                     </div>
                 }
@@ -45,7 +45,7 @@
                         @foreach (var reference in References)
                         {
                             <div class="metric-delete-reference-row" title="@ReferenceTitle(reference)">
-                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" aria-hidden="true" />
                                 <span class="metric-delete-reference-main">
                                     <strong>@reference.WidgetName</strong>
                                     <span>@ReferenceLocationLine(reference)</span>

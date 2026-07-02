@@ -2,7 +2,7 @@
     <TitleContent>
         <div class="metric-confirm-title">
             <span class="metric-confirm-title-icon @ToneClass" aria-hidden="true">
-                <MudIcon Icon="@TitleIcon" Size="Size.Small" />
+                <MudIcon Icon="@TitleIcon" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-confirm-title-copy">
                 <strong>@Title</strong>
@@ -13,7 +13,7 @@
     </TitleContent>
     <DialogContent>
         <div class="@DialogClass" role="alert">
-            <MudIcon Icon="@BodyIcon" Size="Size.Small" />
+            <MudIcon Icon="@BodyIcon" Size="Size.Small" aria-hidden="true" />
             <div>
                 <strong>@Message</strong>
                 @if (!string.IsNullOrWhiteSpace(Detail))

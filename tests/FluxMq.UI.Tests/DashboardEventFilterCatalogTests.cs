@@ -4548,6 +4548,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("role=\"form\" aria-label=\"Create metric\"");
         markup.ShouldContain("role=\"search\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("aria-label=\"Create metric\"");
         markup.ShouldContain("Color=\"Color.Primary\"");
         markup.ShouldContain("Variant=\"Variant.Filled\"");
@@ -4610,6 +4619,15 @@ public sealed class DashboardEventFilterCatalogTests
             markup.ShouldContain($"{prefix}-title-icon");
             markup.ShouldContain($"{prefix}-title-copy");
             markup.ShouldContain("aria-label=");
+            System.Text.RegularExpressions.Regex.Matches(
+                    markup,
+                    @"<MudIcon\b(?:(?!/>).)*?/>",
+                    System.Text.RegularExpressions.RegexOptions.Singleline)
+                .Cast<System.Text.RegularExpressions.Match>()
+                .Select(static match => match.Value)
+                .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+                .ToArray()
+                .ShouldBeEmpty();
             if (prefix == "metric-confirm")
             {
                 markup.ShouldContain("class=\"metric-confirm-title-icon @ToneClass\" aria-hidden=\"true\"");
