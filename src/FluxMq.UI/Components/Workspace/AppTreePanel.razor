@@ -292,7 +292,7 @@ else
                                     <small>@TestRunMeta(latestTestRun)</small>
                                 </div>
                                 <div class="@TestRunSummaryClass(latestTestRun)"
-                                     aria-label="@TestRunStateLabel(latestTestRun)">
+                                     aria-label="@TestRunSummaryLabel(latestTestRun)">
                                     <span class="@TestRunMarkerClass(latestTestRun)">
                                         <MudIcon Icon="@TestRunIcon(latestTestRun)" Size="Size.Small" />
                                         <span>@TestRunText(latestTestRun)</span>
@@ -540,7 +540,7 @@ else
             ? "No run yet"
             : $"Latest {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}";
 
-    private static string TestRunStateLabel(ScenarioRunResult? latestRun)
+    private static string TestRunSummaryLabel(ScenarioRunResult? latestRun)
         => latestRun is null
             ? "No scenario run history"
             : $"Latest run {latestRun.Status}, {TestRunDetailText(latestRun)}";

@@ -11839,9 +11839,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-artifact-copy");
         markup.ShouldContain("TestRunMeta(latestTestRun)");
         markup.ShouldContain("TestRunSummaryClass(latestTestRun)");
+        markup.ShouldContain("aria-label=\"@TestRunSummaryLabel(latestTestRun)\"");
+        markup.ShouldContain("private static string TestRunSummaryLabel");
         markup.ShouldContain("TestRunDetailText(latestTestRun)");
         markup.ShouldContain("TestRunMarkerClass(latestTestRun)");
         markup.ShouldContain("No run yet");
+        markup.ShouldNotContain("TestRunStateLabel");
         markup.ShouldNotContain("TestRunStateClass(latestTestRun)");
         markup.ShouldNotContain("test-run-state");
         markup.ShouldContain("tree-item-actions");
