@@ -12,9 +12,9 @@
             </span>
             <span class="catalog-title-copy">
                 <span class="catalog-title-label">@CatalogTitle</span>
-                <span class="catalog-meta-strip" aria-label="Catalog state">
+                <span class="catalog-meta-strip" aria-label="Catalog mode and availability">
                     <span>@CatalogModeLabel</span>
-                    <span class="@CatalogUseStateClass">@CatalogUseStateLabel</span>
+                    <span class="@CatalogUseAvailabilityClass">@CatalogUseAvailabilityLabel</span>
                     <span>@CatalogSearchStateLabel</span>
                 </span>
             </span>
@@ -173,11 +173,11 @@
         _ => "Pipeline"
     };
 
-    private string CatalogUseStateLabel
+    private string CatalogUseAvailabilityLabel
         => CanUseItem ? "Available" : "Inactive tab";
 
-    private string CatalogUseStateClass
-        => CanUseItem ? "catalog-use-state available" : "catalog-use-state inactive";
+    private string CatalogUseAvailabilityClass
+        => CanUseItem ? "catalog-use-availability available" : "catalog-use-availability inactive";
 
     private string CatalogSearchStateLabel
         => SearchResult.HasSearch ? "Filtered" : "All";
