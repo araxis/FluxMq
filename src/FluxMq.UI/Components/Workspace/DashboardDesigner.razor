@@ -6,7 +6,7 @@
 @inject DashboardWidgetRegistry DashboardWidgets
 
 <div class="dashboard-designer" role="region" aria-label="Dashboard designer">
-    <div class="dashboard-toolbar" role="toolbar" aria-label="Dashboard toolbar">
+    <div class="dashboard-toolbar" role="toolbar" aria-label="@DashboardToolbarLabel">
         <div class="dashboard-heading">
             <span class="dashboard-heading-icon-tile" aria-hidden="true">
                 <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" aria-hidden="true" />
@@ -529,6 +529,8 @@
     private string DashboardTitle => string.IsNullOrWhiteSpace(Project.ActiveDashboardName)
         ? "Dashboards"
         : Project.ActiveDashboardName;
+
+    private string DashboardToolbarLabel => $"{DashboardTitle} dashboard toolbar";
 
     private string DashboardMeta => _layout is null
         ? Project.DashboardNames.Count == 0 ? "No dashboards yet" : DashboardCountLabel(Project.DashboardNames.Count)

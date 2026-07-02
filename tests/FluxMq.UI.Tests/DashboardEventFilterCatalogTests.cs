@@ -5504,7 +5504,9 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardDesigner.razor.css"));
 
         razor.ShouldContain("role=\"region\" aria-label=\"Dashboard designer\"");
-        razor.ShouldContain("class=\"dashboard-toolbar\" role=\"toolbar\" aria-label=\"Dashboard toolbar\"");
+        razor.ShouldContain("class=\"dashboard-toolbar\" role=\"toolbar\" aria-label=\"@DashboardToolbarLabel\"");
+        razor.ShouldContain("private string DashboardToolbarLabel => $\"{DashboardTitle} dashboard toolbar\";");
+        razor.ShouldNotContain("aria-label=\"Dashboard toolbar\"");
         razor.ShouldContain("dashboard-meta-strip");
         razor.ShouldContain("aria-label=\"@DashboardMetaSummaryLabel\"");
         razor.ShouldContain("@DashboardSummaryLabel");
