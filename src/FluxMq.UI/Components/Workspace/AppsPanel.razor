@@ -37,6 +37,7 @@
                          role="button"
                          tabindex="0"
                          aria-label="@AppTileLabel(a, isActive)"
+                         aria-current="@AppTileCurrent(isActive)"
                          title="@AppTileLabel(a, isActive)"
                          @onclick="@(() => Projects.SetActive(a))"
                          @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboard(args, a))">
@@ -97,6 +98,9 @@
 
     private static string AppTileClass(bool isActive)
         => isActive ? "app-tile active" : "app-tile";
+
+    private static string? AppTileCurrent(bool isActive)
+        => isActive ? "true" : null;
 
     private static string FileLabel(FlowWorkspaceService app)
         => string.IsNullOrWhiteSpace(app.CurrentFilePath)

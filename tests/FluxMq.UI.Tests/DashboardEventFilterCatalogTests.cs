@@ -12402,6 +12402,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("role=\"button\"");
         markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("aria-label=\"@AppTileLabel(a, isActive)\"");
+        markup.ShouldContain("aria-current=\"@AppTileCurrent(isActive)\"");
         markup.ShouldContain("title=\"@AppTileLabel(a, isActive)\"");
         markup.ShouldContain("SelectAppFromKeyboard(args, a)");
         markup.ShouldContain("private static bool IsActivationKey");
@@ -12414,6 +12415,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("app-state active");
         markup.ShouldNotContain("app-state unsaved");
         markup.ShouldContain("aria-label=\"@CloseLabel(a)\"");
+        markup.ShouldContain("private static string? AppTileCurrent");
         markup.ShouldContain("private static string BuildAppMeta");
         markup.ShouldContain("private static string FileLabel");
         markup.ShouldContain("private static string AppTileLabel");
