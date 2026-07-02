@@ -97,6 +97,7 @@ else
                                                                Icon="@Icons.Material.Filled.PlayArrow"
                                                                Color="Color.Success"
                                                                Class="tree-icon-button"
+                                                               aria-label="@($"Connect {c.ResourceName}")"
                                                                OnClick="@(() => Live.ConnectAsync(c.Id))" />
                                             </MudTooltip>
                                         }
@@ -107,6 +108,7 @@ else
                                                                Icon="@Icons.Material.Filled.Stop"
                                                                Color="Color.Error"
                                                                Class="tree-icon-button"
+                                                               aria-label="@($"Disconnect {c.ResourceName}")"
                                                                OnClick="@(() => Live.DisconnectAsync(c.Id))" />
                                             </MudTooltip>
                                         }
@@ -114,6 +116,7 @@ else
                                             <MudIconButton Size="Size.Small"
                                                            Icon="@Icons.Material.Filled.DeleteOutline"
                                                            Class="tree-icon-button"
+                                                           aria-label="@($"Remove connection {c.ResourceName}")"
                                                            OnClick="@(() => Live.RemoveConnectionAsync(c.Id))" />
                                         </MudTooltip>
                                     </div>

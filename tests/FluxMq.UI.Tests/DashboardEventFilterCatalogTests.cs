@@ -12121,6 +12121,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("tree-empty-artifact-copy");
         markup.ShouldContain("tree-empty-artifact-cues");
         markup.ShouldContain("@ConnectionDotClass(c.State)");
+        markup.ShouldContain("aria-label=\"@($\"Connect {c.ResourceName}\")\"");
+        markup.ShouldContain("aria-label=\"@($\"Disconnect {c.ResourceName}\")\"");
+        markup.ShouldContain("aria-label=\"@($\"Remove connection {c.ResourceName}\")\"");
         markup.ShouldContain("private static string ConnectionDotClass");
         markup.ShouldNotContain("StateDotClass");
         markup.ShouldContain("TreeSectionHeader(");
