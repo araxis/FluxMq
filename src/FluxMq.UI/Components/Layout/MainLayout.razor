@@ -156,22 +156,22 @@
 
     @if (HasActiveProject)
     {
-        <footer class="flux-statusbar">
-            <div class="flux-status-group">
-                <span class="@StatusDotClass"></span>
+        <footer class="flux-bottom-bar">
+            <div class="flux-bottom-group">
+                <span class="@LiveStateDotClass"></span>
                 <span>@Live.State</span>
                 @if (Live.Connections.Count > 0)
                 {
-                    <span class="flux-status-muted">@Live.Connections.Count connections</span>
+                    <span class="flux-bottom-muted">@Live.Connections.Count connections</span>
                 }
             </div>
-            <div class="flux-status-path">
+            <div class="flux-bottom-path">
                 @if (Projects.ActiveProject is { } active)
                 {
                     @(string.IsNullOrEmpty(active.CurrentFilePath) ? "Untitled project" : active.CurrentFilePath)
                 }
             </div>
-            <div class="flux-status-group right">
+            <div class="flux-bottom-group right">
                 <span>@Live.RecentMessages.Count messages</span>
             </div>
         </footer>
@@ -345,12 +345,12 @@
     private bool CanRunActiveProject => !_busy && Projects.ActiveProject is not null && !ActiveProjectIsRunning;
     private bool CanStopActiveProject => !_busy && ActiveProjectIsRunning;
 
-    private string StatusDotClass => Live.State switch
+    private string LiveStateDotClass => Live.State switch
     {
-        MqttClientState.Connected => "flux-status-dot live",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-status-dot pending",
-        MqttClientState.Faulted => "flux-status-dot faulted",
-        _ => "flux-status-dot"
+        MqttClientState.Connected => "flux-live-dot live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-live-dot pending",
+        MqttClientState.Faulted => "flux-live-dot faulted",
+        _ => "flux-live-dot"
     };
 
     private Task NewProject() => RunBusyAsync(async () =>

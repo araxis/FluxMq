@@ -2724,6 +2724,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("no-active-project");
         markup.ShouldContain("Hide MQTT publisher");
         markup.ShouldContain("Show MQTT publisher");
+        markup.ShouldContain("flux-bottom-bar");
+        markup.ShouldContain("LiveStateDotClass");
+        markup.ShouldNotContain("flux-statusbar");
+        markup.ShouldNotContain("StatusDotClass");
         markup.ShouldNotContain("brokersReady");
         markup.ShouldNotContain("Workspace navigation");
         markup.ShouldNotContain("No active project");
@@ -2734,10 +2738,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("<SessionPanel />");
 
         css.ShouldContain("--flux-right-width: 360px;");
+        css.ShouldContain("--flux-bottom-height: 28px;");
         css.ShouldContain("\"top top\"");
         css.ShouldContain("\"main right\"");
-        css.ShouldContain("\"status status\"");
+        css.ShouldContain("\"bottom bottom\"");
         css.ShouldContain(".flux-breadcrumb");
+        css.ShouldContain(".flux-bottom-bar");
+        css.ShouldContain(".flux-live-dot");
         css.ShouldContain("font-size: 12.5px;");
         css.ShouldContain("font-weight: 650;");
         css.ShouldContain(".flux-shell.right-collapsed");
@@ -2746,6 +2753,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-rows: minmax(0, 1fr);");
         css.ShouldContain("\"main\"");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) var(--flux-right-width);");
+        css.ShouldNotContain("--flux-status-height");
+        css.ShouldNotContain("\"status status\"");
+        css.ShouldNotContain(".flux-statusbar");
+        css.ShouldNotContain(".flux-status-dot");
         css.ShouldNotContain("--flux-rail-width");
         css.ShouldNotContain("--flux-left-width");
         css.ShouldNotContain(".flux-rail");
