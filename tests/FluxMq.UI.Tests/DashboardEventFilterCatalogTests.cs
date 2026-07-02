@@ -3050,6 +3050,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SelectedHistoryReceivedLabel");
         markup.ShouldContain("role=\"tablist\" aria-label=\"Latest payload views\"");
         markup.ShouldContain("role=\"tablist\" aria-label=\"Selected payload views\"");
+        markup.ShouldContain("id=\"@LatestPayloadViewTabId(view)\"");
+        markup.ShouldContain("aria-controls=\"@LatestPayloadPanelId\"");
+        markup.ShouldContain("id=\"@LatestPayloadPanelId\"");
+        markup.ShouldContain("aria-labelledby=\"@LatestPayloadViewTabId(_lastPayloadView)\"");
+        markup.ShouldContain("id=\"@SelectedPayloadViewTabId(view)\"");
+        markup.ShouldContain("aria-controls=\"@SelectedPayloadPanelId\"");
+        markup.ShouldContain("id=\"@SelectedPayloadPanelId\"");
+        markup.ShouldContain("aria-labelledby=\"@SelectedPayloadViewTabId(_selectedHistoryPayloadView)\"");
+        markup.ShouldContain("private static string LatestPayloadViewTabId");
+        markup.ShouldContain("private static string SelectedPayloadViewTabId");
         markup.ShouldContain("PayloadViewOptions");
         markup.ShouldContain("SelectedPayloadViewOptions");
         markup.ShouldContain("@foreach (var view in PayloadViewOptions)");

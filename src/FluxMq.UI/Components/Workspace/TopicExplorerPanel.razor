@@ -183,8 +183,10 @@
                                 @foreach (var view in PayloadViewOptions)
                                 {
                                     <button type="button"
+                                            id="@LatestPayloadViewTabId(view)"
                                             role="tab"
                                             aria-selected="@IsPayloadViewActive(_lastPayloadView, view)"
+                                            aria-controls="@LatestPayloadPanelId"
                                             class="@PayloadViewButtonClass(_lastPayloadView, view)"
                                             title="@PayloadViewLabel(view)"
                                             @onclick="@(() => _lastPayloadView = view)">
@@ -202,7 +204,10 @@
                                 </MudTooltip>
                             </div>
                         </div>
-                        <pre>@LastPayloadPreview</pre>
+                        <pre id="@LatestPayloadPanelId"
+                             role="tabpanel"
+                             aria-labelledby="@LatestPayloadViewTabId(_lastPayloadView)"
+                             tabindex="0">@LastPayloadPreview</pre>
                     </div>
 
                     <div class="topic-last-meta" aria-label="Latest message metadata">
@@ -580,8 +585,10 @@
                                         @foreach (var view in SelectedPayloadViewOptions)
                                         {
                                             <button type="button"
+                                                    id="@SelectedPayloadViewTabId(view)"
                                                     role="tab"
                                                     aria-selected="@IsPayloadViewActive(_selectedHistoryPayloadView, view)"
+                                                    aria-controls="@SelectedPayloadPanelId"
                                                     class="@PayloadViewButtonClass(_selectedHistoryPayloadView, view)"
                                                     title="@PayloadViewLabel(view)"
                                                     @onclick="@(() => _selectedHistoryPayloadView = view)">
@@ -599,7 +606,10 @@
                                         </MudTooltip>
                                     </div>
                                 </div>
-                                <pre>@SelectedHistoryPayloadPreview</pre>
+                                <pre id="@SelectedPayloadPanelId"
+                                     role="tabpanel"
+                                     aria-labelledby="@SelectedPayloadViewTabId(_selectedHistoryPayloadView)"
+                                     tabindex="0">@SelectedHistoryPayloadPreview</pre>
                             </div>
                         </div>
                     }
@@ -615,6 +625,8 @@
     private const string PayloadHexView = "hex";
     private const string PayloadMetaView = "meta";
     private const string PayloadDiffView = "diff";
+    private const string LatestPayloadPanelId = "topic-latest-payload-panel";
+    private const string SelectedPayloadPanelId = "topic-selected-payload-panel";
     private const int PayloadDiffContextLineCount = 2;
     private const int PayloadDiffMaxChangedLines = 80;
     private const int MaxRecentPublishes = 6;
@@ -1792,6 +1804,12 @@
         => IsPayloadViewActive(currentView, view)
             ? "topic-payload-view-button active"
             : "topic-payload-view-button";
+
+    private static string LatestPayloadViewTabId(string view)
+        => $"topic-latest-payload-{view}-tab";
+
+    private static string SelectedPayloadViewTabId(string view)
+        => $"topic-selected-payload-{view}-tab";
 
     private static string PayloadViewLabel(string view)
         => view switch
