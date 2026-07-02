@@ -31,12 +31,12 @@
                 </div>
             </div>
         </div>
-        <div class="flow-canvas-actions" aria-label="Pipeline canvas state and commands">
+        <div class="flow-canvas-actions" aria-label="Pipeline canvas runtime and commands">
             @if (ShowRuntimeState)
             {
-                <span class="flow-state @RuntimeStateClass">
-                    <span class="flow-state-dot" aria-hidden="true"></span>
-                    @RuntimeStateLabel
+                <span class="flow-runtime-marker @RuntimeMarkerClass">
+                    <span class="flow-runtime-marker-dot" aria-hidden="true"></span>
+                    @RuntimeMarkerLabel
                 </span>
             }
             <div class="flow-canvas-metrics" aria-label="Pipeline canvas metrics">
@@ -269,7 +269,7 @@
 
     private bool ShowRuntimeState => Flow.State != RuntimeWorkspaceState.Faulted || ErrorCount == 0;
 
-    private string RuntimeStateLabel => Flow.State switch
+    private string RuntimeMarkerLabel => Flow.State switch
     {
         RuntimeWorkspaceState.Valid => "Valid",
         RuntimeWorkspaceState.Running => "Running",
@@ -278,7 +278,7 @@
         _ => "Idle"
     };
 
-    private string RuntimeStateClass => Flow.State switch
+    private string RuntimeMarkerClass => Flow.State switch
     {
         RuntimeWorkspaceState.Valid => "valid",
         RuntimeWorkspaceState.Running => "running",

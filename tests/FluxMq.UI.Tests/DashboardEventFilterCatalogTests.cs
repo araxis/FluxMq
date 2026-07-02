@@ -6241,9 +6241,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Pipeline loaded");
         markup.ShouldContain("@WorkflowModeLabel");
         markup.ShouldContain("@WorkflowSelectionLabel");
+        markup.ShouldContain("aria-label=\"Pipeline canvas runtime and commands\"");
+        markup.ShouldContain("flow-runtime-marker @RuntimeMarkerClass");
+        markup.ShouldContain("flow-runtime-marker-dot");
+        markup.ShouldContain("@RuntimeMarkerLabel");
         markup.ShouldContain("flow-canvas-metrics");
         markup.ShouldContain("flow-canvas-stat");
-        markup.ShouldContain("aria-label=\"Pipeline canvas state and commands\"");
         markup.ShouldContain("flow-canvas-command-group");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("@EmptyCanvasHint");
@@ -6260,7 +6263,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("ViewStrokeColor=\"#FBBF24\"");
         markup.ShouldNotContain("flow-link-condition-meta");
         markup.ShouldNotContain("Icons.Material.Filled.Link");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas state and commands\"");
         markup.ShouldNotContain("aria-label=\"Pipeline canvas status and commands\"");
+        markup.ShouldNotContain("flow-state");
+        markup.ShouldNotContain("flow-state-dot");
+        markup.ShouldNotContain("RuntimeStateLabel");
+        markup.ShouldNotContain("RuntimeStateClass");
         markup.ShouldNotContain(">Ready<");
         markup.IndexOf("class=\"flow-canvas-header\"", StringComparison.Ordinal)
             .ShouldBeLessThan(markup.IndexOf("class=\"flow-canvas\" role=\"group\"", StringComparison.Ordinal));
@@ -6274,6 +6282,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("height: auto;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain(".flow-canvas-title-copy");
+        css.ShouldContain(".flow-runtime-marker");
+        css.ShouldContain(".flow-runtime-marker.valid");
+        css.ShouldContain(".flow-runtime-marker-dot");
         css.ShouldContain(".flow-canvas-metrics");
         css.ShouldContain(".flow-canvas-stat");
         css.ShouldContain(".flow-canvas-stat:not(:last-child)::after");
@@ -6298,6 +6309,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("#A78BFA");
         css.ShouldNotContain("#DDD6FE");
         css.ShouldNotContain(".flow-link-condition-meta");
+        css.ShouldNotContain(".flow-state");
+        css.ShouldNotContain(".flow-state-dot");
         css.ShouldNotContain("flex-wrap: nowrap;");
         css.ShouldContain("max-width: min(100%, 340px);");
         css.ShouldContain("grid-row: auto;");
