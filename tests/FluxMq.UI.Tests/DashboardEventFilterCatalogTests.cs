@@ -11579,6 +11579,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".node-edit-dialog-content.json-schema-validator-dialog ::deep(.json-schema-validator-schema-area)");
         css.ShouldContain(".node-edit-dialog-content.json-schema-validator-dialog ::deep(.json-schema-validator-inline-source .schema-monaco-editor .overflow-guard)");
         css.ShouldNotContain(".node-edit-dialog-editor ::deep(.dynamic-mapper-workbench .dynamic-mapper-panel)");
+        css.ShouldNotContain(".node-edit-dialog-editor ::deep(.mud-chip)");
         css.ShouldNotContain("height: 96px;");
         css.ShouldNotContain("height: 280px;");
         css.ShouldNotContain("height: 570px;");
