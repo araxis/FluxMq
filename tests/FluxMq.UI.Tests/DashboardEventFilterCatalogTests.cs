@@ -6765,6 +6765,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-disabled=\"@CatalogItemDisabled\"");
         markup.ShouldContain("aria-grabbed=\"@CatalogItemGrabbed(item)\"");
         markup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
+        markup.ShouldContain("args.Key is \"Enter\" or \" \" or \"Spacebar\"");
         markup.ShouldContain("private string CatalogItemDisabled");
         markup.ShouldContain("ShouldShowStepMetadata(item)");
         markup.ShouldContain("catalog-step-meta");

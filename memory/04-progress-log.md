@@ -5072,3 +5072,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only publish retain label scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace controls for concise accessible names and stale selectors without broadening runtime or schema scope.
+- Component Catalog keyboard accessibility result:
+  - Expanded catalog item keyboard activation to accept the legacy `Spacebar` key value in addition to `Enter` and the literal space key, matching the advertised `aria-keyshortcuts="Enter Space"` and the custom role-button behavior used elsewhere.
+  - Preserved catalog item click/drag behavior, dashboard/test/pipeline add behavior, availability gating, labels, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Component Catalog guard to require the complete activation-key expression.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ComponentCatalogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - The first focused build attempt timed out under local process contention; the longer serial rerun passed cleanly.
+  - Source-only Component Catalog keyboard scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
