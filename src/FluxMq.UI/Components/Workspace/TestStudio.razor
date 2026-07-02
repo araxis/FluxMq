@@ -23,8 +23,9 @@
                     role="tab"
                     aria-selected="@(_mode == TestStudioMode.Designer)"
                     aria-controls="@DesignerPanelId"
-                    aria-keyshortcuts="Enter Space"
+                    aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                     aria-label="@ModeButtonLabel(TestStudioMode.Designer)"
+                    @onkeydown="@OnDesignerTabKeyDown"
                     @onclick="@(() => SetMode(TestStudioMode.Designer))">
                 <MudIcon Icon="@Icons.Material.Filled.EditNote" Size="Size.Small" aria-hidden="true" />
                 <span>Design</span>
@@ -35,8 +36,9 @@
                     role="tab"
                     aria-selected="@(_mode == TestStudioMode.Runner)"
                     aria-controls="@RunnerPanelId"
-                    aria-keyshortcuts="Enter Space"
+                    aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                     aria-label="@ModeButtonLabel(TestStudioMode.Runner)"
+                    @onkeydown="@OnRunnerTabKeyDown"
                     @onclick="@(() => SetMode(TestStudioMode.Runner))">
                 <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" aria-hidden="true" />
                 <span>Run</span>
@@ -110,6 +112,31 @@
 
     private void SetMode(TestStudioMode mode)
         => _mode = mode;
+
+    private void OnDesignerTabKeyDown(KeyboardEventArgs args)
+        => SelectModeFromKeyboard(args, TestStudioMode.Designer);
+
+    private void OnRunnerTabKeyDown(KeyboardEventArgs args)
+        => SelectModeFromKeyboard(args, TestStudioMode.Runner);
+
+    private void SelectModeFromKeyboard(KeyboardEventArgs args, TestStudioMode currentMode)
+    {
+        _mode = args.Key switch
+        {
+            "ArrowLeft" => PreviousMode(currentMode),
+            "ArrowRight" => NextMode(currentMode),
+            "Home" => TestStudioMode.Designer,
+            "End" => TestStudioMode.Runner,
+            "Enter" or " " or "Spacebar" => currentMode,
+            _ => _mode
+        };
+    }
+
+    private static TestStudioMode PreviousMode(TestStudioMode mode)
+        => mode == TestStudioMode.Designer ? TestStudioMode.Runner : TestStudioMode.Designer;
+
+    private static TestStudioMode NextMode(TestStudioMode mode)
+        => mode == TestStudioMode.Runner ? TestStudioMode.Designer : TestStudioMode.Runner;
 
     private string ModeButtonClass(TestStudioMode mode)
         => _mode == mode ? "test-studio-mode-button active" : "test-studio-mode-button";

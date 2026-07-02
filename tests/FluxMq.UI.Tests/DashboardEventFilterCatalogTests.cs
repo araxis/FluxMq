@@ -3181,7 +3181,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SelectedHistoryReceivedLabel");
         markup.ShouldContain("role=\"tablist\" aria-label=\"Latest payload views\"");
         markup.ShouldContain("role=\"tablist\" aria-label=\"Selected payload views\"");
-        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(2);
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space ArrowLeft ArrowRight Home End\"").Count.ShouldBe(2);
         markup.ShouldContain("id=\"@LatestPayloadViewTabId(view)\"");
         markup.ShouldContain("aria-controls=\"@LatestPayloadPanelId\"");
         markup.ShouldContain("id=\"@LatestPayloadPanelId\"");
@@ -3190,6 +3190,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-controls=\"@SelectedPayloadPanelId\"");
         markup.ShouldContain("id=\"@SelectedPayloadPanelId\"");
         markup.ShouldContain("aria-labelledby=\"@SelectedPayloadViewTabId(_selectedHistoryPayloadView)\"");
+        markup.ShouldContain("@onkeydown=\"@((KeyboardEventArgs args) => OnLatestPayloadViewTabKeyDown(args, view))\"");
+        markup.ShouldContain("@onkeydown=\"@((KeyboardEventArgs args) => OnSelectedPayloadViewTabKeyDown(args, view))\"");
         markup.ShouldContain("private static string LatestPayloadViewTabId");
         markup.ShouldContain("private static string SelectedPayloadViewTabId");
         markup.ShouldContain("PayloadViewOptions");
@@ -3206,6 +3208,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("PayloadViewButtonClass");
         markup.ShouldContain("PayloadViewLabel(view)");
         markup.ShouldContain("PayloadViewIcon(view)");
+        markup.ShouldContain("OnLatestPayloadViewTabKeyDown");
+        markup.ShouldContain("OnSelectedPayloadViewTabKeyDown");
+        markup.ShouldContain("ResolvePayloadView");
         markup.ShouldContain("DisplayPayloadView(LastInspection, _lastPayloadView)");
         markup.ShouldContain("DisplaySelectedPayloadView");
         markup.ShouldContain("DisplaySelectedPayloadDiff");
@@ -3700,11 +3705,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("role=\"tablist\"");
         markup.ShouldContain("id=\"@DesignerTabId\"");
         markup.ShouldContain("aria-controls=\"@DesignerPanelId\"");
-        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(2);
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space ArrowLeft ArrowRight Home End\"").Count.ShouldBe(2);
+        markup.ShouldContain("@onkeydown=\"@OnDesignerTabKeyDown\"");
         markup.ShouldContain("ModeButtonClass(TestStudioMode.Designer)");
         markup.ShouldContain("id=\"@RunnerTabId\"");
         markup.ShouldContain("aria-controls=\"@RunnerPanelId\"");
+        markup.ShouldContain("@onkeydown=\"@OnRunnerTabKeyDown\"");
         markup.ShouldContain("ModeButtonClass(TestStudioMode.Runner)");
+        markup.ShouldContain("SelectModeFromKeyboard");
+        markup.ShouldContain("PreviousMode");
+        markup.ShouldContain("NextMode");
         markup.ShouldContain("role=\"tabpanel\"");
         markup.ShouldContain("aria-labelledby=\"@DesignerTabId\"");
         markup.ShouldContain("aria-labelledby=\"@RunnerTabId\"");
@@ -5017,9 +5027,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"Size.Small\" />");
         markup.ShouldContain("id=\"@PayloadViewTabId(FormattedView)\"");
         markup.ShouldContain("role=\"tab\"");
-        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(4);
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space ArrowLeft ArrowRight Home End\"").Count.ShouldBe(4);
         markup.ShouldContain("aria-selected=\"@IsActiveView(FormattedView)\"");
         markup.ShouldContain("aria-controls=\"@PayloadViewPanelId\"");
+        markup.ShouldContain("@onkeydown=\"@OnFormattedViewTabKeyDown\"");
+        markup.ShouldContain("@onkeydown=\"@OnRawViewTabKeyDown\"");
+        markup.ShouldContain("@onkeydown=\"@OnHexViewTabKeyDown\"");
+        markup.ShouldContain("@onkeydown=\"@OnMetaViewTabKeyDown\"");
+        markup.ShouldContain("PayloadViewOrder");
+        markup.ShouldContain("SelectPayloadViewFromKeyboard");
+        markup.ShouldContain("ResolvePayloadView");
         markup.ShouldContain("role=\"tabpanel\"");
         markup.ShouldContain("aria-labelledby=\"@PayloadViewTabId(_activeView)\"");
         markup.ShouldContain("tabindex=\"0\"");
@@ -13564,6 +13581,51 @@ public sealed class DashboardEventFilterCatalogTests
 
                 var line = markup.Take(match.Index).Count(static value => value == '\n') + 1;
                 violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceTabs_ExposeKeyboardNavigation()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var lines = File.ReadAllLines(file);
+            for (var index = 0; index < lines.Length; index++)
+            {
+                if (!lines[index].Contains("role=\"tab\"", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var start = index;
+                while (start > 0 && !lines[start].TrimStart().StartsWith("<", StringComparison.Ordinal))
+                {
+                    start--;
+                }
+
+                var end = index;
+                while (end < lines.Length - 1 && !lines[end].TrimEnd().EndsWith(">", StringComparison.Ordinal))
+                {
+                    end++;
+                }
+
+                var tag = string.Join('\n', lines[start..(end + 1)]);
+                if (tag.Contains("aria-controls=", StringComparison.Ordinal) &&
+                    tag.Contains("aria-selected=", StringComparison.Ordinal) &&
+                    tag.Contains("aria-keyshortcuts=\"Enter Space ArrowLeft ArrowRight Home End\"", StringComparison.Ordinal) &&
+                    tag.Contains("@onkeydown=", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                violations.Add($"{Path.GetRelativePath(root, file)}:{start + 1}: {tag.ReplaceLineEndings(" ").Trim()}");
             }
         }
 

@@ -188,9 +188,10 @@
                                             role="tab"
                                             aria-selected="@IsPayloadViewActive(_lastPayloadView, view)"
                                             aria-controls="@LatestPayloadPanelId"
-                                            aria-keyshortcuts="Enter Space"
+                                            aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                                             class="@PayloadViewButtonClass(_lastPayloadView, view)"
                                             title="@PayloadViewLabel(view)"
+                                            @onkeydown="@((KeyboardEventArgs args) => OnLatestPayloadViewTabKeyDown(args, view))"
                                             @onclick="@(() => _lastPayloadView = view)">
                                         <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" aria-hidden="true" />
                                         <span>@PayloadViewLabel(view)</span>
@@ -592,9 +593,10 @@
                                                     role="tab"
                                                     aria-selected="@IsPayloadViewActive(_selectedHistoryPayloadView, view)"
                                                     aria-controls="@SelectedPayloadPanelId"
-                                                    aria-keyshortcuts="Enter Space"
+                                                    aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                                                     class="@PayloadViewButtonClass(_selectedHistoryPayloadView, view)"
                                                     title="@PayloadViewLabel(view)"
+                                                    @onkeydown="@((KeyboardEventArgs args) => OnSelectedPayloadViewTabKeyDown(args, view))"
                                                     @onclick="@(() => _selectedHistoryPayloadView = view)">
                                                 <MudIcon Icon="@PayloadViewIcon(view)" Size="Size.Small" aria-hidden="true" />
                                                 <span>@PayloadViewLabel(view)</span>
@@ -1834,6 +1836,41 @@
             PayloadDiffView => Icons.Material.Filled.CompareArrows,
             _ => Icons.Material.Filled.DataObject
         };
+
+    private void OnLatestPayloadViewTabKeyDown(KeyboardEventArgs args, string currentView)
+    {
+        if (ResolvePayloadView(PayloadViewOptions, currentView, args.Key) is { } view)
+        {
+            _lastPayloadView = view;
+        }
+    }
+
+    private void OnSelectedPayloadViewTabKeyDown(KeyboardEventArgs args, string currentView)
+    {
+        if (ResolvePayloadView(SelectedPayloadViewOptions, currentView, args.Key) is { } view)
+        {
+            _selectedHistoryPayloadView = view;
+        }
+    }
+
+    private static string? ResolvePayloadView(string[] views, string currentView, string key)
+    {
+        var index = Array.IndexOf(views, currentView);
+        if (index < 0)
+        {
+            index = 0;
+        }
+
+        return key switch
+        {
+            "ArrowLeft" => views[(index + views.Length - 1) % views.Length],
+            "ArrowRight" => views[(index + 1) % views.Length],
+            "Home" => views[0],
+            "End" => views[^1],
+            "Enter" or " " or "Spacebar" => currentView,
+            _ => null
+        };
+    }
 
     private bool IsInSelectedTopic(string topic) =>
         string.IsNullOrWhiteSpace(_selectedTopic) ||

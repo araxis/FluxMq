@@ -27,9 +27,10 @@
                 role="tab"
                 aria-selected="@IsActiveView(FormattedView)"
                 aria-controls="@PayloadViewPanelId"
-                aria-keyshortcuts="Enter Space"
+                aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                 class="@ViewButtonClass(FormattedView)"
                 title="Formatted"
+                @onkeydown="@OnFormattedViewTabKeyDown"
                 @onclick="@(() => _activeView = FormattedView)">
             <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Small" aria-hidden="true" />
             <span>Formatted</span>
@@ -39,9 +40,10 @@
                 role="tab"
                 aria-selected="@IsActiveView(RawView)"
                 aria-controls="@PayloadViewPanelId"
-                aria-keyshortcuts="Enter Space"
+                aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                 class="@ViewButtonClass(RawView)"
                 title="Raw"
+                @onkeydown="@OnRawViewTabKeyDown"
                 @onclick="@(() => _activeView = RawView)">
             <MudIcon Icon="@Icons.Material.Filled.Subject" Size="Size.Small" aria-hidden="true" />
             <span>Raw</span>
@@ -51,9 +53,10 @@
                 role="tab"
                 aria-selected="@IsActiveView(HexView)"
                 aria-controls="@PayloadViewPanelId"
-                aria-keyshortcuts="Enter Space"
+                aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                 class="@ViewButtonClass(HexView)"
                 title="Hex"
+                @onkeydown="@OnHexViewTabKeyDown"
                 @onclick="@(() => _activeView = HexView)">
             <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" aria-hidden="true" />
             <span>Hex</span>
@@ -63,9 +66,10 @@
                 role="tab"
                 aria-selected="@IsActiveView(MetaView)"
                 aria-controls="@PayloadViewPanelId"
-                aria-keyshortcuts="Enter Space"
+                aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                 class="@ViewButtonClass(MetaView)"
                 title="Metadata"
+                @onkeydown="@OnMetaViewTabKeyDown"
                 @onclick="@(() => _activeView = MetaView)">
             <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" aria-hidden="true" />
             <span>Meta</span>
@@ -124,6 +128,7 @@
     private const string RawView = "raw";
     private const string HexView = "hex";
     private const string MetaView = "meta";
+    private static readonly string[] PayloadViewOrder = [FormattedView, RawView, HexView, MetaView];
 
     private readonly string _payloadViewIdPrefix = $"payload-inspector-{Guid.NewGuid():N}";
 
@@ -178,4 +183,43 @@
     private string ViewButtonClass(string view) => IsActiveView(view)
         ? "payload-view-button active"
         : "payload-view-button";
+
+    private void OnFormattedViewTabKeyDown(KeyboardEventArgs args)
+        => SelectPayloadViewFromKeyboard(args, FormattedView);
+
+    private void OnRawViewTabKeyDown(KeyboardEventArgs args)
+        => SelectPayloadViewFromKeyboard(args, RawView);
+
+    private void OnHexViewTabKeyDown(KeyboardEventArgs args)
+        => SelectPayloadViewFromKeyboard(args, HexView);
+
+    private void OnMetaViewTabKeyDown(KeyboardEventArgs args)
+        => SelectPayloadViewFromKeyboard(args, MetaView);
+
+    private void SelectPayloadViewFromKeyboard(KeyboardEventArgs args, string currentView)
+    {
+        if (ResolvePayloadView(PayloadViewOrder, currentView, args.Key) is { } view)
+        {
+            _activeView = view;
+        }
+    }
+
+    private static string? ResolvePayloadView(string[] views, string currentView, string key)
+    {
+        var index = Array.IndexOf(views, currentView);
+        if (index < 0)
+        {
+            index = 0;
+        }
+
+        return key switch
+        {
+            "ArrowLeft" => views[(index + views.Length - 1) % views.Length],
+            "ArrowRight" => views[(index + 1) % views.Length],
+            "Home" => views[0],
+            "End" => views[^1],
+            "Enter" or " " or "Spacebar" => currentView,
+            _ => null
+        };
+    }
 }

@@ -5397,3 +5397,15 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only treeitem navigation scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Workspace tab keyboard navigation result:
+  - Added ArrowLeft, ArrowRight, Home, and End keyboard handling to custom tab controls in `PayloadInspectorPanel`, `TopicExplorerPanel`, and `TestStudio`.
+  - Updated the advertised tab keyboard shortcuts to match the implemented Enter, Space, ArrowLeft, ArrowRight, Home, and End behavior.
+  - Preserved native button activation, payload view switching, selected-history diff view behavior, Test Studio mode switching, tab/panel ownership, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Payload Inspector, Topic Explorer, and Test Studio guards to require the tab key handlers.
+  - Added a source-wide UI guard that scans custom `role="tab"` controls for selected state, controlled panels, complete keyboard shortcut hints, and key handling.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome|FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome|FullyQualifiedName~PayloadInspectorPanel_UsesFlatCompactInspectorChrome|FullyQualifiedName~WorkspaceTabs_ExposeKeyboardNavigation" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Neutral added-text scan and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, and remaining visible noise without broadening runtime or schema scope.
