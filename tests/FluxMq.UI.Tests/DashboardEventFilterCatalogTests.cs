@@ -5805,6 +5805,8 @@ public sealed class DashboardEventFilterCatalogTests
         designer.ShouldContain("var currentWidgetLabel = WidgetLabel(currentCell.Widget);");
         designer.ShouldContain("title=\"@($\"Drag {currentWidgetLabel} to move; use toolbar to edit\")\"");
         designer.ShouldContain("DropTargetHint(MoveTargetCellName, $\"Move {WidgetLabel(_movingWidgetName)}\")");
+        designer.ShouldContain("DropTargetHint(_hoveredDropCellName, $\"Place {DashboardComponentDragLabel}\")");
+        designer.ShouldContain("private string DashboardComponentDragLabel");
         designer.ShouldContain("class=\"dashboard-cell-widget-action edit\"");
         designer.ShouldContain("title=\"@($\"Edit {currentWidgetLabel} settings\")\"");
         designer.ShouldContain("aria-label=\"@($\"Edit {currentWidgetLabel} settings\")\"");
@@ -5814,6 +5816,7 @@ public sealed class DashboardEventFilterCatalogTests
         designer.ShouldContain("aria-label=\"@($\"Delete {currentWidgetLabel}\")\"");
         designer.ShouldNotContain("Drag to move widget; use toolbar to edit");
         designer.ShouldNotContain("DropTargetHint(MoveTargetCellName, \"Move widget\")");
+        designer.ShouldNotContain("DropTargetHint(_hoveredDropCellName, \"Place widget\")");
         designer.ShouldNotContain("title=\"Edit widget settings\"");
         designer.ShouldNotContain("title=\"Simulate widget data\"");
         designer.ShouldNotContain("aria-label=\"Simulate widget data\"");

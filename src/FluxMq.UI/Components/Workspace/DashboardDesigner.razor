@@ -1167,7 +1167,13 @@
     private string DashboardDragHintText
         => IsDashboardMoveDrag
             ? DropTargetHint(MoveTargetCellName, $"Move {WidgetLabel(_movingWidgetName)}")
-            : DropTargetHint(_hoveredDropCellName, "Place widget");
+            : DropTargetHint(_hoveredDropCellName, $"Place {DashboardComponentDragLabel}");
+
+    private string DashboardComponentDragLabel
+        => DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Dashboard } activeDrag &&
+           !string.IsNullOrWhiteSpace(activeDrag.DisplayName)
+            ? activeDrag.DisplayName
+            : "widget";
 
     private string? MoveTargetCellName
         => string.Equals(_hoveredWidgetMoveCellName, _movingWidgetSourceCellName, StringComparison.Ordinal)

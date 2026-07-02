@@ -5463,3 +5463,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale drag-copy scans, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard widget placement-hint specificity result:
+  - Replaced the dashboard add-drag overlay fallback from generic `Place widget` to `Place {dragged widget}` using the active catalog drag display name.
+  - Preserved the existing target-cell suffix, catalog drag metadata, widget placement/drop behavior, cell selection, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard catalog handoff guard to require the display-name-backed placement hint and reject the old generic fallback.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardCatalogHandoff_UsesDirectWidgetEditAndPlacementCues" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale placement-copy scans, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
