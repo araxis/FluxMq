@@ -3828,6 +3828,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-scenario-heading-icon");
         markup.ShouldContain("test-scenario-title-copy");
         markup.ShouldContain("test-scenario-meta-strip");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("@NoTestEmptyTitle");
         markup.ShouldContain("@NoTestSelectionHint");
         markup.ShouldContain("test-scenario-empty-cues");
@@ -3879,6 +3884,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-step-meta");
         markup.ShouldContain("StepCardClass(step, stepResult)");
         markup.ShouldContain("StepCardLabel(step, stepResult)");
+        markup.ShouldContain("aria-label=\"Show latest run\"");
+        markup.ShouldContain("aria-label=\"Move step earlier\"");
+        markup.ShouldContain("aria-label=\"Move step later\"");
+        markup.ShouldContain("aria-label=\"Edit step\"");
+        markup.ShouldContain("aria-label=\"Delete step\"");
         markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("StepStatusIcon(stepResult)");
         markup.ShouldContain("StepResultMarkerClass(stepResult.Status)");

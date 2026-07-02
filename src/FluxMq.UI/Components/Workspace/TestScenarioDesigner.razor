@@ -19,7 +19,7 @@
         <div class="test-scenario-empty" aria-label="Test scenario setup state">
             <div class="test-scenario-empty-panel">
                 <span class="test-scenario-empty-icon" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <div class="test-scenario-empty-copy">
                     <span>@NoTestEmptyTitle</span>
@@ -27,7 +27,7 @@
                 </div>
                 <div class="test-scenario-empty-cues" aria-label="Scenario designer setup">
                     <span>
-                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                         @NoTestSelectionHint
                     </span>
                 </div>
@@ -44,7 +44,7 @@
         <div class="test-scenario-header">
             <div class="test-scenario-heading">
                 <span class="test-scenario-heading-icon" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <div class="test-scenario-title-copy">
                     <div class="test-scenario-title">@Scenario.Name</div>
@@ -63,7 +63,7 @@
                     <MudTooltip Text="@ActiveRunTooltip">
                         <div class="@RunContextClass(result)" aria-label="@RunContextAriaLabel(result)">
                             <span class="test-run-context-marker">
-                                <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
+                                <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" aria-hidden="true" />
                                 <strong>@result.Status</strong>
                             </span>
                             <span class="test-run-context-meta">@ActiveRunMarkerText</span>
@@ -71,9 +71,10 @@
                             {
                                 <button type="button"
                                         class="test-run-context-reset"
+                                        aria-label="Show latest run"
                                         title="Show latest run"
                                         @onclick="@ShowLatestRun">
-                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" aria-hidden="true" />
                                 </button>
                             }
                         </div>
@@ -119,7 +120,7 @@
                                 @if (RecentRuns.Count == 0)
                                 {
                                     <div class="test-run-history-empty" role="status">
-                                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" aria-hidden="true" />
                                         <span>
                                             <strong>No run history</strong>
                                             <small>Run this scenario once to compare future edits.</small>
@@ -134,7 +135,7 @@
                                                      OnClick="@ShowLatestRun"
                                                      aria-label="Show latest scenario run">
                                             <div class="test-run-history-reset-row">
-                                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" aria-hidden="true" />
                                                 <span>
                                                     <strong>Show latest run</strong>
                                                     <small>Return to the current result</small>
@@ -150,7 +151,7 @@
                                                      aria-label="@RunHistoryAriaLabel(historyRun)"
                                                      @key="historyRun">
                                             <div class="test-run-history-row">
-                                                <MudIcon Icon="@RunHistoryIcon(historyRun)" Size="Size.Small" />
+                                                <MudIcon Icon="@RunHistoryIcon(historyRun)" Size="Size.Small" aria-hidden="true" />
                                                 <div class="test-run-history-main">
                                                     <span class="test-run-history-primary">
                                                         <strong>@RunHistoryPrefix(historyRun)</strong>
@@ -206,17 +207,17 @@
         <div class="test-scenario-workspace">
             <div class="test-scenario-builder-strip" aria-label="Scenario build summary">
                 <div class="@BuilderMetricClass(Scenario.StepCount > 0)">
-                    <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" aria-hidden="true" />
                     <span>Steps</span>
                     <strong>@StepCountText</strong>
                 </div>
                 <div class="@BuilderMetricClass(Scenario.Phases.Any(phase => phase.Steps.Count > 0))">
-                    <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" aria-hidden="true" />
                     <span>Active phases</span>
                     <strong>@ActivePhaseCountText</strong>
                 </div>
                 <div class="@BuilderMetricClass(!Project.IsScenarioRunning)">
-                    <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" aria-hidden="true" />
                     <span>Runner</span>
                     <strong>@RunnerSummaryText</strong>
                 </div>
@@ -227,7 +228,7 @@
                 <div class="test-scenario-empty" aria-label="Empty scenario">
                     <div class="test-scenario-empty-panel compact">
                         <span class="test-scenario-empty-icon timeline" aria-hidden="true">
-                            <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <div class="test-scenario-empty-copy">
                             <span>@NoStepsEmptyTitle</span>
@@ -235,15 +236,15 @@
                         </div>
                         <div class="test-scenario-empty-cues" aria-label="Scenario starter cues">
                             <span>
-                                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                                 @ScenarioStepTypeCountText
                             </span>
                             <span>
-                                <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" aria-hidden="true" />
                                 @PhaseCountText
                             </span>
                             <span>
-                                <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" aria-hidden="true" />
                                 Build first
                             </span>
                         </div>
@@ -258,7 +259,7 @@
                         <section class="@PhaseLaneClass(phase)" @key="phase.Name">
                             <div class="test-phase-header">
                                 <span class="test-phase-icon" aria-hidden="true">
-                                    <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" />
+                                    <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <div class="test-phase-copy">
                                     <span>@phase.Title</span>
@@ -296,14 +297,14 @@
                                                     @if (stepResult is not null)
                                                     {
                                                         <span class="@StepResultMarkerClass(stepResult.Status)">
-                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
+                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" aria-hidden="true" />
                                                             <span>@stepResult.Status</span>
                                                         </span>
                                                     }
                                                     else
                                                     {
                                                         <span class="test-step-result-marker idle">
-                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
+                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" aria-hidden="true" />
                                                             <span>Not run</span>
                                                         </span>
                                                     }
@@ -311,29 +312,33 @@
                                                 <span class="test-step-actions">
                                                     <button type="button"
                                                             class="test-step-action"
+                                                            aria-label="Move step earlier"
                                                             title="Move earlier"
                                                             disabled="@(index == 0)"
                                                             @onclick="@(() => MoveStep(step.Name, -1))">
-                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
+                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                     <button type="button"
                                                             class="test-step-action"
+                                                            aria-label="Move step later"
                                                             title="Move later"
                                                             disabled="@(index >= phase.Steps.Count - 1)"
                                                             @onclick="@(() => MoveStep(step.Name, 1))">
-                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" />
+                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                     <button type="button"
                                                             class="test-step-action"
+                                                            aria-label="Edit step"
                                                             title="Edit step"
                                                             @onclick="@(() => OpenStepEditorAsync(step))">
-                                                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                                                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                     <button type="button"
                                                             class="test-step-action danger"
+                                                            aria-label="Delete step"
                                                             title="Delete step"
                                                             @onclick="@(() => RemoveStep(step.Name))">
-                                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
+                                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                 </span>
                                             </div>
@@ -345,7 +350,7 @@
                                             {
                                                 <div class="test-step-result-strip" aria-label="@StepResultMetaLabel(stepResult)">
                                                     <span class="@StepResultScopeClass">
-                                                        <MudIcon Icon="@ActiveRunMarkerIcon" Size="Size.Small" />
+                                                        <MudIcon Icon="@ActiveRunMarkerIcon" Size="Size.Small" aria-hidden="true" />
                                                         <span>@StepResultScopeLabel</span>
                                                     </span>
                                                     <span>@StepResultClockLabel(stepResult)</span>
@@ -356,7 +361,7 @@
                                             @if (stepResult?.MatchedEvent is { } matched)
                                             {
                                                 <div class="test-step-event">
-                                                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
+                                                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" aria-hidden="true" />
                                                     <span>@BuildEventSummary(matched)</span>
                                                 </div>
                                             }
