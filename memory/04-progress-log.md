@@ -5420,3 +5420,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Neutral added-text scan and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard directional command-title specificity result:
+  - Replaced the Dashboard visual metric card move command tooltips from generic `Move up` and `Move down` to row-specific `Move {metric} up` and `Move {metric} down` titles that match the accessible labels.
+  - Preserved metric-card ordering, move/remove/add behavior, dashboard inspector bindings, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector guard to require the specific move titles.
+  - Extended the source-wide command-title guard to reject generic directional command titles such as `Move up` and `Move down` in Razor components.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls|FullyQualifiedName~WorkspaceCommandTitles_UseSpecificLabels" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Neutral added-text scan and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: implement the Flow Designer canvas chrome polish request without broadening runtime or schema scope.

@@ -2658,9 +2658,14 @@ public sealed class DashboardEventFilterCatalogTests
         visualMetricRows.ShouldContain("KeyboardArrowUp");
         visualMetricRows.ShouldContain("KeyboardArrowDown");
         visualMetricRows.ShouldContain("Icons.Material.Filled.Close");
+        visualMetricRows.ShouldContain("title=\"@($\"Move {VisualMetricLabel(currentMetric)} up\")\"");
         visualMetricRows.ShouldContain("aria-label=\"@($\"Move {VisualMetricLabel(currentMetric)} up\")\"");
+        visualMetricRows.ShouldContain("title=\"@($\"Move {VisualMetricLabel(currentMetric)} down\")\"");
+        visualMetricRows.ShouldContain("aria-label=\"@($\"Move {VisualMetricLabel(currentMetric)} down\")\"");
         visualMetricRows.ShouldContain("title=\"@($\"Remove {VisualMetricLabel(currentMetric)}\")\"");
         visualMetricRows.ShouldContain("aria-label=\"@($\"Remove {VisualMetricLabel(currentMetric)}\")\"");
+        visualMetricRows.ShouldNotContain("title=\"Move up\"");
+        visualMetricRows.ShouldNotContain("title=\"Move down\"");
         visualMetricRows.ShouldNotContain("title=\"Remove\"");
         visualMetricRows.ShouldContain("aria-label=\"Add metric card\"");
     }
@@ -13660,7 +13665,9 @@ public sealed class DashboardEventFilterCatalogTests
             "Clear",
             "Refresh",
             "Reload",
-            "Search"
+            "Search",
+            "Move up",
+            "Move down"
         };
         var violations = new List<string>();
 

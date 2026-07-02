@@ -42,7 +42,7 @@
                     <span class="visual-metric-actions" aria-label="@($"{VisualMetricLabel(currentMetric)} card commands")">
                         <button type="button"
                                 class="visual-metric-icon-button"
-                                title="Move up"
+                                title="@($"Move {VisualMetricLabel(currentMetric)} up")"
                                 aria-label="@($"Move {VisualMetricLabel(currentMetric)} up")"
                                 disabled="@(item.Index == 0)"
                                 @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, -1)))">
@@ -50,7 +50,7 @@
                         </button>
                         <button type="button"
                                 class="visual-metric-icon-button"
-                                title="Move down"
+                                title="@($"Move {VisualMetricLabel(currentMetric)} down")"
                                 aria-label="@($"Move {VisualMetricLabel(currentMetric)} down")"
                                 disabled="@(item.Index == Draft.DisplayMetrics.Count - 1)"
                                 @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, 1)))">
