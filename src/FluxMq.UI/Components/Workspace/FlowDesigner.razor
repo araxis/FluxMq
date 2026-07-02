@@ -10,7 +10,7 @@
 
 <div class="flow-designer-root"
      role="region"
-     aria-label="Flow designer canvas"
+     aria-label="@FlowDesignerRegionLabel"
      @onpointerenter="HandleDesignerPointerEnter"
      @onpointermove="HandleDesignerPointerMove"
      @onpointerleave="HandleDesignerPointerLeave">
@@ -88,7 +88,7 @@
             </div>
         </div>
     </div>
-    <div class="flow-canvas" role="group" aria-label="Pipeline diagram canvas">
+    <div class="flow-canvas" role="group" aria-label="@PipelineDiagramCanvasLabel">
         <CascadingValue Value="_diagram">
             <DiagramCanvas>
                 <Widgets>
@@ -205,9 +205,17 @@
 
     private string WorkflowTitle => Flow.ActiveWorkflowName ?? "Pipeline";
 
+    private string FlowDesignerRegionLabel => Flow.ActiveWorkflowName is null
+        ? "Flow designer canvas, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} flow designer canvas";
+
     private string PipelineCanvasSummaryLabel => Flow.ActiveWorkflowName is null
         ? "Pipeline canvas summary, no active pipeline"
         : $"{Flow.ActiveWorkflowName} pipeline summary";
+
+    private string PipelineDiagramCanvasLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline diagram canvas, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} pipeline diagram canvas";
 
     private string PipelineCanvasActionsLabel => Flow.ActiveWorkflowName is null
         ? "Pipeline canvas runtime and commands, no active pipeline"

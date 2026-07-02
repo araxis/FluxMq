@@ -7123,8 +7123,14 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "FlowDesigner.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Flow designer canvas\"");
-        markup.ShouldContain("aria-label=\"Pipeline diagram canvas\"");
+        markup.ShouldContain("aria-label=\"@FlowDesignerRegionLabel\"");
+        markup.ShouldContain("private string FlowDesignerRegionLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} flow designer canvas\"");
+        markup.ShouldNotContain("aria-label=\"Flow designer canvas\"");
+        markup.ShouldContain("aria-label=\"@PipelineDiagramCanvasLabel\"");
+        markup.ShouldContain("private string PipelineDiagramCanvasLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} pipeline diagram canvas\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline diagram canvas\"");
         markup.ShouldContain("flow-canvas-title-copy");
         markup.ShouldContain("flow-canvas-meta-strip");
         markup.ShouldContain("aria-label=\"@PipelineCanvasSummaryLabel\"");
