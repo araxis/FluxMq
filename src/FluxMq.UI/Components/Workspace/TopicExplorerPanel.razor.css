@@ -1524,7 +1524,7 @@ h3 {
     color: var(--flux-text-subtle);
 }
 
-.topic-empty-state {
+.topic-empty-panel {
     align-content: center;
     align-items: center;
     color: var(--mud-palette-text-secondary);
@@ -1539,7 +1539,7 @@ h3 {
     text-align: center;
 }
 
-.topic-empty-state strong {
+.topic-empty-panel strong {
     color: var(--mud-palette-text-primary);
     font-size: 13px;
     font-weight: 750;
@@ -1547,7 +1547,7 @@ h3 {
     min-width: 0;
 }
 
-.topic-empty-state span {
+.topic-empty-panel span {
     color: var(--flux-text-muted);
     font-size: 12px;
     line-height: 1.35;
@@ -1556,7 +1556,7 @@ h3 {
     overflow-wrap: anywhere;
 }
 
-.topic-empty-state ::deep .mud-icon-root {
+.topic-empty-panel ::deep .mud-icon-root {
     color: var(--flux-text-subtle);
 }
 

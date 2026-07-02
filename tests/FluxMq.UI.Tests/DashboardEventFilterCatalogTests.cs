@@ -3246,12 +3246,15 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, min(320px, 100%));");
         css.ShouldContain("justify-items: center;");
         css.ShouldContain("text-align: center;");
-        css.ShouldContain(".topic-empty-state ::deep .mud-icon-root");
+        markup.ShouldContain("topic-empty-panel");
+        markup.ShouldNotContain("topic-empty-state");
+        css.ShouldContain(".topic-empty-panel ::deep .mud-icon-root");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("flex-basis: clamp(252px, 40vh, 360px);");
         css.ShouldContain(".topic-publish-actions {");
         css.ShouldContain("flex-wrap: wrap;");
         css.ShouldNotContain(".topic-payload-frame");
+        css.ShouldNotContain(".topic-empty-state");
         css.ShouldNotContain(".topic-payload-empty");
         css.ShouldNotContain(".topic-last-empty");
         css.ShouldNotContain(".topic-last-meta div:last-child:nth-child(odd)");
