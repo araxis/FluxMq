@@ -3838,7 +3838,11 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeEmpty();
         markup.ShouldContain("@NoTestEmptyTitle");
         markup.ShouldContain("@NoTestSelectionHint");
-        markup.ShouldContain("test-runner-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"Test runner scenario setup state\"");
+        markup.ShouldContain("test-runner-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"@TestRunnerSetupStateLabel\"");
+        markup.ShouldContain("private string TestRunnerSetupStateLabel");
+        markup.ShouldContain("Test runner setup state with no tests");
+        markup.ShouldContain("Test runner setup state with {FormatCount(Project.TestNames.Count, \"test\")}");
+        markup.ShouldNotContain("aria-label=\"Test runner scenario setup state\"");
         markup.ShouldContain("test-runner-empty-cues");
         markup.ShouldContain("aria-label=\"@TestRunnerSetupLabel\"");
         markup.ShouldContain("private string TestRunnerSetupLabel");

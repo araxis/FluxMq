@@ -11,7 +11,7 @@
 <div class="test-runner-console" aria-label="@TestRunnerConsoleLabel">
     @if (Scenario is null)
     {
-        <div class="test-runner-empty" role="status" aria-live="polite" aria-label="Test runner scenario setup state">
+        <div class="test-runner-empty" role="status" aria-live="polite" aria-label="@TestRunnerSetupStateLabel">
             <div class="test-runner-empty-panel">
                 <span class="test-runner-empty-icon" aria-hidden="true">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
@@ -381,6 +381,11 @@
 
     private string NoTestSelectionHint
         => Project.TestNames.Count == 0 ? "No tests" : FormatCount(Project.TestNames.Count, "test");
+
+    private string TestRunnerSetupStateLabel
+        => Project.TestNames.Count == 0
+            ? "Test runner setup state with no tests"
+            : $"Test runner setup state with {FormatCount(Project.TestNames.Count, "test")}";
 
     private string TestRunnerSetupLabel
         => Project.TestNames.Count == 0
