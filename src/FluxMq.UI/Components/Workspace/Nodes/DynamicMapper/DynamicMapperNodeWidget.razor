@@ -259,7 +259,7 @@
     private int _schemaControlVersion;
     private IReadOnlyList<DynamicMapperOutputField> _outputFields = [];
     private IReadOnlyList<DynamicMapperVariable> _variables = [];
-    private DynamicMapperPreviewResult _previewResult = ErrorPreview("MqttPublishRequest", "Preview is not ready.");
+    private DynamicMapperPreviewResult _previewResult = ErrorPreview("MqttPublishRequest", "Preview unavailable.");
     private MqttEnvelope _sampleEnvelope = DynamicMapperWorkbenchPreview.FallbackEnvelope();
     private string _sampleSource = "sample";
     private bool _sampleEdited;

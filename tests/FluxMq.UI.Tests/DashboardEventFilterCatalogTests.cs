@@ -7273,6 +7273,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dynamic-mapper-workspace-header");
         markup.ShouldContain("dynamic-mapper-workspace-actions");
         markup.ShouldContain("dynamic-mapper-heading-token");
+        markup.ShouldContain("Preview unavailable.");
+        markup.ShouldNotContain("Preview is not ready.");
         markup.ShouldNotContain("OutputShapeLabel");
         markup.ShouldContain("ReloadWorkspaceSample");
         markup.ShouldContain("dynamic-mapper-input-error");
