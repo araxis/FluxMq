@@ -12370,6 +12370,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("No app open");
         markup.ShouldContain("No artifacts");
         System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(7);
+        markup.ShouldContain("aria-label=\"@($\"Open pipeline {w}\")\"");
+        markup.ShouldContain("aria-label=\"Open metrics\"");
+        markup.ShouldContain("aria-label=\"@($\"Open dashboard {d}\")\"");
+        markup.ShouldContain("aria-label=\"@($\"Open test {t}\")\"");
+        markup.ShouldContain("aria-label=\"Open topics\"");
+        markup.ShouldContain("aria-label=\"Open logs\"");
+        markup.ShouldContain("aria-label=\"Open app JSON\"");
         markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveWorkflow(w); _jsonView = false; })");
         markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveMetrics(); _jsonView = false; })");
         markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveDashboard(d); _jsonView = false; })");
@@ -12429,6 +12436,34 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".project-tab-json {");
         css.ShouldNotContain(".project-tab-json:hover");
         css.ShouldNotContain(".project-tab-json-active");
+    }
+
+    [Fact]
+    public void WorkspaceRoleButtons_UseExplicitAccessibleNames()
+    {
+        var root = FindRepositoryRoot();
+        var componentDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components");
+        var violations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<[^>]*\brole\s*=\s*""button""[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("aria-label=", StringComparison.Ordinal) &&
+                        !item.Tag.Contains("aria-labelledby=", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+
+        violations.ShouldBeEmpty();
     }
 
     [Fact]

@@ -37,6 +37,7 @@
                      tabindex="0"
                      aria-current="@WorkspaceTabCurrent(isActive)"
                      aria-keyshortcuts="Enter Space"
+                     aria-label="@($"Open pipeline {w}")"
                      title="@($"Pipeline {w}")"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveWorkflow(w); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
@@ -61,6 +62,7 @@
                  tabindex="0"
                  aria-current="@WorkspaceTabCurrent(metricsActive)"
                  aria-keyshortcuts="Enter Space"
+                 aria-label="Open metrics"
                  title="Metrics"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveMetrics(); _jsonView = false; }))"
                  @onclick="@(() => { active.SetActiveMetrics(); _jsonView = false; })">
@@ -79,6 +81,7 @@
                      tabindex="0"
                      aria-current="@WorkspaceTabCurrent(isActive)"
                      aria-keyshortcuts="Enter Space"
+                     aria-label="@($"Open dashboard {d}")"
                      title="@($"Dashboard {d}")"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveDashboard(d); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveDashboard(d); _jsonView = false; })">
@@ -106,6 +109,7 @@
                      tabindex="0"
                      aria-current="@WorkspaceTabCurrent(isActive)"
                      aria-keyshortcuts="Enter Space"
+                     aria-label="@($"Open test {t}")"
                      title="@($"Test {t}")"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveTest(t); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveTest(t); _jsonView = false; })">
@@ -130,6 +134,7 @@
                  tabindex="0"
                  aria-current="@WorkspaceTabCurrent(topicsActive)"
                  aria-keyshortcuts="Enter Space"
+                 aria-label="Open topics"
                  title="Topics"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveTopics(); _jsonView = false; }))"
                  @onclick="@(() => { active.SetActiveTopics(); _jsonView = false; })">
@@ -145,6 +150,7 @@
                  tabindex="0"
                  aria-current="@WorkspaceTabCurrent(logsActive)"
                  aria-keyshortcuts="Enter Space"
+                 aria-label="Open logs"
                  title="Logs"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, SelectLogs))"
                  @onclick="@(() => SelectLogs())">
@@ -156,6 +162,7 @@
                  tabindex="0"
                  aria-current="@WorkspaceTabCurrent(_jsonView)"
                  aria-keyshortcuts="Enter Space"
+                 aria-label="Open app JSON"
                  title="App JSON"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, ToggleJsonView))"
                  @onclick="@ToggleJsonView">
