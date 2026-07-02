@@ -3,7 +3,7 @@
 <section class="payload-inspector" aria-label="@Title">
     <div class="payload-inspector-header">
         <div class="payload-inspector-title">
-            <span class="payload-format-state @FormatClass">
+            <span class="payload-format-marker @FormatMarkerClass">
                 <MudIcon Icon="@FormatIcon" Size="Size.Small" />
             </span>
             <div class="payload-title-copy">
@@ -109,7 +109,7 @@
         ? "No topic"
         : Topic;
 
-    private string FormatClass => _inspection.Format switch
+    private string FormatMarkerClass => _inspection.Format switch
     {
         PayloadFormat.Json or PayloadFormat.Array => "json",
         PayloadFormat.Number or PayloadFormat.Boolean => "scalar",

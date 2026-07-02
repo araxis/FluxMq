@@ -4435,25 +4435,27 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("<section class=\"payload-inspector\" aria-label=\"@Title\">");
         markup.ShouldContain("payload-inspector-header");
-        markup.ShouldContain("payload-format-state @FormatClass");
+        markup.ShouldContain("payload-format-marker @FormatMarkerClass");
         markup.ShouldContain("payload-meta-strip");
         markup.ShouldContain("payload-view-switch");
         markup.ShouldContain("role=\"tab\"");
         markup.ShouldContain("aria-selected=\"@IsActiveView(FormattedView)\"");
         markup.ShouldContain("payload-inspector-meta-list");
         markup.ShouldContain("private const string FormattedView = \"formatted\";");
-        markup.ShouldContain("private string FormatClass");
+        markup.ShouldContain("private string FormatMarkerClass");
         markup.ShouldContain("private string FormatIcon");
+        markup.ShouldNotContain("payload-format-state");
+        markup.ShouldNotContain("private string FormatClass");
         markup.ShouldNotContain("payload-format-badge");
         markup.ShouldNotContain("MudToggleGroup");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("<MudPaper");
 
         css.ShouldContain("border-radius: 5px;");
-        css.ShouldContain(".payload-format-state");
-        css.ShouldContain(".payload-format-state.scalar");
-        css.ShouldContain(".payload-format-state.structured");
-        css.ShouldContain(".payload-format-state.binary");
+        css.ShouldContain(".payload-format-marker");
+        css.ShouldContain(".payload-format-marker.scalar");
+        css.ShouldContain(".payload-format-marker.structured");
+        css.ShouldContain(".payload-format-marker.binary");
         css.ShouldContain(".payload-inspector-header");
         css.ShouldContain("min-height: 38px;");
         css.ShouldContain(".payload-view-switch");
@@ -4464,6 +4466,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".payload-inspector-meta-list div");
         css.ShouldContain("grid-template-columns: 76px minmax(0, 1fr);");
         css.ShouldContain("@media (max-width: 520px)");
+        css.ShouldNotContain(".payload-format-state");
         css.ShouldNotContain(".payload-format-badge");
     }
 
