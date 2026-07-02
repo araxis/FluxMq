@@ -5388,6 +5388,10 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("dashboard-track-editor-title");
         razor.ShouldContain("dashboard-track-editor-preview");
         razor.ShouldContain("dashboard-track-editor-toggle");
+        razor.ShouldContain("<MudIcon Icon=\"@AxisIcon\" Size=\"MudBlazor.Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.ArrowForward\" Size=\"MudBlazor.Size.Small\" Color=\"Color.Secondary\" aria-hidden=\"true\" />");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Settings\" Size=\"MudBlazor.Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"MudBlazor.Size.Small\" aria-hidden=\"true\" />");
         razor.ShouldContain("<MudToggleGroup T=\"string\"");
         razor.ShouldContain("SelectionMode=\"SelectionMode.SingleSelection\"");
         razor.ShouldContain("@TrackCode");
@@ -5396,6 +5400,10 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("@ModeDescription");
         razor.ShouldContain("StartIcon=\"@Icons.Material.Filled.RestartAlt\"");
         razor.ShouldContain("Disabled=\"@(!CanSubmit)\"");
+        razor.ShouldNotContain("<MudIcon Icon=\"@AxisIcon\" Size=\"MudBlazor.Size.Small\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.ArrowForward\" Size=\"MudBlazor.Size.Small\" Color=\"Color.Secondary\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Settings\" Size=\"MudBlazor.Size.Small\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"MudBlazor.Size.Small\" />");
 
         css.ShouldContain(".dashboard-track-editor-preview");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr);");
@@ -6442,6 +6450,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dashboard-widget-editor-section-head");
         markup.ShouldContain("dashboard-widget-editor-action-spacer");
         markup.ShouldContain("dashboard-widget-editor-actions");
+        markup.ShouldContain("<MudIcon Icon=\"@Profile.Icon\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Speed\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.ShowChart\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Dashboard\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.FilterAltOff\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("StartIcon=\"@Icons.Material.Filled.RestartAlt\"");
         markup.ShouldContain("Disabled=\"@(!HasChanges)\"");
         markup.ShouldContain("ConfigurationEquals");
@@ -6450,6 +6464,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("ActionStatusLabel");
         markup.ShouldNotContain("No changes");
         markup.ShouldNotContain("Unsaved changes");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Profile.Icon\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Speed\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.ShowChart\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Dashboard\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.FilterAltOff\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("<MudDivider />");
 
         css.ShouldContain(".dashboard-widget-editor-title-icon");

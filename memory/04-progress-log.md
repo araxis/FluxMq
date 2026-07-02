@@ -4808,3 +4808,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only setup-dialog icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Dashboard editor dialog decorative icon accessibility result:
+  - Added hidden decorative semantics to title, section, preview, empty-state, and note `MudIcon` instances in `DashboardWidgetEditorDialog` and `DashboardTrackEditorDialog`.
+  - Preserved visible labels, widget settings, filter fields, topic-tree settings, track sizing preview, reset/apply behavior, dashboard schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused dashboard dialog guards to require the hidden decorative icon treatment and reject old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardTrackEditorDialog|FullyQualifiedName~DashboardWidgetEditorDialog" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only dashboard-dialog icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

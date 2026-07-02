@@ -5,7 +5,7 @@
     <TitleContent>
         <div class="dashboard-track-editor-title">
             <span class="dashboard-track-editor-title-icon" aria-hidden="true">
-                <MudIcon Icon="@AxisIcon" Size="MudBlazor.Size.Small" />
+                <MudIcon Icon="@AxisIcon" Size="MudBlazor.Size.Small" aria-hidden="true" />
             </span>
             <div class="dashboard-track-editor-title-copy">
                 <MudText Typo="Typo.h6">@Title</MudText>
@@ -24,7 +24,7 @@
                     <strong>@Size</strong>
                     <small>@FormatPadding(Padding)</small>
                 </div>
-                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="MudBlazor.Size.Small" Color="Color.Secondary" />
+                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="MudBlazor.Size.Small" Color="Color.Secondary" aria-hidden="true" />
                 <div class="dashboard-track-editor-preview-item active">
                     <span>New</span>
                     <strong>@ResultSize</strong>
@@ -34,7 +34,7 @@
 
             <section class="dashboard-track-editor-section" aria-label="Size mode">
                 <div class="dashboard-track-editor-section-head">
-                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="MudBlazor.Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="MudBlazor.Size.Small" aria-hidden="true" />
                     <span>Size mode</span>
                 </div>
                 <div class="dashboard-track-editor-toggle">
@@ -71,7 +71,7 @@
             </div>
 
             <div class="dashboard-track-editor-note">
-                <MudIcon Icon="@Icons.Material.Filled.Info" Size="MudBlazor.Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Info" Size="MudBlazor.Size.Small" aria-hidden="true" />
                 <span>@ModeDescription</span>
             </div>
         </div>
