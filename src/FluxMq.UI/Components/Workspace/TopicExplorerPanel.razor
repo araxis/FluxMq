@@ -188,6 +188,7 @@
                                             role="tab"
                                             aria-selected="@IsPayloadViewActive(_lastPayloadView, view)"
                                             aria-controls="@LatestPayloadPanelId"
+                                            aria-keyshortcuts="Enter Space"
                                             class="@PayloadViewButtonClass(_lastPayloadView, view)"
                                             title="@PayloadViewLabel(view)"
                                             @onclick="@(() => _lastPayloadView = view)">
@@ -591,6 +592,7 @@
                                                     role="tab"
                                                     aria-selected="@IsPayloadViewActive(_selectedHistoryPayloadView, view)"
                                                     aria-controls="@SelectedPayloadPanelId"
+                                                    aria-keyshortcuts="Enter Space"
                                                     class="@PayloadViewButtonClass(_selectedHistoryPayloadView, view)"
                                                     title="@PayloadViewLabel(view)"
                                                     @onclick="@(() => _selectedHistoryPayloadView = view)">

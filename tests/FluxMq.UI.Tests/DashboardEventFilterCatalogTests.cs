@@ -3177,6 +3177,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SelectedHistoryReceivedLabel");
         markup.ShouldContain("role=\"tablist\" aria-label=\"Latest payload views\"");
         markup.ShouldContain("role=\"tablist\" aria-label=\"Selected payload views\"");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(2);
         markup.ShouldContain("id=\"@LatestPayloadViewTabId(view)\"");
         markup.ShouldContain("aria-controls=\"@LatestPayloadPanelId\"");
         markup.ShouldContain("id=\"@LatestPayloadPanelId\"");

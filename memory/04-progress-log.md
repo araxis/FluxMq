@@ -5183,3 +5183,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~PayloadInspectorPanel_UsesFlatCompactInspectorChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use payload and workspace tab controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Topic Explorer payload tab keyboard hint result:
+  - Added explicit Enter/Space keyboard shortcut hints to the Topics latest and selected-history payload view tab loops.
+  - Preserved native button activation, latest/selected payload view switching, tab/panel ownership, copy actions, payload diff view, history grid, publish composer, MQTT behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Topic Explorer guard to require both payload view tab shortcut hint loop sites.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace tab controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
