@@ -40,9 +40,9 @@
                 </div>
             </div>
 
-            <div class="dynamic-mapper-contracts node-ui-token-group">
-                <div class="dynamic-mapper-contract node-ui-token-row" aria-label="Mapper input variables">
-                    <span class="dynamic-mapper-contract-label node-ui-fact-label">Input variables</span>
+            <div class="dynamic-mapper-fields node-ui-token-group">
+                <div class="dynamic-mapper-field-row node-ui-token-row" aria-label="Mapper input variables">
+                    <span class="dynamic-mapper-field-label node-ui-fact-label">Input variables</span>
                     @foreach (var variable in SummaryVariables)
                     {
                         <span class="dynamic-mapper-token node-ui-token">@variable.Label</span>
@@ -52,8 +52,8 @@
                         <span class="dynamic-mapper-token overflow node-ui-token">+@SummaryVariableOverflow</span>
                     }
                 </div>
-                <div class="dynamic-mapper-contract node-ui-token-row" aria-label="Mapper output fields">
-                    <span class="dynamic-mapper-contract-label node-ui-fact-label">Output fields</span>
+                <div class="dynamic-mapper-field-row node-ui-token-row" aria-label="Mapper output fields">
+                    <span class="dynamic-mapper-field-label node-ui-fact-label">Output fields</span>
                     @foreach (var field in SummaryOutputFields)
                     {
                         <span class="dynamic-mapper-token node-ui-token">@field.Name</span>
@@ -94,12 +94,12 @@
                 </MudSelect>
 
                 <MudSelect T="string"
-                           Label="Result contract"
+                           Label="Result mode"
                            Value="@_outputContract"
                            ValueChanged="@SetOutputContract"
                            Variant="Variant.Outlined"
                            Margin="Margin.Dense"
-                           Class="dynamic-mapper-contract-field">
+                           Class="dynamic-mapper-result-mode-field">
                     <MudSelectItem Value="@DynamicMapperNodeModel.OutputContractAny">Any</MudSelectItem>
                     <MudSelectItem Value="@DynamicMapperNodeModel.OutputContractTyped">Typed</MudSelectItem>
                     <MudSelectItem Value="@DynamicMapperNodeModel.OutputContractJsonSchemaFile">JSON Schema file</MudSelectItem>

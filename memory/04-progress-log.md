@@ -4581,5 +4581,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowAssertionNodeWidget|FullyQualifiedName~JsonSchemaValidatorNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Dynamic Mapper Summary Copy result:
+  - Renamed Dynamic Mapper compact summary hooks from contract wording to neutral field wording while keeping input-variable and output-field facts unchanged.
+  - Changed the editor label from `Result contract` to `Result mode`; the existing `OutputContract` model/API names, saved `outputContract` value, schema controls, preview workbench, validation, node id, ports, and runtime behavior are unchanged.
+  - Updated the focused guard to require the neutral mapper field hooks and reject the old mapper contract hooks.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DynamicMapperNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Next implementation order:
   1. Continue the next small designer-polish backlog item from remaining high-use workspace noise, starting with remaining compact node-summary naming noise where a focused guard already exists.
