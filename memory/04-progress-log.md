@@ -4767,3 +4767,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Payload Inspector icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Shared EmptyView decorative icon accessibility result:
+  - Added hidden decorative semantics to the shared `EmptyView` fallback inbox icon.
+  - Preserved custom content rendering, fallback message text, Topic Tree empty-state usage, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Added the focused `EmptyView_HidesDecorativeInboxIcon` guard to require hidden decorative icon treatment and reject the old unhidden snippet.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~EmptyView_HidesDecorativeInboxIcon" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only EmptyView icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.

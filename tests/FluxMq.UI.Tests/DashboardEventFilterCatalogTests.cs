@@ -4783,6 +4783,22 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void EmptyView_HidesDecorativeInboxIcon()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "EmptyView.razor"));
+
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Outlined.Inbox\" Color=\"Color.Secondary\" Size=\"Size.Large\" aria-hidden=\"true\" />");
+        markup.ShouldContain("@(Message ?? \"No data\")");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Outlined.Inbox\" Color=\"Color.Secondary\" Size=\"Size.Large\" />");
+    }
+
+    [Fact]
     public void WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome()
     {
         var root = FindRepositoryRoot();
