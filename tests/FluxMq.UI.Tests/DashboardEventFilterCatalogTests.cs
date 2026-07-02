@@ -7164,6 +7164,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("flow-runtime-marker-dot");
         markup.ShouldContain("@RuntimeMarkerLabel");
         markup.ShouldContain("flow-canvas-metrics");
+        markup.ShouldContain("aria-label=\"@PipelineCanvasMetricsLabel\"");
+        markup.ShouldContain("private string PipelineCanvasMetricsLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} pipeline canvas metrics\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas metrics\"");
         markup.ShouldContain("flow-canvas-stat");
         markup.ShouldContain("flow-canvas-command-group");
         markup.ShouldContain("aria-label=\"@PipelineCanvasCommandLabel\"");

@@ -39,7 +39,7 @@
                     @RuntimeMarkerLabel
                 </span>
             }
-            <div class="flow-canvas-metrics" aria-label="Pipeline canvas metrics">
+            <div class="flow-canvas-metrics" aria-label="@PipelineCanvasMetricsLabel">
                 <span class="flow-canvas-stat">
                     <span>Nodes</span>
                     <strong>@PipelineNodeCount</strong>
@@ -220,6 +220,10 @@
     private string PipelineCanvasActionsLabel => Flow.ActiveWorkflowName is null
         ? "Pipeline canvas runtime and commands, no active pipeline"
         : $"{Flow.ActiveWorkflowName} runtime and canvas commands";
+
+    private string PipelineCanvasMetricsLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline canvas metrics, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} pipeline canvas metrics";
 
     private string PipelineCanvasCommandLabel => Flow.ActiveWorkflowName is null
         ? "Pipeline canvas commands, no active pipeline"
