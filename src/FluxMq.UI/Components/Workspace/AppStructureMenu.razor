@@ -99,6 +99,7 @@
                         var w = workflow;
                         <MudMenuItem OnClick="@(() => SelectPipeline(active, w))"
                                      Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Pipeline, w)"
+                                     aria-current="@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Pipeline, w)"
                                      title="@w">
                             <div class="app-menu-artifact-row app-menu-compact-artifact-row">
                                 <span class="app-menu-artifact-icon-frame pipeline" aria-hidden="true">
@@ -155,6 +156,7 @@
                         var d = dashboard;
                         <MudMenuItem OnClick="@(() => SelectDashboard(active, d))"
                                      Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Dashboard, d)"
+                                     aria-current="@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Dashboard, d)"
                                      title="@d">
                             <div class="app-menu-artifact-row app-menu-compact-artifact-row">
                                 <span class="app-menu-artifact-icon-frame dashboard" aria-hidden="true">
@@ -208,6 +210,7 @@
                 {
                     <MudMenuItem OnClick="@(() => SelectMetrics(active))"
                                  Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Metrics, "Metrics")"
+                                 aria-current="@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Metrics, "Metrics")"
                                  title="Open metric designer">
                         <div class="app-menu-artifact-row app-menu-compact-artifact-row app-menu-metrics-row">
                             <span class="app-menu-artifact-icon-frame metrics" aria-hidden="true">
@@ -256,6 +259,7 @@
                         var latestTestRun = LatestTestRun(active, t);
                         <MudMenuItem OnClick="@(() => SelectTest(active, t))"
                                      Class="@TestArtifactItemClass(active, t, latestTestRun)"
+                                     aria-current="@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Test, t)"
                                      title="@TestArtifactTitle(t, latestTestRun)">
                             <div class="@TestRunMenuRowClass(latestTestRun)">
                                 <span class="app-menu-test-icon-frame" aria-hidden="true">
@@ -512,15 +516,21 @@
 
     private string ArtifactItemClass(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
     {
-        var active = app == Projects.ActiveProject &&
-                     app.ActiveArtifactKind == kind &&
-                     string.Equals(app.ActiveArtifactName, name, StringComparison.Ordinal);
+        var active = IsArtifactActive(app, kind, name);
 
         return active ? "app-menu-child active-artifact" : "app-menu-child";
     }
 
     private string ArtifactMenuItemClass(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
         => $"{ArtifactItemClass(app, kind, name)} app-menu-artifact-item";
+
+    private string? ArtifactMenuItemCurrent(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
+        => IsArtifactActive(app, kind, name) ? "true" : null;
+
+    private bool IsArtifactActive(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
+        => app == Projects.ActiveProject &&
+           app.ActiveArtifactKind == kind &&
+           string.Equals(app.ActiveArtifactName, name, StringComparison.Ordinal);
 
     private async Task ToggleBrokerAsync(ManagedConnection connection)
     {

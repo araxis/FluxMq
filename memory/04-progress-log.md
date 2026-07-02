@@ -4619,3 +4619,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+
+- App Structure active item accessibility result:
+  - Added `aria-current` to active pipeline, dashboard, metric-designer, and test menu items in the compact app-structure menu.
+  - Reused the existing active-artifact logic through a small `ArtifactMenuItemCurrent` helper and shared `IsArtifactActive` helper.
+  - Preserved active classes, MudMenuItem selection behavior, delete actions, broker controls, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

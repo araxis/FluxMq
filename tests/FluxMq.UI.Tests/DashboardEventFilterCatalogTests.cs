@@ -12282,8 +12282,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static string BrokerEndpointLabel");
         markup.ShouldContain("private static string BrokerConnectionText");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Pipeline, w)\"");
+        markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Pipeline, w)\"");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Dashboard, d)\"");
+        markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Dashboard, d)\"");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Metrics, \"Metrics\")\"");
+        markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Metrics, \"Metrics\")\"");
         markup.ShouldContain("app-menu-artifact-item");
         markup.ShouldContain("app-menu-compact-artifact-row");
         markup.ShouldContain("app-menu-artifact-icon-frame pipeline");
@@ -12313,11 +12316,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("app-menu-inline-action");
         markup.ShouldContain("app-menu-delete-button");
         markup.ShouldContain("aria-label=\"@DeleteLabel(");
+        markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Test, t)\"");
         markup.ShouldContain("@onclick:stopPropagation=\"true\"");
         markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
         markup.ShouldContain("private static string DeleteLabel");
         markup.ShouldContain("private static ScenarioRunResult? LatestTestRun");
         markup.ShouldContain("private string TestArtifactItemClass");
+        markup.ShouldContain("private string? ArtifactMenuItemCurrent");
+        markup.ShouldContain("private bool IsArtifactActive");
         markup.ShouldContain("private static string TestRunMenuIssueText");
         markup.ShouldContain("No run yet");
         markup.ShouldContain("No run");
