@@ -1120,7 +1120,7 @@
                 @if (!string.IsNullOrWhiteSpace(assistiveText))
                 {
                     <MudTooltip Text="@assistiveText">
-                        <span class="metrics-param-help" tabindex="0" aria-label="@assistiveText">
+                        <span class="metrics-param-help" role="img" tabindex="0" aria-label="@assistiveText">
                             <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" aria-hidden="true" />
                         </span>
                     </MudTooltip>

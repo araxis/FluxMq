@@ -4005,6 +4005,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-step-title-block");
         markup.ShouldContain("test-step-meta");
         markup.ShouldContain("StepCardClass(step, stepResult)");
+        markup.ReplaceLineEndings("\n")
+            .ShouldContain("class=\"@StepCardClass(step, stepResult)\"\n                                             role=\"group\"");
         markup.ShouldContain("StepCardLabel(step, stepResult)");
         markup.ShouldContain("aria-label=\"Show latest run\"");
         markup.ShouldContain("aria-label=\"Move step earlier\"");
@@ -4531,6 +4533,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-preview-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("metrics-reference-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("aria-label=\"@MetricRowLabel(current)\"");
+        markup.ShouldContain("class=\"metrics-param-help\" role=\"img\" tabindex=\"0\" aria-label=\"@assistiveText\"");
         markup.ShouldContain("private static string MetricRowLabel(MetricDesignerRow row)");
         markup.ShouldContain("Select metric {row.DisplayName} ({row.Id})");
         markup.Split('\n')
@@ -13419,6 +13422,49 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".session-row-time");
         css.ShouldNotContain("border-radius: 999px;");
         css.ShouldNotContain("box-shadow: 0 0 0");
+    }
+
+    [Fact]
+    public void WorkspaceFocusableCustomElements_ExposeRoles()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var nativeFocusTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "a",
+            "button",
+            "input",
+            "select",
+            "textarea"
+        };
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<[A-Za-z][A-Za-z0-9:.]*\b[^>]*\btabindex\s*=\s*""0""[^>]*>",
+                System.Text.RegularExpressions.RegexOptions.Singleline))
+            {
+                var tag = match.Value;
+                var tagNameMatch = System.Text.RegularExpressions.Regex.Match(tag, @"^<([A-Za-z][A-Za-z0-9:.]*)");
+                if (!tagNameMatch.Success || nativeFocusTags.Contains(tagNameMatch.Groups[1].Value))
+                {
+                    continue;
+                }
+
+                if (System.Text.RegularExpressions.Regex.IsMatch(tag, @"\brole\s*="))
+                {
+                    continue;
+                }
+
+                var line = markup.Take(match.Index).Count(static value => value == '\n') + 1;
+                violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
     }
 
     private static FlowEvent Event(

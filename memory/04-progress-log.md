@@ -5364,3 +5364,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only role-button label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for keyboard semantics, concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Workspace focusable element role semantics result:
+  - Added explicit roles to the remaining custom `tabindex="0"` focus targets: Metric Designer parameter help now uses a labeled `role="img"` affordance, and Test Scenario Designer step cards now use labeled `role="group"` semantics.
+  - Preserved metric parameter rendering, tooltips, scenario step layout, run result display, editing commands, saved app/schema data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the Metric Designer and Test Scenario Designer guards to require the accepted roles.
+  - Added a source-wide UI guard that scans Razor component tags with `tabindex="0"` and requires custom focusable elements to expose an explicit role.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks|FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome|FullyQualifiedName~WorkspaceFocusableCustomElements_ExposeRoles" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only focusable-role scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.

@@ -282,6 +282,7 @@
                                     var stepResult = FindStepResult(step);
                                     var visibleConfiguration = VisibleConfiguration(step).ToArray();
                                     <section class="@StepCardClass(step, stepResult)"
+                                             role="group"
                                              aria-label="@StepCardLabel(step, stepResult)"
                                              tabindex="0"
                                              @key="step.Name">
