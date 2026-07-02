@@ -3565,6 +3565,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private Task SelectFromKeyboardAsync(KeyboardEventArgs args)");
         markup.ShouldContain("private static void IgnoreChevronClick()");
         markup.ShouldNotContain("<span class=\"topic-node-chevron\" @onclick=\"Toggle\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal) &&
+                !icon.Contains("aria-label=", StringComparison.Ordinal) &&
+                !icon.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
 
         css.ShouldContain(".topic-node-branch");
         css.ShouldContain("border-radius: 1px;");
@@ -3584,6 +3595,19 @@ public sealed class DashboardEventFilterCatalogTests
         viewMarkup.ShouldContain("aria-level=\"@TopicNodeLevel(node)\"");
         viewMarkup.ShouldContain("aria-selected=\"@TopicNodeSelected(node)\"");
         viewMarkup.ShouldContain("class=\"topic-node-flat-icon\" aria-hidden=\"true\"");
+        viewMarkup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.SearchOff\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        viewMarkup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Topic\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        System.Text.RegularExpressions.Regex.Matches(
+                viewMarkup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal) &&
+                !icon.Contains("aria-label=", StringComparison.Ordinal) &&
+                !icon.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         viewMarkup.ShouldContain("@onkeydown=\"@((KeyboardEventArgs args) => SelectTopicFromKeyboardAsync(args, node.FullPath))\"");
         viewMarkup.ShouldContain("private static int TopicNodeLevel(TopicNode node)");
         viewMarkup.ShouldContain("private string TopicNodeSelected(TopicNode node)");
@@ -12261,6 +12285,19 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("<span class=\"project-tabbar-app-name\">@active.Name</span>");
         markup.ShouldContain("aria-label=\"@($\"Close app {active.Name}\")\"");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Close\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Close\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.DeleteOutline\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal) &&
+                !icon.Contains("aria-label=", StringComparison.Ordinal) &&
+                !icon.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("@onclick:stopPropagation=\"true\"");
         markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
         markup.ShouldContain("@onclick=\"@ToggleJsonView\"");

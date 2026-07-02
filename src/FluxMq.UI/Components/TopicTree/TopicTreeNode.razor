@@ -22,7 +22,8 @@
                     @onclick="Toggle"
                     @onclick:stopPropagation>
                 <MudIcon Icon="@(_expanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
-                         Size="Size.Small" />
+                         Size="Size.Small"
+                         aria-hidden="true" />
             </button>
         }
         else

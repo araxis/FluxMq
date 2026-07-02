@@ -28,7 +28,7 @@
             @if (results.Count == 0)
             {
                 <div class="topic-tree-empty">
-                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Small" aria-hidden="true" />
                     <strong>No matching topics</strong>
                     <span>Clear or change the search text.</span>
                 </div>
@@ -47,7 +47,7 @@
                          @onkeydown="@((KeyboardEventArgs args) => SelectTopicFromKeyboardAsync(args, node.FullPath))"
                          @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
                         <span class="topic-node-flat-icon" aria-hidden="true">
-                            <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <MudText Typo="Typo.body2" Class="topic-path">@node.FullPath</MudText>
                         <span class="topic-node-count">@node.MessageCount</span>

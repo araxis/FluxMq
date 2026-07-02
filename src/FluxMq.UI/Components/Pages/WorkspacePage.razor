@@ -48,7 +48,7 @@
                             @onclick:stopPropagation="true"
                             @onmousedown:stopPropagation="true"
                             @onclick="@(() => RemoveWorkflowAsync(w))">
-                        <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
                     </button>
                 </div>
             }
@@ -88,7 +88,7 @@
                             @onclick:stopPropagation="true"
                             @onmousedown:stopPropagation="true"
                             @onclick="@(() => RemoveDashboardAsync(d))">
-                        <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
                     </button>
                 </div>
             }
@@ -114,7 +114,7 @@
                             @onclick:stopPropagation="true"
                             @onmousedown:stopPropagation="true"
                             @onclick="@(() => RemoveTestAsync(t))">
-                        <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
                     </button>
                 </div>
             }
@@ -182,7 +182,7 @@
                         @onclick:stopPropagation="true"
                         @onmousedown:stopPropagation="true"
                         @onclick="@CloseActiveAsync">
-                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                 </button>
             </div>
         </div>

@@ -5022,3 +5022,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only `NodeWidgetShell` icon command/direct-icon scan passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the direct-icon audit for remaining high-use workspace surfaces such as project tab commands and topic tree rows without broadening runtime or schema scope.
+- Workspace tab and topic tree direct icon accessibility result:
+  - Hid decorative delete/close glyphs inside already labeled workspace project-tab buttons and app close command.
+  - Hid decorative topic-tree chevron, empty-search, and filtered-topic glyphs while preserving the surrounding chevron button labels, treeitem labels, selection, keyboard activation, topic filtering, project tab routing, delete/close actions, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated focused WorkspacePage and TopicTree guards to reject direct `MudIcon` tags without an explicit hidden or labeled accessibility treatment.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage|FullyQualifiedName~TopicTreeNode" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Full `src\FluxMq.UI` direct `MudIcon` accessibility scan and `MudIconButton` label scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: audit remaining custom role/button surfaces for accessible keyboard semantics and stale selectors now that direct icon scans pass across UI Razor files.
