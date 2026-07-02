@@ -11475,7 +11475,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("node-edit-dialog-title");
         markup.ShouldContain("node-edit-dialog-heading");
-        markup.ShouldContain("node-edit-dialog-status");
+        markup.ShouldContain("node-edit-dialog-validation");
         markup.ShouldContain("node-edit-dialog-content");
         markup.ShouldContain("ContentClassName");
         markup.ShouldContain("[Parameter] public string? ContentClass");
@@ -11483,15 +11483,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("node-edit-dialog-section node-edit-dialog-identity");
         markup.ShouldContain("aria-label=\"Node identity\"");
         markup.ShouldContain("node-edit-dialog-editor");
-        markup.ShouldContain("aria-describedby=\"@StatusElementId\"");
+        markup.ShouldContain("aria-describedby=\"@ValidationElementId\"");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("OnNodeIdKeyDown");
         markup.ShouldContain("@if (!CanSubmit)");
-        markup.ShouldContain("StatusElementId");
-        markup.ShouldContain("SubmitStatusText");
-        markup.ShouldContain("<span id=\"node-edit-dialog-status\"");
-        markup.ShouldContain("class=\"node-edit-dialog-action-status\"");
+        markup.ShouldContain("ValidationElementId");
+        markup.ShouldContain("SubmitValidationText");
+        markup.ShouldContain("<span id=\"node-edit-dialog-validation\"");
+        markup.ShouldContain("class=\"node-edit-dialog-validation-message\"");
         markup.ShouldContain("[Parameter] public Func<string?>? EditorValidationError");
         markup.ShouldContain("private string? _editorError;");
         markup.ShouldContain("private string? EditorError => _editorError;");
@@ -11500,6 +11500,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("string.IsNullOrWhiteSpace(EditorError)");
         markup.ShouldContain("NodeIdError ?? EditorError ?? \"Review required\"");
         markup.ShouldNotContain("Ready to save");
+        markup.ShouldNotContain("StatusElementId");
+        markup.ShouldNotContain("SubmitStatusText");
+        markup.ShouldNotContain("node-edit-dialog-action-status");
         markup.ShouldNotContain("SubmitStatusClass");
         markup.ShouldContain("node-edit-dialog-actions");
         markup.ShouldContain("aria-label=\"Cancel node edit\"");
@@ -11577,8 +11580,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("height: 96px;");
         css.ShouldNotContain("height: 280px;");
         css.ShouldNotContain("height: 570px;");
-        css.ShouldContain(".node-edit-dialog-action-status");
-        css.ShouldNotContain(".node-edit-dialog-action-status.ready");
+        css.ShouldContain(".node-edit-dialog-validation-message");
+        css.ShouldNotContain(".node-edit-dialog-action-status");
+        css.ShouldNotContain(".node-edit-dialog-validation-message.ready");
         css.ShouldContain("min-height: 28px;");
         css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldNotContain("white-space: nowrap;");
