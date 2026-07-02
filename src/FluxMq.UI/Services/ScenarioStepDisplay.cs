@@ -40,12 +40,12 @@ public static class ScenarioStepDisplay
     public static string StepStatusClass(ScenarioStepRunStatus status)
         => status switch
         {
-            ScenarioStepRunStatus.Passed => "test-step-status passed",
-            ScenarioStepRunStatus.Skipped => "test-step-status skipped",
-            ScenarioStepRunStatus.Failed => "test-step-status failed",
-            ScenarioStepRunStatus.TimedOut => "test-step-status timed-out",
-            ScenarioStepRunStatus.Canceled => "test-step-status canceled",
-            _ => "test-step-status"
+            ScenarioStepRunStatus.Passed => "test-step-state passed",
+            ScenarioStepRunStatus.Skipped => "test-step-state skipped",
+            ScenarioStepRunStatus.Failed => "test-step-state failed",
+            ScenarioStepRunStatus.TimedOut => "test-step-state timed-out",
+            ScenarioStepRunStatus.Canceled => "test-step-state canceled",
+            _ => "test-step-state"
         };
 
     public static string BuildStepSummary(ScenarioStepSnapshot step, ScenarioStepCatalog catalog)

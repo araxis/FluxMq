@@ -62,7 +62,7 @@
                 {
                     <MudTooltip Text="@ActiveRunTooltip">
                         <div class="@RunContextClass(result)" aria-label="@RunContextAriaLabel(result)">
-                            <span class="test-run-context-status">
+                            <span class="test-run-context-state">
                                 <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
                                 <strong>@result.Status</strong>
                             </span>
@@ -302,7 +302,7 @@
                                                     }
                                                     else
                                                     {
-                                                        <span class="test-step-status idle">
+                                                        <span class="test-step-state idle">
                                                             <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
                                                             <span>Not run</span>
                                                         </span>

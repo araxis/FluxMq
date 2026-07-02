@@ -28,7 +28,7 @@ public sealed class ScenarioStepDisplayTests
         ScenarioStepDisplay.StepCardClass(ScenarioStepRunStatus.Skipped)
             .ShouldBe("test-step-card skipped");
         ScenarioStepDisplay.StepStatusClass(ScenarioStepRunStatus.Skipped)
-            .ShouldBe("test-step-status skipped");
+            .ShouldBe("test-step-state skipped");
     }
 
     [Fact]

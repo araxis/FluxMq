@@ -3572,7 +3572,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ActiveRunStateIcon");
         markup.ShouldContain("ActiveRunStateText");
         markup.ShouldContain("ActiveRunStateColor");
-        markup.ShouldContain("test-run-context-status");
+        markup.ShouldContain("test-run-context-state");
         markup.ShouldContain("test-run-context-meta");
         markup.ShouldContain("test-run-context-reset");
         markup.ShouldContain("ReportActionsClass");
@@ -3610,24 +3610,25 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("StepResultScopeLabel");
         markup.ShouldContain("FormatRunIdText");
         markup.ShouldContain("StepResultEventLabel(stepResult)");
-        markup.ShouldContain("test-step-status idle");
+        markup.ShouldContain("test-step-state idle");
         markup.ShouldContain("var connectionsAvailable = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("ActiveRunChip");
         markup.ShouldNotContain("FormatRunIdChip");
         markup.ShouldNotContain("test-step-badges");
+        markup.ShouldNotContain("test-run-context-status");
+        markup.ShouldNotContain("test-step-status idle");
         markup.ShouldNotContain("Designer ready");
         markup.ShouldNotContain("var ready = await Live.EnsureConnectionsAsync");
         markup.ShouldNotContain("if (!ready)");
         markup.ShouldNotContain("? \"Running\" : \"Ready\"");
 
         css.ShouldContain(".test-scenario-heading-icon");
-        css.ShouldContain(".test-scenario-meta-strip span,");
-        css.ShouldContain(".test-run-status");
+        css.ShouldContain(".test-scenario-meta-strip span");
         css.ShouldContain(".test-run-context");
         css.ShouldContain(".test-run-context.latest");
         css.ShouldContain(".test-run-context.history");
-        css.ShouldContain(".test-run-context-status");
+        css.ShouldContain(".test-run-context-state");
         css.ShouldContain(".test-run-context-reset");
         css.ShouldContain(".test-run-history-panel");
         css.ShouldContain(".test-run-history-empty strong");
@@ -3664,6 +3665,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-step-card.history");
         css.ShouldContain(".test-step-meta");
         css.ShouldNotContain(".test-step-badges");
+        css.ShouldNotContain(".test-run-status");
+        css.ShouldNotContain(".test-run-context-status");
+        css.ShouldNotContain(".test-step-status");
         css.ShouldNotContain("border-radius: 999px;");
         css.ShouldContain(".test-step-card.configured .test-step-index");
         css.ShouldContain(".test-step-card.issue");
