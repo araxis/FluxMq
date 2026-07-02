@@ -12494,6 +12494,11 @@ public sealed class DashboardEventFilterCatalogTests
             "app.css"));
 
         markup.ShouldContain("aria-label=\"App structure navigation\"");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("StructureMenuLabel(\"Brokers\", conns.Count)");
         markup.ShouldContain("<span class=\"app-structure-name\">@active.Name</span>");
         (markup.Split("Modal=\"false\"", StringSplitOptions.None).Length - 1).ShouldBe(5);

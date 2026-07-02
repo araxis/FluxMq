@@ -4879,3 +4879,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Flow Designer icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App Structure menu decorative icon accessibility result:
+  - Added hidden decorative semantics to direct empty/app, broker, artifact, test-result, empty-row, command-add, and command-cue `MudIcon` markers in `AppStructureMenu`.
+  - Preserved visible labels, broker state text, active `aria-current` markers, delete labels/actions, add commands, test run summaries, app selection/routing, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused App Structure menu guard to reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App Structure menu icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.

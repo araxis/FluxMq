@@ -8,7 +8,7 @@
     @if (Projects.ActiveProject is not { } active)
     {
         <span class="app-structure-empty">
-            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" aria-hidden="true" />
             <span>No app open</span>
         </span>
     }
@@ -17,7 +17,7 @@
         var conns = GetConnections(active);
 
         <span class="app-structure-app" title="@BuildAppMeta(active)">
-            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" aria-hidden="true" />
             <span class="app-structure-name">@active.Name</span>
         </span>
 
@@ -51,7 +51,7 @@
                                      title="@BrokerItemTitle(c)">
                             <div class="@BrokerRowClass(c)">
                                 <span class="app-menu-broker-icon-frame" aria-hidden="true">
-                                    <MudIcon Icon="@BrokerActionIcon(c)" Size="Size.Small" />
+                                    <MudIcon Icon="@BrokerActionIcon(c)" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <span class="app-menu-broker-copy">
                                     <span>@c.ResourceName</span>
@@ -103,7 +103,7 @@
                                      title="@w">
                             <div class="app-menu-artifact-row app-menu-compact-artifact-row">
                                 <span class="app-menu-artifact-icon-frame pipeline" aria-hidden="true">
-                                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <span class="app-menu-artifact-copy">
                                     <span class="app-menu-artifact-name">@w</span>
@@ -160,7 +160,7 @@
                                      title="@d">
                             <div class="app-menu-artifact-row app-menu-compact-artifact-row">
                                 <span class="app-menu-artifact-icon-frame dashboard" aria-hidden="true">
-                                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <span class="app-menu-artifact-copy">
                                     <span class="app-menu-artifact-name">@d</span>
@@ -214,7 +214,7 @@
                                  title="Open metric designer">
                         <div class="app-menu-artifact-row app-menu-compact-artifact-row app-menu-metrics-row">
                             <span class="app-menu-artifact-icon-frame metrics" aria-hidden="true">
-                                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <span class="app-menu-artifact-copy">
                                 <span class="app-menu-artifact-name">Metric designer</span>
@@ -263,7 +263,7 @@
                                      title="@TestArtifactTitle(t, latestTestRun)">
                             <div class="@TestRunMenuRowClass(latestTestRun)">
                                 <span class="app-menu-test-icon-frame" aria-hidden="true">
-                                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <span class="app-menu-artifact-copy">
                                     <span class="app-menu-artifact-name">@t</span>
@@ -272,7 +272,7 @@
                                 <span class="@TestRunMenuSummaryClass(latestTestRun)"
                                       aria-label="@TestRunMenuSummaryLabel(latestTestRun)">
                                     <span class="@TestRunMenuMarkerClass(latestTestRun)">
-                                        <MudIcon Icon="@TestRunMenuIcon(latestTestRun)" Size="Size.Small" />
+                                        <MudIcon Icon="@TestRunMenuIcon(latestTestRun)" Size="Size.Small" aria-hidden="true" />
                                         <span>@TestRunMenuText(latestTestRun)</span>
                                     </span>
                                     <span class="app-menu-test-summary-meta">@TestRunMenuDetailText(latestTestRun)</span>
@@ -308,7 +308,7 @@
 
     private static RenderFragment MenuEmptyRow(string icon, string title, string hint) => @<div class="app-menu-empty-row">
         <span class="app-menu-empty-icon" aria-hidden="true">
-            <MudIcon Icon="@icon" Size="Size.Small" />
+            <MudIcon Icon="@icon" Size="Size.Small" aria-hidden="true" />
         </span>
         <span class="app-menu-empty-copy">
             <span>@title</span>
@@ -319,13 +319,13 @@
 
     private static RenderFragment MenuCommandRow(string title, string hint) => @<div class="app-menu-command-row">
         <span class="app-menu-command-icon" aria-hidden="true">
-            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
         </span>
         <span class="app-menu-command-copy">
             <span>@title</span>
             <small>@hint</small>
         </span>
-        <MudIcon Icon="@Icons.Material.Filled.ChevronRight"
+        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" aria-hidden="true"
                  Size="Size.Small"
                  Class="app-menu-command-cue" />
     </div>;
