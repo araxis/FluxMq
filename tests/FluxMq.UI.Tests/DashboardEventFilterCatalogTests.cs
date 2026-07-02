@@ -2659,6 +2659,9 @@ public sealed class DashboardEventFilterCatalogTests
         visualMetricRows.ShouldContain("KeyboardArrowDown");
         visualMetricRows.ShouldContain("Icons.Material.Filled.Close");
         visualMetricRows.ShouldContain("aria-label=\"@($\"Move {VisualMetricLabel(currentMetric)} up\")\"");
+        visualMetricRows.ShouldContain("title=\"@($\"Remove {VisualMetricLabel(currentMetric)}\")\"");
+        visualMetricRows.ShouldContain("aria-label=\"@($\"Remove {VisualMetricLabel(currentMetric)}\")\"");
+        visualMetricRows.ShouldNotContain("title=\"Remove\"");
         visualMetricRows.ShouldContain("aria-label=\"Add metric card\"");
     }
 
@@ -13626,6 +13629,54 @@ public sealed class DashboardEventFilterCatalogTests
                 }
 
                 violations.Add($"{Path.GetRelativePath(root, file)}:{start + 1}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceCommandTitles_UseSpecificLabels()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var genericTitles = new[]
+        {
+            "Add",
+            "Remove",
+            "Reset",
+            "Copy",
+            "Export",
+            "Open",
+            "Close",
+            "Delete",
+            "Run",
+            "Stop",
+            "Save",
+            "Apply",
+            "Cancel",
+            "Edit",
+            "Start",
+            "Clear",
+            "Refresh",
+            "Reload",
+            "Search"
+        };
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (var title in genericTitles)
+            {
+                var pattern = $"title=\"{title}\"";
+                var index = markup.IndexOf(pattern, StringComparison.Ordinal);
+                while (index >= 0)
+                {
+                    var line = markup.Take(index).Count(static value => value == '\n') + 1;
+                    violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {pattern}");
+                    index = markup.IndexOf(pattern, index + pattern.Length, StringComparison.Ordinal);
+                }
             }
         }
 

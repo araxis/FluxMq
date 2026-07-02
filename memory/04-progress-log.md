@@ -5409,3 +5409,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Neutral added-text scan and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard command-title specificity result:
+  - Replaced the Dashboard visual metric card remove command's generic `Remove` tooltip with the row-specific `Remove {metric}` title that already backs the accessible label.
+  - Preserved metric-card ordering, remove behavior, add-card behavior, dashboard inspector bindings, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector guard to require the specific remove title.
+  - Added a source-wide UI guard that rejects generic one-word command titles such as `Remove`, `Copy`, `Export`, and `Delete` in Razor components.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls|FullyQualifiedName~WorkspaceCommandTitles_UseSpecificLabels" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Neutral added-text scan and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

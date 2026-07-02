@@ -58,7 +58,7 @@
                         </button>
                         <button type="button"
                                 class="visual-metric-icon-button danger"
-                                title="Remove"
+                                title="@($"Remove {VisualMetricLabel(currentMetric)}")"
                                 aria-label="@($"Remove {VisualMetricLabel(currentMetric)}")"
                                 disabled="@(!Draft.CanRemoveDisplayMetric)"
                                 @onclick="@(() => RemoveMetric.InvokeAsync(currentMetric))">
