@@ -3394,6 +3394,38 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void StartupSplash_UsesCompactLoadingChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "StartupSplash.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "StartupSplash.razor.css"));
+
+        markup.ShouldContain("startup-splash");
+        markup.ShouldContain("startup-splash-content");
+        markup.ShouldContain("startup-splash-rail");
+        markup.ShouldContain("brand/fluxmq-loader.svg");
+        markup.ShouldContain("brand/fluxmq-wordmark.svg");
+        markup.ShouldContain("MQTT flow studio");
+
+        css.ShouldContain(".startup-splash-rail");
+        css.ShouldContain("height: 3px;");
+        css.ShouldContain("border-radius: 3px;");
+        css.ShouldContain("animation: startup-splash-progress 1.8s ease-in-out infinite;");
+        css.ShouldContain("@media (prefers-reduced-motion: reduce)");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
     public void TestStudio_UsesFlatCompactWorkspaceChrome()
     {
         var root = FindRepositoryRoot();
