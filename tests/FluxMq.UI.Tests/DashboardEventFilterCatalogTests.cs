@@ -4699,7 +4699,8 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("role=\"region\" aria-label=\"Dashboard designer\"");
         razor.ShouldContain("class=\"dashboard-toolbar\" role=\"toolbar\" aria-label=\"Dashboard toolbar\"");
         razor.ShouldContain("dashboard-meta-strip");
-        razor.ShouldContain("@DashboardStatusLabel");
+        razor.ShouldContain("@DashboardSummaryLabel");
+        razor.ShouldNotContain("@DashboardStatusLabel");
         razor.ShouldContain("@GridSizeLabel");
         razor.ShouldContain("@CellCountLabel");
         razor.ShouldContain("@WidgetCountLabel");

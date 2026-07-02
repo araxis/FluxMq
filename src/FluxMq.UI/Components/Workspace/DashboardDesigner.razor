@@ -14,7 +14,7 @@
             <div class="dashboard-heading-copy">
                 <div class="dashboard-title">@DashboardTitle</div>
                 <div class="dashboard-meta-strip" aria-label="Dashboard summary">
-                    <span>@DashboardStatusLabel</span>
+                    <span>@DashboardSummaryLabel</span>
                     @if (_layout is null)
                     {
                         <span>@DashboardMeta</span>
@@ -526,7 +526,7 @@
         ? Project.DashboardNames.Count == 0 ? "No dashboards yet" : DashboardCountLabel(Project.DashboardNames.Count)
         : $"{_layout.Columns.Count} x {_layout.Rows.Count} grid / {_layout.Cells.Count} cells / {_layout.WidgetCount} widgets";
 
-    private string DashboardStatusLabel => _layout is null
+    private string DashboardSummaryLabel => _layout is null
         ? Project.DashboardNames.Count == 0 ? "No dashboards" : "Select dashboard"
         : DashboardModeLabel;
 
