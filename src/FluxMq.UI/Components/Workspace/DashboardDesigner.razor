@@ -345,7 +345,7 @@
         }
         else
         {
-            <div class="dashboard-live-frame" role="group" aria-label="Live dashboard preview">
+            <div class="dashboard-live-frame" role="group" aria-label="@LivePreviewFrameLabel">
                 <div class="dashboard-live-head">
                     <div class="dashboard-live-title">
                         <span class="dashboard-live-icon" aria-hidden="true">
@@ -561,6 +561,8 @@
     private string LivePreviewContentLabel => HasDashboardWidgets ? "Read-only" : "Empty";
 
     private string LivePreviewContentClass => HasDashboardWidgets ? "active" : "empty";
+
+    private string LivePreviewFrameLabel => $"{DashboardTitle} live dashboard preview";
 
     private string LivePreviewSummaryLabel => $"{DashboardTitle} live preview facts";
 

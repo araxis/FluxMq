@@ -5606,6 +5606,9 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardDesigner.razor.css"));
 
         razor.ShouldContain("dashboard-live-head");
+        razor.ShouldContain("class=\"dashboard-live-frame\" role=\"group\" aria-label=\"@LivePreviewFrameLabel\"");
+        razor.ShouldContain("private string LivePreviewFrameLabel => $\"{DashboardTitle} live dashboard preview\";");
+        razor.ShouldNotContain("aria-label=\"Live dashboard preview\"");
         razor.ShouldContain("dashboard-live-summary");
         razor.ShouldContain("aria-label=\"@LivePreviewSummaryLabel\"");
         razor.ShouldContain("private string LivePreviewSummaryLabel");
