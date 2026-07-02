@@ -5264,3 +5264,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Test Studio empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the Test Runner no-test state and the Test Scenario Designer no-test and no-steps states.
+  - Preserved scenario selection, scenario editing, run controls, report actions, run history, phase and step rendering, saved scenario data, runtime events/logs, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Runner and Test Scenario Designer guards to require the status-backed empty-state wrappers.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome|FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.

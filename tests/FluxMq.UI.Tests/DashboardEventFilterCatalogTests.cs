@@ -3753,6 +3753,7 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeEmpty();
         markup.ShouldContain("@NoTestEmptyTitle");
         markup.ShouldContain("@NoTestSelectionHint");
+        markup.ShouldContain("test-runner-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"Test runner setup state\"");
         markup.ShouldContain("test-runner-empty-cues");
         markup.ShouldContain("@ScenarioStepLabel");
         markup.ShouldContain("@ScenarioPhaseLabel");
@@ -3950,9 +3951,11 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeEmpty();
         markup.ShouldContain("@NoTestEmptyTitle");
         markup.ShouldContain("@NoTestSelectionHint");
+        markup.ShouldContain("test-scenario-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"Test scenario setup state\"");
         markup.ShouldContain("test-scenario-empty-cues");
         markup.ShouldContain("@NoStepsEmptyTitle");
         markup.ShouldContain("@NoStepsEmptyText");
+        markup.ShouldContain("test-scenario-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"Empty scenario\"");
         markup.ShouldContain("@ScenarioStepTypeCountText");
         markup.ShouldContain("@PhaseCountText");
         markup.ShouldContain("@RunModeText");

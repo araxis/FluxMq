@@ -16,7 +16,7 @@
      @onpointerleave="HandleDesignerPointerLeave">
     @if (Scenario is null)
     {
-        <div class="test-scenario-empty" aria-label="Test scenario setup state">
+        <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="Test scenario setup state">
             <div class="test-scenario-empty-panel">
                 <span class="test-scenario-empty-icon" aria-hidden="true">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
@@ -225,7 +225,7 @@
 
             @if (Scenario.Steps.Count == 0)
             {
-                <div class="test-scenario-empty" aria-label="Empty scenario">
+                <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="Empty scenario">
                     <div class="test-scenario-empty-panel compact">
                         <span class="test-scenario-empty-icon timeline" aria-hidden="true">
                             <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" aria-hidden="true" />
