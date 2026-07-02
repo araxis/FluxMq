@@ -66,7 +66,7 @@
                                 <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
                                 <strong>@result.Status</strong>
                             </span>
-                            <span class="test-run-context-meta">@ActiveRunChipText</span>
+                            <span class="test-run-context-meta">@ActiveRunStateText</span>
                             @if (IsViewingHistoricalRun)
                             {
                                 <button type="button"
@@ -345,7 +345,7 @@
                                             {
                                                 <div class="test-step-result-strip" aria-label="@StepResultMetaLabel(stepResult)">
                                                     <span class="@StepResultScopeClass">
-                                                        <MudIcon Icon="@ActiveRunChipIcon" Size="Size.Small" />
+                                                        <MudIcon Icon="@ActiveRunStateIcon" Size="Size.Small" />
                                                         <span>@StepResultScopeLabel</span>
                                                     </span>
                                                     <span>@StepResultClockLabel(stepResult)</span>
@@ -477,15 +477,15 @@
                 ? "test-scenario-report-actions history"
                 : "test-scenario-report-actions latest";
 
-    private string ActiveRunChipText
+    private string ActiveRunStateText
         => Project.LastScenarioRunResult is { } result
             ? $"{(IsViewingHistoricalRun ? "History" : "Latest")} {FormatRunTime(result)}"
             : "No run";
 
-    private string ActiveRunChipIcon
+    private string ActiveRunStateIcon
         => IsViewingHistoricalRun ? Icons.Material.Filled.History : Icons.Material.Filled.Schedule;
 
-    private Color ActiveRunChipColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
+    private Color ActiveRunStateColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
 
     private string StepResultScopeClass
         => IsViewingHistoricalRun ? "test-step-result-run history" : "test-step-result-run latest";
@@ -849,9 +849,9 @@
             {
                 [nameof(ScenarioRunReportDialog.Title)] = $"Scenario report: {result.Name}",
                 [nameof(ScenarioRunReportDialog.RunScopeText)] = IsViewingHistoricalRun ? "Historical run" : "Latest run",
-                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunChipIcon,
-                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunChipColor,
-                [nameof(ScenarioRunReportDialog.RunIdText)] = FormatRunIdChip(report.RunId),
+                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunStateIcon,
+                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunStateColor,
+                [nameof(ScenarioRunReportDialog.RunIdText)] = FormatRunIdText(report.RunId),
                 [nameof(ScenarioRunReportDialog.RunStatusText)] = result.Status.ToString(),
                 [nameof(ScenarioRunReportDialog.RunStatusColor)] = RunStatusColor(result.Status),
                 [nameof(ScenarioRunReportDialog.RunStepSummaryText)] = FormatReportStepCount(report.StepSummary),
@@ -997,7 +997,7 @@
         return string.IsNullOrWhiteSpace(safe) ? "scenario" : safe;
     }
 
-    private static string FormatRunIdChip(string runId)
+    private static string FormatRunIdText(string runId)
         => runId.Length <= 36 ? $"Run {runId}" : $"Run {runId[..33]}...";
 
     private void ShowLatestRun()

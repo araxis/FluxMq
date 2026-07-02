@@ -59,8 +59,8 @@
                     </span>
                     <MudTooltip Text="@ActiveRunTooltip">
                         <span class="@ActiveRunStateClass" aria-label="@ActiveRunTooltip">
-                            <MudIcon Icon="@ActiveRunChipIcon" Size="Size.Small" />
-                            <span>@ActiveRunChipText</span>
+                            <MudIcon Icon="@ActiveRunStateIcon" Size="Size.Small" />
+                            <span>@ActiveRunStateText</span>
                         </span>
                     </MudTooltip>
                 }
@@ -198,7 +198,7 @@
                     </span>
                     <div class="test-runner-result-copy">
                         <span class="@RunResultScopeClass">
-                            <MudIcon Icon="@ActiveRunChipIcon" Size="Size.Small" />
+                            <MudIcon Icon="@ActiveRunStateIcon" Size="Size.Small" />
                             <span>@RunResultScopeLabel</span>
                         </span>
                         <strong>@latest.Status</strong>
@@ -453,15 +453,15 @@
 
     private string SaveReportTooltip => $"Save {ActiveRunScopeText} scenario report";
 
-    private string ActiveRunChipText
+    private string ActiveRunStateText
         => Project.LastScenarioRunResult is { } result
             ? $"{(IsViewingHistoricalRun ? "History" : "Latest")} {FormatRunTime(result)}"
             : "No run";
 
-    private string ActiveRunChipIcon
+    private string ActiveRunStateIcon
         => IsViewingHistoricalRun ? Icons.Material.Filled.History : Icons.Material.Filled.Schedule;
 
-    private Color ActiveRunChipColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
+    private Color ActiveRunStateColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
 
     private string ActiveRunStateClass
         => IsViewingHistoricalRun ? "test-runner-status-state history" : "test-runner-status-state latest";
@@ -846,9 +846,9 @@
             {
                 [nameof(ScenarioRunReportDialog.Title)] = $"Scenario report: {result.Name}",
                 [nameof(ScenarioRunReportDialog.RunScopeText)] = IsViewingHistoricalRun ? "Historical run" : "Latest run",
-                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunChipIcon,
-                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunChipColor,
-                [nameof(ScenarioRunReportDialog.RunIdText)] = FormatRunIdChip(report.RunId),
+                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunStateIcon,
+                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunStateColor,
+                [nameof(ScenarioRunReportDialog.RunIdText)] = FormatRunIdText(report.RunId),
                 [nameof(ScenarioRunReportDialog.RunStatusText)] = result.Status.ToString(),
                 [nameof(ScenarioRunReportDialog.RunStatusColor)] = RunStatusColor(result.Status),
                 [nameof(ScenarioRunReportDialog.RunStepSummaryText)] = FormatReportStepCount(report.StepSummary),
@@ -994,7 +994,7 @@
         return string.IsNullOrWhiteSpace(safe) ? "scenario" : safe;
     }
 
-    private static string FormatRunIdChip(string runId)
+    private static string FormatRunIdText(string runId)
         => runId.Length <= 36 ? $"Run {runId}" : $"Run {runId[..33]}...";
 
     private void ShowLatestRun()

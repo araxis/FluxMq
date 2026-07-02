@@ -3364,6 +3364,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@RunHistorySummaryLabel");
         markup.ShouldContain("RunStatusClass(result.Status)");
         markup.ShouldContain("ActiveRunStateClass");
+        markup.ShouldContain("ActiveRunStateIcon");
+        markup.ShouldContain("ActiveRunStateText");
+        markup.ShouldContain("ActiveRunStateColor");
         markup.ShouldContain("test-run-history-panel");
         markup.ShouldContain("No run history");
         markup.ShouldContain("test-run-history-row");
@@ -3395,6 +3398,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("RunSummaryAriaLabel(latest)");
         markup.ShouldContain("test-runner-result-scope");
         markup.ShouldContain("RunResultScopeLabel");
+        markup.ShouldContain("FormatRunIdText");
         markup.ShouldContain("test-runner-main");
         markup.ShouldContain("test-runner-section timeline");
         markup.ShouldContain("test-runner-section activity");
@@ -3425,6 +3429,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@ActivitySummaryLabel");
         markup.ShouldContain("@RunnerLogCountLabel");
         markup.ShouldNotContain("MudChip");
+        markup.ShouldNotContain("ActiveRunChip");
+        markup.ShouldNotContain("FormatRunIdChip");
         markup.ShouldNotContain("RunStatusPillClass(result.Status)");
         markup.ShouldNotContain("ActiveRunPillClass");
         markup.ShouldNotContain("test-runner-status-pill");
@@ -3530,6 +3536,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("? \"Running\" : \"Idle\"");
         markup.ShouldContain("RunContextClass(result)");
         markup.ShouldContain("RunContextAriaLabel(result)");
+        markup.ShouldContain("ActiveRunStateIcon");
+        markup.ShouldContain("ActiveRunStateText");
+        markup.ShouldContain("ActiveRunStateColor");
         markup.ShouldContain("test-run-context-status");
         markup.ShouldContain("test-run-context-meta");
         markup.ShouldContain("test-run-context-reset");
@@ -3566,9 +3575,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-step-result-strip");
         markup.ShouldContain("StepResultMetaLabel(stepResult)");
         markup.ShouldContain("StepResultScopeLabel");
+        markup.ShouldContain("FormatRunIdText");
         markup.ShouldContain("StepResultEventLabel(stepResult)");
         markup.ShouldContain("test-step-status idle");
         markup.ShouldNotContain("MudChip");
+        markup.ShouldNotContain("ActiveRunChip");
+        markup.ShouldNotContain("FormatRunIdChip");
         markup.ShouldNotContain("test-step-badges");
         markup.ShouldNotContain("Designer ready");
         markup.ShouldNotContain("? \"Running\" : \"Ready\"");
