@@ -292,9 +292,9 @@
         <div class="scenario-step-editor-actions">
             @if (HasValidationIssues)
             {
-                <div class="scenario-step-editor-state invalid" role="status" aria-live="polite">
+                <div class="scenario-step-editor-validation invalid" role="status" aria-live="polite">
                     <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
-                    <span>@ValidationStateText</span>
+                    <span>@ValidationSummaryText</span>
                 </div>
             }
             <div class="scenario-step-editor-action-buttons">
@@ -384,7 +384,7 @@
 
     private bool HasValidationIssues => ValidationMessages.Count > 0;
 
-    private string ValidationStateText => ValidationMessages is { Count: > 0 } messages
+    private string ValidationSummaryText => ValidationMessages is { Count: > 0 } messages
         ? $"{messages.Count} {(messages.Count == 1 ? "issue" : "issues")} - {messages[0]}"
         : string.Empty;
 
