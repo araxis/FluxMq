@@ -6711,6 +6711,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Pipeline diagram canvas\"");
         markup.ShouldContain("flow-canvas-title-copy");
         markup.ShouldContain("flow-canvas-meta-strip");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("Pipeline loaded");
         markup.ShouldContain("@WorkflowModeLabel");
         markup.ShouldContain("@WorkflowSelectionLabel");

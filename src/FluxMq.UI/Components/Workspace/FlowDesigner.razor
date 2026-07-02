@@ -17,7 +17,7 @@
     <div class="flow-canvas-header">
         <div class="flow-canvas-title">
             <span class="flow-canvas-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="flow-canvas-title-copy">
                 <h2>@WorkflowTitle</h2>
@@ -108,7 +108,7 @@
     {
         <div class="flow-canvas-empty" role="status" aria-live="polite">
             <span class="flow-canvas-empty-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Large" />
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Large" aria-hidden="true" />
             </span>
             <strong>No pipeline nodes</strong>
             <span class="flow-canvas-empty-message">@EmptyCanvasText</span>
@@ -118,7 +118,7 @@
     @if (DragState.ActiveComponentDrag is { IsOverDesigner: true, TargetKind: WorkspaceArtifactKind.Pipeline })
     {
         <div class="flow-canvas-drop-highlight" aria-hidden="true">
-            <MudIcon Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" aria-hidden="true" />
             <span>Drop component</span>
         </div>
     }

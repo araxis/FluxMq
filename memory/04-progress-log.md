@@ -4869,3 +4869,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Dashboard Inspector/property-grid icon scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Flow Designer decorative icon accessibility result:
+  - Added hidden decorative semantics to direct canvas-title, empty-canvas, and drop-highlight `MudIcon` markers in `FlowDesigner`.
+  - Preserved visible labels, the neutral `Pipeline loaded` subtitle path, unsaved/no-pipeline states, runtime marker, metrics, diagnostics action, diagram canvas, navigator, link-condition editor, drag/drop behavior, workflow JSON, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Flow Designer guard to reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
