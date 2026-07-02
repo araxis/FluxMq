@@ -6369,6 +6369,9 @@ public sealed class DashboardEventFilterCatalogTests
             System.Text.RegularExpressions.Regex.Matches(markup, "dashboard-widget-empty").Count
                 .ShouldBe(System.Text.RegularExpressions.Regex.Matches(markup, "class=\"dashboard-widget-empty\" role=\"status\" aria-live=\"polite\"").Count);
         }
+
+        File.ReadAllText(Path.Combine(widgetsPath, "DashboardTopicBars.razor"))
+            .ShouldContain("dashboard-topic-empty\" role=\"status\" aria-live=\"polite\"");
     }
 
     [Fact]
