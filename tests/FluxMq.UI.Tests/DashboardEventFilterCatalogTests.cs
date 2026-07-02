@@ -11242,6 +11242,7 @@ public sealed class DashboardEventFilterCatalogTests
         shellMarkup.ShouldNotContain("HeaderBadge");
         shellMarkup.ShouldContain("EditDialogContentClass");
         shellMarkup.ShouldContain("EditorValidationError");
+        shellMarkup.ShouldNotContain("nameof(NodeEditDialog.CategoryColor)");
         shellMarkup.ShouldContain("flow-node-type-icon");
         shellMarkup.ShouldContain("flow-node-name");
         shellMarkup.ShouldContain("flow-node-display-name");
@@ -11508,6 +11509,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Cancel node edit\"");
         markup.ShouldContain("aria-label=\"Save node edit\"");
         markup.ShouldContain("Color=\"Color.Primary\"");
+        markup.ShouldNotContain("[Parameter] public Color CategoryColor");
         markup.ShouldNotContain("Color=\"@CategoryColor\"");
         markup.ShouldNotContain("HelperText=");
         markup.ShouldNotContain("ErrorText=");
