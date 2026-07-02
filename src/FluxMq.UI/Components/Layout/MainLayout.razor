@@ -116,7 +116,10 @@
                 </MudTooltip>
 
                 <MudTooltip Text="@AppRuntimeTooltip">
-                    <div class="@AppRuntimeMarkerClass">
+                    <div class="@AppRuntimeMarkerClass"
+                         role="status"
+                         aria-live="polite"
+                         aria-label="@AppRuntimeSummaryLabel">
                         <span class="flux-app-runtime-dot" aria-hidden="true"></span>
                         <span>@AppRuntimeSummaryLabel</span>
                     </div>
@@ -124,7 +127,8 @@
 
                 <span class="flux-toolbar-divider"></span>
 
-                <div class="@LiveConnectionMarkerClass">
+                <div class="@LiveConnectionMarkerClass"
+                     aria-label="@LiveConnectionSummaryLabel">
                     <span class="flux-live-connection-dot" aria-hidden="true"></span>
                     <span>@Live.State</span>
                 </div>
@@ -164,7 +168,10 @@
     @if (HasActiveProject)
     {
         <footer class="flux-bottom-bar">
-            <div class="flux-bottom-group">
+            <div class="flux-bottom-group"
+                 role="status"
+                 aria-live="polite"
+                 aria-label="@LiveConnectionSummaryLabel">
                 <span class="@LiveConnectionDotClass" aria-hidden="true"></span>
                 <span>@Live.State</span>
                 @if (Live.Connections.Count > 0)
@@ -359,6 +366,8 @@
         MqttClientState.Faulted => "flux-live-dot faulted",
         _ => "flux-live-dot"
     };
+
+    private string LiveConnectionSummaryLabel => $"MQTT {Live.State}";
 
     private Task NewProject() => RunBusyAsync(async () =>
     {

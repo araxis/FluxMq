@@ -5431,3 +5431,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Neutral added-text scan and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: implement the Flow Designer canvas chrome polish request without broadening runtime or schema scope.
+- Workspace shell status semantics result:
+  - Added polite status semantics to the app runtime marker and the persistent bottom MQTT connection readout, and added a concise label to the duplicate top MQTT marker without making it a second live region.
+  - Preserved topbar commands, theme/right-panel controls, app validation/run/stop behavior, live MQTT state, bottom bar layout, drag preview, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MainLayout guard to require the shell status labels and to reject duplicate live-region semantics on the top MQTT marker.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MainLayout_RemovesSessionOnlyLeftRail|FullyQualifiedName~WorkspaceStatusMessages_UseExplicitPoliteLiveSemantics" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Direct status-live scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

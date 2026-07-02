@@ -2856,11 +2856,29 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AppRuntimeMarkerClass");
         markup.ShouldContain("AppRuntimeSummaryLabel");
         markup.ShouldContain("AppRuntimeTooltip");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("aria-label=\"@AppRuntimeSummaryLabel\"");
+        System.Text.RegularExpressions.Regex.IsMatch(
+            markup,
+            @"<div class=""@AppRuntimeMarkerClass""(?=[^>]*role=""status"")(?=[^>]*aria-live=""polite"")(?=[^>]*aria-label=""@AppRuntimeSummaryLabel"")[^>]*>",
+            System.Text.RegularExpressions.RegexOptions.Singleline).ShouldBeTrue();
         markup.ShouldContain("<span class=\"flux-app-runtime-dot\" aria-hidden=\"true\"></span>");
         markup.ShouldContain("LiveConnectionMarkerClass");
+        markup.ShouldContain("LiveConnectionSummaryLabel");
+        markup.ShouldContain("aria-label=\"@LiveConnectionSummaryLabel\"");
+        System.Text.RegularExpressions.Regex.IsMatch(
+            markup,
+            @"<div class=""@LiveConnectionMarkerClass""(?=[^>]*aria-label=""@LiveConnectionSummaryLabel"")(?![^>]*role=""status"")[^>]*>",
+            System.Text.RegularExpressions.RegexOptions.Singleline).ShouldBeTrue();
         markup.ShouldContain("<span class=\"flux-live-connection-dot\" aria-hidden=\"true\"></span>");
         markup.ShouldContain("LiveConnectionDotClass");
         markup.ShouldContain("<span class=\"@LiveConnectionDotClass\" aria-hidden=\"true\"></span>");
+        System.Text.RegularExpressions.Regex.IsMatch(
+            markup,
+            @"<div class=""flux-bottom-group""(?=[^>]*role=""status"")(?=[^>]*aria-live=""polite"")(?=[^>]*aria-label=""@LiveConnectionSummaryLabel"")[^>]*>",
+            System.Text.RegularExpressions.RegexOptions.Singleline).ShouldBeTrue();
+        markup.ShouldContain("private string LiveConnectionSummaryLabel => $\"MQTT {Live.State}\";");
         markup.ShouldNotContain("flux-statusbar");
         markup.ShouldNotContain("FlowStateClass");
         markup.ShouldNotContain("ActiveProjectStateLabel");
