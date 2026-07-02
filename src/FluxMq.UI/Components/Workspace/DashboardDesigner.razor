@@ -37,7 +37,7 @@
                         <MudToggleItem Value="@DashboardModeEdit" UnselectedIcon="@Icons.Material.Filled.Edit" SelectedIcon="@Icons.Material.Filled.Edit">Edit</MudToggleItem>
                         <MudToggleItem Value="@DashboardModeLive" UnselectedIcon="@Icons.Material.Filled.Visibility" SelectedIcon="@Icons.Material.Filled.Visibility">Live</MudToggleItem>
                     </MudToggleGroup>
-                    <span class="@($"dashboard-mode-state {DashboardModeStateClass}")">@DashboardModeLabel</span>
+                    <span class="@($"dashboard-mode-indicator {DashboardModeIndicatorClass}")">@DashboardModeLabel</span>
                 </div>
 
                 @if (IsEditMode)
@@ -532,7 +532,7 @@
 
     private string DashboardModeLabel => IsEditMode ? "Editing" : "Live preview";
 
-    private string DashboardModeStateClass => IsEditMode ? "edit" : "live";
+    private string DashboardModeIndicatorClass => IsEditMode ? "edit" : "live";
 
     private string LivePreviewSubtitle => HasDashboardWidgets
         ? "Read-only runtime view without layout controls."

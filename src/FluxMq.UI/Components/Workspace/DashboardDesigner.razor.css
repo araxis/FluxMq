@@ -114,7 +114,7 @@
     padding: 1px 6px 1px 1px;
 }
 
-.dashboard-mode-state {
+.dashboard-mode-indicator {
     align-items: center;
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
@@ -127,12 +127,12 @@
     white-space: nowrap;
 }
 
-.dashboard-mode-state.edit {
+.dashboard-mode-indicator.edit {
     background: color-mix(in srgb, var(--flux-accent) 10%, transparent);
     color: var(--flux-accent);
 }
 
-.dashboard-mode-state.live {
+.dashboard-mode-indicator.live {
     background: color-mix(in srgb, var(--mud-palette-success) 10%, transparent);
     color: var(--mud-palette-success);
 }
@@ -1762,7 +1762,7 @@
         padding: 0;
     }
 
-    .dashboard-mode-state {
+    .dashboard-mode-indicator {
         display: none;
     }
 

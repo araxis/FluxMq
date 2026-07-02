@@ -4738,7 +4738,9 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("@CellCountLabel");
         razor.ShouldContain("@WidgetCountLabel");
         razor.ShouldContain("dashboard-mode-shell");
-        razor.ShouldContain("DashboardModeStateClass");
+        razor.ShouldContain("DashboardModeIndicatorClass");
+        razor.ShouldNotContain("DashboardModeStateClass");
+        razor.ShouldNotContain("dashboard-mode-state");
         razor.ShouldContain("dashboard-tool-group dashboard-tool-group-grid");
         razor.ShouldContain("dashboard-tool-group dashboard-tool-group-selection");
         razor.ShouldContain("aria-label=\"Dashboard layout editor\"");
@@ -4759,8 +4761,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain(".dashboard-meta-strip span");
         css.ShouldContain(".dashboard-mode-shell");
-        css.ShouldContain(".dashboard-mode-state.edit");
-        css.ShouldContain(".dashboard-mode-state.live");
+        css.ShouldContain(".dashboard-mode-indicator.edit");
+        css.ShouldContain(".dashboard-mode-indicator.live");
+        css.ShouldNotContain(".dashboard-mode-state");
         css.ShouldContain(".dashboard-tool-group");
         css.ShouldContain("min-height: 32px;");
         css.ShouldContain("@media (max-width: 980px)");
