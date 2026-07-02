@@ -4606,6 +4606,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("role=\"form\" aria-label=\"Create metric\"");
         markup.ShouldContain("role=\"search\"");
+        markup.ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
+        markup.ShouldContain("MetricTypeOptionLabel(MetricDescriptor descriptor)");
         System.Text.RegularExpressions.Regex.Matches(
                 markup,
                 @"<MudIcon\b(?:(?!/>).)*?/>",
@@ -4755,6 +4757,10 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldNotContain("DuplicateStatusText");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldNotContain("metric-type-change-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("MetricTypeOptionLabel(MetricDescriptor descriptor)");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldNotContain("TypeChangeStatusText");
         File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor.css"))

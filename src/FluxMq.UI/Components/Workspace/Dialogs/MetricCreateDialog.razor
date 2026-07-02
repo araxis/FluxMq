@@ -43,6 +43,7 @@
                                 class="@TypeButtonClass(current)"
                                 role="option"
                                 aria-selected="@IsSelected(current)"
+                                aria-label="@MetricTypeOptionLabel(current)"
                                 title="@current.Description"
                                 @onclick="@(() => SelectDescriptor(current))">
                             <span class="metric-create-type-icon">
@@ -208,6 +209,9 @@
 
     private string TypeButtonClass(MetricDescriptor descriptor)
         => IsSelected(descriptor) ? "metric-create-type selected" : "metric-create-type";
+
+    private static string MetricTypeOptionLabel(MetricDescriptor descriptor)
+        => $"Select metric type {descriptor.DisplayName}, {descriptor.TypeId}, {descriptor.ValueKind}, {ParameterCountText(descriptor)}";
 
     private static string IconFor(MetricDescriptor descriptor)
         => descriptor.ValueKind == MetricValueKind.Double

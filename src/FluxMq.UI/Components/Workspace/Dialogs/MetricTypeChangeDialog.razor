@@ -43,6 +43,7 @@
                                 class="@TypeButtonClass(current)"
                                 role="option"
                                 aria-selected="@IsSelected(current)"
+                                aria-label="@MetricTypeOptionLabel(current)"
                                 title="@current.Description"
                                 @onclick="@(() => SelectDescriptor(current))">
                             <span class="metric-type-change-option-icon">
@@ -220,6 +221,12 @@
             (false, true) => "metric-type-change-option current",
             _ => "metric-type-change-option"
         };
+    }
+
+    private string MetricTypeOptionLabel(MetricDescriptor descriptor)
+    {
+        var currentText = IsCurrent(descriptor) ? ", current type" : string.Empty;
+        return $"Select metric type {descriptor.DisplayName}, {descriptor.TypeId}, {descriptor.ValueKind}, {ParameterCountText(descriptor)}{currentText}";
     }
 
     private static string IconFor(MetricDescriptor descriptor)

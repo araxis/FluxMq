@@ -5201,3 +5201,12 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
     - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace tab controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Metric type option label result:
+  - Added concise row-level accessible labels to the Metric Create and Metric Type Change metric type option lists.
+  - Preserved native button activation, descriptor selection, search, result counts, metric id generation, default parameter previews, type-change reset warnings, validation, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Metric Create and Metric Action dialog guards to require the option-label helpers and bindings.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
