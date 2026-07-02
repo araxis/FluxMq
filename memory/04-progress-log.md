@@ -5524,3 +5524,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only Dashboard Inspector label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Designer toolbar-label specificity result:
+  - Replaced generic dashboard toolbar group accessible names with active-dashboard-backed labels for dashboard facts, mode/layout commands, edit commands, grid commands, cell selection commands, and live preview facts.
+  - Preserved visible toolbar text, edit/live mode switching, grid picker, split picker, selection summary, live preview, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Designer toolbar and live-preview guards to require the new label helpers and reject the old generic group labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar|FullyQualifiedName~DashboardDesigner_UsesFlatLivePreviewChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Designer label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

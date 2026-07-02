@@ -5444,8 +5444,23 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("role=\"region\" aria-label=\"Dashboard designer\"");
         razor.ShouldContain("class=\"dashboard-toolbar\" role=\"toolbar\" aria-label=\"Dashboard toolbar\"");
         razor.ShouldContain("dashboard-meta-strip");
+        razor.ShouldContain("aria-label=\"@DashboardMetaSummaryLabel\"");
         razor.ShouldContain("@DashboardSummaryLabel");
+        razor.ShouldContain("aria-label=\"@DashboardToolbarActionsLabel\"");
+        razor.ShouldContain("aria-label=\"@DashboardEditCommandsLabel\"");
+        razor.ShouldContain("aria-label=\"@GridLayoutCommandsLabel\"");
+        razor.ShouldContain("aria-label=\"@SelectionCommandsLabel\"");
+        razor.ShouldContain("private string DashboardMetaSummaryLabel");
+        razor.ShouldContain("private string DashboardToolbarActionsLabel");
+        razor.ShouldContain("private string DashboardEditCommandsLabel");
+        razor.ShouldContain("private string GridLayoutCommandsLabel");
+        razor.ShouldContain("private string SelectionCommandsLabel");
         razor.ShouldNotContain("@DashboardStatusLabel");
+        razor.ShouldNotContain("aria-label=\"Dashboard summary\"");
+        razor.ShouldNotContain("aria-label=\"Dashboard mode and commands\"");
+        razor.ShouldNotContain("aria-label=\"Dashboard edit commands\"");
+        razor.ShouldNotContain("aria-label=\"Grid layout commands\"");
+        razor.ShouldNotContain("aria-label=\"Selection commands\"");
         razor.Split('\n')
             .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
                 !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
@@ -5516,9 +5531,12 @@ public sealed class DashboardEventFilterCatalogTests
 
         razor.ShouldContain("dashboard-live-head");
         razor.ShouldContain("dashboard-live-summary");
+        razor.ShouldContain("aria-label=\"@LivePreviewSummaryLabel\"");
+        razor.ShouldContain("private string LivePreviewSummaryLabel");
         razor.ShouldContain("@LivePreviewSubtitle");
         razor.ShouldContain("@LivePreviewContentLabel");
         razor.ShouldContain("LivePreviewContentClass");
+        razor.ShouldNotContain("aria-label=\"Live preview summary\"");
         razor.ShouldNotContain("@LivePreviewStateLabel");
         razor.ShouldNotContain("LivePreviewStateClass");
         razor.ShouldContain("SwitchToEditMode");

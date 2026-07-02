@@ -13,7 +13,7 @@
             </span>
             <div class="dashboard-heading-copy">
                 <div class="dashboard-title">@DashboardTitle</div>
-                <div class="dashboard-meta-strip" aria-label="Dashboard summary">
+                <div class="dashboard-meta-strip" aria-label="@DashboardMetaSummaryLabel">
                     <span>@DashboardSummaryLabel</span>
                     @if (_layout is null)
                     {
@@ -31,7 +31,7 @@
 
         @if (_layout is not null)
         {
-            <div class="dashboard-toolbar-actions" aria-label="Dashboard mode and commands">
+            <div class="dashboard-toolbar-actions" aria-label="@DashboardToolbarActionsLabel">
                 <div class="dashboard-mode-shell">
                     <MudToggleGroup T="string" @bind-Value="DashboardMode" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="dashboard-mode-toggle">
                         <MudToggleItem Value="@DashboardModeEdit" UnselectedIcon="@Icons.Material.Filled.Edit" SelectedIcon="@Icons.Material.Filled.Edit">Edit</MudToggleItem>
@@ -42,8 +42,8 @@
 
                 @if (IsEditMode)
                 {
-                    <div class="dashboard-command-strip" aria-label="Dashboard edit commands">
-                        <div class="dashboard-tool-group dashboard-tool-group-grid" aria-label="Grid layout commands">
+                    <div class="dashboard-command-strip" aria-label="@DashboardEditCommandsLabel">
+                        <div class="dashboard-tool-group dashboard-tool-group-grid" aria-label="@GridLayoutCommandsLabel">
                             <div class="dashboard-grid-picker dashboard-grid-size-control">
                                 <MudTooltip Text="Set grid layout">
                                     <MudIconButton Icon="@Icons.Material.Filled.GridOn"
@@ -87,7 +87,7 @@
                             </div>
                         </div>
 
-                        <div class="dashboard-tool-group dashboard-tool-group-selection" aria-label="Selection commands">
+                        <div class="dashboard-tool-group dashboard-tool-group-selection" aria-label="@SelectionCommandsLabel">
                             <MudTooltip Text="Merge selected cells">
                                 <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
                                                Size="Size.Small"
@@ -356,7 +356,7 @@
                             <small>@LivePreviewSubtitle</small>
                         </div>
                     </div>
-                    <div class="dashboard-live-summary" aria-label="Live preview summary">
+                    <div class="dashboard-live-summary" aria-label="@LivePreviewSummaryLabel">
                         <span>@GridSizeLabel</span>
                         <span>@WidgetCountLabel</span>
                         <span class="@LivePreviewContentClass">@LivePreviewContentLabel</span>
@@ -538,6 +538,16 @@
         ? Project.DashboardNames.Count == 0 ? "No dashboards" : "Select dashboard"
         : DashboardModeLabel;
 
+    private string DashboardMetaSummaryLabel => $"{DashboardTitle} dashboard facts";
+
+    private string DashboardToolbarActionsLabel => $"{DashboardTitle} mode and layout commands";
+
+    private string DashboardEditCommandsLabel => $"{DashboardTitle} edit layout commands";
+
+    private string GridLayoutCommandsLabel => $"{DashboardTitle} grid layout commands";
+
+    private string SelectionCommandsLabel => $"{DashboardTitle} cell selection commands";
+
     private string DashboardModeLabel => IsEditMode ? "Editing" : "Live preview";
 
     private string DashboardModeIndicatorClass => IsEditMode ? "edit" : "live";
@@ -549,6 +559,8 @@
     private string LivePreviewContentLabel => HasDashboardWidgets ? "Read-only" : "Empty";
 
     private string LivePreviewContentClass => HasDashboardWidgets ? "active" : "empty";
+
+    private string LivePreviewSummaryLabel => $"{DashboardTitle} live preview facts";
 
     private string GridSizeLabel => _layout is null
         ? "No grid"
