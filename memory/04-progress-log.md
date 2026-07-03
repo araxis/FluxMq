@@ -6251,3 +6251,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardDesigner stale-title scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: Dashboard widget cell action tooltip specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard widget cell action tooltip specificity result:
+  - Replaced inline Dashboard widget preview/edit/simulate/delete title and accessible-label strings with helper-backed labels based on the existing widget label.
+  - Preserved widget drag/move behavior, edit dialog launch, preview simulation, delete behavior, widget rendering, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner onboarding/placement guard to require helper-backed widget action labels and reject the old inline widget action strings.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFirstWidgetEmptyGridOnboarding" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale widget-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard widget placeholder title specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.

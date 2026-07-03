@@ -285,7 +285,7 @@
                                         var currentWidgetLabel = WidgetLabel(currentCell.Widget);
                                         <div class="dashboard-cell-widget-preview"
                                              draggable="true"
-                                             title="@($"Drag {currentWidgetLabel} to move; use toolbar to edit")"
+                                             title="@WidgetMoveLabel(currentWidgetLabel)"
                                              @ondragstart="@(() => BeginWidgetMove(currentCell.Widget, currentCell.Name))"
                                              @ondragend="@EndWidgetMove">
                                             <DashboardWidgetView Project="@Project"
@@ -298,22 +298,22 @@
                                              @onclick:stopPropagation="true">
                                             <button type="button"
                                                     class="dashboard-cell-widget-action edit"
-                                                    title="@($"Edit {currentWidgetLabel} settings")"
-                                                    aria-label="@($"Edit {currentWidgetLabel} settings")"
+                                                    title="@WidgetEditLabel(currentWidgetLabel)"
+                                                    aria-label="@WidgetEditLabel(currentWidgetLabel)"
                                                     @onclick="@(() => OpenWidgetEditorAsync(currentCell.Widget))">
                                                 <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action simulate"
-                                                    title="@($"Simulate {currentWidgetLabel} data")"
-                                                    aria-label="@($"Simulate {currentWidgetLabel} data")"
+                                                    title="@WidgetSimulateLabel(currentWidgetLabel)"
+                                                    aria-label="@WidgetSimulateLabel(currentWidgetLabel)"
                                                     @onclick="@(() => SimulateWidgetPreview(currentCell.Widget))">
                                                 <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action danger"
-                                                    title="@($"Delete {currentWidgetLabel}")"
-                                                    aria-label="@($"Delete {currentWidgetLabel}")"
+                                                    title="@WidgetDeleteLabel(currentWidgetLabel)"
+                                                    aria-label="@WidgetDeleteLabel(currentWidgetLabel)"
                                                     @onclick="@(() => RemoveWidget(currentCell.Widget))">
                                                 <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" aria-hidden="true" />
                                             </button>
@@ -1358,6 +1358,18 @@
                DashboardWidgets.Find(widget.Type)?.DisplayName ??
                widget.Name;
     }
+
+    private static string WidgetMoveLabel(string widgetLabel)
+        => $"Drag {widgetLabel} to move; use toolbar to edit";
+
+    private static string WidgetEditLabel(string widgetLabel)
+        => $"Edit {widgetLabel} settings";
+
+    private static string WidgetSimulateLabel(string widgetLabel)
+        => $"Simulate {widgetLabel} data";
+
+    private static string WidgetDeleteLabel(string widgetLabel)
+        => $"Delete {widgetLabel}";
 
     private static string CssTemplate(IReadOnlyList<string> sizes, string axis)
         => string.Join(" ", sizes.Select(size => ToCssTrack(size, axis)));
