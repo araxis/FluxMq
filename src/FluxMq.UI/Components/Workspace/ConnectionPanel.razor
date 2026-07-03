@@ -13,11 +13,11 @@
                 <span>@ConnectionCountLabel</span>
             </div>
         </div>
-        <MudTooltip Text="Add connection">
+        <MudTooltip Text="@AddConnectionLabel">
             <MudIconButton Size="Size.Small"
                            Icon="@Icons.Material.Filled.Add"
                            Class="connection-add-button"
-                           aria-label="Add connection"
+                           aria-label="@AddConnectionLabel"
                            OnClick="@AddConnectionAsync" />
         </MudTooltip>
     </div>
@@ -98,6 +98,10 @@
         : $"{VisibleConnections.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)} connections";
 
     private string ConnectionsPanelLabel => $"Connections, {ConnectionCountLabel}";
+
+    private string AddConnectionLabel => VisibleConnections.Count == 0
+        ? "Add first broker connection"
+        : $"Add broker connection, {ConnectionCountLabel} configured";
 
     private async Task AddConnectionAsync()
     {

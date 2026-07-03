@@ -13709,6 +13709,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@ConnectionsPanelLabel\"");
         markup.ShouldContain("private string ConnectionsPanelLabel => $\"Connections, {ConnectionCountLabel}\";");
         markup.ShouldNotContain("aria-label=\"Connections panel\"");
+        markup.ShouldContain("Text=\"@AddConnectionLabel\"");
+        markup.ShouldContain("aria-label=\"@AddConnectionLabel\"");
+        markup.ShouldContain("private string AddConnectionLabel => VisibleConnections.Count == 0");
+        markup.ShouldContain("? \"Add first broker connection\"");
+        markup.ShouldContain(": $\"Add broker connection, {ConnectionCountLabel} configured\"");
+        markup.ShouldNotContain("Text=\"Add connection\"");
+        markup.ShouldNotContain("aria-label=\"Add connection\"");
         markup.ShouldContain("connections-title-icon");
         markup.ShouldContain("class=\"connections-title-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");

@@ -5900,3 +5900,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardInspector stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Connections add-action label specificity result:
+  - Replaced the static Connections add-action tooltip and accessible label with a broker-count-aware label.
+  - Preserved add-connection dialog launch, broker filtering, connection rows, connect/disconnect/remove actions, managed connection data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Connections panel guard to require the add-action label helper and reject the old static add label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ConnectionPanel_UsesFlatCompactConnectionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - The first parallel focused-test attempt hit the known shared intermediate XAML file lock while the build was running; the serial guard rerun passed.
+  - Source-only ConnectionPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
