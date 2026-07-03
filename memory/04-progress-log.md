@@ -6442,3 +6442,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale log fixed/search label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are MetricDesigner or PropertyGrid literals, after confirming existing guard coverage and keeping edits UI-only.
+- PropertyGrid label specificity result:
+  - Replaced the static dashboard property editor and property-name column resize accessible labels with helper-backed labels that include current group count and column width.
+  - Preserved property grid layout, group collapse/expand behavior, column resizing and keyboard shortcuts, dashboard inspector rows, saved dashboard data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardInspector/PropertyGrid guard to require helper-backed grid/resizer labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale PropertyGrid label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: end the current timed goal window with a clean handoff, then resume later with one focused high-use workspace static-label audit at a time; likely candidate is MetricDesigner literals after confirming focused guard coverage and keeping edits UI-only.

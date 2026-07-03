@@ -4,7 +4,7 @@
 
 <div class="@GridClass"
      role="treegrid"
-     aria-label="Dashboard property editor"
+     aria-label="@GridAriaLabel"
      style="@GridStyle"
      @onpointermove="@ResizeNameColumn"
      @onpointerup="@StopNameColumnResize"
@@ -13,8 +13,8 @@
     <button type="button"
             class="property-grid-column-resizer"
             role="separator"
-            title="Resize property name column"
-            aria-label="Resize property name column"
+            title="@NameColumnResizeLabel"
+            aria-label="@NameColumnResizeLabel"
             aria-orientation="vertical"
             aria-valuemin="@MinNameColumnWidth"
             aria-valuemax="@MaxNameColumnWidth"
@@ -92,6 +92,12 @@
 
     private string NameColumnWidthValue
         => _nameColumnWidth.ToString("0", CultureInfo.InvariantCulture);
+
+    private string GridAriaLabel
+        => $"Dashboard property editor, {Groups.Count.ToString(CultureInfo.InvariantCulture)} groups";
+
+    private string NameColumnResizeLabel
+        => $"Resize property name column, {NameColumnWidthValue} pixels";
 
     protected override void OnParametersSet()
     {

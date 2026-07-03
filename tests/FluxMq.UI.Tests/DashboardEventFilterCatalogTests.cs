@@ -2548,7 +2548,16 @@ public sealed class DashboardEventFilterCatalogTests
         propertyGrid.ShouldContain("MinNameColumnWidth = 78");
         propertyGrid.ShouldContain("MaxNameColumnWidth = 176");
         propertyGrid.ShouldContain("--property-grid-name-width: min({_nameColumnWidth.ToString(\"0\", CultureInfo.InvariantCulture)}px, 39%);");
-        propertyGrid.ShouldContain("aria-label=\"Dashboard property editor\"");
+        propertyGrid.ShouldContain("aria-label=\"@GridAriaLabel\"");
+        propertyGrid.ShouldContain("private string GridAriaLabel");
+        propertyGrid.ShouldContain("$\"Dashboard property editor, {Groups.Count.ToString(CultureInfo.InvariantCulture)} groups\"");
+        propertyGrid.ShouldContain("title=\"@NameColumnResizeLabel\"");
+        propertyGrid.ShouldContain("aria-label=\"@NameColumnResizeLabel\"");
+        propertyGrid.ShouldContain("private string NameColumnResizeLabel");
+        propertyGrid.ShouldContain("$\"Resize property name column, {NameColumnWidthValue} pixels\"");
+        propertyGrid.ShouldNotContain("aria-label=\"Dashboard property editor\"");
+        propertyGrid.ShouldNotContain("title=\"Resize property name column\"");
+        propertyGrid.ShouldNotContain("aria-label=\"Resize property name column\"");
         propertyGrid.ShouldContain("aria-keyshortcuts=\"ArrowLeft ArrowRight Home End Enter\"");
         propertyGrid.ShouldContain("role=\"rowgroup\"");
         propertyGrid.ShouldContain("aria-label=\"@GroupAriaLabel(group, collapsed)\"");
