@@ -6241,3 +6241,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardDesigner stale-tooltip scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: Dashboard Designer picker-cell title specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard Designer picker-cell title specificity result:
+  - Replaced inline Dashboard Designer grid and split picker cell hover titles with the same helper-backed labels used by their accessible names.
+  - Preserved grid preview/pick behavior, split preview/pick behavior, disabled split-cell rules, picker cell classes, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner guard to require helper-backed picker cell titles and reject the old inline title strings.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-title scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard widget cell action tooltip specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.

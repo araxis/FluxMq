@@ -5976,6 +5976,12 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldNotContain("aria-label=\"Close split picker\"");
         razor.ShouldContain("@onclick=\"@CloseSplitPicker\"");
         razor.ShouldNotContain("class=\"dashboard-picker-backdrop\" @onclick");
+        razor.ShouldContain("title=\"@GridPickerCellAriaLabel(r, c)\"");
+        razor.ShouldContain("aria-label=\"@GridPickerCellAriaLabel(r, c)\"");
+        razor.ShouldNotContain("title=\"@($\"Set grid to {c} columns x {r} rows\")\"");
+        razor.ShouldContain("title=\"@SplitPickerCellAriaLabel(r, c)\"");
+        razor.ShouldContain("aria-label=\"@SplitPickerCellAriaLabel(r, c)\"");
+        razor.ShouldNotContain("title=\"@($\"Split selected cell to {c} columns x {r} rows\")\"");
         razor.ShouldContain("GridPickerCellAriaLabel");
         razor.ShouldContain("SplitPickerCellAriaLabel");
         razor.ShouldContain("disabled=\"@IsSplitPickerCellDisabled(r, c)\"");

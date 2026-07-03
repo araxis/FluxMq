@@ -72,7 +72,7 @@
                                                     var c = column;
                                                     <button type="button"
                                                             class="@GridPickerCellClass(r, c)"
-                                                            title="@($"Set grid to {c} columns x {r} rows")"
+                                                            title="@GridPickerCellAriaLabel(r, c)"
                                                             aria-label="@GridPickerCellAriaLabel(r, c)"
                                                             aria-pressed="@(r == _previewRows && c == _previewColumns)"
                                                             @onmouseenter="@(() => PreviewGrid(r, c))"
@@ -123,7 +123,7 @@
                                                     var c = column;
                                                     <button type="button"
                                                             class="@SplitPickerCellClass(r, c)"
-                                                            title="@($"Split selected cell to {c} columns x {r} rows")"
+                                                            title="@SplitPickerCellAriaLabel(r, c)"
                                                             aria-label="@SplitPickerCellAriaLabel(r, c)"
                                                             aria-pressed="@(r == _previewSplitRows && c == _previewSplitColumns)"
                                                             disabled="@IsSplitPickerCellDisabled(r, c)"
