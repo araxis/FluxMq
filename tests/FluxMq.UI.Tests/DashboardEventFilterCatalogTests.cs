@@ -13111,7 +13111,11 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("tree-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Medium\" aria-hidden=\"true\" />");
-        markup.ShouldContain("app-tree\" aria-label=\"App structure tree\"");
+        markup.ShouldContain("app-tree\" aria-label=\"@AppTreeLabel\"");
+        markup.ShouldContain("private string AppTreeLabel");
+        markup.ShouldContain("App structure tree for {active.Name}, {CountLabel(Projects.Projects.Count, \"open app\")}");
+        markup.ShouldContain("App structure tree with {CountLabel(Projects.Projects.Count, \"open app\")}");
+        markup.ShouldNotContain("aria-label=\"App structure tree\"");
         markup.ShouldContain("aria-label=\"@AppRowLabel(a, isActive)\"");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isActive)\"");
         markup.ShouldContain("title=\"@AppRowLabel(a, isActive)\"");

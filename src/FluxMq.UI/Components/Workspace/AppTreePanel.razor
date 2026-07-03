@@ -16,7 +16,7 @@
 }
 else
 {
-    <div class="app-tree" aria-label="App structure tree">
+    <div class="app-tree" aria-label="@AppTreeLabel">
         @foreach (var app in Projects.Projects)
         {
             var a = app;
@@ -361,6 +361,11 @@ else
 
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
     private readonly Dictionary<FlowWorkspaceService, HashSet<string>> _collapsedSections = [];
+
+    private string AppTreeLabel
+        => Projects.ActiveProject is { } active
+            ? $"App structure tree for {active.Name}, {CountLabel(Projects.Projects.Count, "open app")}"
+            : $"App structure tree with {CountLabel(Projects.Projects.Count, "open app")}";
 
     private RenderFragment TreeSectionHeader(
         FlowWorkspaceService app,
