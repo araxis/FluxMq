@@ -274,7 +274,7 @@ else
                             <div class="tree-empty-artifact-row tests"
                                  role="button"
                                  tabindex="0"
-                                 aria-label="Create test scenario"
+                                 aria-label="@CreateTestScenarioLabel(a)"
                                  aria-keyshortcuts="Enter Space"
                                  @onclick="@(() => AddTestAsync(a))"
                                  @onkeydown="@((KeyboardEventArgs args) => AddTestFromKeyboardAsync(args, a))">
@@ -658,6 +658,9 @@ else
         => latestRun is null
             ? $"Test {testName}. No runs yet."
             : $"Test {testName}. Latest run {latestRun.Status} at {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}.";
+
+    private static string CreateTestScenarioLabel(FlowWorkspaceService app)
+        => $"Create test scenario for {app.Name}, {CountLabel(app.TestNames.Count, "test")}";
 
     private Task CloseAsync(FlowWorkspaceService app) => Projects.CloseProjectAsync(app).AsTask();
 

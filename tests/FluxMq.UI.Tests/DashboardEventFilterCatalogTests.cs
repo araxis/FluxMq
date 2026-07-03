@@ -13468,7 +13468,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Text=\"Close app\"");
         markup.ShouldContain("tree-empty-artifact-row tests");
         markup.ShouldContain("role=\"button\"");
-        markup.ShouldContain("aria-label=\"Create test scenario\"");
+        markup.ShouldContain("aria-label=\"@CreateTestScenarioLabel(a)\"");
+        markup.ShouldContain("private static string CreateTestScenarioLabel(FlowWorkspaceService app)");
+        markup.ShouldContain("=> $\"Create test scenario for {app.Name}, {CountLabel(app.TestNames.Count, \"test\")}\";");
+        markup.ShouldNotContain("aria-label=\"Create test scenario\"");
         markup.ShouldContain("AddTestFromKeyboardAsync(args, a)");
         markup.ShouldContain("if (IsActivationKey(args))");
         System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""tree-empty-artifact-icon""\s+aria-hidden=""true""").ShouldBeTrue();
