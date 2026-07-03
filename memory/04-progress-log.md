@@ -5870,3 +5870,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only TopicExplorerPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace Logs action-label specificity result:
+  - Replaced static Workspace Logs command-group, stats, copy, export, reset, and clear accessible labels/tooltips with count/scope-aware labels.
+  - Preserved scope/level/search filtering, forced-scope handling, visible-row copy/export, reset/clear behavior, log rendering, export JSON, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Workspace Logs guard to require the action-label helpers and reject the old static action labels/tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only WorkspaceLogPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

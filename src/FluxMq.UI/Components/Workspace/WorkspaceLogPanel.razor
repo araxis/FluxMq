@@ -18,10 +18,10 @@
             </div>
         </div>
 
-        <div class="workspace-log-actions" aria-label="Workspace log commands">
+        <div class="workspace-log-actions" aria-label="@WorkspaceLogActionsLabel">
             @if (Logs.Count > 0)
             {
-                <div class="workspace-log-stats" aria-label="Workspace log total and problem count">
+                <div class="workspace-log-stats" aria-label="@WorkspaceLogStatsLabel">
                     <span><strong>@Logs.Count</strong> total</span>
                     @if (ProblemCount > 0)
                     {
@@ -29,36 +29,36 @@
                     }
                 </div>
             }
-            <MudTooltip Text="Copy visible logs">
+            <MudTooltip Text="@CopyVisibleLogsLabel">
                 <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                                Size="Size.Small"
                                Class="workspace-log-icon-button"
                                Disabled="@(FilteredLogs.Count == 0)"
-                               aria-label="Copy visible logs"
+                               aria-label="@CopyVisibleLogsLabel"
                                OnClick="CopyVisibleLogsAsync" />
             </MudTooltip>
-            <MudTooltip Text="Export visible logs">
+            <MudTooltip Text="@ExportVisibleLogsLabel">
                 <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
                                Size="Size.Small"
                                Class="workspace-log-icon-button"
                                Disabled="@(FilteredLogs.Count == 0)"
-                               aria-label="Export visible logs"
+                               aria-label="@ExportVisibleLogsLabel"
                                OnClick="ExportVisibleLogsAsync" />
             </MudTooltip>
-            <MudTooltip Text="Reset filters">
+            <MudTooltip Text="@ResetLogFiltersLabel">
                 <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
                                Size="Size.Small"
                                Class="workspace-log-icon-button"
                                Disabled="@(!HasActiveFilters)"
-                               aria-label="Reset log filters"
+                               aria-label="@ResetLogFiltersLabel"
                                OnClick="ResetFilters" />
             </MudTooltip>
-            <MudTooltip Text="Clear logs">
+            <MudTooltip Text="@ClearLogsLabel">
                 <MudIconButton Icon="@Icons.Material.Filled.DeleteSweep"
                                Size="Size.Small"
                                Class="workspace-log-icon-button danger"
                                Disabled="@(Logs.Count == 0)"
-                               aria-label="Clear logs"
+                               aria-label="@ClearLogsLabel"
                                OnClick="ClearAsync" />
             </MudTooltip>
         </div>
@@ -241,6 +241,28 @@
     private string WorkspaceLogListLabel => HasActiveFilters
         ? $"Workspace log list, {FormatLogCount(FilteredLogs.Count)} shown from {FormatLogCount(Logs.Count)}"
         : $"Workspace log list, {FormatLogCount(FilteredLogs.Count)} shown";
+
+    private string WorkspaceLogActionsLabel => Logs.Count == 0
+        ? "Workspace log commands, no logs"
+        : $"Workspace log commands, {FormatLogCount(Logs.Count)} total";
+
+    private string WorkspaceLogStatsLabel => ProblemCount > 0
+        ? $"Workspace log totals, {FormatLogCount(Logs.Count)} total and {ProblemCount} {ProblemCountLabel}"
+        : $"Workspace log totals, {FormatLogCount(Logs.Count)} total and no problems";
+
+    private string VisibleLogActionTargetLabel => HasActiveFilters
+        ? $"{FormatLogCount(FilteredLogs.Count)} after filters"
+        : FormatLogCount(FilteredLogs.Count);
+
+    private string CopyVisibleLogsLabel => $"Copy {VisibleLogActionTargetLabel}";
+
+    private string ExportVisibleLogsLabel => $"Export {VisibleLogActionTargetLabel}";
+
+    private string ResetLogFiltersLabel => string.IsNullOrWhiteSpace(ForcedScope)
+        ? "Reset workspace log filters"
+        : $"Reset {ScopeLabel(ForcedScope)} workspace log filters";
+
+    private string ClearLogsLabel => $"Clear {FormatLogCount(Logs.Count)}";
 
     private string EmptyIcon => HasActiveFilters
         ? Icons.Material.Filled.SearchOff
