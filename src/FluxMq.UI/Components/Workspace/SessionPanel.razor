@@ -11,11 +11,11 @@
                 <strong>@RecordingName</strong>
                 <span>@RecordedMessageLabel</span>
             </div>
-            <MudTooltip Text="Stop recording">
+            <MudTooltip Text="@StopRecordingLabel">
                 <MudIconButton Size="Size.Small"
                                Icon="@Icons.Material.Filled.StopCircle"
                                Class="session-stop-button"
-                               aria-label="Stop recording"
+                               aria-label="@StopRecordingLabel"
                                OnClick="@Live.StopRecording" />
             </MudTooltip>
         </div>
@@ -47,17 +47,17 @@
         <div class="session-live-strip">
             <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" aria-hidden="true" />
             <span>@Live.SelectedStoredSession.Name</span>
-            <MudTooltip Text="Switch to live traffic">
+            <MudTooltip Text="@SwitchToLiveTrafficLabel">
                 <MudIconButton Size="Size.Small"
                                Icon="@Icons.Material.Filled.Sensors"
                                Class="session-live-button"
-                               aria-label="Switch to live traffic"
+                               aria-label="@SwitchToLiveTrafficLabel"
                                OnClick="@Live.ClearStoredSessionSelection" />
             </MudTooltip>
         </div>
     }
 
-    <div class="sessions-toolbar" role="search" aria-label="Session filters">
+    <div class="sessions-toolbar" role="search" aria-label="@SessionsToolbarLabel">
         <MudTextField T="string"
                       Value="@_search"
                       ValueChanged="@OnSearchChanged"
@@ -69,7 +69,7 @@
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       AdornmentColor="Color.Secondary"
-                      aria-label="Search recorded sessions"
+                      aria-label="@SessionSearchLabel"
                       Class="session-search" />
     </div>
 
@@ -165,6 +165,24 @@
         : $"{Live.RecordedMessageCount} messages captured";
 
     private string RecordButtonLabel => Live.IsRecording ? "Recording in progress" : "Start recording";
+
+    private string StopRecordingLabel => $"Stop recording {RecordingName}";
+
+    private string SwitchToLiveTrafficLabel => Live.SelectedStoredSession is { } session
+        ? $"Switch from {session.Name} to live traffic"
+        : "Switch to live traffic";
+
+    private string SessionsToolbarLabel => HasSearch
+        ? $"Recording filters, {FilteredSessionCount} of {AllSessions.Count} shown"
+        : $"Recording filters, {SessionCountLabel.ToLowerInvariant()}";
+
+    private string SessionSearchLabel => AllSessions.Count switch
+    {
+        0 => "Search recorded sessions, no recordings",
+        _ when HasSearch => $"Search recorded sessions, {FilteredSessionCount} of {AllSessions.Count} shown",
+        1 => "Search 1 recorded session",
+        var count => $"Search {count} recorded sessions"
+    };
 
     private string EmptyIcon => HasSearch
         ? Icons.Material.Filled.SearchOff
