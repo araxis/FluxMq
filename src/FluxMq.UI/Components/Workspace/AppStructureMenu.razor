@@ -69,7 +69,9 @@
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddConnectionAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "broker connection")"
+                             aria-label="@AddCommandLabel(active, "broker connection")">
                     @MenuCommandRow("Add connection", "Broker profile")
                 </MudMenuItem>
             </ChildContent>
@@ -127,7 +129,9 @@
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddPipelineAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "pipeline")"
+                             aria-label="@AddCommandLabel(active, "pipeline")">
                     @MenuCommandRow("Add pipeline", "Processing flow")
                 </MudMenuItem>
             </ChildContent>
@@ -185,7 +189,9 @@
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddDashboardAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "dashboard")"
+                             aria-label="@AddCommandLabel(active, "dashboard")">
                     @MenuCommandRow("Add dashboard", "Metric view")
                 </MudMenuItem>
             </ChildContent>
@@ -232,7 +238,9 @@
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddMetricAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "metric")"
+                             aria-label="@AddCommandLabel(active, "metric")">
                     @MenuCommandRow("Add metric", "Dashboard signal")
                 </MudMenuItem>
             </ChildContent>
@@ -299,7 +307,9 @@
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddTestAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "test")"
+                             aria-label="@AddCommandLabel(active, "test")">
                     @MenuCommandRow("Add test", "Scenario check")
                 </MudMenuItem>
             </ChildContent>
@@ -378,6 +388,9 @@
 
     private static string CountLabel(int count, string singular)
         => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
+
+    private static string AddCommandLabel(FlowWorkspaceService app, string artifactLabel)
+        => $"Add {artifactLabel} to {app.Name}";
 
     private static string DeleteLabel(string artifactKind, string name)
         => $"Delete {artifactKind} {name}";

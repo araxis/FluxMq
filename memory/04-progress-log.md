@@ -6392,3 +6392,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale navigation-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: keep the remaining timed pass narrow; either stop with a clean handoff or audit AppStructureMenu command row text specificity as one final focused surface.
+- AppStructureMenu add command label specificity result:
+  - Added helper-backed contextual titles and accessible labels to the five AppStructureMenu add-command rows.
+  - Preserved visible command text, command hints, add connection/pipeline/dashboard/metric/test callbacks, menu layout, active markers, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppStructureMenu guard to require the helper-backed add-command labels and reject stale literal add labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale add-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: stop the timed pass with a clean handoff, or resume later with another focused workspace chrome/static-label audit only after choosing the next surface from current memory.
