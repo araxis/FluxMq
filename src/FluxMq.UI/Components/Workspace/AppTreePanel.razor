@@ -53,11 +53,11 @@ else
                         </div>
                     </div>
                     <div class="app-actions" @onclick:stopPropagation="true">
-                        <MudTooltip Text="@($"Close app {a.Name}")">
+                        <MudTooltip Text="@CloseAppLabel(a)">
                             <MudIconButton Size="Size.Small"
                                            Icon="@Icons.Material.Outlined.Cancel"
                                            Class="tree-icon-button"
-                                           aria-label="@($"Close app {a.Name}")"
+                                           aria-label="@CloseAppLabel(a)"
                                            OnClick="@(() => CloseAsync(a))" />
                         </MudTooltip>
                     </div>
@@ -94,31 +94,31 @@ else
                                     <div class="conn-actions">
                                         @if (c.State is MqttClientState.Disconnected or MqttClientState.Faulted)
                                         {
-                                            <MudTooltip Text="@($"Connect {c.ResourceName}")">
+                                            <MudTooltip Text="@ConnectConnectionLabel(c)">
                                                 <MudIconButton Size="Size.Small"
                                                                Icon="@Icons.Material.Filled.PlayArrow"
                                                                Color="Color.Success"
                                                                Class="tree-icon-button"
-                                                               aria-label="@($"Connect {c.ResourceName}")"
+                                                               aria-label="@ConnectConnectionLabel(c)"
                                                                OnClick="@(() => Live.ConnectAsync(c.Id))" />
                                             </MudTooltip>
                                         }
                                         else
                                         {
-                                            <MudTooltip Text="@($"Disconnect {c.ResourceName}")">
+                                            <MudTooltip Text="@DisconnectConnectionLabel(c)">
                                                 <MudIconButton Size="Size.Small"
                                                                Icon="@Icons.Material.Filled.Stop"
                                                                Color="Color.Error"
                                                                Class="tree-icon-button"
-                                                               aria-label="@($"Disconnect {c.ResourceName}")"
+                                                               aria-label="@DisconnectConnectionLabel(c)"
                                                                OnClick="@(() => Live.DisconnectAsync(c.Id))" />
                                             </MudTooltip>
                                         }
-                                        <MudTooltip Text="@($"Remove connection {c.ResourceName}")">
+                                        <MudTooltip Text="@RemoveConnectionLabel(c)">
                                             <MudIconButton Size="Size.Small"
                                                            Icon="@Icons.Material.Filled.DeleteOutline"
                                                            Class="tree-icon-button"
-                                                           aria-label="@($"Remove connection {c.ResourceName}")"
+                                                           aria-label="@RemoveConnectionLabel(c)"
                                                            OnClick="@(() => Live.RemoveConnectionAsync(c.Id))" />
                                         </MudTooltip>
                                     </div>
@@ -474,6 +474,18 @@ else
         var state = isActive ? "active" : "inactive";
         return $"{app.Name} metric designer, {state}, {CountLabel(app.MetricNames.Count, "metric")}";
     }
+
+    private static string CloseAppLabel(FlowWorkspaceService app)
+        => $"Close app {app.Name}";
+
+    private static string ConnectConnectionLabel(ManagedConnection connection)
+        => $"Connect {connection.ResourceName}";
+
+    private static string DisconnectConnectionLabel(ManagedConnection connection)
+        => $"Disconnect {connection.ResourceName}";
+
+    private static string RemoveConnectionLabel(ManagedConnection connection)
+        => $"Remove connection {connection.ResourceName}";
 
     private static string? TreeItemCurrent(bool isActive)
         => isActive ? "true" : null;

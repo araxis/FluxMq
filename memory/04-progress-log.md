@@ -6322,3 +6322,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardInspectorLayoutRows stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace static-label audit with one focused surface at a time; likely candidate is remaining App Tree inline action expressions.
+- App Tree app and connection action-label specificity result:
+  - Replaced inline close-app, connect, disconnect, and remove-connection action label expressions with helper-backed labels in AppTreePanel.
+  - Preserved app selection, app close behavior, broker connection connect/disconnect/remove behavior, section expansion, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppTreePanel guard to require helper-backed app/connection action labels and reject the old inline expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTreePanel app/connection stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue App Tree static-label cleanup with pipeline/dashboard/test row open/delete labels, one focused surface at a time.
