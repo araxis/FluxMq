@@ -6412,3 +6412,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale catalog-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are small literal labels in LiveInspectorPanel or WorkspaceLogPanel filter groups, after confirming existing guard coverage.
+- WorkspaceLogPanel filter group label specificity result:
+  - Replaced the static scope and level filter group accessible labels with helper-backed labels that include current option counts.
+  - Preserved visible filter labels, scope/level/search behavior, copy/export/reset/clear actions, visible-row export scope, saved app data, runtime behavior, log collection semantics, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspaceLogPanel guard to require the helper-backed filter group labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale log-filter-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidate is LiveInspectorPanel publish controls, after confirming existing guard coverage.

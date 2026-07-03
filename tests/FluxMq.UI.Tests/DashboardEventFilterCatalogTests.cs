@@ -5595,8 +5595,14 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldBeEmpty();
         markup.ShouldContain("WorkspaceLogFilter.Problems");
         markup.ShouldContain("workspace-log-segment");
-        markup.ShouldContain("aria-label=\"Workspace log scope filter\"");
-        markup.ShouldContain("aria-label=\"Workspace log level filter\"");
+        markup.ShouldContain("aria-label=\"@ScopeFilterGroupLabel\"");
+        markup.ShouldContain("aria-label=\"@SeverityFilterGroupLabel\"");
+        markup.ShouldContain("private string ScopeFilterGroupLabel");
+        markup.ShouldContain("$\"Workspace log scope filter, {ScopeOptions.Count.ToString(CultureInfo.InvariantCulture)} options\"");
+        markup.ShouldContain("private string SeverityFilterGroupLabel");
+        markup.ShouldContain("$\"Workspace log level filter, {SeverityOptions.Length.ToString(CultureInfo.InvariantCulture)} options\"");
+        markup.ShouldNotContain("aria-label=\"Workspace log scope filter\"");
+        markup.ShouldNotContain("aria-label=\"Workspace log level filter\"");
         markup.ShouldNotContain("aria-label=\"Scope filter\"");
         markup.ShouldNotContain("aria-label=\"Level filter\"");
         markup.ShouldContain("aria-label=\"@ScopeFilterButtonLabel(scope)\"");

@@ -69,7 +69,7 @@
         {
             <div class="workspace-log-filter-block scope">
                 <span class="workspace-log-filter-label">Scope</span>
-                <div class="workspace-log-segment" role="group" aria-label="Workspace log scope filter">
+                <div class="workspace-log-segment" role="group" aria-label="@ScopeFilterGroupLabel">
                     @foreach (var scope in ScopeOptions)
                     {
                         <button type="button"
@@ -93,7 +93,7 @@
 
         <div class="workspace-log-filter-block severity">
             <span class="workspace-log-filter-label">Level</span>
-            <div class="workspace-log-segment" role="group" aria-label="Workspace log level filter">
+            <div class="workspace-log-segment" role="group" aria-label="@SeverityFilterGroupLabel">
                 @foreach (var severity in SeverityOptions)
                 {
                     <button type="button"
@@ -237,6 +237,12 @@
     private string WorkspaceLogFiltersLabel => string.IsNullOrWhiteSpace(ForcedScope)
         ? "Workspace log filters"
         : $"{ScopeLabel(ForcedScope)} workspace log filters";
+
+    private string ScopeFilterGroupLabel
+        => $"Workspace log scope filter, {ScopeOptions.Count.ToString(CultureInfo.InvariantCulture)} options";
+
+    private string SeverityFilterGroupLabel
+        => $"Workspace log level filter, {SeverityOptions.Length.ToString(CultureInfo.InvariantCulture)} options";
 
     private string WorkspaceLogListLabel => HasActiveFilters
         ? $"Workspace log list, {FormatLogCount(FilteredLogs.Count)} shown from {FormatLogCount(Logs.Count)}"
