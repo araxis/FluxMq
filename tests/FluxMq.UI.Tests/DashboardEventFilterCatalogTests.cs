@@ -5610,6 +5610,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("$\"Workspace log level filter, {SeverityOptions.Length.ToString(CultureInfo.InvariantCulture)} options\"");
         markup.ShouldNotContain("aria-label=\"Workspace log scope filter\"");
         markup.ShouldNotContain("aria-label=\"Workspace log level filter\"");
+        markup.ShouldContain("aria-label=\"@FixedScopeLabel\"");
+        markup.ShouldContain("private string FixedScopeLabel");
+        markup.ShouldContain("$\"{ScopeLabel(ForcedScope)} fixed workspace log scope\"");
+        markup.ShouldContain("aria-label=\"@LogSearchLabel\"");
+        markup.ShouldContain("private string LogSearchLabel");
+        markup.ShouldContain("$\"Search {ScopeLabel(EffectiveScope).ToLowerInvariant()} workspace logs\"");
+        markup.ShouldNotContain("aria-label=\"Fixed scope\"");
+        markup.ShouldNotContain("aria-label=\"Search logs\"");
         markup.ShouldNotContain("aria-label=\"Scope filter\"");
         markup.ShouldNotContain("aria-label=\"Level filter\"");
         markup.ShouldContain("aria-label=\"@ScopeFilterButtonLabel(scope)\"");

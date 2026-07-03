@@ -85,7 +85,7 @@
         }
         else
         {
-            <div class="workspace-log-forced-scope" aria-label="Fixed scope">
+            <div class="workspace-log-forced-scope" aria-label="@FixedScopeLabel">
                 <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" aria-hidden="true" />
                 <span>@ScopeLabel(ForcedScope)</span>
             </div>
@@ -109,7 +109,7 @@
 
         <MudTextField T="string"
                       Placeholder="Search logs"
-                      aria-label="Search logs"
+                      aria-label="@LogSearchLabel"
                       Variant="Variant.Outlined"
                       Margin="Margin.Dense"
                       Immediate="true"
@@ -243,6 +243,12 @@
 
     private string SeverityFilterGroupLabel
         => $"Workspace log level filter, {SeverityOptions.Length.ToString(CultureInfo.InvariantCulture)} options";
+
+    private string FixedScopeLabel
+        => $"{ScopeLabel(ForcedScope)} fixed workspace log scope";
+
+    private string LogSearchLabel
+        => $"Search {ScopeLabel(EffectiveScope).ToLowerInvariant()} workspace logs";
 
     private string WorkspaceLogListLabel => HasActiveFilters
         ? $"Workspace log list, {FormatLogCount(FilteredLogs.Count)} shown from {FormatLogCount(Logs.Count)}"

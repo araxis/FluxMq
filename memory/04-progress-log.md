@@ -6432,3 +6432,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale publish-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are remaining literal labels in workspace panels with focused guards, chosen from current search evidence.
+- WorkspaceLogPanel fixed-scope/search label specificity result:
+  - Replaced the remaining static fixed-scope and log-search accessible labels with helper-backed labels based on effective scope.
+  - Preserved visible log filter labels, search placeholder, scope/level/search behavior, copy/export/reset/clear actions, visible-row export scope, saved app data, runtime behavior, log collection semantics, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspaceLogPanel guard to require helper-backed fixed-scope/search labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale log fixed/search label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are MetricDesigner or PropertyGrid literals, after confirming existing guard coverage and keeping edits UI-only.
