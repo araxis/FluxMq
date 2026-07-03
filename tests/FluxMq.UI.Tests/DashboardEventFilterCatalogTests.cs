@@ -5710,8 +5710,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("workspace-logs-{stamp}.json");
         markup.ShouldContain("WriteLogExportAsync");
         markup.ShouldContain("File.WriteAllTextAsync(fullPath, content)");
-        markup.ShouldContain("aria-label=\"@($\"{SeverityLabel(entry)} log at {FormatLogTime(entry)} from {SourceCode(entry)}\")\"");
+        markup.ShouldContain("aria-label=\"@WorkspaceLogRowLabel(entry)\"");
+        markup.ShouldContain("private static string WorkspaceLogRowLabel(WorkspaceLogEntry entry)");
+        markup.ShouldContain("$\"Workspace log row, {SeverityLabel(entry)} at {FormatLogTime(entry)} on {FormatLogDate(entry)}, {EntryScopeLabel(entry)}, {SourceCode(entry)}\"");
         markup.ShouldContain("workspace-log-row-icon");
+        markup.ShouldContain("title=\"@WorkspaceLogSeverityTitle(entry)\"");
+        markup.ShouldContain("private static string WorkspaceLogSeverityTitle(WorkspaceLogEntry entry)");
+        markup.ShouldContain("$\"{SeverityLabel(entry)} log severity\"");
+        markup.ShouldNotContain("aria-label=\"@($\"{SeverityLabel(entry)} log at {FormatLogTime(entry)} from {SourceCode(entry)}\")\"");
+        markup.ShouldNotContain("title=\"@SeverityLabel(entry)\"");
         markup.ShouldContain("DetailLabels(entry)");
         markup.ShouldContain("SeverityIcon(entry)");
         markup.ShouldContain("workspace-log-empty\" role=\"status\" aria-live=\"polite\"");

@@ -6482,3 +6482,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only raw-parameter-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: choose the next high-use workspace polish target from current search evidence; likely candidates are contextual WorkspaceLog row labels or remaining app-level action labels with focused guards.
+- WorkspaceLogPanel row label specificity result:
+  - Replaced the inline workspace log row accessible label and severity icon title with helper-backed labels that include severity, time, date, scope/artifact, and source/code context.
+  - Preserved log filtering, visible-row copy/export, reset/clear actions, row rendering, log collection semantics, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspaceLogPanel guard to require helper-backed row/severity labels and reject the stale inline row label/title.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale workspace-log row label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace polish audit from current search evidence, likely remaining app-level action labels or workspace panel row titles with focused guards.

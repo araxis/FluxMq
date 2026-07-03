@@ -145,9 +145,9 @@
             {
                 var detailLabels = DetailLabels(entry);
                 <article class="workspace-log-row @SeverityClass(entry)"
-                         aria-label="@($"{SeverityLabel(entry)} log at {FormatLogTime(entry)} from {SourceCode(entry)}")"
+                         aria-label="@WorkspaceLogRowLabel(entry)"
                          @key="entry">
-                    <span class="workspace-log-row-icon" title="@SeverityLabel(entry)" aria-hidden="true">
+                    <span class="workspace-log-row-icon" title="@WorkspaceLogSeverityTitle(entry)" aria-hidden="true">
                         <MudIcon Icon="@SeverityIcon(entry)" Size="Size.Small" aria-hidden="true" />
                     </span>
                     <div class="workspace-log-row-time">
@@ -478,6 +478,12 @@
         var artifact = ArtifactLabel(entry);
         return string.IsNullOrWhiteSpace(artifact) ? scope : $"{scope} - {artifact}";
     }
+
+    private static string WorkspaceLogRowLabel(WorkspaceLogEntry entry)
+        => $"Workspace log row, {SeverityLabel(entry)} at {FormatLogTime(entry)} on {FormatLogDate(entry)}, {EntryScopeLabel(entry)}, {SourceCode(entry)}";
+
+    private static string WorkspaceLogSeverityTitle(WorkspaceLogEntry entry)
+        => $"{SeverityLabel(entry)} log severity";
 
     private static IReadOnlyList<string> DetailLabels(WorkspaceLogEntry entry)
     {
