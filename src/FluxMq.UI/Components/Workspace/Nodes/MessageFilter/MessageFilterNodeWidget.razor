@@ -90,7 +90,7 @@
                                 var index = i;
                                 <div class="message-filter-pattern-row">
                                     <MudTextField T="string"
-                                                  aria-label="@($"Topic pattern {index + 1}")"
+                                                  aria-label="@TopicPatternFieldLabel(index)"
                                                   Value="@_draftPatterns[index]"
                                                   ValueChanged="@(value => SetPattern(index, value))"
                                                   Placeholder="sensors/#"
@@ -233,6 +233,16 @@
     {
         _draftPatterns.Add(string.Empty);
         await RefreshDialogAsync();
+    }
+
+    private string TopicPatternFieldLabel(int index)
+    {
+        var pattern = index >= 0 && index < _draftPatterns.Count ? _draftPatterns[index] : string.Empty;
+        var target = string.IsNullOrWhiteSpace(pattern)
+            ? $"topic pattern {index + 1}"
+            : pattern.Trim();
+
+        return $"Edit {target} for {Node.NodeName}";
     }
 
     private async Task RemovePattern(int index)

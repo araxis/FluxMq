@@ -6542,3 +6542,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale visual metric position label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target for the one-hour goal window: stop with a clean handoff; resume later only after a fresh current-state scan selects another focused high-use UI surface.
+- MessageFilterNodeWidget topic pattern label specificity result:
+  - Replaced the inline topic-pattern field accessible label with a helper-backed label that includes the current pattern or row number plus the node name.
+  - Preserved pattern binding, add/remove pattern actions, condition editor layout, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MessageFilterNodeWidget guard to require the helper-backed topic-pattern field label and reject the stale inline label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MessageFilterNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale topic-pattern label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the node-editor static-label cleanup from the current scan one focused widget at a time; likely next candidates are Routing Switch route labels or Routing Fork/Merge port labels with existing focused guards.

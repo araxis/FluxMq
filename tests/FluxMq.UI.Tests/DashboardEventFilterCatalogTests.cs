@@ -8705,7 +8705,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Topic pattern filters\"");
         markup.ShouldContain("aria-label=\"Condition expression\"");
         markup.ShouldContain("message-filter-pattern-row");
-        markup.ShouldContain("aria-label=\"@($\"Topic pattern {index + 1}\")\"");
+        markup.ShouldContain("aria-label=\"@TopicPatternFieldLabel(index)\"");
+        markup.ShouldContain("private string TopicPatternFieldLabel(int index)");
+        markup.ShouldContain("$\"Edit {target} for {Node.NodeName}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Topic pattern {index + 1}\")\"");
         markup.ShouldContain("ValueChanged=\"@(value => SetPattern(index, value))\"");
         markup.ShouldContain("Text=\"@AddPatternLabel\"");
         markup.ShouldContain("aria-label=\"@AddPatternLabel\"");
