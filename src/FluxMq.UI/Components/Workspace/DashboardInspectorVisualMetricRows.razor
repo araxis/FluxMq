@@ -28,38 +28,39 @@
         @foreach (var item in Draft.DisplayMetrics.Select((metric, index) => new { Metric = metric, Index = index }))
         {
             var currentMetric = item.Metric;
+            var currentMetricLabel = VisualMetricLabel(currentMetric);
             <PropertyGridRow Name="@($"{Labels.CardRowPrefix} {item.Index + 1}")">
                 <div class="property-grid-inline visual-metric-row">
                     <span class="visual-metric-position" aria-label="@($"Card position {item.Index + 1}")">
                         @((item.Index + 1).ToString(CultureInfo.InvariantCulture))
                     </span>
                     <span class="visual-metric-copy">
-                        <span class="visual-metric-label" title="@VisualMetricLabel(currentMetric)">
-                            @VisualMetricLabel(currentMetric)
+                        <span class="visual-metric-label" title="@currentMetricLabel">
+                            @currentMetricLabel
                         </span>
                         <small>@currentMetric</small>
                     </span>
-                    <span class="visual-metric-actions" aria-label="@($"{VisualMetricLabel(currentMetric)} card commands")">
+                    <span class="visual-metric-actions" aria-label="@MetricCardCommandsLabel(currentMetricLabel)">
                         <button type="button"
                                 class="visual-metric-icon-button"
-                                title="@($"Move {VisualMetricLabel(currentMetric)} up")"
-                                aria-label="@($"Move {VisualMetricLabel(currentMetric)} up")"
+                                title="@MoveMetricUpLabel(currentMetricLabel)"
+                                aria-label="@MoveMetricUpLabel(currentMetricLabel)"
                                 disabled="@(item.Index == 0)"
                                 @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, -1)))">
                             <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" aria-hidden="true" />
                         </button>
                         <button type="button"
                                 class="visual-metric-icon-button"
-                                title="@($"Move {VisualMetricLabel(currentMetric)} down")"
-                                aria-label="@($"Move {VisualMetricLabel(currentMetric)} down")"
+                                title="@MoveMetricDownLabel(currentMetricLabel)"
+                                aria-label="@MoveMetricDownLabel(currentMetricLabel)"
                                 disabled="@(item.Index == Draft.DisplayMetrics.Count - 1)"
                                 @onclick="@(() => MoveMetric.InvokeAsync(new DashboardInspectorMetricMove(currentMetric, 1)))">
                             <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" aria-hidden="true" />
                         </button>
                         <button type="button"
                                 class="visual-metric-icon-button danger"
-                                title="@($"Remove {VisualMetricLabel(currentMetric)}")"
-                                aria-label="@($"Remove {VisualMetricLabel(currentMetric)}")"
+                                title="@RemoveMetricCardLabel(currentMetricLabel)"
+                                aria-label="@RemoveMetricCardLabel(currentMetricLabel)"
                                 disabled="@(!Draft.CanRemoveDisplayMetric)"
                                 @onclick="@(() => RemoveMetric.InvokeAsync(currentMetric))">
                             <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
@@ -140,6 +141,18 @@
     private string AddMetricCardLabel => string.IsNullOrWhiteSpace(MetricToAdd)
         ? "Add selected metric card"
         : $"Add metric card for {VisualMetricLabel(MetricToAdd)}";
+
+    private static string MetricCardCommandsLabel(string metricLabel)
+        => $"{metricLabel} card commands";
+
+    private static string MoveMetricUpLabel(string metricLabel)
+        => $"Move {metricLabel} up";
+
+    private static string MoveMetricDownLabel(string metricLabel)
+        => $"Move {metricLabel} down";
+
+    private static string RemoveMetricCardLabel(string metricLabel)
+        => $"Remove {metricLabel}";
 
     private async Task SetMetricCardColumnsAsync(ChangeEventArgs args)
     {
