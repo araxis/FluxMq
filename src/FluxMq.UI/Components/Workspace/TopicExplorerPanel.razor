@@ -10,7 +10,7 @@
 @inject ISnackbar Snackbar
 
 <div class="topic-explorer">
-    <section class="topic-explorer-tree" aria-label="Topic tree">
+    <section class="topic-explorer-tree" aria-label="@TopicExplorerTreeLabel">
         <div class="topic-explorer-header">
             <div class="topic-explorer-title">
                 <span class="topic-explorer-title-icon" aria-hidden="true">
@@ -132,8 +132,8 @@
         </div>
     </section>
 
-    <section class="topic-explorer-detail" aria-label="Topic latest message and history">
-        <section class="topic-latest-message" aria-label="Latest topic message">
+    <section class="topic-explorer-detail" aria-label="@TopicExplorerDetailLabel">
+        <section class="topic-latest-message" aria-label="@LatestTopicMessageLabel">
             <div class="topic-last-header">
                 <div class="topic-detail-heading">
                     <h3>@SelectedTopicLabel</h3>
@@ -427,7 +427,7 @@
             </section>
         }
 
-        <section class="topic-history-panel" aria-label="Topic message history">
+        <section class="topic-history-panel" aria-label="@TopicHistoryPanelLabel">
             <div class="topic-history-header">
                 <span>History</span>
                 <span>@HistorySummaryLabel</span>
@@ -891,6 +891,14 @@
         _ => _selectedTopic ?? "All brokers"
     };
 
+    private string TopicExplorerTreeLabel => $"{TopicSourceLabel} topic tree, {BrokerCountLabel(BrokerGroups.Count)}, {TopicCountLabel(TopicCount)}";
+
+    private string TopicExplorerDetailLabel => $"{SelectedTopicLabel} latest message and history";
+
+    private string LatestTopicMessageLabel => $"{SelectedTopicLabel} latest topic message";
+
+    private string TopicHistoryPanelLabel => $"{SelectedTopicLabel} message history, {HistorySummaryLabel}";
+
     private string LastPayloadLabel => LastMessage is { } message
         ? $"{message.Payload.Length} B"
         : "No payload";
@@ -1041,6 +1049,12 @@
         => stats.LatestReceivedAt is { } receivedAt
             ? receivedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.InvariantCulture)
             : "No message";
+
+    private static string BrokerCountLabel(int count)
+        => count == 1 ? "1 broker" : $"{count.ToString(CultureInfo.InvariantCulture)} brokers";
+
+    private static string TopicCountLabel(int count)
+        => count == 1 ? "1 topic" : $"{count.ToString(CultureInfo.InvariantCulture)} topics";
 
     private static string FormatAveragePayloadBytes(double bytes)
         => bytes <= 0

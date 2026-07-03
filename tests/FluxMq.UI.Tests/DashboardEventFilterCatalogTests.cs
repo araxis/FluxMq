@@ -3010,12 +3010,22 @@ public sealed class DashboardEventFilterCatalogTests
             "Services",
             "TopicExplorerMonitorResolver.cs"));
 
-        markup.ShouldContain("aria-label=\"Topic tree\"");
-        markup.ShouldContain("aria-label=\"Topic latest message and history\"");
+        markup.ShouldContain("aria-label=\"@TopicExplorerTreeLabel\"");
+        markup.ShouldContain("private string TopicExplorerTreeLabel => $\"{TopicSourceLabel} topic tree, {BrokerCountLabel(BrokerGroups.Count)}, {TopicCountLabel(TopicCount)}\"");
+        markup.ShouldContain("private static string BrokerCountLabel(int count)");
+        markup.ShouldContain("private static string TopicCountLabel(int count)");
+        markup.ShouldNotContain("aria-label=\"Topic tree\"");
+        markup.ShouldContain("aria-label=\"@TopicExplorerDetailLabel\"");
+        markup.ShouldContain("private string TopicExplorerDetailLabel => $\"{SelectedTopicLabel} latest message and history\"");
+        markup.ShouldNotContain("aria-label=\"Topic latest message and history\"");
         markup.ShouldNotContain("aria-label=\"Topic last state and history\"");
-        markup.ShouldContain("aria-label=\"Latest topic message\"");
+        markup.ShouldContain("aria-label=\"@LatestTopicMessageLabel\"");
+        markup.ShouldContain("private string LatestTopicMessageLabel => $\"{SelectedTopicLabel} latest topic message\"");
+        markup.ShouldNotContain("aria-label=\"Latest topic message\"");
         markup.ShouldContain("aria-label=\"Publish MQTT message\"");
-        markup.ShouldContain("aria-label=\"Topic message history\"");
+        markup.ShouldContain("aria-label=\"@TopicHistoryPanelLabel\"");
+        markup.ShouldContain("private string TopicHistoryPanelLabel => $\"{SelectedTopicLabel} message history, {HistorySummaryLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Topic message history\"");
         markup.ShouldContain("<h2>Topics</h2>");
         markup.ShouldContain("@implements IDisposable");
         markup.ShouldContain("@using System.Globalization");
