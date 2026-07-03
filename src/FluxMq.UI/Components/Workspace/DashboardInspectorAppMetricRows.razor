@@ -21,8 +21,8 @@
     <div class="property-grid-inline property-grid-action-strip">
         <button type="button"
                 class="property-grid-icon-action"
-                title="Open metric"
-                aria-label="Open metric"
+                title="@OpenMetricLabel"
+                aria-label="@OpenMetricLabel"
                 disabled="@string.IsNullOrWhiteSpace(MetricId)"
                 @onclick="@(() => OpenMetric.InvokeAsync())">
             <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" aria-hidden="true" />
@@ -68,6 +68,15 @@
 
     [Parameter]
     public EventCallback OpenMetric { get; set; }
+
+    private string OpenMetricLabel => string.IsNullOrWhiteSpace(MetricId)
+        ? "Open selected metric"
+        : $"Open metric {MetricActionTargetLabel}";
+
+    private string MetricActionTargetLabel =>
+        MetricOptions.FirstOrDefault(option => string.Equals(option.Value, MetricId, StringComparison.Ordinal))?.Label
+        ?? MetricId
+        ?? "selected metric";
 
     private RenderFragment RenderParameterField(MetricParamSpec parameter)
     {

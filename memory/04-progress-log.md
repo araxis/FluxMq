@@ -6021,3 +6021,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Inspector metric/style command label specificity result:
+  - Replaced static Dashboard Inspector open-metric, add-metric-card, and reset-cell-style command labels with selected-metric/card/style-aware labels.
+  - Preserved metric selection, app metric opening, metric card add/move/remove behavior, cell style reset behavior, property grid bindings, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended focused DashboardInspector guards to require helper-backed command labels and reject the old static command attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls|FullyQualifiedName~DashboardInspector_UsesFocusedLayoutAndStyleRowComponents|FullyQualifiedName~DashboardInspector_UsesFocusedMetricDataRowComponents|FullyQualifiedName~DashboardInspector_UsesFocusedVisualMetricRowComponent" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardInspector stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

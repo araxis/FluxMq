@@ -77,8 +77,8 @@
                                     ValueChanged="@MetricToAddChanged" />
                 <button type="button"
                         class="visual-metric-add-button"
-                        title="Add metric card"
-                        aria-label="Add metric card"
+                        title="@AddMetricCardLabel"
+                        aria-label="@AddMetricCardLabel"
                         disabled="@string.IsNullOrWhiteSpace(MetricToAdd)"
                         @onclick="@(() => AddMetric.InvokeAsync())">
                     <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
@@ -136,6 +136,10 @@
 
     private IReadOnlyList<PropertyGridIconSegmentOption> PrimaryMetricSegmentOptions
         => MetricSegmentOptions(MetricOptions);
+
+    private string AddMetricCardLabel => string.IsNullOrWhiteSpace(MetricToAdd)
+        ? "Add selected metric card"
+        : $"Add metric card for {VisualMetricLabel(MetricToAdd)}";
 
     private async Task SetMetricCardColumnsAsync(ChangeEventArgs args)
     {

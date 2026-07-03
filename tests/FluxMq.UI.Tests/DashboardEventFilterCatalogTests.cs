@@ -2682,7 +2682,12 @@ public sealed class DashboardEventFilterCatalogTests
         visualMetricRows.ShouldNotContain("title=\"Move up\"");
         visualMetricRows.ShouldNotContain("title=\"Move down\"");
         visualMetricRows.ShouldNotContain("title=\"Remove\"");
-        visualMetricRows.ShouldContain("aria-label=\"Add metric card\"");
+        visualMetricRows.ShouldContain("title=\"@AddMetricCardLabel\"");
+        visualMetricRows.ShouldContain("aria-label=\"@AddMetricCardLabel\"");
+        visualMetricRows.ShouldContain("private string AddMetricCardLabel => string.IsNullOrWhiteSpace(MetricToAdd)");
+        visualMetricRows.ShouldContain("$\"Add metric card for {VisualMetricLabel(MetricToAdd)}\"");
+        visualMetricRows.ShouldNotContain("title=\"Add metric card\"");
+        visualMetricRows.ShouldNotContain("aria-label=\"Add metric card\"");
     }
 
     [Fact]
@@ -6406,7 +6411,11 @@ public sealed class DashboardEventFilterCatalogTests
         styleRows.ShouldContain("Icons.Material.Filled.CloseFullscreen");
         styleRows.ShouldContain("Icons.Material.Filled.Check");
         styleRows.ShouldContain("Icons.Material.Filled.Close");
-        styleRows.ShouldContain("Reset cell style");
+        styleRows.ShouldContain("title=\"@ResetCellStyleLabel\"");
+        styleRows.ShouldContain("aria-label=\"@ResetCellStyleLabel\"");
+        styleRows.ShouldContain("private const string ResetCellStyleLabel = \"Reset selected cell style to defaults\";");
+        styleRows.ShouldNotContain("title=\"Reset cell style\"");
+        styleRows.ShouldNotContain("aria-label=\"Reset cell style\"");
         styleRows.ShouldContain("Icons.Material.Filled.RestartAlt");
         styleRows.ShouldNotContain("property-grid-action-button");
         propertyGridRowCss.ShouldContain(".property-grid-action-strip");
@@ -6440,7 +6449,13 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("<PropertyGridRow Name=\"Metric query\">");
         inspector.ShouldNotContain("private RenderFragment RenderMetricParameterField");
         inspector.ShouldNotContain("CurrentBindingMetrics(");
-        appRows.ShouldContain("Open metric");
+        appRows.ShouldContain("title=\"@OpenMetricLabel\"");
+        appRows.ShouldContain("aria-label=\"@OpenMetricLabel\"");
+        appRows.ShouldContain("private string OpenMetricLabel => string.IsNullOrWhiteSpace(MetricId)");
+        appRows.ShouldContain("$\"Open metric {MetricActionTargetLabel}\"");
+        appRows.ShouldContain("private string MetricActionTargetLabel");
+        appRows.ShouldNotContain("title=\"Open metric\"");
+        appRows.ShouldNotContain("aria-label=\"Open metric\"");
         appRows.ShouldContain("property-grid-action-strip");
         appRows.ShouldContain("property-grid-icon-action");
         appRows.ShouldContain("Icons.Material.Filled.OpenInNew");
