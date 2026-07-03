@@ -100,7 +100,7 @@
         <div class="sessions-list" role="list">
             @foreach (var group in projectGroups)
             {
-                <section class="session-project-group" aria-label="@($"{group.Name} sessions")" @key="group.Name">
+                <section class="session-project-group" aria-label="@SessionProjectGroupLabel(group)" @key="group.Name">
                     <div class="session-project-head">
                         <span>@group.Name</span>
                         <strong>@ProjectSessionLabel(group.Sessions.Count)</strong>
@@ -297,6 +297,9 @@
 
     private static string ProjectSessionLabel(int count)
         => count == 1 ? "1 session" : $"{count} sessions";
+
+    private static string SessionProjectGroupLabel(SessionProjectGroup group)
+        => $"{group.Name} project recordings, {ProjectSessionLabel(group.Sessions.Count)}";
 
     private static string ProfileLabel(StoredSession session)
         => string.IsNullOrWhiteSpace(session.ProfileName) ? "Workspace profile" : session.ProfileName;

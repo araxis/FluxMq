@@ -6512,3 +6512,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale topic broker label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue from current search evidence with one remaining high-use workspace inline label at a time, likely session project group or dashboard visual metric position labels with focused guards.
+- SessionPanel project group label specificity result:
+  - Replaced the inline session project-group accessible label with a helper-backed label that includes the project name and grouped session count.
+  - Preserved recording controls, search/filter behavior, grouped session rendering, session selection, live-traffic switching, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused SessionPanel guard to require the helper-backed project-group label and reject the stale inline label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~SessionPanel_UsesFlatGroupedSessionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale session project-group label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target for the one-hour goal window: stop with a clean handoff unless a new focused surface is explicitly selected; remaining search evidence includes dashboard visual metric position and test runner result labels.

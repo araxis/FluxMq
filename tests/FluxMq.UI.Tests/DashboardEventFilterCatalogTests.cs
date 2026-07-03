@@ -14418,6 +14418,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("sessions-list");
         markup.ShouldContain("role=\"list\"");
         markup.ShouldContain("session-project-group");
+        markup.ShouldContain("aria-label=\"@SessionProjectGroupLabel(group)\"");
+        markup.ShouldContain("private static string SessionProjectGroupLabel(SessionProjectGroup group)");
+        markup.ShouldContain("$\"{group.Name} project recordings, {ProjectSessionLabel(group.Sessions.Count)}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"{group.Name} sessions\")\"");
         markup.ShouldContain("session-project-head");
         markup.ShouldContain("SessionRowClass(session)");
         markup.ShouldContain("SessionDotClass(session)");
