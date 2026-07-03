@@ -5971,3 +5971,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only WorkspacePage stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App JSON copy-tooltip label specificity result:
+  - Replaced the static App JSON copy tooltip with the existing active-app-specific copy label.
+  - Preserved copy behavior, snackbar feedback, read-only code editor wiring, generated JSON source, unsaved indicator, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppJsonPanel guard to require the copy tooltip helper and reject the old static copy tooltip.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel_UsesFlatCompactCodeViewerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppJsonPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

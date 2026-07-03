@@ -5566,8 +5566,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("app-json-unsaved-indicator");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\">Unsaved</span>");
         markup.ShouldNotContain("app-json-state");
+        markup.ShouldContain("Text=\"@CopyAppJsonLabel\"");
         markup.ShouldContain("aria-label=\"@CopyAppJsonLabel\"");
         markup.ShouldContain("private string CopyAppJsonLabel => $\"Copy application JSON for {Project.Name}\"");
+        markup.ShouldNotContain("Text=\"Copy JSON\"");
         markup.ShouldNotContain("aria-label=\"Copy JSON\"");
         markup.ShouldContain("Disabled=\"@string.IsNullOrWhiteSpace(_fullJson)\"");
         markup.ShouldContain("app-json-editor-shell");
