@@ -60,10 +60,10 @@
                         <span class="generated-source-column-header">Retain</span>
                         <span class="generated-source-column-header">Received at</span>
                         <span class="generated-source-column-header action">
-                            <MudTooltip Text="Add message">
+                            <MudTooltip Text="@AddGeneratedMessageLabel">
                                 <MudIconButton Size="Size.Small"
                                                Icon="@Icons.Material.Filled.Add"
-                                               aria-label="Add generated message"
+                                               aria-label="@AddGeneratedMessageLabel"
                                                Class="generated-source-add-button"
                                                OnClick="@AddMessageAsync" />
                             </MudTooltip>
@@ -129,10 +129,10 @@
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="generated-source-received-field" />
-                                <MudTooltip Text="Remove message">
+                                <MudTooltip Text="@RemoveGeneratedMessageLabel(index)">
                                     <MudIconButton Size="Size.Small"
                                                    Icon="@Icons.Material.Filled.Close"
-                                                   aria-label="@($"Remove generated message {index + 1}")"
+                                                   aria-label="@RemoveGeneratedMessageLabel(index)"
                                                    Class="generated-source-remove-button"
                                                    OnClick="@(() => RemoveMessage(index))" />
                                 </MudTooltip>
@@ -173,6 +173,23 @@
     private string BufferCaption => SourceNodeConfiguration.NormalizeBoundedCapacity(Model.BoundedCapacity).ToString();
     private IReadOnlyList<GeneratedMessageDraft> MessagePreview => Model.Messages.Take(3).ToArray();
     private int MessagePreviewOverflow => Math.Max(0, Model.Messages.Count - 3);
+
+    private string AddGeneratedMessageLabel => $"Add generated message to {Node.NodeName}";
+
+    private string RemoveGeneratedMessageLabel(int index)
+    {
+        if (index < 0 || index >= _messages.Count)
+        {
+            return $"Remove generated message from {Node.NodeName}";
+        }
+
+        var topic = _messages[index].Topic?.Trim();
+        var target = string.IsNullOrWhiteSpace(topic)
+            ? $"generated message {index + 1}"
+            : topic;
+
+        return $"Remove {target} from {Node.NodeName}";
+    }
 
     protected override void OnParametersSet()
     {
