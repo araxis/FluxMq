@@ -37,7 +37,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Sensors"
                                    Size="Size.Small"
                                    Class="topic-session-live-button"
-                                   aria-label="Switch to live traffic"
+                                   aria-label="@SwitchToLiveTrafficLabel"
                                    OnClick="@Live.ClearStoredSessionSelection" />
                 </MudTooltip>
             </div>
@@ -62,7 +62,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Backspace"
                                    Size="Size.Small"
                                    Class="topic-clear-button"
-                                   aria-label="Clear topic selection"
+                                   aria-label="@ClearTopicSelectionLabel"
                                    OnClick="@ClearTopicSelection" />
                 </MudTooltip>
             }
@@ -156,7 +156,7 @@
 
                     @if (NoTrafficBrokerGroups.Count > 0)
                     {
-                        <div class="topic-monitor-list" aria-label="Broker monitors">
+                        <div class="topic-monitor-list" aria-label="@BrokerMonitorsLabel">
                             @foreach (var broker in NoTrafficBrokerGroups)
                             {
                                 <div class="@MonitorRowClass(broker)" @key="@broker.Name">
@@ -299,7 +299,7 @@
 
         @if (Live.SelectedStoredSession is null)
         {
-            <section class="topic-publish-panel" aria-label="Publish MQTT message">
+            <section class="topic-publish-panel" aria-label="@PublishPanelLabel">
                 <div class="topic-publish-header">
                     <span>Publish</span>
                     <span>@PublishConnectionLabel</span>
@@ -314,7 +314,7 @@
                         @if (PublishConnections.Count > 0)
                         {
                             <select class="topic-publish-input"
-                                    aria-label="Publish broker"
+                                    aria-label="@PublishBrokerLabel"
                                     @bind="_publishConnectionId">
                                 @foreach (var connection in PublishConnections)
                                 {
@@ -346,7 +346,7 @@
                     </label>
 
                     <div class="topic-publish-actions">
-                        <label class="topic-publish-qos" aria-label="Publish quality of service">
+                        <label class="topic-publish-qos" aria-label="@PublishQosLabel">
                             <select @bind="_publishQos">
                                 <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
                                 <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
@@ -356,7 +356,7 @@
 
                         <button type="button"
                                 class="topic-publish-retain @(_publishRetain ? "active" : null)"
-                                aria-label="Publish retained message"
+                                aria-label="@PublishRetainLabel"
                                 aria-pressed="@(_publishRetain ? "true" : "false")"
                                 @onclick="@(() => _publishRetain = !_publishRetain)">
                             <span>Retain</span>
@@ -373,7 +373,7 @@
                     </div>
                 </div>
 
-                <div class="topic-publish-assist" aria-label="Publish assist">
+                <div class="topic-publish-assist" aria-label="@PublishAssistLabel">
                     <div class="topic-publish-assist-actions">
                         <span class="topic-publish-assist-label">Use message</span>
                         <button type="button"
@@ -394,7 +394,7 @@
                         </button>
                     </div>
 
-                    <div class="topic-publish-recent" aria-label="Recent publishes">
+                    <div class="topic-publish-recent" aria-label="@RecentPublishesLabel">
                         @if (_recentPublishes.Count == 0)
                         {
                             <div class="topic-publish-recent-empty" role="status" aria-live="polite">No recent publishes</div>
@@ -418,7 +418,7 @@
                                 <MudIconButton Icon="@Icons.Material.Filled.ClearAll"
                                                Size="Size.Small"
                                                Class="topic-publish-recent-clear"
-                                               aria-label="Clear recent publishes"
+                                               aria-label="@ClearRecentPublishesLabel"
                                                OnClick="@ClearRecentPublishes" />
                             </MudTooltip>
                         }
@@ -891,6 +891,14 @@
         _ => _selectedTopic ?? "All brokers"
     };
 
+    private string SwitchToLiveTrafficLabel => Live.SelectedStoredSession is { } session
+        ? $"Switch {session.Name} to live traffic"
+        : "Switch to live traffic";
+
+    private string ClearTopicSelectionLabel => $"Clear topic selection for {SelectedTopicLabel}";
+
+    private string BrokerMonitorsLabel => $"{BrokerCountLabel(NoTrafficBrokerGroups.Count)} shown for {SelectedTopicLabel}";
+
     private string TopicExplorerTreeLabel => $"{TopicSourceLabel} topic tree, {BrokerCountLabel(BrokerGroups.Count)}, {TopicCountLabel(TopicCount)}";
 
     private string TopicExplorerDetailLabel => $"{SelectedTopicLabel} latest message and history";
@@ -1025,11 +1033,34 @@
 
     private string PublishButtonLabel => _publishBusy ? "Publishing" : "Publish";
 
+    private string PublishPanelLabel => $"Publish MQTT message for {SelectedTopicLabel}";
+
+    private string PublishBrokerLabel => $"Publish broker for {SelectedTopicLabel}, {PublishClientCountLabel}";
+
+    private string PublishQosLabel => $"Publish quality of service for {SelectedTopicLabel}";
+
+    private string PublishRetainLabel => _publishRetain
+        ? $"Publish retained message for {SelectedTopicLabel}, enabled"
+        : $"Publish retained message for {SelectedTopicLabel}, disabled";
+
+    private string PublishAssistLabel => $"Publish assist for {SelectedTopicLabel}";
+
+    private string RecentPublishesLabel => $"Recent publishes, {RecentPublishCountLabel}";
+
+    private string ClearRecentPublishesLabel => $"Clear {RecentPublishCountLabel}";
+
     private string PublishClientCountLabel => PublishConnections.Count switch
     {
         0 => "0 brokers",
         1 => "1 broker",
         var count => $"{count} brokers"
+    };
+
+    private string RecentPublishCountLabel => _recentPublishes.Count switch
+    {
+        0 => "no recent publishes",
+        1 => "1 recent publish",
+        var count => $"{count.ToString(CultureInfo.InvariantCulture)} recent publishes"
     };
 
     private string PublishConnectionLabel => SelectedPublishConnection is { } connection
