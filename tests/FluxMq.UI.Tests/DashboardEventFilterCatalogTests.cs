@@ -13230,6 +13230,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("RunFromKeyboardAsync(args, SelectLogs)");
         markup.ShouldContain("RunFromKeyboardAsync(args, ToggleJsonView)");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Code\"");
+        markup.ShouldContain("AriaLabel=\"@AddArtifactMenuLabel(active)\"");
+        markup.ShouldContain("private static string AddArtifactMenuLabel(FlowWorkspaceService app)");
+        markup.ShouldNotContain("AriaLabel=\"Add artifact\"");
         markup.Split("Class=\"project-tab-icon\" aria-hidden=\"true\"", StringSplitOptions.None).Length.ShouldBe(8);
         markup.ShouldContain("<span class=\"project-tab-name\">App JSON</span>");
         markup.ShouldContain("<span class=\"project-tabbar-app-name\">@active.Name</span>");

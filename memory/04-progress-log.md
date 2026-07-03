@@ -6362,3 +6362,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale inline-label/title scan for the touched expressions, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are remaining WorkspacePage static menu/action labels or other visible workspace chrome labels.
+- Workspace add-artifact menu label specificity result:
+  - Added a helper-backed accessible label to the icon-only WorkspacePage add-artifact menu.
+  - Preserved menu item text, add pipeline/metric/dashboard/test callbacks, artifact tab selection, keyboard activation, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspacePage guard to require the helper-backed menu label and reject a literal add-artifact label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale literal menu-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are AppStructureMenu icon-only menu labels or other visible workspace chrome labels.
