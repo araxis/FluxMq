@@ -53,7 +53,7 @@ else
                         </div>
                     </div>
                     <div class="app-actions" @onclick:stopPropagation="true">
-                        <MudTooltip Text="Close app">
+                        <MudTooltip Text="@($"Close app {a.Name}")">
                             <MudIconButton Size="Size.Small"
                                            Icon="@Icons.Material.Outlined.Cancel"
                                            Class="tree-icon-button"
@@ -94,7 +94,7 @@ else
                                     <div class="conn-actions">
                                         @if (c.State is MqttClientState.Disconnected or MqttClientState.Faulted)
                                         {
-                                            <MudTooltip Text="Connect">
+                                            <MudTooltip Text="@($"Connect {c.ResourceName}")">
                                                 <MudIconButton Size="Size.Small"
                                                                Icon="@Icons.Material.Filled.PlayArrow"
                                                                Color="Color.Success"
@@ -105,7 +105,7 @@ else
                                         }
                                         else
                                         {
-                                            <MudTooltip Text="Disconnect">
+                                            <MudTooltip Text="@($"Disconnect {c.ResourceName}")">
                                                 <MudIconButton Size="Size.Small"
                                                                Icon="@Icons.Material.Filled.Stop"
                                                                Color="Color.Error"
@@ -114,7 +114,7 @@ else
                                                                OnClick="@(() => Live.DisconnectAsync(c.Id))" />
                                             </MudTooltip>
                                         }
-                                        <MudTooltip Text="Remove">
+                                        <MudTooltip Text="@($"Remove connection {c.ResourceName}")">
                                             <MudIconButton Size="Size.Small"
                                                            Icon="@Icons.Material.Filled.DeleteOutline"
                                                            Class="tree-icon-button"
@@ -334,7 +334,7 @@ else
                                     <span class="tree-item-actions"
                                           @onclick:stopPropagation="true"
                                           @onmousedown:stopPropagation="true">
-                                        <MudTooltip Text="Delete test">
+                                        <MudTooltip Text="@($"Delete test {t}")">
                                             <MudIconButton Size="Size.Small"
                                                            Icon="@Icons.Material.Filled.DeleteOutline"
                                                            Class="tree-icon-button tree-delete-button"

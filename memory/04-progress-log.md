@@ -5931,3 +5931,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only AppsPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App Tree row-action label specificity result:
+  - Replaced static App Tree close, connect, disconnect, remove-connection, and delete-test tooltips with target-specific labels.
+  - Preserved app selection, section expansion, add actions, connection connect/disconnect/remove behavior, test delete confirmation, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App Tree guard to require target-specific row-action tooltips and reject the old static row-action tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTreePanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

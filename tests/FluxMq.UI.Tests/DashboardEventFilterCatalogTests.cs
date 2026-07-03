@@ -13235,7 +13235,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static string AppRowLabel");
         markup.ShouldContain("private static string? TreeItemCurrent");
         System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(7);
+        markup.ShouldContain("Text=\"@($\"Close app {a.Name}\")\"");
         markup.ShouldContain("aria-label=\"@($\"Close app {a.Name}\")\"");
+        markup.ShouldNotContain("Text=\"Close app\"");
         markup.ShouldContain("tree-empty-artifact-row tests");
         markup.ShouldContain("role=\"button\"");
         markup.ShouldContain("aria-label=\"Create test scenario\"");
@@ -13246,9 +13248,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("tree-empty-artifact-copy");
         markup.ShouldContain("tree-empty-artifact-cues");
         markup.ShouldContain("@ConnectionDotClass(c.State)");
+        markup.ShouldContain("Text=\"@($\"Connect {c.ResourceName}\")\"");
         markup.ShouldContain("aria-label=\"@($\"Connect {c.ResourceName}\")\"");
+        markup.ShouldContain("Text=\"@($\"Disconnect {c.ResourceName}\")\"");
         markup.ShouldContain("aria-label=\"@($\"Disconnect {c.ResourceName}\")\"");
+        markup.ShouldContain("Text=\"@($\"Remove connection {c.ResourceName}\")\"");
         markup.ShouldContain("aria-label=\"@($\"Remove connection {c.ResourceName}\")\"");
+        markup.ShouldNotContain("Text=\"Connect\"");
+        markup.ShouldNotContain("Text=\"Disconnect\"");
+        markup.ShouldNotContain("Text=\"Remove\"");
         markup.ShouldContain("private static string ConnectionDotClass");
         markup.ShouldNotContain("StateDotClass");
         markup.ShouldContain("TreeSectionHeader(");
@@ -13300,6 +13308,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("test-run-state");
         markup.ShouldContain("tree-item-actions");
         markup.ShouldContain("tree-delete-button");
+        markup.ShouldContain("Text=\"@($\"Delete test {t}\")\"");
+        markup.ShouldContain("aria-label=\"@($\"Delete test {t}\")\"");
+        markup.ShouldNotContain("Text=\"Delete test\"");
         markup.ShouldContain("RemoveTestAsync(a, t)");
         markup.ShouldContain("ShowMessageBoxAsync(");
         markup.ShouldContain("private static string TestArtifactTitle");
