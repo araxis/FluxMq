@@ -5833,9 +5833,15 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("private static bool IsActivationKey");
         razor.ShouldContain("aria-label=\"@GridPickerButtonLabel\"");
         razor.ShouldContain("aria-label=\"@SplitPickerButtonLabel\"");
-        razor.ShouldContain("aria-label=\"Close grid layout picker\"");
+        razor.ShouldContain("aria-label=\"@CloseGridPickerLabel\"");
+        razor.ShouldContain("private string CloseGridPickerLabel => $\"Close {DashboardTitle} grid layout picker\";");
+        razor.ShouldNotContain("aria-label=\"Close grid layout picker\"");
         razor.ShouldContain("@onclick=\"@CloseGridPicker\"");
-        razor.ShouldContain("aria-label=\"Close split picker\"");
+        razor.ShouldContain("aria-label=\"@CloseSplitPickerLabel\"");
+        razor.ShouldContain("private string CloseSplitPickerLabel => SelectedCells.Count == 1");
+        razor.ShouldContain("$\"Close split picker for {CellTitle(SelectedCells[0])}\"");
+        razor.ShouldContain("$\"Close {DashboardTitle} split picker\"");
+        razor.ShouldNotContain("aria-label=\"Close split picker\"");
         razor.ShouldContain("@onclick=\"@CloseSplitPicker\"");
         razor.ShouldNotContain("class=\"dashboard-picker-backdrop\" @onclick");
         razor.ShouldContain("GridPickerCellAriaLabel");

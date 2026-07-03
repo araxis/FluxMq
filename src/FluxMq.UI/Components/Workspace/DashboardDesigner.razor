@@ -60,7 +60,7 @@
                                 {
                                     <button type="button"
                                             class="dashboard-picker-backdrop"
-                                            aria-label="Close grid layout picker"
+                                            aria-label="@CloseGridPickerLabel"
                                             @onclick="@CloseGridPicker"></button>
                                     <div class="dashboard-grid-picker-popover">
                                         <div class="dashboard-grid-picker-cells">
@@ -111,7 +111,7 @@
                                 {
                                     <button type="button"
                                             class="dashboard-picker-backdrop"
-                                            aria-label="Close split picker"
+                                            aria-label="@CloseSplitPickerLabel"
                                             @onclick="@CloseSplitPicker"></button>
                                     <div class="dashboard-grid-picker-popover">
                                         <div class="dashboard-grid-picker-cells split-picker-cells">
@@ -627,6 +627,8 @@
         ? "Set dashboard grid layout"
         : $"Set dashboard grid layout, currently {_layout.Columns.Count} columns by {_layout.Rows.Count} rows";
 
+    private string CloseGridPickerLabel => $"Close {DashboardTitle} grid layout picker";
+
     private string GridPickerLabel => $"{_previewColumns} columns x {_previewRows} rows";
 
     private string SplitPickerSummary => SelectedCells.Count == 1
@@ -636,6 +638,10 @@
     private string SplitPickerButtonLabel => SelectedCells.Count == 1
         ? $"Split {CellTitle(SelectedCells[0])}"
         : "Split selected cell";
+
+    private string CloseSplitPickerLabel => SelectedCells.Count == 1
+        ? $"Close split picker for {CellTitle(SelectedCells[0])}"
+        : $"Close {DashboardTitle} split picker";
 
     private string SplitPickerLabel => $"{_previewSplitColumns} columns x {_previewSplitRows} rows";
 

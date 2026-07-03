@@ -6011,3 +6011,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only MetricDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Designer picker close-label specificity result:
+  - Replaced static Dashboard Designer grid-layout and split-picker close backdrop labels with dashboard/selected-cell-aware labels.
+  - Preserved grid picker toggling, split picker toggling, backdrop close behavior, grid resize, split behavior, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner toolbar guard to require helper-backed picker close labels and reject the old static backdrop labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
