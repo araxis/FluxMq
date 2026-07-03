@@ -5981,3 +5981,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only AppJsonPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer link-condition tooltip label specificity result:
+  - Replaced static Flow Designer apply-condition and clear-condition tooltips with the existing selected-link-specific link-condition labels.
+  - Preserved link selection, condition expression editing, apply/clear behavior, workflow JSON, diagram behavior, diagnostics, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused FlowDesigner guard to require selected-link tooltip helpers and reject the old static link-condition tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only FlowDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

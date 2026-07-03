@@ -7418,12 +7418,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("flow-link-condition-title");
         markup.ShouldContain("Label=\"Expression\"");
         markup.ShouldContain("Class=\"flow-link-condition-action apply\"");
+        markup.ShouldContain("Text=\"@ApplyLinkConditionLabel\"");
         markup.ShouldContain("aria-label=\"@ApplyLinkConditionLabel\"");
         markup.ShouldContain("private string ApplyLinkConditionLabel => _selectedWorkflowLink is null");
         markup.ShouldContain("$\"Apply condition to {SelectedLinkLabel}\"");
+        markup.ShouldContain("Text=\"@ClearLinkConditionLabel\"");
         markup.ShouldContain("aria-label=\"@ClearLinkConditionLabel\"");
         markup.ShouldContain("private string ClearLinkConditionLabel => _selectedWorkflowLink is null");
         markup.ShouldContain("$\"Clear condition from {SelectedLinkLabel}\"");
+        markup.ShouldNotContain("Text=\"Apply condition\"");
+        markup.ShouldNotContain("Text=\"Clear condition\"");
         markup.ShouldNotContain("aria-label=\"Apply link condition\"");
         markup.ShouldNotContain("aria-label=\"Clear link condition\"");
         markup.ShouldNotContain("ViewStrokeColor=\"#FBBF24\"");
