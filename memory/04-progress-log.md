@@ -5819,3 +5819,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only WorkspaceLogPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App JSON detail-label specificity result:
+  - Replaced static App JSON meta, copy action, and editor-shell accessible labels with active-app-aware labels.
+  - Preserved visible App JSON copy, read-only code editor, full-definition JSON source, copy behavior, unsaved state, Monaco sync, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App JSON guard to require the label helpers and reject the old static meta/action/editor labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel_UsesFlatCompactCodeViewerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppJsonPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

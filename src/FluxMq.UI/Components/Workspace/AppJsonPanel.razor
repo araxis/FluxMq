@@ -14,7 +14,7 @@
                 <span>@FileLabel</span>
             </div>
         </div>
-        <div class="app-json-meta" aria-label="Application JSON line and size summary">
+        <div class="app-json-meta" aria-label="@AppJsonMetaLabel">
             <span>@JsonLineCount lines</span>
             <span>@JsonSizeLabel</span>
         </div>
@@ -25,14 +25,14 @@
         <MudTooltip Text="Copy JSON">
             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                            Size="Size.Small"
-                           aria-label="Copy JSON"
+                           aria-label="@CopyAppJsonLabel"
                            Class="app-json-copy-button"
                            Disabled="@string.IsNullOrWhiteSpace(_fullJson)"
                            OnClick="@CopyAsync" />
         </MudTooltip>
     </div>
 
-    <div class="app-json-editor-shell" aria-label="Application definition JSON">
+    <div class="app-json-editor-shell" aria-label="@AppJsonEditorLabel">
         @if (string.IsNullOrWhiteSpace(_fullJson))
         {
             <div class="app-json-empty" role="status" aria-live="polite">
@@ -64,6 +64,12 @@
         ? $"Application JSON toolbar for {Project.Name}, unsaved changes"
         : $"Application JSON toolbar for {Project.Name}";
 
+    private string AppJsonMetaLabel => $"Application JSON summary for {Project.Name}: {JsonLineCountLabel}, {JsonSizeLabel}";
+
+    private string CopyAppJsonLabel => $"Copy application JSON for {Project.Name}";
+
+    private string AppJsonEditorLabel => $"Application definition JSON for {Project.Name}";
+
     private string FileLabel => string.IsNullOrWhiteSpace(Project.CurrentFilePath)
         ? "In memory - not saved"
         : Project.CurrentFilePath;
@@ -71,6 +77,8 @@
     private int JsonLineCount => string.IsNullOrEmpty(_fullJson)
         ? 0
         : _fullJson.Count(static character => character == '\n') + 1;
+
+    private string JsonLineCountLabel => JsonLineCount == 1 ? "1 line" : $"{JsonLineCount} lines";
 
     private string JsonSizeLabel
     {
