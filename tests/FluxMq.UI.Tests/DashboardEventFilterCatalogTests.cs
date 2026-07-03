@@ -6893,6 +6893,9 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardDesigner.razor.css"));
 
         markup.ShouldContain("dashboard-cell-placeholder");
+        markup.ShouldContain("title=\"@CellPlaceholderTitle(cell)\"");
+        markup.ShouldContain("private static string CellPlaceholderTitle(DashboardCellSnapshot cell)");
+        markup.ShouldNotContain("title=\"@($\"{CellTitle(cell)} {CellSpan(cell)}\")\"");
         css.ShouldContain(".dashboard-cell-placeholder");
         css.ShouldContain("align-items: flex-start;");
         css.ShouldContain("max-width: 100%;");

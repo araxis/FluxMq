@@ -6261,3 +6261,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardDesigner stale widget-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: Dashboard widget placeholder title specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard widget placeholder title specificity result:
+  - Replaced the inline Dashboard empty-cell placeholder hover title with a helper-backed title derived from the existing cell title and span helpers.
+  - Preserved empty-cell rendering, merged-cell span display, drop marker chrome, selection behavior, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner empty-cell label guard to require the helper-backed placeholder title and reject the old inline title expression.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_EmptyCellLabelsStayBoundedWhenGridShrinks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale placeholder-title scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard widget editor dialog action-label specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.

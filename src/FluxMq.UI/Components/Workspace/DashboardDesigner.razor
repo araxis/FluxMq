@@ -1297,7 +1297,7 @@
             : "dashboard-cell-content";
 
     private static RenderFragment RenderEmptyCellContent(DashboardCellSnapshot cell) => @<text>
-        <div class="dashboard-cell-placeholder" title="@($"{CellTitle(cell)} {CellSpan(cell)}")">
+        <div class="dashboard-cell-placeholder" title="@CellPlaceholderTitle(cell)">
             <span class="dashboard-cell-name">@CellTitle(cell)</span>
             @if (cell.IsMerged)
             {
@@ -1308,6 +1308,9 @@
             </span>
         </div>
     </text>;
+
+    private static string CellPlaceholderTitle(DashboardCellSnapshot cell)
+        => $"{CellTitle(cell)} {CellSpan(cell)}";
 
     private DashboardWidgetSnapshot? FindWidget(string? widgetName)
         => !string.IsNullOrWhiteSpace(widgetName) &&
