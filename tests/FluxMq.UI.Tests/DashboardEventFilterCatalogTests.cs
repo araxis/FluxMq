@@ -9613,6 +9613,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SummaryVariables");
         markup.ShouldContain("VariableOverflow");
         markup.ShouldContain("condition-router-token");
+        markup.ShouldContain("title=\"@SummaryVariableTitle(variable)\"");
+        markup.ShouldContain("private string SummaryVariableTitle(ConditionVariable variable)");
+        markup.ShouldContain("$\"{variable.Name}: {variable.Type} in {Node.NodeName}\"");
+        markup.ShouldNotContain("title=\"@($\"{variable.Name}: {variable.Type}\")\"");
         markup.ShouldContain("condition-router-editor");
         markup.ShouldContain("aria-label=\"Condition router settings\"");
         markup.ShouldNotContain("condition-router-config-row");
@@ -9658,6 +9662,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("condition-router-variable-strip");
         markup.ShouldContain("condition-router-variable-label");
         markup.ShouldContain("condition-router-variable-token");
+        markup.ShouldContain("title=\"@VariableReferenceTitle(variable)\"");
+        markup.ShouldContain("private string VariableReferenceTitle(ConditionVariable variable)");
+        markup.ShouldContain("$\"{variable.Name} {variable.Type} example {variable.Example} in {Node.NodeName}\"");
+        markup.ShouldNotContain("title=\"@($\"{variable.Type}: {variable.Example}\")\"");
         markup.ShouldContain("Variables");
         markup.ShouldNotContain("condition-router-variable-reference-grid");
         markup.ShouldNotContain("condition-router-variable-reference-row");

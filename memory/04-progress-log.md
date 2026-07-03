@@ -6602,3 +6602,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale MQTT metrics label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the static-label cleanup from a fresh current-state scan; likely candidates are compact token titles in ConditionRouterNodeWidget, RoutingSwitchNodeWidget, or MetricSourceNodeWidget summaries.
+- ConditionRouterNodeWidget token title specificity result:
+  - Replaced inline summary variable and editor variable-reference hover titles with helper-backed titles that include variable context plus the node name.
+  - Preserved condition expression editor layout, input-type switching, variable display, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused ConditionRouterNodeWidget guard to require helper-backed token titles and reject stale inline titles.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ConditionRouterNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale condition-router title scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue static-title cleanup from a fresh current-state scan; likely candidates are RoutingSwitchNodeWidget route token titles or MetricSourceNodeWidget parameter token titles.
