@@ -13741,7 +13741,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ConnectionDotClass");
         markup.ShouldContain("private static string ConnectionRowLabel");
         markup.ShouldContain("aria-label=\"@PrimaryActionLabel(conn)\"");
+        markup.ShouldContain("Text=\"@RemoveLabel(conn)\"");
         markup.ShouldContain("aria-label=\"@RemoveLabel(conn)\"");
+        markup.ShouldNotContain("Text=\"Remove connection\"");
         markup.ShouldNotContain("StateClass");
         markup.ShouldNotContain("StateLabel");
         markup.ShouldNotContain("StateDotClass");

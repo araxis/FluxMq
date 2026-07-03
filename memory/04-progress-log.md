@@ -5911,3 +5911,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only ConnectionPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Connections remove-action label specificity result:
+  - Replaced the static Connections remove-action tooltip with the existing connection-specific remove label.
+  - Preserved remove behavior, add-connection dialog launch, broker filtering, connection rows, connect/disconnect actions, managed connection data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Connections panel guard to require the row-specific remove tooltip and reject the old static remove tooltip.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ConnectionPanel_UsesFlatCompactConnectionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only ConnectionPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

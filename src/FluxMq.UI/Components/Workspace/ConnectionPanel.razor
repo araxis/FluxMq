@@ -72,7 +72,7 @@
                                            aria-label="@PrimaryActionLabel(conn)"
                                            OnClick="@(() => ToggleConnectionAsync(conn))" />
                         </MudTooltip>
-                        <MudTooltip Text="Remove connection">
+                        <MudTooltip Text="@RemoveLabel(conn)">
                             <MudIconButton Size="Size.Small"
                                            Icon="@Icons.Material.Filled.DeleteOutline"
                                            Class="connection-remove-button"
