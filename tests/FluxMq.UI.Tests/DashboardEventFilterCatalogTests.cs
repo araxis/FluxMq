@@ -13809,6 +13809,19 @@ public sealed class DashboardEventFilterCatalogTests
             .ToArray()
             .ShouldBeEmpty();
         markup.ShouldContain("StructureMenuLabel(\"Brokers\", conns.Count)");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Brokers\", conns.Count, \"broker connection\")");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Pipelines\", active.WorkflowNames.Count, \"pipeline\")");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Dashboards\", active.DashboardNames.Count, \"dashboard\")");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Metrics\", active.MetricNames.Count, \"metric\")");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Tests\", active.TestNames.Count, \"test\")");
+        markup.ShouldContain("private static string StructureMenuAriaLabel(FlowWorkspaceService app, string sectionLabel, int count, string singular)");
+        markup.ShouldContain("$\"{app.Name} {sectionLabel.ToLowerInvariant()} menu, {CountLabel(count, singular)}\"");
+        (markup.Split("AriaLabel=\"@StructureMenuAriaLabel", StringSplitOptions.None).Length - 1).ShouldBe(5);
+        markup.ShouldNotContain("AriaLabel=\"Brokers\"");
+        markup.ShouldNotContain("AriaLabel=\"Pipelines\"");
+        markup.ShouldNotContain("AriaLabel=\"Dashboards\"");
+        markup.ShouldNotContain("AriaLabel=\"Metrics\"");
+        markup.ShouldNotContain("AriaLabel=\"Tests\"");
         markup.ShouldContain("<span class=\"app-structure-name\">@active.Name</span>");
         (markup.Split("Modal=\"false\"", StringSplitOptions.None).Length - 1).ShouldBe(5);
         markup.ShouldContain("app-menu-artifact-row");

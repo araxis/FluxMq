@@ -6372,3 +6372,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale literal menu-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are AppStructureMenu icon-only menu labels or other visible workspace chrome labels.
+- AppStructureMenu menu label specificity result:
+  - Added helper-backed contextual accessible labels to the five top-level AppStructureMenu menus.
+  - Preserved visible menu labels, broker toggle behavior, add/select/delete artifact commands, active markers, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppStructureMenu guard to require all five helper-backed menu labels and reject literal section labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale literal menu-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are AppStructureMenu navigation label and command row text specificity or other visible workspace chrome labels.
