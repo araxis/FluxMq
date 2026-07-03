@@ -6612,3 +6612,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale condition-router title scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue static-title cleanup from a fresh current-state scan; likely candidates are RoutingSwitchNodeWidget route token titles or MetricSourceNodeWidget parameter token titles.
+- MetricSourceNodeWidget parameter title specificity result:
+  - Replaced the inline parameter-preview hover title with a helper-backed title that includes parameter key/value context plus the node name.
+  - Preserved metric selection, parameter preview, parameter editor rendering, start behavior, output buffer validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricSourceNodeWidget guard to require the helper-backed parameter preview title and reject the stale inline title.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricSourceNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale metric-source title scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: stop with a clean handoff; if explicitly resuming, continue static-title cleanup from a fresh scan, likely RoutingSwitchNodeWidget route token titles or MetricDesigner reference-count title.

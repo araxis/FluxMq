@@ -12084,6 +12084,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ParameterPreview");
         markup.ShouldContain("ParameterPreviewOverflow");
         markup.ShouldContain("metric-source-token");
+        markup.ShouldContain("title=\"@ParameterPreviewTitle(parameter)\"");
+        markup.ShouldContain("private string ParameterPreviewTitle(KeyValuePair<string, string> parameter)");
+        markup.ShouldContain("$\"{parameter.Key}: {parameter.Value} in {Node.NodeName}\"");
+        markup.ShouldNotContain("title=\"@($\"{parameter.Key}: {parameter.Value}\")\"");
         markup.ShouldNotContain("metric-source-contract");
         markup.ShouldNotContain("aria-label=\"Metric source output fields\"");
         markup.ShouldNotContain("Output fields");
