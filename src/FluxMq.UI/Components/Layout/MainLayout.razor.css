@@ -55,7 +55,7 @@
 
 .flux-brand-mark {
     display: block;
-    filter: drop-shadow(0 8px 14px rgba(45, 212, 191, 0.2));
+    filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--flux-accent) 20%, transparent));
     height: 24px;
     width: 24px;
 }

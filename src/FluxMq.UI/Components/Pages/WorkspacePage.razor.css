@@ -17,7 +17,7 @@
 }
 
 .workspace-empty-mark {
-    filter: drop-shadow(0 18px 30px rgba(45, 212, 191, 0.16));
+    filter: drop-shadow(0 18px 30px color-mix(in srgb, var(--flux-accent) 16%, transparent));
     height: 72px;
     opacity: 0.9;
     width: 72px;

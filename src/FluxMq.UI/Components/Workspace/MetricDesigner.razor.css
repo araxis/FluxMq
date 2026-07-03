@@ -190,7 +190,7 @@
 }
 
 .metrics-new-button:hover {
-    background: color-mix(in srgb, var(--flux-accent) 88%, white);
+    background: var(--flux-accent-hover);
 }
 
 .metrics-new-button:focus-visible {
@@ -587,7 +587,7 @@
 }
 
 .metrics-empty-action:hover {
-    background: color-mix(in srgb, var(--flux-accent) 88%, white);
+    background: var(--flux-accent-hover);
 }
 
 .metrics-empty-action.secondary:hover {
@@ -807,7 +807,7 @@
 }
 
 .metrics-save-button:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--flux-accent) 88%, white);
+    background: var(--flux-accent-hover);
 }
 
 .metrics-editor-scroll {
