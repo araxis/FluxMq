@@ -156,7 +156,7 @@ else
                                 <div class="pipe-item @(isPipeActive ? "active" : null)"
                                      role="button"
                                      tabindex="0"
-                                     aria-label="@($"Open pipeline {w}")"
+                                     aria-label="@OpenPipelineLabel(w)"
                                      aria-current="@TreeItemCurrent(isPipeActive)"
                                      aria-keyshortcuts="Enter Space"
                                      @onclick="@(() => SelectPipeline(a, w))"
@@ -240,7 +240,7 @@ else
                                 <div class="artifact-item @(isDashboardActive ? "active" : null)"
                                      role="button"
                                      tabindex="0"
-                                     aria-label="@($"Open dashboard {d}")"
+                                     aria-label="@OpenDashboardLabel(d)"
                                      aria-current="@TreeItemCurrent(isDashboardActive)"
                                      aria-keyshortcuts="Enter Space"
                                      @onclick="@(() => SelectDashboard(a, d))"
@@ -474,6 +474,12 @@ else
         var state = isActive ? "active" : "inactive";
         return $"{app.Name} metric designer, {state}, {CountLabel(app.MetricNames.Count, "metric")}";
     }
+
+    private static string OpenPipelineLabel(string pipelineName)
+        => $"Open pipeline {pipelineName}";
+
+    private static string OpenDashboardLabel(string dashboardName)
+        => $"Open dashboard {dashboardName}";
 
     private static string CloseAppLabel(FlowWorkspaceService app)
         => $"Close app {app.Name}";

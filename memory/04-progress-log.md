@@ -6332,3 +6332,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only AppTreePanel app/connection stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue App Tree static-label cleanup with pipeline/dashboard/test row open/delete labels, one focused surface at a time.
+- App Tree artifact open-label specificity result:
+  - Replaced inline pipeline and dashboard open label expressions with helper-backed labels in AppTreePanel.
+  - Preserved pipeline/dashboard selection, keyboard activation, active markers, section expansion, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppTreePanel guards to require helper-backed artifact open labels and reject the old inline expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTreePanel artifact stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue App Tree static-label cleanup with test row delete labels, then stop or resume the broader high-use workspace static-label audit one focused surface at a time.

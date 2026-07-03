@@ -13185,10 +13185,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("No app open");
         markup.ShouldContain("No artifacts");
         System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(7);
-        markup.ShouldContain("aria-label=\"@($\"Open pipeline {w}\")\"");
+        markup.ShouldContain("aria-label=\"@OpenPipelineLabel(w)\"");
         markup.ShouldContain("aria-label=\"@OpenMetricsTabLabel(active)\"");
         markup.ShouldContain("title=\"@OpenMetricsTabLabel(active)\"");
-        markup.ShouldContain("aria-label=\"@($\"Open dashboard {d}\")\"");
+        markup.ShouldContain("aria-label=\"@OpenDashboardLabel(d)\"");
         markup.ShouldContain("aria-label=\"@($\"Open test {t}\")\"");
         markup.ShouldContain("aria-label=\"@OpenTopicsTabLabel(active)\"");
         markup.ShouldContain("title=\"@OpenTopicsTabLabel(active)\"");
@@ -13203,6 +13203,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("title=\"@DeleteArtifactTabLabel(\"test\", t)\"");
         markup.ShouldContain("aria-label=\"@DeleteArtifactTabLabel(\"test\", t)\"");
         markup.ShouldContain("private static string OpenMetricsTabLabel");
+        markup.ShouldContain("private static string OpenPipelineLabel(string pipelineName)");
+        markup.ShouldContain("private static string OpenDashboardLabel(string dashboardName)");
+        markup.ShouldNotContain("@($\"Open pipeline {w}\")");
+        markup.ShouldNotContain("@($\"Open dashboard {d}\")");
         markup.ShouldContain("private static string OpenTopicsTabLabel");
         markup.ShouldContain("private static string OpenLogsTabLabel");
         markup.ShouldContain("private static string OpenAppJsonTabLabel");
@@ -13656,6 +13660,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SelectAppFromKeyboardAsync(args, a)");
         markup.ShouldContain("ToggleSectionFromKeyboardAsync(args, app, section)");
         markup.ShouldContain("SelectPipelineFromKeyboardAsync(args, a, w)");
+        markup.ShouldContain("aria-label=\"@OpenPipelineLabel(w)\"");
+        markup.ShouldContain("private static string OpenPipelineLabel(string pipelineName)");
+        markup.ShouldNotContain("@($\"Open pipeline {w}\")");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isPipeActive)\"");
         System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""pipe-icon""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("SelectMetricsFromKeyboardAsync(args, a)");
@@ -13668,6 +13675,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isMetricsActive)\"");
         System.Text.RegularExpressions.Regex.Matches(markup, @"Class=""artifact-icon dashboard""\s+aria-hidden=""true""").Count.ShouldBe(2);
         markup.ShouldContain("SelectDashboardFromKeyboardAsync(args, a, d)");
+        markup.ShouldContain("aria-label=\"@OpenDashboardLabel(d)\"");
+        markup.ShouldContain("private static string OpenDashboardLabel(string dashboardName)");
+        markup.ShouldNotContain("@($\"Open dashboard {d}\")");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isDashboardActive)\"");
         markup.ShouldContain("SelectTestFromKeyboardAsync(args, a, t)");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isTestActive)\"");
