@@ -4887,6 +4887,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private string CancelMetricChangesLabel => $\"Cancel changes for {SelectedMetricActionTarget}\"");
         markup.ShouldNotContain("Text=\"Cancel changes\"");
         markup.ShouldNotContain("aria-label=\"Cancel changes\"");
+        markup.ShouldContain("title=\"@RenameMetricLabel\"");
+        markup.ShouldContain("aria-label=\"@RenameMetricLabel\"");
+        markup.ShouldContain("private string RenameMetricLabel => $\"Rename {SelectedMetricActionTarget}\"");
+        markup.ShouldNotContain("title=\"Rename metric\"");
+        markup.ShouldNotContain("aria-label=\"Rename metric\"");
         markup.ShouldContain("Text=\"@DuplicateMetricLabel\"");
         markup.ShouldContain("aria-label=\"@DuplicateMetricLabel\"");
         markup.ShouldContain("private string DuplicateMetricLabel => $\"Duplicate {SelectedMetricActionTarget}\"");

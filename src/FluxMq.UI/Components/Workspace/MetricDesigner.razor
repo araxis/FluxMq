@@ -277,8 +277,8 @@
                                         @if (CanOpenRename)
                                         {
                                             <button type="button"
-                                                    title="Rename metric"
-                                                    aria-label="Rename metric"
+                                                    title="@RenameMetricLabel"
+                                                    aria-label="@RenameMetricLabel"
                                                     @onclick="@RenameMetricAsync">
                                                 <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" aria-hidden="true" />
                                             </button>
@@ -600,6 +600,8 @@
     private string ResetMetricFiltersLabel => $"Reset metric filters, {MetricFilterStateLabel}";
 
     private string CancelMetricChangesLabel => $"Cancel changes for {SelectedMetricActionTarget}";
+
+    private string RenameMetricLabel => $"Rename {SelectedMetricActionTarget}";
 
     private string DuplicateMetricLabel => $"Duplicate {SelectedMetricActionTarget}";
 

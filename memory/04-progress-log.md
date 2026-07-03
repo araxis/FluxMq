@@ -6181,3 +6181,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only RoutingForkNodeWidget/RoutingMergeNodeWidget stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Metric Designer rename action-label specificity result:
+  - Replaced the static Metric Designer inline rename command title and accessible label with a selected-metric-aware label using existing draft metric state.
+  - Preserved metric selection, rename dialog launch, metric id/display/type editing, validation, save/duplicate/delete behavior, saved metric data, dashboard bindings, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricDesigner guard to require the helper-backed rename label and reject the old static title/aria-label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only MetricDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
