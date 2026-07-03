@@ -5953,14 +5953,18 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("tabindex=\"0\"");
         razor.ShouldContain("SelectCellFromKeyboard");
         razor.ShouldContain("private static bool IsActivationKey");
+        razor.ShouldContain("Text=\"@GridPickerButtonLabel\"");
         razor.ShouldContain("aria-label=\"@GridPickerButtonLabel\"");
+        razor.ShouldNotContain("Text=\"Set grid layout\"");
         razor.ShouldContain("Text=\"@MergeSelectedCellsLabel\"");
         razor.ShouldContain("aria-label=\"@MergeSelectedCellsLabel\"");
         razor.ShouldContain("private string MergeSelectedCellsLabel => SelectedCells.Count switch");
         razor.ShouldContain("$\"Merge {SelectedCells.Count.ToString(CultureInfo.InvariantCulture)} selected cells in {DashboardTitle}\"");
         razor.ShouldNotContain("Text=\"Merge selected cells\"");
         razor.ShouldNotContain("aria-label=\"Merge selected cells\"");
+        razor.ShouldContain("Text=\"@SplitPickerButtonLabel\"");
         razor.ShouldContain("aria-label=\"@SplitPickerButtonLabel\"");
+        razor.ShouldNotContain("Text=\"Split selected cell\"");
         razor.ShouldContain("aria-label=\"@CloseGridPickerLabel\"");
         razor.ShouldContain("private string CloseGridPickerLabel => $\"Close {DashboardTitle} grid layout picker\";");
         razor.ShouldNotContain("aria-label=\"Close grid layout picker\"");

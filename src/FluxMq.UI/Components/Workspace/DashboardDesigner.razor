@@ -45,7 +45,7 @@
                     <div class="dashboard-command-strip" aria-label="@DashboardEditCommandsLabel">
                         <div class="dashboard-tool-group dashboard-tool-group-grid" aria-label="@GridLayoutCommandsLabel">
                             <div class="dashboard-grid-picker dashboard-grid-size-control">
-                                <MudTooltip Text="Set grid layout">
+                                <MudTooltip Text="@GridPickerButtonLabel">
                                     <MudIconButton Icon="@Icons.Material.Filled.GridOn"
                                                    Variant="Variant.Outlined"
                                                    Color="Color.Primary"
@@ -97,7 +97,7 @@
                                                OnClick="@MergeSelected" />
                             </MudTooltip>
                             <div class="dashboard-grid-picker dashboard-split-control">
-                                <MudTooltip Text="Split selected cell">
+                                <MudTooltip Text="@SplitPickerButtonLabel">
                                     <MudIconButton Icon="@Icons.Material.Filled.Splitscreen"
                                                    Size="Size.Small"
                                                    Disabled="@(!CanOpenSplitPicker)"
