@@ -28,8 +28,8 @@
                     {
                         <button type="button"
                                 class="metrics-inline-clear"
-                                title="Clear search"
-                                aria-label="Clear search"
+                                title="@ClearMetricSearchLabel"
+                                aria-label="@ClearMetricSearchLabel"
                                 @onclick="@ClearSearch">
                             <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                         </button>
@@ -64,10 +64,10 @@
 
                 @if (HasActiveFilters)
                 {
-                    <MudTooltip Text="Reset filters">
+                    <MudTooltip Text="@ResetMetricFiltersLabel">
                         <button type="button"
                                 class="metrics-filter-reset"
-                                aria-label="Reset filters"
+                                aria-label="@ResetMetricFiltersLabel"
                                 @onclick="@ResetFilters">
                             <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                         </button>
@@ -216,27 +216,27 @@
                         <div class="metrics-action-strip">
                             @if (_draft.IsDirty)
                             {
-                                <MudTooltip Text="Cancel changes">
+                                <MudTooltip Text="@CancelMetricChangesLabel">
                                     <button type="button"
                                             class="metrics-header-icon-button"
-                                            aria-label="Cancel changes"
+                                            aria-label="@CancelMetricChangesLabel"
                                             @onclick="@CancelEdit">
                                         <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                                     </button>
                                 </MudTooltip>
                             }
-                            <MudTooltip Text="Duplicate metric">
+                            <MudTooltip Text="@DuplicateMetricLabel">
                                 <button type="button"
                                         class="metrics-header-icon-button"
-                                        aria-label="Duplicate metric"
+                                        aria-label="@DuplicateMetricLabel"
                                         @onclick="@DuplicateSelectedMetricAsync">
                                     <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-hidden="true" />
                                 </button>
                             </MudTooltip>
-                            <MudTooltip Text="Delete metric">
+                            <MudTooltip Text="@DeleteMetricLabel">
                                 <button type="button"
                                         class="metrics-header-icon-button danger"
-                                        aria-label="Delete metric"
+                                        aria-label="@DeleteMetricLabel"
                                         @onclick="@DeleteSelectedMetricAsync">
                                     <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
                                 </button>
@@ -584,6 +584,46 @@
         _draft is null
             ? "Metric details"
             : $"Metric details for {(_draft.DisplayName.Length == 0 ? _draft.Id : _draft.DisplayName)}";
+
+    private string SelectedMetricActionTarget =>
+        _draft is null
+            ? "selected metric"
+            : string.IsNullOrWhiteSpace(_draft.DisplayName)
+                ? _draft.Id
+                : _draft.DisplayName;
+
+    private string ClearMetricSearchLabel =>
+        string.IsNullOrWhiteSpace(_search)
+            ? "Clear metric search"
+            : $"Clear metric search for {_search}";
+
+    private string ResetMetricFiltersLabel => $"Reset metric filters, {MetricFilterStateLabel}";
+
+    private string CancelMetricChangesLabel => $"Cancel changes for {SelectedMetricActionTarget}";
+
+    private string DuplicateMetricLabel => $"Duplicate {SelectedMetricActionTarget}";
+
+    private string DeleteMetricLabel => $"Delete {SelectedMetricActionTarget}";
+
+    private string MetricFilterStateLabel
+    {
+        get
+        {
+            var hasSearch = !string.IsNullOrWhiteSpace(_search);
+            var hasType = !string.IsNullOrWhiteSpace(_typeFilter);
+
+            return (hasSearch, hasType) switch
+            {
+                (true, true) => $"search {_search}, type {TypeFilterLabel(_typeFilter)}",
+                (true, false) => $"search {_search}",
+                (false, true) => $"type {TypeFilterLabel(_typeFilter)}",
+                _ => "no active filters"
+            };
+        }
+    }
+
+    private string TypeFilterLabel(string typeId) =>
+        Catalog.Describe(typeId)?.DisplayName ?? typeId;
 
     private string EditorIcon =>
         CurrentDescriptor?.ValueKind == MetricValueKind.Double

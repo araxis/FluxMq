@@ -6001,3 +6001,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only TopicExplorerPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Metric Designer command label specificity result:
+  - Replaced static Metric Designer clear-search, reset-filter, cancel-changes, duplicate, and delete command labels/tooltips with search/filter/selected-metric-aware labels.
+  - Preserved metric search and type filtering, reset behavior, edit cancel, duplicate/delete dialogs, save validation, metric data, dashboard bindings, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricDesigner guard to require helper-backed command labels and reject the old static command attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only MetricDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
