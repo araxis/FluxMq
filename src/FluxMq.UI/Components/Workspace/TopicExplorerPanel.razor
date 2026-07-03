@@ -58,7 +58,7 @@
                           Class="topic-search" />
             @if (HasTopicSelection)
             {
-                <MudTooltip Text="Clear topic selection">
+                <MudTooltip Text="@ClearTopicSelectionLabel">
                     <MudIconButton Icon="@Icons.Material.Filled.Backspace"
                                    Size="Size.Small"
                                    Class="topic-clear-button"
@@ -197,7 +197,7 @@
                                         <span>@PayloadViewLabel(view)</span>
                                     </button>
                                 }
-                                <MudTooltip Text="Copy latest payload view">
+                                <MudTooltip Text="@CopyLatestPayloadViewLabel">
                                     <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                                                    Size="Size.Small"
                                                    Class="topic-payload-copy"
@@ -414,7 +414,7 @@
                                     </button>
                                 }
                             </div>
-                            <MudTooltip Text="Clear recent publishes">
+                            <MudTooltip Text="@ClearRecentPublishesLabel">
                                 <MudIconButton Icon="@Icons.Material.Filled.ClearAll"
                                                Size="Size.Small"
                                                Class="topic-publish-recent-clear"
@@ -466,7 +466,7 @@
 
                 @if (HasHistoryFilters)
                 {
-                    <MudTooltip Text="Reset history filters">
+                    <MudTooltip Text="@ResetHistoryFiltersLabel">
                         <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
                                        Size="Size.Small"
                                        Class="topic-history-action"
@@ -602,7 +602,7 @@
                                                 <span>@PayloadViewLabel(view)</span>
                                             </button>
                                         }
-                                        <MudTooltip Text="Copy selected payload view">
+                                        <MudTooltip Text="@CopySelectedPayloadViewLabel">
                                             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                                                            Size="Size.Small"
                                                            Class="topic-payload-copy"

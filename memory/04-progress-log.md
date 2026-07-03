@@ -5991,3 +5991,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only FlowDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Topics tooltip label specificity result:
+  - Replaced static Topic Explorer clear-selection, latest-payload copy, recent-publish clear, history-filter reset, and selected-payload copy tooltips with the existing scope-aware labels.
+  - Preserved broker monitoring, stored-session switching, topic selection clearing, payload view copying, recent publish clearing, history filtering/export, selected detail rendering, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused TopicExplorerPanel guard to require helper-backed tooltips and reject the old static Topic Explorer tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TopicExplorerPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
