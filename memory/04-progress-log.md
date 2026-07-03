@@ -6091,3 +6091,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only NewAppDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Metric action dialog label specificity result:
+  - Replaced static metric dialog cancel/confirm action labels in create, rename, duplicate, delete, type-change, and confirmation dialogs with helper-backed labels derived from existing metric, type, title, and form state.
+  - Preserved metric creation, rename, duplicate, delete, type-change, confirmation behavior, validation, default parameter preview, destructive tone/status surfaces, dialog result projection, dashboard binding behavior, saved metric data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended focused MetricCreateDialog and MetricActionDialogs guards to require helper-backed action labels and reject the old static button attributes while preserving valid form labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only metric dialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

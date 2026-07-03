@@ -5005,7 +5005,13 @@ public sealed class DashboardEventFilterCatalogTests
             .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
             .ToArray()
             .ShouldBeEmpty();
-        markup.ShouldContain("aria-label=\"Create metric\"");
+        markup.ShouldContain("aria-label=\"@CancelMetricCreateLabel\"");
+        markup.ShouldContain("aria-label=\"@CreateMetricLabel\"");
+        markup.ShouldContain("private string CancelMetricCreateLabel => $\"Cancel metric creation for {MetricCreateTargetLabel}\"");
+        markup.ShouldContain("private string CreateMetricLabel => $\"Create metric {MetricCreateTargetLabel}\"");
+        markup.ShouldContain("private string MetricCreateTargetLabel => string.IsNullOrWhiteSpace(_name)");
+        markup.ShouldNotContain("aria-label=\"Cancel metric creation\"");
+        markup.ShouldNotContain("                       aria-label=\"Create metric\"");
         markup.ShouldContain("Color=\"Color.Primary\"");
         markup.ShouldContain("Variant=\"Variant.Filled\"");
         markup.ShouldContain("aria-invalid=\"@(!CanCreate)\"");
@@ -5126,6 +5132,16 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldContain("role=\"status\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
             .ShouldContain("role=\"alert\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelConfirmationLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("aria-label=\"@ConfirmActionLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("private string CancelConfirmationLabel => $\"Cancel {ConfirmationTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("private string ConfirmActionLabel => $\"{ConfirmText} for {ConfirmationTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel confirmation\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldContain("metric-delete-tone");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
@@ -5138,14 +5154,50 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldContain("role=\"status\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldContain("role=\"alert\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelMetricDeleteLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("aria-label=\"@DeleteMetricLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("private string CancelMetricDeleteLabel => $\"Cancel delete for {MetricDeleteTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("private string DeleteMetricLabel => $\"Delete {MetricDeleteTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel metric delete\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldNotContain("aria-label=\"Delete metric\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
             .ShouldNotContain("metric-rename-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
             .ShouldNotContain("RenameStatusText");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelMetricRenameLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldContain("aria-label=\"@RenameMetricLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldContain("private string CancelMetricRenameLabel => $\"Cancel rename for {CurrentMetricTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldContain("private string RenameMetricLabel => $\"Rename {CurrentMetricTargetLabel} to {MetricRenameTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel metric rename\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldNotContain("                       aria-label=\"Rename metric\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
             .ShouldNotContain("metric-duplicate-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
             .ShouldNotContain("DuplicateStatusText");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelMetricDuplicateLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldContain("aria-label=\"@DuplicateMetricLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldContain("private string CancelMetricDuplicateLabel => $\"Cancel duplicate for {SourceMetricTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldContain("private string DuplicateMetricLabel => $\"Duplicate {SourceMetricTargetLabel} as {DuplicateMetricTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel metric duplicate\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldNotContain("                       aria-label=\"Duplicate metric\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldNotContain("metric-type-change-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
@@ -5158,6 +5210,16 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldContain("id=\"@MetricTypeOptionId(current)\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelMetricTypeChangeLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-label=\"@SubmitTypeChangeLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("private string CancelMetricTypeChangeLabel => $\"Cancel type change from {CurrentTypeTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("private string SubmitTypeChangeLabel => CanChange && SelectedDescriptor is { } descriptor");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel metric type change\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldContain("title=\"@ClearMetricTypeSearchLabel\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))

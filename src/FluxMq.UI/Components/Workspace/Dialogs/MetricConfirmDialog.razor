@@ -27,12 +27,12 @@
         <div class="metric-confirm-actions">
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
-                       aria-label="Cancel confirmation">Cancel</MudButton>
+                       aria-label="@CancelConfirmationLabel">Cancel</MudButton>
             <MudButton Color="@ActionColor"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@ActionIcon"
-                       aria-label="@ConfirmText"
+                       aria-label="@ConfirmActionLabel"
                        OnClick="@Confirm">@ConfirmText</MudButton>
         </div>
     </DialogActions>
@@ -78,6 +78,14 @@
     private string DialogClass => IsDanger
         ? "metric-confirm-dialog danger"
         : "metric-confirm-dialog warning";
+
+    private string CancelConfirmationLabel => $"Cancel {ConfirmationTargetLabel}";
+
+    private string ConfirmActionLabel => $"{ConfirmText} for {ConfirmationTargetLabel}";
+
+    private string ConfirmationTargetLabel => string.IsNullOrWhiteSpace(Title)
+        ? "confirmation"
+        : Title.Trim();
 
     private void Cancel() => MudDialog.Cancel();
 

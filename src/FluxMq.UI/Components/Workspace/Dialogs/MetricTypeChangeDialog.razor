@@ -127,13 +127,13 @@
         <div class="metric-type-change-actions">
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
-                       aria-label="Cancel metric type change">Cancel</MudButton>
+                       aria-label="@CancelMetricTypeChangeLabel">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Settings"
                        Disabled="@(!CanChange)"
-                       aria-label="@SubmitText"
+                       aria-label="@SubmitTypeChangeLabel"
                        OnClick="@Submit">@SubmitText</MudButton>
         </div>
     </DialogActions>
@@ -184,6 +184,16 @@
     private string ClearMetricTypeSearchLabel => string.IsNullOrWhiteSpace(_search)
         ? "Clear metric type search"
         : $"Clear metric type search for {_search}";
+
+    private string CancelMetricTypeChangeLabel => $"Cancel type change from {CurrentTypeTargetLabel}";
+
+    private string SubmitTypeChangeLabel => CanChange && SelectedDescriptor is { } descriptor
+        ? $"Change metric type from {CurrentTypeTargetLabel} to {descriptor.DisplayName}"
+        : $"Current metric type {CurrentTypeTargetLabel}";
+
+    private string CurrentTypeTargetLabel => string.IsNullOrWhiteSpace(CurrentTypeId)
+        ? "current type"
+        : CurrentTypeId.Trim();
 
     private string SubmitText => CanChange ? "Change type" : "Current type";
 
