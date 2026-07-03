@@ -4969,6 +4969,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("role=\"form\" aria-label=\"Create metric\"");
         markup.ShouldContain("role=\"search\"");
+        markup.ShouldContain("title=\"@ClearMetricTypeSearchLabel\"");
+        markup.ShouldContain("aria-label=\"@ClearMetricTypeSearchLabel\"");
+        markup.ShouldContain("private string ClearMetricTypeSearchLabel => string.IsNullOrWhiteSpace(_search)");
+        markup.ShouldContain("$\"Clear metric type search for {_search}\"");
+        markup.ShouldNotContain("title=\"Clear search\"");
+        markup.ShouldNotContain("aria-label=\"Clear search\"");
         markup.ShouldContain("aria-activedescendant=\"@SelectedMetricTypeOptionId\"");
         markup.ShouldContain("id=\"@MetricTypeOptionId(current)\"");
         markup.ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
@@ -5138,6 +5144,18 @@ public sealed class DashboardEventFilterCatalogTests
             .ShouldContain("id=\"@MetricTypeOptionId(current)\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("title=\"@ClearMetricTypeSearchLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-label=\"@ClearMetricTypeSearchLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("private string ClearMetricTypeSearchLabel => string.IsNullOrWhiteSpace(_search)");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("$\"Clear metric type search for {_search}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldNotContain("title=\"Clear search\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldNotContain("aria-label=\"Clear search\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldContain("MetricTypeOptionLabel(MetricDescriptor descriptor)");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))

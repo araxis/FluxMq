@@ -24,8 +24,8 @@
                     @if (!string.IsNullOrWhiteSpace(_search))
                     {
                         <button type="button"
-                                title="Clear search"
-                                aria-label="Clear search"
+                                title="@ClearMetricTypeSearchLabel"
+                                aria-label="@ClearMetricTypeSearchLabel"
                                 @onclick="@ClearSearch">
                             <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                         </button>
@@ -176,6 +176,10 @@
             : null;
 
     private bool CanCreate => SelectedDescriptor is not null && !string.IsNullOrWhiteSpace(_name);
+
+    private string ClearMetricTypeSearchLabel => string.IsNullOrWhiteSpace(_search)
+        ? "Clear metric type search"
+        : $"Clear metric type search for {_search}";
 
     private string MetricIdPreview => MetricDesignerState.UniqueMetricId(_name, ExistingMetricIds);
 

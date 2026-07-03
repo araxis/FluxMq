@@ -24,8 +24,8 @@
                     @if (!string.IsNullOrWhiteSpace(_search))
                     {
                         <button type="button"
-                                title="Clear search"
-                                aria-label="Clear search"
+                                title="@ClearMetricTypeSearchLabel"
+                                aria-label="@ClearMetricTypeSearchLabel"
                                 @onclick="@ClearSearch">
                             <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                         </button>
@@ -180,6 +180,10 @@
     private bool CanChange =>
         SelectedDescriptor is { } selected &&
         !string.Equals(selected.TypeId, CurrentTypeId, StringComparison.Ordinal);
+
+    private string ClearMetricTypeSearchLabel => string.IsNullOrWhiteSpace(_search)
+        ? "Clear metric type search"
+        : $"Clear metric type search for {_search}";
 
     private string SubmitText => CanChange ? "Change type" : "Current type";
 
