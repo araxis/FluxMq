@@ -180,7 +180,7 @@
                                 <span>Payload</span>
                                 <span>@LastPayloadMeta</span>
                             </div>
-                            <div class="topic-payload-controls" role="tablist" aria-label="Latest payload views">
+                            <div class="topic-payload-controls" role="tablist" aria-label="@LatestPayloadViewsLabel">
                                 @foreach (var view in PayloadViewOptions)
                                 {
                                     <button type="button"
@@ -202,7 +202,7 @@
                                                    Size="Size.Small"
                                                    Class="topic-payload-copy"
                                                    Disabled="@(LastInspection is null)"
-                                                   aria-label="Copy latest payload view"
+                                                   aria-label="@CopyLatestPayloadViewLabel"
                                                    OnClick="@CopyLatestPayloadViewAsync" />
                                 </MudTooltip>
                             </div>
@@ -213,7 +213,7 @@
                              tabindex="0">@LastPayloadPreview</pre>
                     </div>
 
-                    <div class="topic-last-meta" aria-label="Latest message metadata">
+                    <div class="topic-last-meta" aria-label="@LatestMessageMetadataLabel">
                         <div>
                             <span>Broker</span>
                             <strong title="@BrokerLabel(LastMessage)">@BrokerLabel(LastMessage)</strong>
@@ -242,7 +242,7 @@
         @{
             var topicStats = TopicStats;
         }
-        <section class="topic-stats-panel" aria-label="Topic scope statistics">
+        <section class="topic-stats-panel" aria-label="@TopicStatsPanelLabel">
             <div class="topic-stats-header">
                 <span>Stats</span>
                 <span>@TopicStatsScopeLabel</span>
@@ -433,7 +433,7 @@
                 <span>@HistorySummaryLabel</span>
             </div>
 
-            <div class="topic-history-toolbar" role="search" aria-label="History filters">
+            <div class="topic-history-toolbar" role="search" aria-label="@TopicHistoryFiltersLabel">
                 <MudTextField T="string"
                               Value="@_historyFilter"
                               ValueChanged="@OnHistoryFilterChanged"
@@ -539,7 +539,7 @@
                     </MudTable>
                 </div>
 
-                <aside class="topic-history-detail" aria-label="Selected MQTT message details">
+                <aside class="topic-history-detail" aria-label="@SelectedMessageDetailsLabel">
                     <div class="topic-history-detail-header">
                         <span>Message details</span>
                         <span>@SelectedHistoryMeta</span>
@@ -585,7 +585,7 @@
                                         <span>Payload</span>
                                         <span>@SelectedHistoryPayloadMeta</span>
                                     </div>
-                                    <div class="topic-payload-controls" role="tablist" aria-label="Selected payload views">
+                                    <div class="topic-payload-controls" role="tablist" aria-label="@SelectedPayloadViewsLabel">
                                         @foreach (var view in SelectedPayloadViewOptions)
                                         {
                                             <button type="button"
@@ -607,7 +607,7 @@
                                                            Size="Size.Small"
                                                            Class="topic-payload-copy"
                                                            Disabled="@(SelectedHistoryInspection is null)"
-                                                           aria-label="Copy selected payload view"
+                                                           aria-label="@CopySelectedPayloadViewLabel"
                                                            OnClick="@CopySelectedHistoryPayloadViewAsync" />
                                         </MudTooltip>
                                     </div>
@@ -898,6 +898,28 @@
     private string LatestTopicMessageLabel => $"{SelectedTopicLabel} latest topic message";
 
     private string TopicHistoryPanelLabel => $"{SelectedTopicLabel} message history, {HistorySummaryLabel}";
+
+    private string LatestPayloadViewsLabel => $"{SelectedTopicLabel} latest payload views";
+
+    private string CopyLatestPayloadViewLabel => $"Copy latest {PayloadViewLabel(_lastPayloadView)} payload view for {SelectedTopicLabel}";
+
+    private string LatestMessageMetadataLabel => LastMessage is { } message
+        ? $"Latest message metadata for {BrokerLabel(message)} / {message.Topic}"
+        : $"{SelectedTopicLabel} latest message metadata";
+
+    private string TopicStatsPanelLabel => $"{SelectedTopicLabel} topic scope statistics, {MessageCountLabel(HistoryMessages.Count)}";
+
+    private string TopicHistoryFiltersLabel => $"{SelectedTopicLabel} history filters";
+
+    private string SelectedMessageDetailsLabel => SelectedHistoryMessage is { } message
+        ? $"Selected MQTT message details for {BrokerLabel(message)} / {message.Topic}"
+        : $"{SelectedTopicLabel} selected MQTT message details";
+
+    private string SelectedPayloadViewsLabel => SelectedHistoryMessage is { } message
+        ? $"Selected payload views for {BrokerLabel(message)} / {message.Topic}"
+        : $"{SelectedTopicLabel} selected payload views";
+
+    private string CopySelectedPayloadViewLabel => $"Copy selected {PayloadViewLabel(_selectedHistoryPayloadView)} payload view for {SelectedTopicLabel}";
 
     private string LastPayloadLabel => LastMessage is { } message
         ? $"{message.Payload.Length} B"
