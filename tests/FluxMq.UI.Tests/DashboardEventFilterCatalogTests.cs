@@ -5316,7 +5316,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("start-recording-summary");
         markup.ShouldContain("aria-label=\"Recording project\"");
         markup.ShouldContain("aria-label=\"Recording session name\"");
-        markup.ShouldContain("aria-label=\"Start recording\"");
+        markup.ShouldContain("aria-label=\"@StartRecordingLabel\"");
+        markup.ShouldContain("aria-label=\"@CancelRecordingLabel\"");
+        markup.ShouldContain("private string StartRecordingLabel => $\"Start recording {RecordingTargetLabel}\";");
+        markup.ShouldContain("private string CancelRecordingLabel => $\"Cancel recording {RecordingTargetLabel}\";");
+        markup.ShouldContain("private string RecordingTargetLabel => $\"{RecordingSessionName} in {RecordingProjectName}\";");
+        markup.ShouldContain("private string RecordingProjectName => string.IsNullOrWhiteSpace(_project) ? \"Default\" : _project.Trim();");
+        markup.ShouldContain("private string RecordingSessionName => string.IsNullOrWhiteSpace(_session) ? DefaultSessionName : _session.Trim();");
+        markup.ShouldNotContain("                       aria-label=\"Start recording\"");
+        markup.ShouldNotContain("aria-label=\"Cancel recording\"");
         markup.ShouldContain("DefaultSessionName");
         markup.ShouldContain("ProjectSummaryText");
         markup.ShouldContain("OnKeyDown");

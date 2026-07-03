@@ -6061,3 +6061,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only AddConnectionDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Start Recording dialog action-label specificity result:
+  - Replaced static Start Recording cancel/start action labels with session/project-aware labels using the pending recording target fields.
+  - Preserved project autocomplete, session naming, default project/session normalization, Enter handling, dialog result projection, recording behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused StartRecordingDialog guard to require helper-backed action labels and reject the old static button labels while preserving the dialog form label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~StartRecordingDialog_UsesFlatCompactRecordingChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only StartRecordingDialog stale button-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
