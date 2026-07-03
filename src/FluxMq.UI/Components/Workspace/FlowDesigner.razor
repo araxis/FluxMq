@@ -7,6 +7,7 @@
 @inject LiveMqttWorkspaceService Live
 @inject FlowComponentCatalog Catalog
 @inject DragStateService DragState
+@inject AppThemeService ThemeService
 
 <div class="flow-designer-root"
      role="region"
@@ -96,9 +97,9 @@
                     <NavigatorWidget Width="180"
                                      Height="120"
                                      UseNodeShape="false"
-                                     NodeColor="#2DD4BF"
-                                     GroupColor="#1C222D"
-                                     ViewStrokeColor="#38BDF8"
+                                     NodeColor="@NavigatorNodeColor"
+                                     GroupColor="@NavigatorGroupColor"
+                                     ViewStrokeColor="@NavigatorViewStrokeColor"
                                      Class="flow-navigator" />
                 </Widgets>
             </DiagramCanvas>
@@ -204,6 +205,13 @@
     private string _selectedLinkCondition = string.Empty;
 
     private string WorkflowTitle => Flow.ActiveWorkflowName ?? "Pipeline";
+
+    // NavigatorWidget renders literal SVG fill/stroke colors, so it cannot reference CSS
+    // theme tokens directly. Pick per-theme values matching the active palette; dark keeps
+    // the original colors, light no longer shows the dark near-black group fill.
+    private string NavigatorNodeColor => ThemeService.IsDarkMode ? "#2DD4BF" : "#0F766E";
+    private string NavigatorGroupColor => ThemeService.IsDarkMode ? "#1C222D" : "#DDE3EA";
+    private string NavigatorViewStrokeColor => ThemeService.IsDarkMode ? "#38BDF8" : "#2563EB";
 
     private string FlowDesignerRegionLabel => Flow.ActiveWorkflowName is null
         ? "Flow designer canvas, no active pipeline"
