@@ -6282,3 +6282,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardWidgetEditorDialog stale action-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: close the current one-hour pass by selecting only one remaining high-signal workspace chrome item, likely Dashboard track editor action-label specificity, or stop with a handoff if time is tight.
+- Dashboard track editor action-label specificity result:
+  - Added row/column-aware accessible labels for the Dashboard track editor reset, cancel, and apply actions while keeping compact visible action text unchanged.
+  - Preserved track size parsing, unit selection, padding editing, reset/cancel/apply behavior, validation, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardTrackEditorDialog guard to require helper-backed action labels and reject static reset/cancel/apply accessible labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardTrackEditorDialog_UsesCompactFlatSizingWorkflow" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardTrackEditorDialog stale action-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: stop the current timed pass with a clean handoff, or resume later by auditing remaining high-use workspace chrome for stale static labels and keyboard semantics without broadening runtime or schema scope.

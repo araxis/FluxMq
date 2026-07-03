@@ -6239,6 +6239,12 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("@CurrentSummary");
         razor.ShouldContain("aria-label=\"@TrackSummaryLabel\"");
         razor.ShouldContain("private string TrackSummaryLabel => $\"{Title} sizing facts\"");
+        razor.ShouldContain("aria-label=\"@ResetTrackEditLabel\"");
+        razor.ShouldContain("aria-label=\"@CancelTrackEditLabel\"");
+        razor.ShouldContain("aria-label=\"@ApplyTrackEditLabel\"");
+        razor.ShouldContain("private string ResetTrackEditLabel => $\"Reset sizing edits for {Title}\"");
+        razor.ShouldContain("private string CancelTrackEditLabel => $\"Cancel editing {Title} sizing\"");
+        razor.ShouldContain("private string ApplyTrackEditLabel => $\"Apply sizing changes to {Title}\"");
         razor.ShouldContain("@ResultSize");
         razor.ShouldContain("@ModeDescription");
         razor.ShouldContain("StartIcon=\"@Icons.Material.Filled.RestartAlt\"");
@@ -6248,6 +6254,9 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Settings\" Size=\"MudBlazor.Size.Small\" />");
         razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"MudBlazor.Size.Small\" />");
         razor.ShouldNotContain("aria-label=\"Track summary\"");
+        razor.ShouldNotContain("aria-label=\"Reset\"");
+        razor.ShouldNotContain("aria-label=\"Cancel\"");
+        razor.ShouldNotContain("aria-label=\"Apply\"");
 
         css.ShouldContain(".dashboard-track-editor-preview");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr);");

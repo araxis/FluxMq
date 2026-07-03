@@ -81,15 +81,19 @@
             <MudButton OnClick="@Reset"
                        Size="MudBlazor.Size.Small"
                        StartIcon="@Icons.Material.Filled.RestartAlt"
-                       Disabled="@(!CanReset)">Reset</MudButton>
+                       Disabled="@(!CanReset)"
+                       aria-label="@ResetTrackEditLabel">Reset</MudButton>
             <span class="dashboard-track-editor-action-spacer"></span>
-            <MudButton OnClick="@Cancel" Size="MudBlazor.Size.Small">Cancel</MudButton>
+            <MudButton OnClick="@Cancel"
+                       Size="MudBlazor.Size.Small"
+                       aria-label="@CancelTrackEditLabel">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="MudBlazor.Size.Small"
                        StartIcon="@Icons.Material.Filled.Done"
                        Disabled="@(!CanSubmit)"
-                       OnClick="@Submit">Apply</MudButton>
+                       OnClick="@Submit"
+                       aria-label="@ApplyTrackEditLabel">Apply</MudButton>
         </div>
     </DialogActions>
 </MudDialog>
@@ -155,6 +159,12 @@
     private string EditorAriaLabel => $"{Title} sizing";
 
     private string TrackSummaryLabel => $"{Title} sizing facts";
+
+    private string ResetTrackEditLabel => $"Reset sizing edits for {Title}";
+
+    private string CancelTrackEditLabel => $"Cancel editing {Title} sizing";
+
+    private string ApplyTrackEditLabel => $"Apply sizing changes to {Title}";
 
     private string ResultSize => BuildTrackSize(_unit, Math.Max(0.001, _value));
 
