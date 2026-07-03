@@ -2610,7 +2610,11 @@ public sealed class DashboardEventFilterCatalogTests
         alignmentPadCss.ShouldContain(".property-grid-alignment-pad-button span");
         alignmentPadCss.ShouldContain("border-radius: 50%;");
         alignmentPadCss.ShouldNotContain("border-radius: 999px;");
-        inspector.ShouldContain("role=\"complementary\" aria-label=\"Dashboard inspector\"");
+        inspector.ShouldContain("role=\"complementary\" aria-label=\"@InspectorRegionLabel(propertyGroups)\"");
+        inspector.ShouldContain("private string InspectorRegionLabel(IReadOnlyList<PropertyGridGroup> groups)");
+        inspector.ShouldContain("var targetLabel = string.Equals(InspectorTitle, \"Dashboard inspector\", StringComparison.Ordinal)");
+        inspector.ShouldContain("return $\"{targetLabel}, {InspectorModeLabel}, {InspectorGroupCountLabel(groups.Count)}, {InspectorPropertyCountLabel(groups)}\"");
+        inspector.ShouldNotContain("role=\"complementary\" aria-label=\"Dashboard inspector\"");
         inspector.ShouldContain("var propertyGroups = PropertyGroups;");
         inspector.ShouldContain("class=\"@InspectorHeaderClass\"");
         inspector.ShouldContain("dashboard-inspector-meta-strip");

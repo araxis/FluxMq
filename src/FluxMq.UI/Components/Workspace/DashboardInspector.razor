@@ -10,7 +10,7 @@
     var propertyGroups = PropertyGroups;
 }
 
-<aside class="dashboard-inspector" role="complementary" aria-label="Dashboard inspector">
+<aside class="dashboard-inspector" role="complementary" aria-label="@InspectorRegionLabel(propertyGroups)">
     <header class="@InspectorHeaderClass">
         <div class="dashboard-inspector-icon" aria-hidden="true">
             <MudIcon Icon="@InspectorIcon" Size="Size.Small" aria-hidden="true" />
@@ -140,6 +140,15 @@
     private string WidgetCommandGroupLabel => $"Commands for {InspectorTitle}";
 
     private string ResetWidgetPropertiesLabel => $"Reset {InspectorTitle} properties to defaults";
+
+    private string InspectorRegionLabel(IReadOnlyList<PropertyGridGroup> groups)
+    {
+        var targetLabel = string.Equals(InspectorTitle, "Dashboard inspector", StringComparison.Ordinal)
+            ? InspectorTitle
+            : $"{InspectorTitle} dashboard inspector";
+
+        return $"{targetLabel}, {InspectorModeLabel}, {InspectorGroupCountLabel(groups.Count)}, {InspectorPropertyCountLabel(groups)}";
+    }
 
     private string InspectorModeLabel => Widget is null
         ? SelectedCells.Count switch
