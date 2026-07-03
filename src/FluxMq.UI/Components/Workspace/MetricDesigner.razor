@@ -208,7 +208,7 @@
                     <div class="metrics-editor-actions">
                         @if (ShowUnsavedIndicator)
                         {
-                            <div class="metrics-unsaved-indicator dirty" title="This metric has unsaved changes">
+                            <div class="metrics-unsaved-indicator dirty" title="@UnsavedMetricChangesLabel">
                                 <span class="metrics-unsaved-dot"></span>
                                 <span>Unsaved</span>
                             </div>
@@ -290,7 +290,7 @@
                                            title="@DisplayNameValidationMessage">
                                         <span>Display name</span>
                                         <input value="@_draft.DisplayName"
-                                               aria-label="Display name"
+                                               aria-label="@DisplayNameFieldLabel"
                                                aria-invalid="@AriaState(HasValidationMessage(DisplayNameValidationMessage))"
                                                aria-errormessage="@DisplayNameErrorElementId"
                                                @oninput="@OnDraftDisplayNameInput" />
@@ -310,7 +310,7 @@
                                             <small>@MetricTypeDetailLine</small>
                                         </div>
                                         <button type="button"
-                                                aria-label="Change metric type"
+                                                aria-label="@ChangeMetricTypeLabel"
                                                 @onclick="@OpenMetricTypeDialogAsync">
                                             <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                             <span>Change</span>
@@ -319,7 +319,7 @@
                                     <label class="metrics-identity-field">
                                         <span>Description</span>
                                         <input value="@_draft.Description"
-                                               aria-label="Description"
+                                               aria-label="@DescriptionFieldLabel"
                                                placeholder="Optional"
                                                @oninput="@OnDraftDescriptionInput" />
                                     </label>
@@ -390,7 +390,7 @@
                                 }
                                 else
                                 {
-                                    <div class="metrics-preview-card muted" title="Stopped or not emitted.">
+                                    <div class="metrics-preview-card muted" title="@NoReadingTitle">
                                         <div class="metrics-preview-empty" role="status" aria-live="polite">
                                             <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" aria-hidden="true" />
                                             <span>
@@ -423,7 +423,7 @@
                                 }
                                 else
                                 {
-                                    <div class="metrics-reference-list" role="list" aria-label="Dashboard bindings for selected metric">
+                                    <div class="metrics-reference-list" role="list" aria-label="@MetricReferenceListLabel">
                                         @foreach (var reference in ReferenceSummaries)
                                         {
                                             <div class="metrics-reference-row" role="listitem" title="@ReferenceTitle(reference)">
@@ -480,7 +480,7 @@
                                                 <a class="metrics-validation-line"
                                                    id="@item.MessageId"
                                                    href="#@item.TargetId"
-                                                   title="Show field">
+                                                   title="@ShowMetricFieldLabel(item)">
                                                     <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" aria-hidden="true" />
                                                     <span>@item.Message</span>
                                                 </a>
@@ -560,6 +560,14 @@
             ? "Metric editor, no metric selected"
             : $"Metric editor for {SelectedMetricActionTarget}";
 
+    private string UnsavedMetricChangesLabel => $"Unsaved changes for {SelectedMetricActionTarget}";
+
+    private string DisplayNameFieldLabel => $"Display name for {SelectedMetricActionTarget}";
+
+    private string ChangeMetricTypeLabel => $"Change metric type for {SelectedMetricActionTarget}";
+
+    private string DescriptionFieldLabel => $"Description for {SelectedMetricActionTarget}";
+
     private string FilterEmptyDescription =>
         MetricDesignerState.FilterEmptyDescription(_search, SelectedTypeFilter?.DisplayName);
 
@@ -604,6 +612,11 @@
         _draft is null
             ? "Metric details"
             : $"Metric details for {(_draft.DisplayName.Length == 0 ? _draft.Id : _draft.DisplayName)}";
+
+    private string NoReadingTitle => $"No live reading for {SelectedMetricActionTarget}";
+
+    private string MetricReferenceListLabel =>
+        $"Dashboard bindings for {SelectedMetricActionTarget}, {ReferenceSummaries.Count.ToString(CultureInfo.InvariantCulture)} references";
 
     private string SelectedMetricActionTarget =>
         _draft is null
@@ -1315,6 +1328,9 @@
             ? reference.DashboardName
             : $"{reference.DashboardName} · {cell}";
     }
+
+    private static string ShowMetricFieldLabel(MetricValidationItem item)
+        => $"Show field for {item.Message}";
 
     private static string ParameterRowClass(MetricParamSpec parameter)
         => parameter.Kind switch
