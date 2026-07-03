@@ -110,7 +110,7 @@
                                     <span class="app-menu-artifact-meta">Pipeline</span>
                                 </span>
                                 <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                                    <MudTooltip Text="Delete pipeline">
+                                    <MudTooltip Text="@DeleteLabel("pipeline", w)">
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
                                                        Size="Size.Small"
                                                        Class="app-menu-delete-button"
@@ -167,7 +167,7 @@
                                     <span class="app-menu-artifact-meta">Dashboard</span>
                                 </span>
                                 <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                                    <MudTooltip Text="Delete dashboard">
+                                    <MudTooltip Text="@DeleteLabel("dashboard", d)">
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
                                                        Size="Size.Small"
                                                        Class="app-menu-delete-button"
@@ -278,7 +278,7 @@
                                     <span class="app-menu-test-summary-meta">@TestRunMenuDetailText(latestTestRun)</span>
                                 </span>
                                 <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                                    <MudTooltip Text="Delete test">
+                                    <MudTooltip Text="@DeleteLabel("test", t)">
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
                                                        Size="Size.Small"
                                                        Class="app-menu-delete-button"

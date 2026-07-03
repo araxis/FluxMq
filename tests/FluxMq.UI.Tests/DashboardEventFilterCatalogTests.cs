@@ -13454,6 +13454,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("app-menu-inline-action");
         markup.ShouldContain("app-menu-delete-button");
         markup.ShouldContain("aria-label=\"@DeleteLabel(");
+        markup.ShouldContain("Text=\"@DeleteLabel(\"pipeline\", w)\"");
+        markup.ShouldContain("Text=\"@DeleteLabel(\"dashboard\", d)\"");
+        markup.ShouldContain("Text=\"@DeleteLabel(\"test\", t)\"");
         markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Test, t)\"");
         markup.ShouldContain("@onclick:stopPropagation=\"true\"");
         markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
@@ -13474,6 +13477,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("app-structure-menu active");
         markup.ShouldNotContain("app-menu-danger");
         markup.ShouldNotContain("Class=\"app-menu-muted\">No");
+        markup.ShouldNotContain("Text=\"Delete pipeline\"");
+        markup.ShouldNotContain("Text=\"Delete dashboard\"");
+        markup.ShouldNotContain("Text=\"Delete test\"");
         css.ShouldNotContain(".app-structure-current");
         css.ShouldNotContain(".app-structure-meta");
         css.ShouldNotContain(".app-structure-menu.active");
