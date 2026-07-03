@@ -9672,6 +9672,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("routing-switch-route-list");
         markup.ShouldContain("AddRoute");
         markup.ShouldContain("Class=\"routing-switch-route-add\"");
+        markup.ShouldContain("Text=\"@AddRouteLabel\"");
+        markup.ShouldContain("aria-label=\"@AddRouteLabel\"");
+        markup.ShouldContain("private string AddRouteLabel => $\"Add route to {Node.NodeName}\";");
         markup.ShouldContain("routing-switch-route-row");
         markup.ShouldContain("aria-label=\"@($\"Route match key {index + 1}\")\"");
         markup.ShouldContain("aria-label=\"@($\"Route output port {index + 1}\")\"");
@@ -9684,6 +9687,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Class=\"routing-switch-route-key-field\"");
         markup.ShouldContain("Class=\"routing-switch-route-output-field\"");
         markup.ShouldContain("RemoveRoute(route)");
+        markup.ShouldContain("Text=\"@RemoveRouteLabel(route)\"");
+        markup.ShouldContain("aria-label=\"@RemoveRouteLabel(route)\"");
+        markup.ShouldContain("private string RemoveRouteLabel(RouteDraft route)");
+        markup.ShouldContain("$\"Remove {target} from {Node.NodeName}\"");
+        markup.ShouldNotContain("Text=\"Add route\"");
+        markup.ShouldNotContain("aria-label=\"Add route\"");
+        markup.ShouldNotContain("Text=\"Remove route\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Remove route {route.Key}\")\"");
         markup.ShouldContain("FormatRouteDrafts");
         markup.ShouldContain("private StandaloneCodeEditor? _editor;");
         markup.ShouldContain("private StandaloneCodeEditor? _initializedEditor;");

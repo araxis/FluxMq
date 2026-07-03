@@ -128,12 +128,12 @@
                         <div class="routing-switch-route-header">
                             <span>Match key</span>
                             <span>Output port</span>
-                            <MudTooltip Text="Add route">
+                            <MudTooltip Text="@AddRouteLabel">
                                 <MudIconButton Icon="@Icons.Material.Filled.Add"
                                                Size="Size.Small"
                                                Color="Color.Primary"
                                                Class="routing-switch-route-add"
-                                               aria-label="Add route"
+                                               aria-label="@AddRouteLabel"
                                                OnClick="@AddRoute" />
                             </MudTooltip>
                         </div>
@@ -161,12 +161,12 @@
                                                   Immediate="true"
                                                   Placeholder="Output port"
                                                   Class="routing-switch-route-output-field" />
-                                    <MudTooltip Text="Remove route">
+                                    <MudTooltip Text="@RemoveRouteLabel(route)">
                                         <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                        Size="Size.Small"
                                                        Disabled="@(_routeDrafts.Count == 1)"
                                                        Class="routing-switch-route-remove"
-                                                       aria-label="@($"Remove route {route.Key}")"
+                                                       aria-label="@RemoveRouteLabel(route)"
                                                        OnClick="@(() => RemoveRoute(route))" />
                                     </MudTooltip>
                                 </div>
@@ -209,6 +209,20 @@
         : Model.Expression.Trim();
     private IReadOnlyList<RoutingSwitchRoute> RoutePreview => Model.Routes.Take(3).ToArray();
     private int RoutePreviewOverflow => Math.Max(0, Model.Routes.Count - 3);
+    private string AddRouteLabel => $"Add route to {Node.NodeName}";
+    private string RemoveRouteLabel(RouteDraft route)
+    {
+        var key = route.Key?.Trim();
+        var output = route.OutputPort?.Trim();
+        var target = string.IsNullOrWhiteSpace(key)
+            ? "route"
+            : string.IsNullOrWhiteSpace(output)
+                ? key
+                : $"{key} to {output}";
+
+        return $"Remove {target} from {Node.NodeName}";
+    }
+
     private static readonly IReadOnlyList<ExpressionVariable> ExpressionVariables =
     [
         new("topic", "string"),
