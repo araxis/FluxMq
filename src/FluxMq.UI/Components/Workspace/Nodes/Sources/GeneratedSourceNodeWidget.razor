@@ -86,7 +86,7 @@
                                               Value="@_messages[index].Topic"
                                               ValueChanged="@(value => UpdateMessageTopicAsync(index, value))"
                                               Placeholder="@($"Topic {index + 1}")"
-                                              aria-label="@($"Generated message {index + 1} topic")"
+                                              aria-label="@GeneratedMessageTopicLabel(index)"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Immediate="true"
@@ -95,7 +95,7 @@
                                               Value="@_messages[index].Payload"
                                               ValueChanged="@(value => _messages[index].Payload = value ?? string.Empty)"
                                               Placeholder="Payload"
-                                              aria-label="@($"Generated message {index + 1} payload")"
+                                              aria-label="@GeneratedMessagePayloadLabel(index)"
                                               Lines="2"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
@@ -104,7 +104,7 @@
                                            Value="@_messages[index].QualityOfService"
                                            ValueChanged="@(value => _messages[index].QualityOfService = value)"
                                            Label="QoS"
-                                           aria-label="@($"Generated message {index + 1} QoS")"
+                                           aria-label="@GeneratedMessageQosLabel(index)"
                                            Variant="Variant.Outlined"
                                            Margin="Margin.Dense"
                                            Dense="true"
@@ -117,7 +117,7 @@
                                     <MudCheckBox T="bool"
                                                  Value="@_messages[index].Retain"
                                                  ValueChanged="@(value => _messages[index].Retain = value)"
-                                                 aria-label="@($"Generated message {index + 1} retained")"
+                                                 aria-label="@GeneratedMessageRetainLabel(index)"
                                                  Dense="true"
                                                  Class="generated-source-retain-check" />
                                 </div>
@@ -125,7 +125,7 @@
                                               Value="@_messages[index].ReceivedAt"
                                               ValueChanged="@(value => _messages[index].ReceivedAt = value ?? string.Empty)"
                                               Placeholder="Received at"
-                                              aria-label="@($"Generated message {index + 1} received at")"
+                                              aria-label="@GeneratedMessageReceivedAtLabel(index)"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="generated-source-received-field" />
@@ -175,6 +175,34 @@
     private int MessagePreviewOverflow => Math.Max(0, Model.Messages.Count - 3);
 
     private string AddGeneratedMessageLabel => $"Add generated message to {Node.NodeName}";
+
+    private string GeneratedMessageTopicLabel(int index)
+        => $"Edit topic for {GeneratedMessageLabelTarget(index)} in {Node.NodeName}";
+
+    private string GeneratedMessagePayloadLabel(int index)
+        => $"Edit payload for {GeneratedMessageLabelTarget(index)} in {Node.NodeName}";
+
+    private string GeneratedMessageQosLabel(int index)
+        => $"Select QoS for {GeneratedMessageLabelTarget(index)} in {Node.NodeName}";
+
+    private string GeneratedMessageRetainLabel(int index)
+        => $"Toggle retain for {GeneratedMessageLabelTarget(index)} in {Node.NodeName}";
+
+    private string GeneratedMessageReceivedAtLabel(int index)
+        => $"Edit received time for {GeneratedMessageLabelTarget(index)} in {Node.NodeName}";
+
+    private string GeneratedMessageLabelTarget(int index)
+    {
+        if (index < 0 || index >= _messages.Count)
+        {
+            return $"generated message {index + 1}";
+        }
+
+        var topic = _messages[index].Topic?.Trim();
+        return string.IsNullOrWhiteSpace(topic)
+            ? $"generated message {index + 1}"
+            : $"generated message {index + 1} on {topic}";
+    }
 
     private string RemoveGeneratedMessageLabel(int index)
     {

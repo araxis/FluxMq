@@ -6572,3 +6572,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale fan port label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the node-editor static-label cleanup from the current scan one focused widget at a time; likely next candidate is GeneratedSourceNodeWidget row labels with an existing focused guard.
+- GeneratedSourceNodeWidget generated message label specificity result:
+  - Replaced inline generated-message topic, payload, QoS, retained, and received-at accessible labels with helper-backed labels that include row/topic context plus the node name.
+  - Preserved generated message binding, add/remove message actions, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused GeneratedSourceNodeWidget guard to require helper-backed generated-message field labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~GeneratedSourceNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale generated-message label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: stop the timed pass with a clean handoff; if explicitly continuing, choose the next node-editor static-label cleanup from a fresh current-state scan, likely MqttTriggerNodeWidget subscription labels or MqttMetricsNodeWidget display/readout labels.
