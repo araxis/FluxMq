@@ -2369,6 +2369,26 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void PropertyGridColorPicker_PreservesCssThemeTokenColors()
+    {
+        var root = FindRepositoryRoot();
+        var path = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridColorPicker.razor");
+        var markup = File.ReadAllText(path);
+
+        // CSS theme tokens (e.g. var(--mud-palette-text-primary), used as widget colour defaults)
+        // must be treated as valid colour values and preserved verbatim, so the swatch resolves to
+        // the real theme colour instead of falling back to a fixed colour.
+        markup.ShouldContain("StartsWith(\"var(\"");
+        markup.ShouldContain("color = candidate;");
+    }
+
+    [Fact]
     public void PropertyGridColorPicker_UsesAlphaCapableFrameworkPicker()
     {
         var root = FindRepositoryRoot();

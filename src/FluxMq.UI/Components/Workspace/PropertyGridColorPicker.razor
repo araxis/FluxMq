@@ -194,6 +194,16 @@
             return true;
         }
 
+        // CSS theme tokens (e.g. var(--mud-palette-text-primary)) resolve to a real color at
+        // render time; keep them verbatim so the swatch shows the actual theme color and the
+        // text field shows the token, rather than falling back to an unrelated fixed color.
+        if (candidate.StartsWith("var(", StringComparison.OrdinalIgnoreCase) &&
+            candidate.EndsWith(")", StringComparison.Ordinal))
+        {
+            color = candidate;
+            return true;
+        }
+
         if (candidate.Length == 4 &&
             candidate[0] == '#' &&
             candidate.Skip(1).All(IsHex))
