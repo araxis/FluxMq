@@ -59,7 +59,7 @@
             </label>
 
             <div class="publish-row">
-                <label class="publish-qos-select" aria-label="Quality of service">
+                <label class="publish-qos-select" aria-label="@PublishQosLabel">
                     <select @bind="_publishQos">
                         <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
                         <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
@@ -68,7 +68,7 @@
                 </label>
                 <button type="button"
                         class="publish-retain-toggle @(_retain ? "active" : null)"
-                        aria-label="Publish retained message"
+                        aria-label="@PublishRetainLabel"
                         aria-pressed="@(_retain ? "true" : "false")"
                         @onclick="@(() => _retain = !_retain)">
                     <span>Retain</span>
@@ -175,6 +175,12 @@
     };
 
     private string PublishButtonLabel => _busy ? "Publishing" : "Publish";
+
+    private string PublishQosLabel => $"Quality of service, {_publishQos}";
+
+    private string PublishRetainLabel => _retain
+        ? "Publish retained message, enabled"
+        : "Publish retained message, disabled";
 
     private string PayloadMeta
     {

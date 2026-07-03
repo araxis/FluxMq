@@ -2749,8 +2749,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("publish-field topic");
         markup.ShouldContain("publish-field payload");
         markup.ShouldContain("publish-qos-select");
+        markup.ShouldContain("aria-label=\"@PublishQosLabel\"");
+        markup.ShouldContain("private string PublishQosLabel => $\"Quality of service, {_publishQos}\"");
         markup.ShouldContain("publish-retain-toggle");
-        markup.ShouldContain("aria-label=\"Publish retained message\"");
+        markup.ShouldContain("aria-label=\"@PublishRetainLabel\"");
+        markup.ShouldContain("private string PublishRetainLabel => _retain");
+        markup.ShouldContain("\"Publish retained message, enabled\"");
+        markup.ShouldContain("\"Publish retained message, disabled\"");
+        markup.ShouldNotContain("aria-label=\"Quality of service\"");
+        markup.ShouldNotContain("aria-label=\"Publish retained message\"");
         markup.ShouldContain("aria-pressed=\"@(_retain ? \"true\" : \"false\")\"");
         markup.ShouldContain("publish-submit");
         markup.ShouldContain("publish-empty\" role=\"status\" aria-live=\"polite\"");
