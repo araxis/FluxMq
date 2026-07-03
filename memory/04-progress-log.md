@@ -6552,3 +6552,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale topic-pattern label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the node-editor static-label cleanup from the current scan one focused widget at a time; likely next candidates are Routing Switch route labels or Routing Fork/Merge port labels with existing focused guards.
+- RoutingSwitchNodeWidget route field label specificity result:
+  - Replaced inline route match-key and output-port accessible labels with helper-backed labels that include current route values or row context plus the node name.
+  - Preserved route binding, add/remove route actions, expression editor layout, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused RoutingSwitchNodeWidget guard to require helper-backed route field labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingSwitchNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale route field label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the node-editor static-label cleanup from the current scan one focused widget at a time; likely next candidates are Routing Fork/Merge port labels with existing focused guards.

@@ -144,7 +144,7 @@
                                 var route = _routeDrafts[index];
                                 <div class="routing-switch-route-row" @key="route">
                                     <MudTextField T="string"
-                                                  aria-label="@($"Route match key {index + 1}")"
+                                                  aria-label="@RouteMatchKeyLabel(route, index)"
                                                   Value="@route.Key"
                                                   ValueChanged="@(value => SetRouteKeyAsync(route, value))"
                                                   Variant="Variant.Outlined"
@@ -153,7 +153,7 @@
                                                   Placeholder="Match key"
                                                   Class="routing-switch-route-key-field" />
                                     <MudTextField T="string"
-                                                  aria-label="@($"Route output port {index + 1}")"
+                                                  aria-label="@RouteOutputPortLabel(route, index)"
                                                   Value="@route.OutputPort"
                                                   ValueChanged="@(value => SetRouteOutputAsync(route, value))"
                                                   Variant="Variant.Outlined"
@@ -210,6 +210,25 @@
     private IReadOnlyList<RoutingSwitchRoute> RoutePreview => Model.Routes.Take(3).ToArray();
     private int RoutePreviewOverflow => Math.Max(0, Model.Routes.Count - 3);
     private string AddRouteLabel => $"Add route to {Node.NodeName}";
+
+    private string RouteMatchKeyLabel(RouteDraft route, int index)
+    {
+        var target = string.IsNullOrWhiteSpace(route.Key)
+            ? $"route {index + 1}"
+            : route.Key.Trim();
+
+        return $"Edit match key {target} for {Node.NodeName}";
+    }
+
+    private string RouteOutputPortLabel(RouteDraft route, int index)
+    {
+        var target = string.IsNullOrWhiteSpace(route.OutputPort)
+            ? $"route {index + 1}"
+            : route.OutputPort.Trim();
+
+        return $"Edit output port {target} for {Node.NodeName}";
+    }
+
     private string RemoveRouteLabel(RouteDraft route)
     {
         var key = route.Key?.Trim();

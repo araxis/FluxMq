@@ -9870,8 +9870,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@AddRouteLabel\"");
         markup.ShouldContain("private string AddRouteLabel => $\"Add route to {Node.NodeName}\";");
         markup.ShouldContain("routing-switch-route-row");
-        markup.ShouldContain("aria-label=\"@($\"Route match key {index + 1}\")\"");
-        markup.ShouldContain("aria-label=\"@($\"Route output port {index + 1}\")\"");
+        markup.ShouldContain("aria-label=\"@RouteMatchKeyLabel(route, index)\"");
+        markup.ShouldContain("aria-label=\"@RouteOutputPortLabel(route, index)\"");
+        markup.ShouldContain("private string RouteMatchKeyLabel(RouteDraft route, int index)");
+        markup.ShouldContain("private string RouteOutputPortLabel(RouteDraft route, int index)");
+        markup.ShouldContain("$\"Edit match key {target} for {Node.NodeName}\"");
+        markup.ShouldContain("$\"Edit output port {target} for {Node.NodeName}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Route match key {index + 1}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Route output port {index + 1}\")\"");
         markup.ShouldContain("Value=\"@route.Key\"");
         markup.ShouldContain("ValueChanged=\"@(value => SetRouteKeyAsync(route, value))\"");
         markup.ShouldContain("Value=\"@route.OutputPort\"");
