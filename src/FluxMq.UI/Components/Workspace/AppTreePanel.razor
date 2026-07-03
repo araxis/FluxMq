@@ -335,11 +335,11 @@ else
                                     <span class="tree-item-actions"
                                           @onclick:stopPropagation="true"
                                           @onmousedown:stopPropagation="true">
-                                        <MudTooltip Text="@($"Delete test {t}")">
+                                        <MudTooltip Text="@DeleteTestLabel(t)">
                                             <MudIconButton Size="Size.Small"
                                                            Icon="@Icons.Material.Filled.DeleteOutline"
                                                            Class="tree-icon-button tree-delete-button"
-                                                           aria-label="@($"Delete test {t}")"
+                                                           aria-label="@DeleteTestLabel(t)"
                                                            OnClick="@(() => RemoveTestAsync(a, t))" />
                                         </MudTooltip>
                                     </span>
@@ -480,6 +480,9 @@ else
 
     private static string OpenDashboardLabel(string dashboardName)
         => $"Open dashboard {dashboardName}";
+
+    private static string DeleteTestLabel(string testName)
+        => $"Delete test {testName}";
 
     private static string CloseAppLabel(FlowWorkspaceService app)
         => $"Close app {app.Name}";

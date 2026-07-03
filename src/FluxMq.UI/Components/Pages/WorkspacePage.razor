@@ -37,7 +37,7 @@
                      tabindex="0"
                      aria-current="@WorkspaceTabCurrent(isActive)"
                      aria-keyshortcuts="Enter Space"
-                     aria-label="@($"Open pipeline {w}")"
+                     aria-label="@OpenPipelineLabel(w)"
                      title="@($"Pipeline {w}")"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveWorkflow(w); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
@@ -81,7 +81,7 @@
                      tabindex="0"
                      aria-current="@WorkspaceTabCurrent(isActive)"
                      aria-keyshortcuts="Enter Space"
-                     aria-label="@($"Open dashboard {d}")"
+                     aria-label="@OpenDashboardLabel(d)"
                      title="@($"Dashboard {d}")"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveDashboard(d); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveDashboard(d); _jsonView = false; })">
@@ -109,7 +109,7 @@
                      tabindex="0"
                      aria-current="@WorkspaceTabCurrent(isActive)"
                      aria-keyshortcuts="Enter Space"
-                     aria-label="@($"Open test {t}")"
+                     aria-label="@OpenTestLabel(t)"
                      title="@($"Test {t}")"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveTest(t); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveTest(t); _jsonView = false; })">
@@ -191,8 +191,8 @@
                 <span class="project-tabbar-app-name">@active.Name</span>
                 <button type="button"
                         class="project-tab-close"
-                        title="Close app"
-                        aria-label="@($"Close app {active.Name}")"
+                        title="@CloseAppLabel(active)"
+                        aria-label="@CloseAppLabel(active)"
                         @onclick:stopPropagation="true"
                         @onmousedown:stopPropagation="true"
                         @onclick="@CloseActiveAsync">
@@ -578,6 +578,15 @@
     private static string OpenMetricsTabLabel(FlowWorkspaceService app)
         => $"Open metrics for {app.Name}";
 
+    private static string OpenPipelineLabel(string pipelineName)
+        => $"Open pipeline {pipelineName}";
+
+    private static string OpenDashboardLabel(string dashboardName)
+        => $"Open dashboard {dashboardName}";
+
+    private static string OpenTestLabel(string testName)
+        => $"Open test {testName}";
+
     private static string OpenTopicsTabLabel(FlowWorkspaceService app)
         => $"Open topics for {app.Name}";
 
@@ -589,6 +598,9 @@
 
     private static string DeleteArtifactTabLabel(string artifactKind, string name)
         => $"Delete {artifactKind} {name}";
+
+    private static string CloseAppLabel(FlowWorkspaceService app)
+        => $"Close app {app.Name}";
 
     private static string? WorkspaceTabCurrent(bool isActive)
         => isActive ? "true" : null;

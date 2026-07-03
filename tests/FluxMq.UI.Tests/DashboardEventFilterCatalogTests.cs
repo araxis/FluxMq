@@ -13189,7 +13189,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@OpenMetricsTabLabel(active)\"");
         markup.ShouldContain("title=\"@OpenMetricsTabLabel(active)\"");
         markup.ShouldContain("aria-label=\"@OpenDashboardLabel(d)\"");
-        markup.ShouldContain("aria-label=\"@($\"Open test {t}\")\"");
+        markup.ShouldContain("aria-label=\"@OpenTestLabel(t)\"");
         markup.ShouldContain("aria-label=\"@OpenTopicsTabLabel(active)\"");
         markup.ShouldContain("title=\"@OpenTopicsTabLabel(active)\"");
         markup.ShouldContain("aria-label=\"@OpenLogsTabLabel(active)\"");
@@ -13205,8 +13205,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private static string OpenMetricsTabLabel");
         markup.ShouldContain("private static string OpenPipelineLabel(string pipelineName)");
         markup.ShouldContain("private static string OpenDashboardLabel(string dashboardName)");
+        markup.ShouldContain("private static string OpenTestLabel(string testName)");
         markup.ShouldNotContain("@($\"Open pipeline {w}\")");
         markup.ShouldNotContain("@($\"Open dashboard {d}\")");
+        markup.ShouldNotContain("@($\"Open test {t}\")");
         markup.ShouldContain("private static string OpenTopicsTabLabel");
         markup.ShouldContain("private static string OpenLogsTabLabel");
         markup.ShouldContain("private static string OpenAppJsonTabLabel");
@@ -13222,7 +13224,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.Split("Class=\"project-tab-icon\" aria-hidden=\"true\"", StringSplitOptions.None).Length.ShouldBe(8);
         markup.ShouldContain("<span class=\"project-tab-name\">App JSON</span>");
         markup.ShouldContain("<span class=\"project-tabbar-app-name\">@active.Name</span>");
-        markup.ShouldContain("aria-label=\"@($\"Close app {active.Name}\")\"");
+        markup.ShouldContain("title=\"@CloseAppLabel(active)\"");
+        markup.ShouldContain("aria-label=\"@CloseAppLabel(active)\"");
+        markup.ShouldContain("private static string CloseAppLabel(FlowWorkspaceService app)");
+        markup.ShouldNotContain("@($\"Close app {active.Name}\")");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Close\"");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Close\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.DeleteOutline\" Size=\"Size.Small\" aria-hidden=\"true\" />");
@@ -13711,8 +13716,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("test-run-state");
         markup.ShouldContain("tree-item-actions");
         markup.ShouldContain("tree-delete-button");
-        markup.ShouldContain("Text=\"@($\"Delete test {t}\")\"");
-        markup.ShouldContain("aria-label=\"@($\"Delete test {t}\")\"");
+        markup.ShouldContain("Text=\"@DeleteTestLabel(t)\"");
+        markup.ShouldContain("aria-label=\"@DeleteTestLabel(t)\"");
+        markup.ShouldContain("private static string DeleteTestLabel(string testName)");
+        markup.ShouldNotContain("@($\"Delete test {t}\")");
         markup.ShouldNotContain("Text=\"Delete test\"");
         markup.ShouldContain("RemoveTestAsync(a, t)");
         markup.ShouldContain("ShowMessageBoxAsync(");
