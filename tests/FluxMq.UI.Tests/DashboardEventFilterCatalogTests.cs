@@ -11708,6 +11708,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("--metric-readout-columns:@readoutColumns");
         markup.ShouldContain("MetricReadouts");
         markup.ShouldContain("metrics-readout-token @readout.CssClass");
+        markup.ShouldContain("aria-label=\"@MetricReadoutLabel(readout)\"");
+        markup.ShouldContain("private string MetricReadoutLabel(MetricDisplayReadout readout)");
+        markup.ShouldContain("$\"{readout.Label}: {readout.Value} for {Node.NodeName}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"{readout.Label}: {readout.Value}\")\"");
         markup.ShouldContain("aria-label=\"MQTT metrics readouts\"");
         markup.ShouldContain("metrics-topic-list");
         markup.ShouldContain("metrics-topic-list-header");
@@ -11760,7 +11764,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ReadoutOptionClass(selected, disabled)");
         markup.ShouldContain("metrics-readout-option-tile");
         markup.ShouldContain("metrics-readout-option-name");
-        markup.ShouldContain("aria-label=\"@($\"Show {option.Label}\")\"");
+        markup.ShouldContain("aria-label=\"@DisplayMetricOptionLabel(option, selected, disabled)\"");
+        markup.ShouldContain("private string DisplayMetricOptionLabel(MetricDisplayOption option, bool selected, bool disabled)");
+        markup.ShouldContain("$\"Keep {option.Label} visible for {Node.NodeName}\"");
+        markup.ShouldContain("$\"Hide {option.Label} readout for {Node.NodeName}\"");
+        markup.ShouldContain("$\"Show {option.Label} readout for {Node.NodeName}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Show {option.Label}\")\"");
         markup.ShouldContain("ToggleDisplayMetric");
         markup.ShouldContain("Class=\"metrics-readout-option-check\"");
         markup.ShouldNotContain("metrics-panel-header");

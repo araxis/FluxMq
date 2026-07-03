@@ -40,7 +40,7 @@
                  aria-label="MQTT metrics readouts">
                 @foreach (var readout in metricReadouts)
                 {
-                    <div class="metrics-readout-token @readout.CssClass node-ui-token" aria-label="@($"{readout.Label}: {readout.Value}")">
+                    <div class="metrics-readout-token @readout.CssClass node-ui-token" aria-label="@MetricReadoutLabel(readout)">
                         <span class="metrics-readout-label">@readout.Label</span>
                         <strong class="metrics-readout-value">@readout.Value</strong>
                     </div>
@@ -138,7 +138,7 @@
                                          ValueChanged="@(value => ToggleDisplayMetric(option.Id, value))"
                                          Disabled="@disabled"
                                          Dense="true"
-                                         aria-label="@($"Show {option.Label}")"
+                                         aria-label="@DisplayMetricOptionLabel(option, selected, disabled)"
                                          Class="metrics-readout-option-check" />
                         </div>
                     }
@@ -283,6 +283,21 @@
     {
         var cssClass = selected ? "metrics-readout-option-tile selected" : "metrics-readout-option-tile";
         return disabled ? $"{cssClass} locked" : cssClass;
+    }
+
+    private string MetricReadoutLabel(MetricDisplayReadout readout)
+        => $"{readout.Label}: {readout.Value} for {Node.NodeName}";
+
+    private string DisplayMetricOptionLabel(MetricDisplayOption option, bool selected, bool disabled)
+    {
+        if (disabled)
+        {
+            return $"Keep {option.Label} visible for {Node.NodeName}";
+        }
+
+        return selected
+            ? $"Hide {option.Label} readout for {Node.NodeName}"
+            : $"Show {option.Label} readout for {Node.NodeName}";
     }
 
     private void ToggleDisplayMetric(string id, bool selected)

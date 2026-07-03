@@ -6592,3 +6592,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale subscription label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the node-editor static-label cleanup from a fresh current-state scan; likely remaining candidates include MqttMetricsNodeWidget display/readout labels or compact token titles in expression-heavy node summaries.
+- MqttMetricsNodeWidget readout label specificity result:
+  - Replaced inline runtime readout and visible-readout option accessible labels with helper-backed labels that include readout value/selection state plus the node name.
+  - Preserved runtime metric display, top topic rendering, last-topic state, readout selection behavior, disabled final-readout protection, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MqttMetricsNodeWidget guard to require helper-backed readout labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttMetricsNodeWidget_UsesScopedDisplayAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale MQTT metrics label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the static-label cleanup from a fresh current-state scan; likely candidates are compact token titles in ConditionRouterNodeWidget, RoutingSwitchNodeWidget, or MetricSourceNodeWidget summaries.
