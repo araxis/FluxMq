@@ -13651,7 +13651,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("app-tile-states");
         markup.ShouldNotContain("app-state active");
         markup.ShouldNotContain("app-state unsaved");
+        markup.ShouldContain("Text=\"@CloseLabel(a)\"");
         markup.ShouldContain("aria-label=\"@CloseLabel(a)\"");
+        markup.ShouldNotContain("Text=\"Close app\"");
         markup.ShouldContain("private static string? AppTileCurrent");
         markup.ShouldContain("private static string BuildAppMeta");
         markup.ShouldContain("private static string FileLabel");
