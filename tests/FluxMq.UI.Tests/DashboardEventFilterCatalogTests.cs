@@ -4010,7 +4010,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("aria-label=\"Recent scenario runs\"");
         markup.ShouldNotContain("aria-label=\"Show latest scenario run\"");
         markup.ShouldContain("RunMarkerClass(result.Status)");
-        markup.ShouldContain("aria-label=\"@($\"Run result {result.Status}\")\"");
+        markup.ShouldContain("aria-label=\"@RunResultStatusLabel(result)\"");
+        markup.ShouldContain("private string RunResultStatusLabel(ScenarioRunResult result)");
+        markup.ShouldContain("$\"{RunResultScopeLabel}, {result.Status}, finished {FormatRunTime(result)}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Run result {result.Status}\")\"");
         markup.ShouldContain("ActiveRunMarkerClass");
         markup.ShouldContain("ActiveRunMarkerIcon");
         markup.ShouldContain("ActiveRunMarkerText");
