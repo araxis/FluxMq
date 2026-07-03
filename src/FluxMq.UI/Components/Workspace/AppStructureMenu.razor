@@ -211,7 +211,8 @@
                     <MudMenuItem OnClick="@(() => SelectMetrics(active))"
                                  Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Metrics, "Metrics")"
                                  aria-current="@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Metrics, "Metrics")"
-                                 title="Open metric designer">
+                                 title="@MetricDesignerItemLabel(active)"
+                                 aria-label="@MetricDesignerItemLabel(active)">
                         <div class="app-menu-artifact-row app-menu-compact-artifact-row app-menu-metrics-row">
                             <span class="app-menu-artifact-icon-frame metrics" aria-hidden="true">
                                 <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
@@ -369,6 +370,9 @@
 
     private static string DeleteLabel(string artifactKind, string name)
         => $"Delete {artifactKind} {name}";
+
+    private static string MetricDesignerItemLabel(FlowWorkspaceService app)
+        => $"Open {app.Name} metric designer, {CountLabel(app.MetricNames.Count, "metric")}";
 
     private static ScenarioRunResult? LatestTestRun(FlowWorkspaceService app, string testName)
         => app.ScenarioRunHistory.FirstOrDefault(result =>

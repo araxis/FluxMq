@@ -6191,3 +6191,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only MetricDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App Structure metric-designer row label specificity result:
+  - Replaced the static App Structure metric-designer row title with an app-and-metric-count-aware title and accessible label using existing active app state.
+  - Preserved app structure menu routing, metric designer selection, metric counts, add metric command, artifact highlighting, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppStructureMenu guard to require the helper-backed metric designer row label and reject the old static title/aria-label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppStructureMenu stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

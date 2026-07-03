@@ -13725,6 +13725,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Dashboard, d)\"");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Metrics, \"Metrics\")\"");
         markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Metrics, \"Metrics\")\"");
+        markup.ShouldContain("title=\"@MetricDesignerItemLabel(active)\"");
+        markup.ShouldContain("aria-label=\"@MetricDesignerItemLabel(active)\"");
+        markup.ShouldContain("private static string MetricDesignerItemLabel(FlowWorkspaceService app)");
+        markup.ShouldContain("$\"Open {app.Name} metric designer, {CountLabel(app.MetricNames.Count, \"metric\")}\"");
+        markup.ShouldNotContain("title=\"Open metric designer\"");
+        markup.ShouldNotContain("aria-label=\"Open metric designer\"");
         markup.ShouldContain("app-menu-artifact-item");
         markup.ShouldContain("app-menu-compact-artifact-row");
         markup.ShouldContain("app-menu-artifact-icon-frame pipeline");
