@@ -181,7 +181,7 @@
             <div class="dashboard-editor-workbench">
                 <div class="@DashboardGridFrameClass"
                      role="group"
-                     aria-label="Dashboard layout editor"
+                     aria-label="@DashboardLayoutEditorLabel"
                      @onpointerenter="HandleDesignerPointerEnter"
                      @onpointermove="HandleDesignerPointerMove"
                      @onpointerleave="HandleDesignerPointerLeave">
@@ -569,6 +569,8 @@
     private string LivePreviewFrameLabel => $"{DashboardTitle} live dashboard preview";
 
     private string LivePreviewSummaryLabel => $"{DashboardTitle} live preview facts";
+
+    private string DashboardLayoutEditorLabel => $"{DashboardTitle} dashboard layout editor";
 
     private string DashboardLayoutGridLabel => $"{DashboardTitle} editable dashboard layout grid";
 

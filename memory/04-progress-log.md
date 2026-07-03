@@ -6221,3 +6221,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: Dashboard Designer layout-editor region label specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard Designer layout-editor region label specificity result:
+  - Replaced the static Dashboard Designer layout-editor group accessible label with an active-dashboard-aware helper label.
+  - Preserved edit-mode workbench layout, grid frame classes, pointer/drop handlers, editable grid label, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner guard to require the helper-backed layout-editor label and reject the old static region label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard Designer grid/split command tooltip specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.

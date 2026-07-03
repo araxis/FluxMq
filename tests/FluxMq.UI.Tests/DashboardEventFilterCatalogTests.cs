@@ -5938,7 +5938,9 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldNotContain("dashboard-mode-state");
         razor.ShouldContain("dashboard-tool-group dashboard-tool-group-grid");
         razor.ShouldContain("dashboard-tool-group dashboard-tool-group-selection");
-        razor.ShouldContain("aria-label=\"Dashboard layout editor\"");
+        razor.ShouldContain("aria-label=\"@DashboardLayoutEditorLabel\"");
+        razor.ShouldContain("private string DashboardLayoutEditorLabel => $\"{DashboardTitle} dashboard layout editor\";");
+        razor.ShouldNotContain("aria-label=\"Dashboard layout editor\"");
         razor.ShouldContain("role=\"grid\" aria-label=\"@DashboardLayoutGridLabel\"");
         razor.ShouldContain("private string DashboardLayoutGridLabel => $\"{DashboardTitle} editable dashboard layout grid\";");
         razor.ShouldNotContain("aria-label=\"Dashboard layout grid\"");
