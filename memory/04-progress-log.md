@@ -6081,3 +6081,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only NodeEditDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- New App dialog action-label specificity result:
+  - Replaced static New App dialog cancel/create action labels with app-and-first-pipeline-aware labels using the pending form fields.
+  - Preserved app, pipeline, broker, host, port, security, Enter handling, validation, dialog result projection, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused NewAppDialog guard to require helper-backed action labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NewAppDialog_UsesFlatCompactSetupChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only NewAppDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

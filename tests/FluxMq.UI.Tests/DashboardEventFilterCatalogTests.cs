@@ -4625,7 +4625,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("new-app-dialog-grid connection");
         markup.ShouldContain("new-app-dialog-security-row");
         markup.ShouldContain("new-app-dialog-actions");
-        markup.ShouldContain("aria-label=\"Create app\"");
+        markup.ShouldContain("aria-label=\"@CancelNewAppLabel\"");
+        markup.ShouldContain("aria-label=\"@CreateNewAppLabel\"");
+        markup.ShouldContain("private string CancelNewAppLabel => $\"Cancel {NewAppTargetLabel} setup\"");
+        markup.ShouldContain("private string CreateNewAppLabel => $\"Create {NewAppTargetLabel} with {FirstPipelineTargetLabel}\"");
+        markup.ShouldContain("private string NewAppTargetLabel => string.IsNullOrWhiteSpace(_appName)");
+        markup.ShouldContain("private string FirstPipelineTargetLabel => string.IsNullOrWhiteSpace(_pipelineName)");
+        markup.ShouldNotContain("aria-label=\"Cancel new app\"");
+        markup.ShouldNotContain("aria-label=\"Create app\"");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Apps\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");
