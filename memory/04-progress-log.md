@@ -6402,3 +6402,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale add-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: stop the timed pass with a clean handoff, or resume later with another focused workspace chrome/static-label audit only after choosing the next surface from current memory.
+- ComponentCatalogPanel meta label specificity result:
+  - Replaced the static catalog meta-strip accessible label with a helper-backed label that reflects catalog title, mode, availability, and local filter state.
+  - Preserved visible catalog title/meta text, search behavior, add/drag item behavior, item grouping, empty state, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused ComponentCatalogPanel guard to require the helper-backed meta label and reject the stale static label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ComponentCatalogPanel_UsesFlatCompactCatalogChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale catalog-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are small literal labels in LiveInspectorPanel or WorkspaceLogPanel filter groups, after confirming existing guard coverage.

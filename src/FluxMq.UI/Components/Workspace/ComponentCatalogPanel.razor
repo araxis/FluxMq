@@ -12,7 +12,7 @@
             </span>
             <span class="catalog-title-copy">
                 <span class="catalog-title-label">@CatalogTitle</span>
-                <span class="catalog-meta-strip" aria-label="Catalog mode, availability, and filter">
+                <span class="catalog-meta-strip" aria-label="@CatalogMetaLabel">
                     <span>@CatalogModeLabel</span>
                     <span class="@CatalogUseAvailabilityClass">@CatalogUseAvailabilityLabel</span>
                     <span>@CatalogFilterScopeLabel</span>
@@ -164,6 +164,9 @@
 
     private string CatalogPanelLabel
         => $"{CatalogTitle} catalog";
+
+    private string CatalogMetaLabel
+        => $"{CatalogTitle} summary, {CatalogModeLabel}, {CatalogUseAvailabilityLabel.ToLowerInvariant()}, {CatalogFilterScopeLabel.ToLowerInvariant()} results";
 
     private string CatalogListLabel
         => $"{CatalogTitle} results";

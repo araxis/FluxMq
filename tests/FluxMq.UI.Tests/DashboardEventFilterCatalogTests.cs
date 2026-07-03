@@ -7518,7 +7518,10 @@ public sealed class DashboardEventFilterCatalogTests
             .ToArray()
             .ShouldBeEmpty();
         markup.ShouldContain("catalog-meta-strip");
-        markup.ShouldContain("aria-label=\"Catalog mode, availability, and filter\"");
+        markup.ShouldContain("aria-label=\"@CatalogMetaLabel\"");
+        markup.ShouldContain("private string CatalogMetaLabel");
+        markup.ShouldContain("$\"{CatalogTitle} summary, {CatalogModeLabel}, {CatalogUseAvailabilityLabel.ToLowerInvariant()}, {CatalogFilterScopeLabel.ToLowerInvariant()} results\"");
+        markup.ShouldNotContain("aria-label=\"Catalog mode, availability, and filter\"");
         markup.ShouldContain("@CatalogModeLabel");
         markup.ShouldContain("@CatalogUseAvailabilityLabel");
         markup.ShouldContain("@CatalogFilterScopeLabel");
