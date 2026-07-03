@@ -7394,6 +7394,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dashboard-widget-editor-section-head");
         markup.ShouldContain("dashboard-widget-editor-action-spacer");
         markup.ShouldContain("dashboard-widget-editor-actions");
+        markup.ShouldContain("aria-label=\"@ResetWidgetEditLabel\"");
+        markup.ShouldContain("aria-label=\"@CancelWidgetEditLabel\"");
+        markup.ShouldContain("aria-label=\"@ApplyWidgetEditLabel\"");
+        markup.ShouldContain("private string ResetWidgetEditLabel => $\"Reset edits for {WidgetEditTargetLabel}\"");
+        markup.ShouldContain("private string CancelWidgetEditLabel => $\"Cancel editing {WidgetEditTargetLabel}\"");
+        markup.ShouldContain("private string ApplyWidgetEditLabel => $\"Apply edits for {WidgetEditTargetLabel}\"");
+        markup.ShouldContain("private string WidgetEditTargetLabel => string.IsNullOrWhiteSpace(_draft.Title)");
         markup.ShouldContain("dashboard-widget-editor-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("<MudIcon Icon=\"@Profile.Icon\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Speed\" Size=\"Size.Small\" aria-hidden=\"true\" />");
@@ -7409,6 +7416,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("ActionStatusLabel");
         markup.ShouldNotContain("No changes");
         markup.ShouldNotContain("Unsaved changes");
+        markup.ShouldNotContain("aria-label=\"Reset\"");
+        markup.ShouldNotContain("aria-label=\"Cancel\"");
+        markup.ShouldNotContain("aria-label=\"Apply\"");
         markup.ShouldNotContain("<MudIcon Icon=\"@Profile.Icon\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Speed\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.ShowChart\" Size=\"Size.Small\" />");

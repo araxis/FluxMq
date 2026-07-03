@@ -211,13 +211,15 @@
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.RestartAlt"
                        Disabled="@(!HasChanges)"
-                       Class="dashboard-widget-editor-reset">
+                       Class="dashboard-widget-editor-reset"
+                       aria-label="@ResetWidgetEditLabel">
                 Reset
             </MudButton>
             <span class="dashboard-widget-editor-action-spacer"></span>
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
-                       Class="dashboard-widget-editor-cancel">
+                       Class="dashboard-widget-editor-cancel"
+                       aria-label="@CancelWidgetEditLabel">
                 Cancel
             </MudButton>
             <MudButton Color="Color.Primary"
@@ -226,7 +228,8 @@
                        StartIcon="@Icons.Material.Filled.Check"
                        Disabled="@(!HasChanges)"
                        OnClick="@Submit"
-                       Class="dashboard-widget-editor-apply">
+                       Class="dashboard-widget-editor-apply"
+                       aria-label="@ApplyWidgetEditLabel">
                 Apply
             </MudButton>
         </div>
@@ -286,6 +289,16 @@
                 : "Display";
 
     private bool HasChanges => !ConfigurationEquals(_draft.BuildConfiguration(), _initialConfiguration);
+
+    private string ResetWidgetEditLabel => $"Reset edits for {WidgetEditTargetLabel}";
+
+    private string CancelWidgetEditLabel => $"Cancel editing {WidgetEditTargetLabel}";
+
+    private string ApplyWidgetEditLabel => $"Apply edits for {WidgetEditTargetLabel}";
+
+    private string WidgetEditTargetLabel => string.IsNullOrWhiteSpace(_draft.Title)
+        ? $"{Profile.Title} widget {Widget.Name}"
+        : $"{_draft.Title.Trim()} widget {Widget.Name}";
 
     protected override void OnInitialized()
     {

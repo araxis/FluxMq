@@ -6271,3 +6271,14 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardDesigner stale placeholder-title scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: Dashboard widget editor dialog action-label specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard widget editor dialog action-label specificity result:
+  - Added widget-aware accessible labels for the Dashboard widget editor reset, cancel, and apply actions while keeping the compact visible action text unchanged.
+  - Preserved widget draft editing, reset/cancel/apply behavior, dirty-state disabling, filter and metric controls, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardWidgetEditorDialog guard to require helper-backed action labels and reject static reset/cancel/apply accessible labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetEditorDialog_UsesFlatCompactEditorChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - A first parallel verification attempt hit the known shared intermediate UI compile file lock; the serial rerun passed.
+  - Source-only DashboardWidgetEditorDialog stale action-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: close the current one-hour pass by selecting only one remaining high-signal workspace chrome item, likely Dashboard track editor action-label specificity, or stop with a handoff if time is tight.
