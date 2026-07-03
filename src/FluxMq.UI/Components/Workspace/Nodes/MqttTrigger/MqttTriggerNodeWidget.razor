@@ -73,13 +73,13 @@
                             <MudTh>Retained</MudTh>
                             <MudTh>Keep flag</MudTh>
                             <MudTh Class="mqtt-trigger-add-cell">
-                                <MudTooltip Text="Add subscription">
+                                <MudTooltip Text="@AddSubscriptionLabel">
                                     <MudIconButton Size="Size.Small"
                                                    Icon="@Icons.Material.Filled.Add"
                                                    Variant="Variant.Text"
                                                    Color="Color.Primary"
                                                    Class="mqtt-trigger-add"
-                                                   aria-label="Add subscription"
+                                                   aria-label="@AddSubscriptionLabel"
                                                    OnClick="@AddRow" />
                                 </MudTooltip>
                             </MudTh>
@@ -137,11 +137,11 @@
                                 </div>
                             </MudTd>
                             <MudTd DataLabel="Action" Class="mqtt-trigger-action-cell">
-                                <MudTooltip Text="Remove subscription">
+                                <MudTooltip Text="@RemoveSubscriptionLabel(index)">
                                     <MudIconButton Size="Size.Small"
                                                    Icon="@Icons.Material.Filled.Close"
                                                    Class="mqtt-trigger-remove"
-                                                   aria-label="@($"Remove subscription {index + 1}")"
+                                                   aria-label="@RemoveSubscriptionLabel(index)"
                                                    OnClick="@(() => RemoveRowAsync(index))" />
                                 </MudTooltip>
                             </MudTd>
@@ -225,6 +225,23 @@
     private IEnumerable<MqttTriggerSubscriptionEditorRow> SubscriptionEditorRows
         => Enumerable.Range(0, _draftSubscriptions.Count)
             .Select(static index => new MqttTriggerSubscriptionEditorRow(index));
+
+    private string AddSubscriptionLabel => $"Add subscription to {Node.NodeName}";
+
+    private string RemoveSubscriptionLabel(int index)
+    {
+        if (index < 0 || index >= _draftSubscriptions.Count)
+        {
+            return $"Remove subscription from {Node.NodeName}";
+        }
+
+        var topicFilter = _draftSubscriptions[index].TopicFilter?.Trim();
+        var target = string.IsNullOrWhiteSpace(topicFilter)
+            ? $"subscription {index + 1}"
+            : topicFilter;
+
+        return $"Remove {target} from {Node.NodeName}";
+    }
 
     private IReadOnlyList<BrokerOption> BrokerOptions
     {

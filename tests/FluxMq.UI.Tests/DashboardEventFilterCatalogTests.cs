@@ -7734,7 +7734,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Add\"");
         markup.ShouldContain("Variant=\"Variant.Text\"");
         markup.ShouldContain("Color=\"Color.Primary\"");
-        markup.ShouldContain("aria-label=\"Add subscription\"");
+        markup.ShouldContain("Text=\"@AddSubscriptionLabel\"");
+        markup.ShouldContain("aria-label=\"@AddSubscriptionLabel\"");
+        markup.ShouldContain("private string AddSubscriptionLabel => $\"Add subscription to {Node.NodeName}\";");
+        markup.ShouldContain("Text=\"@RemoveSubscriptionLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@RemoveSubscriptionLabel(index)\"");
+        markup.ShouldContain("private string RemoveSubscriptionLabel(int index)");
+        markup.ShouldContain("$\"Remove {target} from {Node.NodeName}\"");
+        markup.ShouldNotContain("Text=\"Add subscription\"");
+        markup.ShouldNotContain("aria-label=\"Add subscription\"");
+        markup.ShouldNotContain("Text=\"Remove subscription\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Remove subscription {index + 1}\")\"");
         markup.ShouldContain("<MudTd DataLabel=\"Topic filter\">");
         markup.ShouldContain("<MudTd DataLabel=\"QoS\">");
         markup.ShouldContain("<MudTd DataLabel=\"Retained\">");

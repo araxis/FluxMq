@@ -6141,3 +6141,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only MessageFilterNodeWidget stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing node row controls and high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- MQTT trigger subscription action-label specificity result:
+  - Replaced static MQTT trigger add/remove subscription tooltips and action labels with node-and-row-aware labels using existing node name and draft subscription state.
+  - Preserved broker/output buffer controls, subscription editing, add/remove behavior, validation, refresh behavior, saved configuration, workflow JSON, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MqttTriggerNodeWidget guard to require helper-backed add/remove subscription labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttTriggerNodeWidget_UsesCompactSummaryAndStructuredEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only MqttTriggerNodeWidget stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing node row controls and high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
