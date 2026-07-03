@@ -6201,3 +6201,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only AppStructureMenu stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer canvas chrome readiness-copy result:
+  - Confirmed the Flow Designer loaded subtitle uses the neutral `Pipeline loaded` copy while preserving `Unsaved changes` and `No active pipeline` states.
+  - Preserved the compact canvas header, editable/no-pipeline mode, selected-link state, runtime marker, node/link/resource metrics, diagnostics action, canvas, navigator, link-condition editor, workflow JSON, diagram behavior, runtime behavior, services, diagnostics, schemas, ids, ports, and contracts.
+  - Strengthened the focused FlowDesigner guard to require the source-level `Pipeline loaded` fallback and reject the old source-level `Ready` fallback.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - FlowDesigner readiness-copy scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard Designer merge action-label specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.

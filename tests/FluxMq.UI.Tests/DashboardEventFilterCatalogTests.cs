@@ -7556,7 +7556,8 @@ public sealed class DashboardEventFilterCatalogTests
                 !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
             .ToArray()
             .ShouldBeEmpty();
-        markup.ShouldContain("Pipeline loaded");
+        markup.ShouldContain(": \"Pipeline loaded\";");
+        markup.ShouldNotContain(": \"Ready\";");
         markup.ShouldContain("@WorkflowModeLabel");
         markup.ShouldContain("@WorkflowSelectionLabel");
         markup.ShouldContain("aria-label=\"@PipelineCanvasActionsLabel\"");
