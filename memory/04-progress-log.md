@@ -6382,3 +6382,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale literal menu-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are AppStructureMenu navigation label and command row text specificity or other visible workspace chrome labels.
+- AppStructureMenu navigation label specificity result:
+  - Replaced the static app-structure navigation accessible label with a helper-backed contextual label based on the active app and existing structure metadata.
+  - Preserved visible menu labels, top-level menu behavior, broker toggle behavior, add/select/delete artifact commands, active markers, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppStructureMenu guard to require the helper-backed navigation label and reject the stale literal navigation label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale navigation-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: keep the remaining timed pass narrow; either stop with a clean handoff or audit AppStructureMenu command row text specificity as one final focused surface.

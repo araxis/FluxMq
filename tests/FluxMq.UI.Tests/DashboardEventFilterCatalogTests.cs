@@ -13802,7 +13802,10 @@ public sealed class DashboardEventFilterCatalogTests
             "wwwroot",
             "app.css"));
 
-        markup.ShouldContain("aria-label=\"App structure navigation\"");
+        markup.ShouldContain("aria-label=\"@StructureNavigationLabel(active)\"");
+        markup.ShouldContain("private static string StructureNavigationLabel(FlowWorkspaceService app)");
+        markup.ShouldContain("$\"{app.Name} structure navigation, {BuildAppMeta(app)}\"");
+        markup.ShouldNotContain("aria-label=\"App structure navigation\"");
         markup.Split('\n')
             .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
                 !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))

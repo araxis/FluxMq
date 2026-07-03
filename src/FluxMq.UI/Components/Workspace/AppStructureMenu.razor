@@ -21,7 +21,7 @@
             <span class="app-structure-name">@active.Name</span>
         </span>
 
-        <div class="app-structure-actions" role="navigation" aria-label="App structure navigation">
+        <div class="app-structure-actions" role="navigation" aria-label="@StructureNavigationLabel(active)">
             <MudMenu Dense="true"
                      Label="@StructureMenuLabel("Brokers", conns.Count)"
                      AriaLabel="@StructureMenuAriaLabel(active, "Brokers", conns.Count, "broker connection")"
@@ -356,6 +356,9 @@
 
     private static string StructureMenuLabel(string label, int count)
         => $"{label} {count.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+
+    private static string StructureNavigationLabel(FlowWorkspaceService app)
+        => $"{app.Name} structure navigation, {BuildAppMeta(app)}";
 
     private static string StructureMenuAriaLabel(FlowWorkspaceService app, string sectionLabel, int count, string singular)
         => $"{app.Name} {sectionLabel.ToLowerInvariant()} menu, {CountLabel(count, singular)}";
