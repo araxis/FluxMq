@@ -13385,6 +13385,11 @@ public sealed class DashboardEventFilterCatalogTests
         System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""pipe-icon""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("SelectMetricsFromKeyboardAsync(args, a)");
         markup.ShouldContain("var isMetricsActive = a == Projects.ActiveProject");
+        markup.ShouldContain("aria-label=\"@MetricDesignerRowLabel(a, isMetricsActive)\"");
+        markup.ShouldContain("title=\"@MetricDesignerRowLabel(a, isMetricsActive)\"");
+        markup.ShouldContain("private static string MetricDesignerRowLabel");
+        markup.ShouldContain("return $\"{app.Name} metric designer, {state}, {CountLabel(app.MetricNames.Count, \"metric\")}\";");
+        markup.ShouldNotContain("aria-label=\"Open metric designer\"");
         markup.ShouldContain("aria-current=\"@TreeItemCurrent(isMetricsActive)\"");
         System.Text.RegularExpressions.Regex.Matches(markup, @"Class=""artifact-icon dashboard""\s+aria-hidden=""true""").Count.ShouldBe(2);
         markup.ShouldContain("SelectDashboardFromKeyboardAsync(args, a, d)");

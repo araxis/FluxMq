@@ -196,7 +196,8 @@ else
                             <div class="artifact-item @(isMetricsActive ? "active" : null)"
                                  role="button"
                                  tabindex="0"
-                                 aria-label="Open metric designer"
+                                 aria-label="@MetricDesignerRowLabel(a, isMetricsActive)"
+                                 title="@MetricDesignerRowLabel(a, isMetricsActive)"
                                  aria-current="@TreeItemCurrent(isMetricsActive)"
                                  aria-keyshortcuts="Enter Space"
                                  @onclick="@(() => SelectMetrics(a))"
@@ -466,6 +467,12 @@ else
         var state = isActive ? "active" : "inactive";
         var saved = app.HasUnsavedChanges ? "unsaved changes" : "saved";
         return $"{app.Name}, {state}, {saved}, {BuildAppMeta(app)}";
+    }
+
+    private static string MetricDesignerRowLabel(FlowWorkspaceService app, bool isActive)
+    {
+        var state = isActive ? "active" : "inactive";
+        return $"{app.Name} metric designer, {state}, {CountLabel(app.MetricNames.Count, "metric")}";
     }
 
     private static string? TreeItemCurrent(bool isActive)

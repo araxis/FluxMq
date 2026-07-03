@@ -6031,3 +6031,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardInspector stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App Tree metric-designer row label specificity result:
+  - Replaced the static App Tree metric-designer row label with an app/state/metric-count-aware label and title.
+  - Preserved app selection, metric designer selection, keyboard activation, section expansion, artifact rows, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppTreePanel guard to require the helper-backed metric designer row label and reject the old static label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTreePanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
