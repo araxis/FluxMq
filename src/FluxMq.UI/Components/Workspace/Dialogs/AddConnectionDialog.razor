@@ -150,14 +150,14 @@
             <MudButton Variant="Variant.Text"
                        Size="Size.Small"
                        Class="add-connection-dialog-cancel"
-                       aria-label="Cancel new connection"
+                       aria-label="@CancelConnectionLabel"
                        OnClick="@Cancel">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        Class="add-connection-dialog-add"
                        Disabled="@(!IsValid)"
-                       aria-label="Add connection"
+                       aria-label="@AddConnectionLabel"
                        OnClick="@Submit">Add</MudButton>
         </div>
     </DialogActions>
@@ -184,6 +184,20 @@
         !string.IsNullOrWhiteSpace(_host) &&
         _port is >= 1 and <= 65535 &&
         _keepAliveSeconds > 0;
+
+    private string AddConnectionLabel => $"Add connection for {ConnectionTargetLabel}";
+
+    private string CancelConnectionLabel => $"Cancel new connection for {ConnectionTargetLabel}";
+
+    private string ConnectionTargetLabel
+    {
+        get
+        {
+            var name = string.IsNullOrWhiteSpace(_name) ? "local-broker" : _name.Trim();
+            var host = string.IsNullOrWhiteSpace(_host) ? "localhost" : _host.Trim();
+            return $"{name} at {host}:{_port.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        }
+    }
 
     private void Cancel() => MudDialog.Cancel();
 

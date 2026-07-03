@@ -4682,7 +4682,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("add-connection-dialog-grid broker");
         markup.ShouldContain("add-connection-dialog-checkbox-cell");
         markup.ShouldContain("add-connection-dialog-actions");
-        markup.ShouldContain("aria-label=\"Add connection\"");
+        markup.ShouldContain("aria-label=\"@AddConnectionLabel\"");
+        markup.ShouldContain("aria-label=\"@CancelConnectionLabel\"");
+        markup.ShouldContain("private string AddConnectionLabel => $\"Add connection for {ConnectionTargetLabel}\";");
+        markup.ShouldContain("private string CancelConnectionLabel => $\"Cancel new connection for {ConnectionTargetLabel}\";");
+        markup.ShouldContain("private string ConnectionTargetLabel");
+        markup.ShouldContain("return $\"{name} at {host}:{_port.ToString(System.Globalization.CultureInfo.InvariantCulture)}\";");
+        markup.ShouldNotContain("aria-label=\"Add connection\"");
+        markup.ShouldNotContain("aria-label=\"Cancel new connection\"");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Dns\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Lock\" Size=\"Size.Small\" aria-hidden=\"true\" />");

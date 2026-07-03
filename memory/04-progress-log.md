@@ -6051,3 +6051,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only metric dialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Add Connection dialog action-label specificity result:
+  - Replaced static Add Connection cancel/add action labels with broker-target-aware labels using the pending name, host, and port fields.
+  - Preserved host/port/keep-alive validation, broker/client/TLS/certificate controls, file picker behavior, Enter handling, dialog result projection, MQTT connection behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AddConnectionDialog guard to require helper-backed action labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AddConnectionDialog_UsesFlatCompactSetupChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AddConnectionDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
