@@ -10169,7 +10169,10 @@ public sealed class DashboardEventFilterCatalogTests
         forkMarkup.ShouldContain("ValueChanged=\"@(value => SetOutputNameAsync(output, value))\"");
         forkMarkup.ShouldContain("Immediate=\"true\"");
         forkMarkup.ShouldNotContain("@bind-Value=\"output.Name\"");
-        forkMarkup.ShouldContain("aria-label=\"@($\"Output port {index + 1}\")\"");
+        forkMarkup.ShouldContain("aria-label=\"@OutputPortFieldLabel(output, index)\"");
+        forkMarkup.ShouldContain("private string OutputPortFieldLabel(PortDraft output, int index)");
+        forkMarkup.ShouldContain("$\"Edit output port {target} for {Node.NodeName}\"");
+        forkMarkup.ShouldNotContain("aria-label=\"@($\"Output port {index + 1}\")\"");
         forkMarkup.ShouldContain("Text=\"@RemoveOutputPortLabel(output)\"");
         forkMarkup.ShouldContain("aria-label=\"@RemoveOutputPortLabel(output)\"");
         forkMarkup.ShouldContain("private string RemoveOutputPortLabel(PortDraft output)");
@@ -10354,7 +10357,10 @@ public sealed class DashboardEventFilterCatalogTests
         mergeMarkup.ShouldContain("ValueChanged=\"@(value => SetInputNameAsync(input, value))\"");
         mergeMarkup.ShouldContain("Immediate=\"true\"");
         mergeMarkup.ShouldNotContain("@bind-Value=\"input.Name\"");
-        mergeMarkup.ShouldContain("aria-label=\"@($\"Input port {index + 1}\")\"");
+        mergeMarkup.ShouldContain("aria-label=\"@InputPortFieldLabel(input, index)\"");
+        mergeMarkup.ShouldContain("private string InputPortFieldLabel(PortDraft input, int index)");
+        mergeMarkup.ShouldContain("$\"Edit input port {target} for {Node.NodeName}\"");
+        mergeMarkup.ShouldNotContain("aria-label=\"@($\"Input port {index + 1}\")\"");
         mergeMarkup.ShouldContain("Text=\"@RemoveInputPortLabel(input)\"");
         mergeMarkup.ShouldContain("aria-label=\"@RemoveInputPortLabel(input)\"");
         mergeMarkup.ShouldContain("private string RemoveInputPortLabel(PortDraft input)");

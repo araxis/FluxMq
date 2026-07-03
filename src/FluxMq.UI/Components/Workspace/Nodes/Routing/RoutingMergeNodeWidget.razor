@@ -69,7 +69,7 @@
                                 <MudTextField T="string"
                                               Value="@input.Name"
                                               ValueChanged="@(value => SetInputNameAsync(input, value))"
-                                              aria-label="@($"Input port {index + 1}")"
+                                              aria-label="@InputPortFieldLabel(input, index)"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Immediate="true"
@@ -143,6 +143,15 @@
     private int InputPreviewOverflow => Math.Max(0, NormalizedInputs.Count - 4);
 
     private string AddInputPortLabel => $"Add input port to {Node.NodeName}";
+
+    private string InputPortFieldLabel(PortDraft input, int index)
+    {
+        var target = string.IsNullOrWhiteSpace(input.Name)
+            ? $"input port {index + 1}"
+            : input.Name.Trim();
+
+        return $"Edit input port {target} for {Node.NodeName}";
+    }
 
     private string RemoveInputPortLabel(PortDraft input)
     {

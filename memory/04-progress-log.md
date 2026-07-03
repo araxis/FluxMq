@@ -6562,3 +6562,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale route field label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the node-editor static-label cleanup from the current scan one focused widget at a time; likely next candidates are Routing Fork/Merge port labels with existing focused guards.
+- RoutingFanNodeWidgets port label specificity result:
+  - Replaced inline fork output-port and merge input-port accessible labels with helper-backed labels that include current draft port names or row context plus the node name.
+  - Preserved fork/merge port binding, add/remove port actions, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused RoutingFanNodeWidgets guard to require helper-backed port field labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingFanNodeWidgets_UseCompactSummaryAndFlatEditors" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale fan port label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the node-editor static-label cleanup from the current scan one focused widget at a time; likely next candidate is GeneratedSourceNodeWidget row labels with an existing focused guard.
