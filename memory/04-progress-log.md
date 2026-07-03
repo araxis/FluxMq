@@ -6312,3 +6312,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardInspectorVisualMetricRows stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace static-label audit with one focused surface at a time; likely candidates are remaining App Tree inline action expressions or Dashboard Inspector layout row action labels.
+- Dashboard Inspector layout row action-label specificity result:
+  - Replaced inline duplicate/delete widget action label expressions with helper-backed labels in the layout rows component.
+  - Preserved duplicate/delete callbacks, layout selection facts, widget display facts, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector layout/style row guard to require helper-backed action labels and reject the old inline expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesFocusedLayoutAndStyleRowComponents" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardInspectorLayoutRows stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit with one focused surface at a time; likely candidate is remaining App Tree inline action expressions.
