@@ -5952,6 +5952,12 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("SelectCellFromKeyboard");
         razor.ShouldContain("private static bool IsActivationKey");
         razor.ShouldContain("aria-label=\"@GridPickerButtonLabel\"");
+        razor.ShouldContain("Text=\"@MergeSelectedCellsLabel\"");
+        razor.ShouldContain("aria-label=\"@MergeSelectedCellsLabel\"");
+        razor.ShouldContain("private string MergeSelectedCellsLabel => SelectedCells.Count switch");
+        razor.ShouldContain("$\"Merge {SelectedCells.Count.ToString(CultureInfo.InvariantCulture)} selected cells in {DashboardTitle}\"");
+        razor.ShouldNotContain("Text=\"Merge selected cells\"");
+        razor.ShouldNotContain("aria-label=\"Merge selected cells\"");
         razor.ShouldContain("aria-label=\"@SplitPickerButtonLabel\"");
         razor.ShouldContain("aria-label=\"@CloseGridPickerLabel\"");
         razor.ShouldContain("private string CloseGridPickerLabel => $\"Close {DashboardTitle} grid layout picker\";");

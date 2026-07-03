@@ -6211,3 +6211,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - FlowDesigner readiness-copy scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: Dashboard Designer merge action-label specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard Designer merge action-label specificity result:
+  - Replaced the static Dashboard Designer merge-selected-cells tooltip and accessible label with a selection-and-dashboard-aware helper label.
+  - Preserved dashboard mode switching, grid layout picker, split picker, selection summary, merge behavior, selected-cell behavior, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner guard to require the helper-backed merge label and reject the old static merge control label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard Designer layout-editor region label specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.

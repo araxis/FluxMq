@@ -88,12 +88,12 @@
                         </div>
 
                         <div class="dashboard-tool-group dashboard-tool-group-selection" aria-label="@SelectionCommandsLabel">
-                            <MudTooltip Text="Merge selected cells">
+                            <MudTooltip Text="@MergeSelectedCellsLabel">
                                 <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
                                                Size="Size.Small"
                                                Disabled="@(!CanMerge)"
                                                Class="dashboard-tool-button"
-                                               aria-label="Merge selected cells"
+                                               aria-label="@MergeSelectedCellsLabel"
                                                OnClick="@MergeSelected" />
                             </MudTooltip>
                             <div class="dashboard-grid-picker dashboard-split-control">
@@ -617,6 +617,13 @@
         0 => "No selection",
         1 => SelectedCells[0].IsMerged ? $"{SelectedCells[0].ColumnSpan} x {SelectedCells[0].RowSpan} cell" : $"Cell {SelectedCells[0].Label}",
         _ => $"{SelectedCells.Count} cells"
+    };
+
+    private string MergeSelectedCellsLabel => SelectedCells.Count switch
+    {
+        0 => $"Merge cells in {DashboardTitle}",
+        1 => $"Merge {CellTitle(SelectedCells[0])}",
+        _ => $"Merge {SelectedCells.Count.ToString(CultureInfo.InvariantCulture)} selected cells in {DashboardTitle}"
     };
 
     private string GridPickerSummary => _layout is null
