@@ -3132,8 +3132,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("topic-broker-edit");
         markup.ShouldContain("Icons.Material.Filled.Settings");
         markup.ShouldContain("OpenBrokerMonitorEditorAsync");
-        markup.ShouldContain("Broker monitor settings");
-        markup.ShouldContain("Open broker monitor settings");
+        markup.ShouldContain("aria-label=\"@SelectBrokerLabel(group)\"");
+        markup.ShouldContain("private string SelectBrokerLabel(TopicBrokerGroup group)");
+        markup.ShouldContain("$\"Select broker {group.Name}, {BrokerConnectionLabel(group)}, {TopicCountLabel(group.TopicCount)}\"");
+        markup.ShouldContain("<MudTooltip Text=\"@BrokerMonitorSettingsLabel(group)\">");
+        markup.ShouldContain("aria-label=\"@BrokerMonitorSettingsLabel(group)\"");
+        markup.ShouldContain("private string BrokerMonitorSettingsLabel(TopicBrokerGroup group)");
+        markup.ShouldContain("$\"Open broker monitor settings for {group.Name}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Select broker {group.Name}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Open broker monitor settings {group.Name}\")\"");
+        markup.ShouldNotContain("<MudTooltip Text=\"Broker monitor settings\">");
         markup.ShouldContain("PreserveCandidateExplorerNames");
         markup.ShouldContain("topic-broker-tree");
         markup.ShouldContain("topic-session-note");

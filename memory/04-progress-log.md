@@ -6502,3 +6502,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale publisher-toggle label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue from current search evidence with one remaining high-use app-level action or panel-row label at a time.
+- TopicExplorerPanel broker action label specificity result:
+  - Replaced inline broker selection and broker-monitor settings accessible labels with helper-backed labels that include broker name, connection state, and topic count context.
+  - Preserved broker/topic selection, monitor editor launch, topic tree filtering, publish/history/stats controls, saved app data, monitor semantics, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused TopicExplorerPanel guard to require helper-backed broker action labels and reject stale inline labels/tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale topic broker label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue from current search evidence with one remaining high-use workspace inline label at a time, likely session project group or dashboard visual metric position labels with focused guards.

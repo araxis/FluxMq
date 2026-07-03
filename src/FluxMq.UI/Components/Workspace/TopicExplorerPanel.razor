@@ -85,7 +85,7 @@
                         <div class="@BrokerRowClass(group)" title="@group.Endpoint">
                             <button type="button"
                                     class="topic-broker-main"
-                                    aria-label="@($"Select broker {group.Name}")"
+                                    aria-label="@SelectBrokerLabel(group)"
                                     @onclick="@(() => OnBrokerSelected(group.Name))">
                                 <span class="topic-broker-icon" aria-hidden="true">
                                     <MudIcon Icon="@Icons.Material.Filled.Hub" Size="Size.Small" aria-hidden="true" />
@@ -99,11 +99,11 @@
                             <span class="topic-broker-count">@group.TopicCount</span>
                             @if (CanEditBrokerMonitor(group))
                             {
-                                <MudTooltip Text="Broker monitor settings">
+                                <MudTooltip Text="@BrokerMonitorSettingsLabel(group)">
                                     <MudIconButton Icon="@Icons.Material.Filled.Settings"
                                                    Size="Size.Small"
                                                    Class="topic-broker-edit"
-                                                   aria-label="@($"Open broker monitor settings {group.Name}")"
+                                                   aria-label="@BrokerMonitorSettingsLabel(group)"
                                                    OnClick="@(() => OpenBrokerMonitorEditorAsync(group))" />
                                 </MudTooltip>
                             }
@@ -898,6 +898,12 @@
     private string ClearTopicSelectionLabel => $"Clear topic selection for {SelectedTopicLabel}";
 
     private string BrokerMonitorsLabel => $"{BrokerCountLabel(NoTrafficBrokerGroups.Count)} shown for {SelectedTopicLabel}";
+
+    private string SelectBrokerLabel(TopicBrokerGroup group) =>
+        $"Select broker {group.Name}, {BrokerConnectionLabel(group)}, {TopicCountLabel(group.TopicCount)}";
+
+    private string BrokerMonitorSettingsLabel(TopicBrokerGroup group) =>
+        $"Open broker monitor settings for {group.Name}";
 
     private string TopicExplorerTreeLabel => $"{TopicSourceLabel} topic tree, {BrokerCountLabel(BrokerGroups.Count)}, {TopicCountLabel(TopicCount)}";
 
