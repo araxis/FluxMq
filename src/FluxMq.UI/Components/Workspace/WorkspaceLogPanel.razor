@@ -64,7 +64,7 @@
         </div>
     </div>
 
-    <div class="workspace-log-toolbar" role="search" aria-label="Log filters">
+    <div class="workspace-log-toolbar" role="search" aria-label="@WorkspaceLogFiltersLabel">
         @if (string.IsNullOrWhiteSpace(ForcedScope))
         {
             <div class="workspace-log-filter-block scope">
@@ -120,7 +120,7 @@
                       Class="workspace-log-search" />
     </div>
 
-    <div class="workspace-log-list" role="log" aria-label="Workspace logs">
+    <div class="workspace-log-list" role="log" aria-label="@WorkspaceLogListLabel">
         @if (FilteredLogs.Count == 0)
         {
             <div class="workspace-log-empty" role="status" aria-live="polite">
@@ -233,6 +233,14 @@
     private string SummaryLabel => Logs.Count == 0
         ? "No entries recorded"
         : $"{FilteredLogs.Count} shown / {Logs.Count} total";
+
+    private string WorkspaceLogFiltersLabel => string.IsNullOrWhiteSpace(ForcedScope)
+        ? "Workspace log filters"
+        : $"{ScopeLabel(ForcedScope)} workspace log filters";
+
+    private string WorkspaceLogListLabel => HasActiveFilters
+        ? $"Workspace log list, {FormatLogCount(FilteredLogs.Count)} shown from {FormatLogCount(Logs.Count)}"
+        : $"Workspace log list, {FormatLogCount(FilteredLogs.Count)} shown";
 
     private string EmptyIcon => HasActiveFilters
         ? Icons.Material.Filled.SearchOff
@@ -415,6 +423,9 @@
         => severity == WorkspaceLogFilter.All
             ? "Show all log levels"
             : $"Show {SeverityOptionLabel(severity)} logs";
+
+    private static string FormatLogCount(int count)
+        => count == 1 ? "1 log" : $"{count} logs";
 
     private static string FormatLogTime(WorkspaceLogEntry entry)
         => entry.Timestamp.ToLocalTime().ToString("HH:mm:ss");

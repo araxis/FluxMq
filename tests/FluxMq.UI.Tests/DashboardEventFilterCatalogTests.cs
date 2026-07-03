@@ -5307,11 +5307,19 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("Logs.Count > 0");
         markup.ShouldContain("aria-label=\"Workspace log commands\"");
-        markup.ShouldContain("role=\"search\" aria-label=\"Log filters\"");
+        markup.ShouldContain("role=\"search\" aria-label=\"@WorkspaceLogFiltersLabel\"");
+        markup.ShouldContain("private string WorkspaceLogFiltersLabel => string.IsNullOrWhiteSpace(ForcedScope)");
+        markup.ShouldContain("$\"{ScopeLabel(ForcedScope)} workspace log filters\"");
+        markup.ShouldContain("role=\"log\" aria-label=\"@WorkspaceLogListLabel\"");
+        markup.ShouldContain("private string WorkspaceLogListLabel => HasActiveFilters");
+        markup.ShouldContain("FormatLogCount(FilteredLogs.Count)");
+        markup.ShouldContain("private static string FormatLogCount(int count)");
         markup.ShouldContain("workspace-log-stats");
         markup.ShouldContain("aria-label=\"Workspace log total and problem count\"");
         markup.ShouldNotContain("aria-label=\"Log commands\"");
         markup.ShouldNotContain("aria-label=\"Log summary\"");
+        markup.ShouldNotContain("role=\"search\" aria-label=\"Log filters\"");
+        markup.ShouldNotContain("role=\"log\" aria-label=\"Workspace logs\"");
         System.Text.RegularExpressions.Regex.Matches(
                 markup,
                 @"<MudIcon\b(?:(?!/>).)*?/>",
