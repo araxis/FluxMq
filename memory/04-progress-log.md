@@ -5961,3 +5961,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only MainLayout stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace page tab-label specificity result:
+  - Replaced static app-level workspace tab labels for metrics, topics, logs, and app JSON with active-app-specific labels, and replaced static artifact delete hover titles with target-specific delete labels.
+  - Preserved tab routing, keyboard activation, active-state tracking, artifact delete behavior, JSON view toggling, diagnostics-to-logs routing, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspacePage guard to require the tab/delete label helpers and reject the old static tab labels and delete titles.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only WorkspacePage stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

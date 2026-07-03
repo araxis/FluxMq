@@ -45,8 +45,8 @@
                     <span class="project-tab-name">@w</span>
                     <button type="button"
                             class="project-tab-delete"
-                            title="Delete pipeline"
-                            aria-label="@($"Delete pipeline {w}")"
+                            title="@DeleteArtifactTabLabel("pipeline", w)"
+                            aria-label="@DeleteArtifactTabLabel("pipeline", w)"
                             @onclick:stopPropagation="true"
                             @onmousedown:stopPropagation="true"
                             @onclick="@(() => RemoveWorkflowAsync(w))">
@@ -62,8 +62,8 @@
                  tabindex="0"
                  aria-current="@WorkspaceTabCurrent(metricsActive)"
                  aria-keyshortcuts="Enter Space"
-                 aria-label="Open metrics"
-                 title="Metrics"
+                 aria-label="@OpenMetricsTabLabel(active)"
+                 title="@OpenMetricsTabLabel(active)"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveMetrics(); _jsonView = false; }))"
                  @onclick="@(() => { active.SetActiveMetrics(); _jsonView = false; })">
                 <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
@@ -89,8 +89,8 @@
                     <span class="project-tab-name">@d</span>
                     <button type="button"
                             class="project-tab-delete"
-                            title="Delete dashboard"
-                            aria-label="@($"Delete dashboard {d}")"
+                            title="@DeleteArtifactTabLabel("dashboard", d)"
+                            aria-label="@DeleteArtifactTabLabel("dashboard", d)"
                             @onclick:stopPropagation="true"
                             @onmousedown:stopPropagation="true"
                             @onclick="@(() => RemoveDashboardAsync(d))">
@@ -117,8 +117,8 @@
                     <span class="project-tab-name">@t</span>
                     <button type="button"
                             class="project-tab-delete"
-                            title="Delete test"
-                            aria-label="@($"Delete test {t}")"
+                            title="@DeleteArtifactTabLabel("test", t)"
+                            aria-label="@DeleteArtifactTabLabel("test", t)"
                             @onclick:stopPropagation="true"
                             @onmousedown:stopPropagation="true"
                             @onclick="@(() => RemoveTestAsync(t))">
@@ -134,8 +134,8 @@
                  tabindex="0"
                  aria-current="@WorkspaceTabCurrent(topicsActive)"
                  aria-keyshortcuts="Enter Space"
-                 aria-label="Open topics"
-                 title="Topics"
+                 aria-label="@OpenTopicsTabLabel(active)"
+                 title="@OpenTopicsTabLabel(active)"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveTopics(); _jsonView = false; }))"
                  @onclick="@(() => { active.SetActiveTopics(); _jsonView = false; })">
                 <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
@@ -150,8 +150,8 @@
                  tabindex="0"
                  aria-current="@WorkspaceTabCurrent(logsActive)"
                  aria-keyshortcuts="Enter Space"
-                 aria-label="Open logs"
-                 title="Logs"
+                 aria-label="@OpenLogsTabLabel(active)"
+                 title="@OpenLogsTabLabel(active)"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, SelectLogs))"
                  @onclick="@(() => SelectLogs())">
                 <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
@@ -162,8 +162,8 @@
                  tabindex="0"
                  aria-current="@WorkspaceTabCurrent(_jsonView)"
                  aria-keyshortcuts="Enter Space"
-                 aria-label="Open app JSON"
-                 title="App JSON"
+                 aria-label="@OpenAppJsonTabLabel(active)"
+                 title="@OpenAppJsonTabLabel(active)"
                  @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, ToggleJsonView))"
                  @onclick="@ToggleJsonView">
                 <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
@@ -574,6 +574,21 @@
         _jsonView = false;
         SyncActiveArtifactSelection();
     }
+
+    private static string OpenMetricsTabLabel(FlowWorkspaceService app)
+        => $"Open metrics for {app.Name}";
+
+    private static string OpenTopicsTabLabel(FlowWorkspaceService app)
+        => $"Open topics for {app.Name}";
+
+    private static string OpenLogsTabLabel(FlowWorkspaceService app)
+        => $"Open logs for {app.Name}";
+
+    private static string OpenAppJsonTabLabel(FlowWorkspaceService app)
+        => $"Open app JSON for {app.Name}";
+
+    private static string DeleteArtifactTabLabel(string artifactKind, string name)
+        => $"Delete {artifactKind} {name}";
 
     private static string? WorkspaceTabCurrent(bool isActive)
         => isActive ? "true" : null;
