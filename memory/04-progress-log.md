@@ -6071,3 +6071,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only StartRecordingDialog stale button-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Node Edit dialog action-label specificity result:
+  - Replaced static Node Edit dialog cancel/save action labels with node-display-name-aware labels using existing dialog parameters.
+  - Preserved node editor rendering, node ID validation, editor validation, save/cancel behavior, dialog result projection, workflow JSON, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused NodeEditDialog guard to require helper-backed action labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NodeEditDialog_UsesCompactEditorShell" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only NodeEditDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

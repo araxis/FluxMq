@@ -44,7 +44,7 @@
             <MudButton OnClick="@Cancel"
                        Variant="Variant.Text"
                        Size="Size.Small"
-                       aria-label="Cancel node edit"
+                       aria-label="@CancelNodeEditLabel"
                        Class="node-edit-dialog-button">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
@@ -52,7 +52,7 @@
                        StartIcon="@Icons.Material.Filled.Check"
                        Disabled="@(!CanSubmit)"
                        OnClick="@Submit"
-                       aria-label="Save node edit"
+                       aria-label="@SaveNodeEditLabel"
                        Class="node-edit-dialog-button node-edit-dialog-save">Save</MudButton>
         </div>
     </DialogActions>
@@ -91,6 +91,14 @@
     private string? ValidationElementId => CanSubmit ? null : "node-edit-dialog-validation";
 
     private string SubmitValidationText => NodeIdError ?? EditorError ?? "Review required";
+
+    private string CancelNodeEditLabel => $"Cancel editing {NodeEditTargetLabel}";
+
+    private string SaveNodeEditLabel => $"Save edits for {NodeEditTargetLabel}";
+
+    private string NodeEditTargetLabel => string.IsNullOrWhiteSpace(NodeDisplayName)
+        ? "node"
+        : NodeDisplayName.Trim();
 
     protected override void OnParametersSet()
     {

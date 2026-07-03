@@ -13201,8 +13201,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("node-edit-dialog-action-status");
         markup.ShouldNotContain("SubmitStatusClass");
         markup.ShouldContain("node-edit-dialog-actions");
-        markup.ShouldContain("aria-label=\"Cancel node edit\"");
-        markup.ShouldContain("aria-label=\"Save node edit\"");
+        markup.ShouldContain("aria-label=\"@CancelNodeEditLabel\"");
+        markup.ShouldContain("aria-label=\"@SaveNodeEditLabel\"");
+        markup.ShouldContain("private string CancelNodeEditLabel => $\"Cancel editing {NodeEditTargetLabel}\"");
+        markup.ShouldContain("private string SaveNodeEditLabel => $\"Save edits for {NodeEditTargetLabel}\"");
+        markup.ShouldContain("private string NodeEditTargetLabel => string.IsNullOrWhiteSpace(NodeDisplayName)");
+        markup.ShouldNotContain("aria-label=\"Cancel node edit\"");
+        markup.ShouldNotContain("aria-label=\"Save node edit\"");
         markup.ShouldContain("Color=\"Color.Primary\"");
         markup.ShouldNotContain("[Parameter] public Color CategoryColor");
         markup.ShouldNotContain("Color=\"@CategoryColor\"");
