@@ -6452,3 +6452,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale PropertyGrid label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: end the current timed goal window with a clean handoff, then resume later with one focused high-use workspace static-label audit at a time; likely candidate is MetricDesigner literals after confirming focused guard coverage and keeping edits UI-only.
+- MetricDesigner pane/filter label specificity result:
+  - Replaced static MetricDesigner list pane, search field, type filter, and editor pane accessible labels with helper-backed labels that include metric counts, filter state, and selected metric context.
+  - Preserved metric list filtering, type selection, row selection, metric editing, validation, dashboard reference navigation, saved metric resources, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricDesigner guard to require helper-backed pane/filter/editor labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale MetricDesigner label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: end the current timed goal window with a clean handoff; later resume with one focused high-use workspace static-label audit at a time after inspecting current state.

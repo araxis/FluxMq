@@ -16,13 +16,13 @@
     </div>
 
     <div class="metrics-body">
-        <section class="metrics-list-pane" aria-label="Metric resources">
+        <section class="metrics-list-pane" aria-label="@MetricListPaneLabel">
             <div class="metrics-list-toolbar">
                 <label class="metrics-filter-field metrics-search-field">
                     <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" aria-hidden="true" />
                     <input value="@_search"
                            placeholder="Search metrics"
-                           aria-label="Search metrics"
+                           aria-label="@MetricSearchLabel"
                            @oninput="@OnSearchInput" />
                     @if (!string.IsNullOrWhiteSpace(_search))
                     {
@@ -53,7 +53,7 @@
                                MaxHeight="320"
                                AnchorOrigin="Origin.BottomLeft"
                                TransformOrigin="Origin.TopLeft"
-                               aria-label="Metric type">
+                               aria-label="@MetricTypeFilterLabel">
                         <MudSelectItem T="string" Value="@AllTypes">All types</MudSelectItem>
                         @foreach (var descriptor in SortedDescriptors)
                         {
@@ -176,7 +176,7 @@
             </div>
         </section>
 
-        <section class="metrics-editor-pane" aria-label="Metric editor">
+        <section class="metrics-editor-pane" aria-label="@MetricEditorPaneLabel">
             @if (_draft is null || _selectedMetricName is null)
             {
                 <div class="metrics-editor-empty" role="status" aria-live="polite">
@@ -537,8 +537,28 @@
     private string MetricsMetaClass =>
         HasActiveFilters ? "metrics-meta filtered" : "metrics-meta";
 
+    private string MetricListPaneLabel =>
+        HasActiveFilters
+            ? $"Metric resources, {MetricCountText}, {MetricFilterStateLabel}"
+            : $"Metric resources, {MetricCountText}";
+
+    private string MetricSearchLabel =>
+        string.IsNullOrWhiteSpace(_search)
+            ? "Search metrics"
+            : $"Search metrics, current query {_search}";
+
     private MetricDescriptor? SelectedTypeFilter =>
         string.IsNullOrWhiteSpace(_typeFilter) ? null : Catalog.Describe(_typeFilter);
+
+    private string MetricTypeFilterLabel =>
+        SelectedTypeFilter is { } selected
+            ? $"Metric type filter, {selected.DisplayName}"
+            : "Metric type filter, all types";
+
+    private string MetricEditorPaneLabel =>
+        _draft is null
+            ? "Metric editor, no metric selected"
+            : $"Metric editor for {SelectedMetricActionTarget}";
 
     private string FilterEmptyDescription =>
         MetricDesignerState.FilterEmptyDescription(_search, SelectedTypeFilter?.DisplayName);
