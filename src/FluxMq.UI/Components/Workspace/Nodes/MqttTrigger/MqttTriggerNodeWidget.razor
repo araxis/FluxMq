@@ -96,7 +96,7 @@
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="mqtt-trigger-topic-input"
-                                              aria-label="@($"Topic filter {index + 1}")" />
+                                              aria-label="@SubscriptionTopicFilterLabel(index)" />
                             </MudTd>
                             <MudTd DataLabel="QoS">
                                 <MudSelect T="int"
@@ -106,7 +106,7 @@
                                            Margin="Margin.Dense"
                                            Dense="true"
                                            Class="mqtt-trigger-qos-select"
-                                           aria-label="@($"QoS for subscription {index + 1}")">
+                                           aria-label="@SubscriptionQualityOfServiceLabel(index)">
                                     <MudSelectItem Value="0">QoS 0</MudSelectItem>
                                     <MudSelectItem Value="1">QoS 1</MudSelectItem>
                                     <MudSelectItem Value="2">QoS 2</MudSelectItem>
@@ -120,7 +120,7 @@
                                                      ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { ReceiveRetainedMessages = value })"
                                                      Dense="true"
                                                      Class="mqtt-trigger-check"
-                                                     aria-label="@($"Receive retained messages for subscription {index + 1}")" />
+                                                     aria-label="@SubscriptionReceiveRetainedLabel(index)" />
                                     </MudTooltip>
                                 </div>
                             </MudTd>
@@ -132,7 +132,7 @@
                                                      ValueChanged="@(value => _draftSubscriptions[index] = _draftSubscriptions[index] with { RetainAsPublished = value })"
                                                      Dense="true"
                                                      Class="mqtt-trigger-check"
-                                                     aria-label="@($"Keep retain flag for subscription {index + 1}")" />
+                                                     aria-label="@SubscriptionRetainFlagLabel(index)" />
                                     </MudTooltip>
                                 </div>
                             </MudTd>
@@ -227,6 +227,31 @@
             .Select(static index => new MqttTriggerSubscriptionEditorRow(index));
 
     private string AddSubscriptionLabel => $"Add subscription to {Node.NodeName}";
+
+    private string SubscriptionTopicFilterLabel(int index)
+        => $"Edit topic filter for {SubscriptionLabelTarget(index)} in {Node.NodeName}";
+
+    private string SubscriptionQualityOfServiceLabel(int index)
+        => $"Select QoS for {SubscriptionLabelTarget(index)} in {Node.NodeName}";
+
+    private string SubscriptionReceiveRetainedLabel(int index)
+        => $"Toggle retained message delivery for {SubscriptionLabelTarget(index)} in {Node.NodeName}";
+
+    private string SubscriptionRetainFlagLabel(int index)
+        => $"Toggle retain flag handling for {SubscriptionLabelTarget(index)} in {Node.NodeName}";
+
+    private string SubscriptionLabelTarget(int index)
+    {
+        if (index < 0 || index >= _draftSubscriptions.Count)
+        {
+            return $"subscription {index + 1}";
+        }
+
+        var topicFilter = _draftSubscriptions[index].TopicFilter?.Trim();
+        return string.IsNullOrWhiteSpace(topicFilter)
+            ? $"subscription {index + 1}"
+            : $"subscription {index + 1} for {topicFilter}";
+    }
 
     private string RemoveSubscriptionLabel(int index)
     {

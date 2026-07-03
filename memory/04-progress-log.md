@@ -6582,3 +6582,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale generated-message label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: stop the timed pass with a clean handoff; if explicitly continuing, choose the next node-editor static-label cleanup from a fresh current-state scan, likely MqttTriggerNodeWidget subscription labels or MqttMetricsNodeWidget display/readout labels.
+- MqttTriggerNodeWidget subscription label specificity result:
+  - Replaced inline subscription topic-filter, QoS, retained-delivery, and retain-flag accessible labels with helper-backed labels that include row/topic context plus the node name.
+  - Preserved subscription binding, add/remove subscription actions, broker option sync, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MqttTriggerNodeWidget guard to require helper-backed subscription field labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttTriggerNodeWidget_UsesCompactSummaryAndStructuredEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale subscription label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the node-editor static-label cleanup from a fresh current-state scan; likely remaining candidates include MqttMetricsNodeWidget display/readout labels or compact token titles in expression-heavy node summaries.
