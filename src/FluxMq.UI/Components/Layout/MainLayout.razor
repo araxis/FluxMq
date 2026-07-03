@@ -30,72 +30,72 @@
             </nav>
 
             <div class="flux-toolbar">
-                <MudTooltip Text="New project">
+                <MudTooltip Text="@NewProjectActionLabel">
                     <MudIconButton Icon="@Icons.Material.Filled.NoteAdd"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
-                                   aria-label="New project"
+                                   aria-label="@NewProjectActionLabel"
                                    Disabled="@_busy"
                                    OnClick="@NewProject" />
                 </MudTooltip>
-                <MudTooltip Text="Open file">
+                <MudTooltip Text="@OpenProjectActionLabel">
                     <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
-                                   aria-label="Open file"
+                                   aria-label="@OpenProjectActionLabel"
                                    Disabled="@_busy"
                                    OnClick="@OpenAsync" />
                 </MudTooltip>
-                <MudTooltip Text="Save">
+                <MudTooltip Text="@SaveProjectActionLabel">
                     <MudIconButton Icon="@Icons.Material.Filled.Save"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
-                                   aria-label="Save project"
+                                   aria-label="@SaveProjectActionLabel"
                                    Disabled="@(_busy || Projects.ActiveProject is null)"
                                    OnClick="@SaveAsync" />
                 </MudTooltip>
-                <MudTooltip Text="Save as">
+                <MudTooltip Text="@SaveProjectAsActionLabel">
                     <MudIconButton Icon="@Icons.Material.Filled.SaveAs"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
-                                   aria-label="Save project as"
+                                   aria-label="@SaveProjectAsActionLabel"
                                    Disabled="@(_busy || Projects.ActiveProject is null)"
                                    OnClick="@SaveAsAsync" />
                 </MudTooltip>
 
                 <span class="flux-toolbar-divider"></span>
 
-                <MudTooltip Text="Validate app">
+                <MudTooltip Text="@ValidateProjectActionLabel">
                     <MudButton Size="Size.Small"
                                Variant="Variant.Text"
                                Color="Color.Info"
                                StartIcon="@Icons.Material.Filled.FactCheck"
                                Class="flux-command-button"
-                               aria-label="Validate app"
+                               aria-label="@ValidateProjectActionLabel"
                                Disabled="@(!CanValidateActiveProject)"
                                OnClick="@ValidateActiveAsync">
                         <span class="flux-command-text">Validate</span>
                     </MudButton>
                 </MudTooltip>
-                <MudTooltip Text="Run app">
+                <MudTooltip Text="@RunProjectActionLabel">
                     <MudButton Size="Size.Small"
                                Variant="Variant.Text"
                                Color="Color.Success"
                                StartIcon="@Icons.Material.Filled.PlayArrow"
                                Class="flux-command-button"
-                               aria-label="Run app"
+                               aria-label="@RunProjectActionLabel"
                                Disabled="@(!CanRunActiveProject)"
                                OnClick="@RunActiveAsync">
                         <span class="flux-command-text">Run</span>
                     </MudButton>
                 </MudTooltip>
-                <MudTooltip Text="Stop app">
+                <MudTooltip Text="@StopProjectActionLabel">
                     <MudButton Size="Size.Small"
                                Variant="Variant.Text"
                                Color="Color.Error"
                                StartIcon="@StopButtonIcon"
                                Class="flux-command-button"
-                               aria-label="Stop app"
+                               aria-label="@StopProjectActionLabel"
                                Disabled="@(!CanStopActiveProject)"
                                OnClick="@StopActiveAsync">
                         @if (_stopping)
@@ -282,6 +282,43 @@
     private bool IsRightPanelVisible => CanUseLiveTools && _rightOpen;
 
     private bool HasActiveProject => Projects.ActiveProject is not null;
+
+    private string ActiveProjectActionTarget
+    {
+        get
+        {
+            var name = Projects.ActiveProject?.Name;
+            return string.IsNullOrWhiteSpace(name) ? "active app" : name;
+        }
+    }
+
+    private string NewProjectActionLabel => "Create new project";
+
+    private string OpenProjectActionLabel => "Open project file";
+
+    private string SaveProjectActionLabel => Projects.ActiveProject is null
+        ? "Save project"
+        : string.IsNullOrWhiteSpace(Projects.ActiveProject.CurrentFilePath)
+            ? $"Save {ActiveProjectActionTarget} as project file"
+            : $"Save {ActiveProjectActionTarget}";
+
+    private string SaveProjectAsActionLabel => Projects.ActiveProject is null
+        ? "Save project as"
+        : $"Save {ActiveProjectActionTarget} as project file";
+
+    private string ValidateProjectActionLabel => Projects.ActiveProject is null
+        ? "Validate app"
+        : $"Validate {ActiveProjectActionTarget}";
+
+    private string RunProjectActionLabel => Projects.ActiveProject is null
+        ? "Run app"
+        : $"Run {ActiveProjectActionTarget}";
+
+    private string StopProjectActionLabel => Projects.ActiveProject is null
+        ? "Stop app"
+        : _stopping
+            ? $"Stopping {ActiveProjectActionTarget}"
+            : $"Stop {ActiveProjectActionTarget}";
 
     private string ShellClass =>
         $"flux-shell {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}{(!HasActiveProject ? " no-active-project" : "")}{(!IsRightPanelVisible ? " right-collapsed" : "")}{(DragState.ActiveComponentDrag?.DidDrag == true ? " flux-component-drag-active" : "")}";

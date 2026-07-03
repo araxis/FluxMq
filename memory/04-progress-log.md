@@ -5951,3 +5951,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only AppStructureMenu stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Main layout shell-action label specificity result:
+  - Replaced static top-bar new/open/save/validate/run/stop tooltips and accessible labels with helper-backed command labels that include active app context where available.
+  - Preserved visible toolbar text, new/open/save/save-as behavior, validation/run/stop behavior, runtime markers, live connection markers, right-panel toggle behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MainLayout guard to require the shell-action label helpers and reject the old static command label attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MainLayout_RemovesSessionOnlyLeftRail" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only MainLayout stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
