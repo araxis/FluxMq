@@ -618,6 +618,9 @@
     private string MetricReferenceListLabel =>
         $"Dashboard bindings for {SelectedMetricActionTarget}, {ReferenceSummaries.Count.ToString(CultureInfo.InvariantCulture)} references";
 
+    private string ParameterFieldLabel(MetricParamSpec parameter) =>
+        $"{parameter.DisplayName} for {SelectedMetricActionTarget}";
+
     private string SelectedMetricActionTarget =>
         _draft is null
             ? "selected metric"
@@ -1114,7 +1117,7 @@
                 @RenderParameterLabel(parameter)
                 <span class="metrics-param-control select">
                     <select value="@value"
-                            aria-label="@parameter.DisplayName"
+                            aria-label="@ParameterFieldLabel(parameter)"
                             aria-invalid="@AriaState(hasValidationError)"
                             aria-errormessage="@errorElementId"
                             @onchange="@((ChangeEventArgs args) => SetParameterValue(parameter.Key, args.Value?.ToString()))">
@@ -1143,7 +1146,7 @@
                 <div class="metrics-param-toggle"
                      role="radiogroup"
                      aria-orientation="horizontal"
-                     aria-label="@parameter.DisplayName"
+                     aria-label="@ParameterFieldLabel(parameter)"
                      aria-invalid="@AriaState(hasValidationError)"
                      aria-errormessage="@errorElementId">
                     <button type="button"
@@ -1178,7 +1181,7 @@
                        step="@ParameterStep(parameter)"
                        inputmode="@ParameterInputMode(parameter)"
                        placeholder="@ParameterPlaceholder(parameter)"
-                       aria-label="@parameter.DisplayName"
+                       aria-label="@ParameterFieldLabel(parameter)"
                        aria-invalid="@AriaState(hasValidationError)"
                        aria-errormessage="@errorElementId"
                        @oninput="@((ChangeEventArgs args) => SetParameterValue(parameter.Key, args.Value?.ToString()))" />

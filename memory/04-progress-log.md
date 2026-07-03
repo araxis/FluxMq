@@ -6472,3 +6472,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale MetricDesigner editor/detail label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: end the current timed goal window with a clean handoff; later resume only after choosing the next high-use workspace polish target from current search evidence.
+- MetricDesigner parameter label specificity result:
+  - Replaced raw parameter display-name accessible labels in MetricDesigner select, toggle, and text/number inputs with a helper-backed label that includes selected metric context.
+  - Preserved parameter rendering, validation, defaults, select/toggle/text binding, saved metric resources, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricDesigner guard to require the parameter label helper and reject raw `@parameter.DisplayName` labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only raw-parameter-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: choose the next high-use workspace polish target from current search evidence; likely candidates are contextual WorkspaceLog row labels or remaining app-level action labels with focused guards.

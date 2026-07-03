@@ -4921,6 +4921,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("$\"Dashboard bindings for {SelectedMetricActionTarget}, {ReferenceSummaries.Count.ToString(CultureInfo.InvariantCulture)} references\"");
         markup.ShouldContain("title=\"@ShowMetricFieldLabel(item)\"");
         markup.ShouldContain("private static string ShowMetricFieldLabel(MetricValidationItem item)");
+        markup.ShouldContain("aria-label=\"@ParameterFieldLabel(parameter)\"");
+        markup.ShouldContain("private string ParameterFieldLabel(MetricParamSpec parameter)");
+        markup.ShouldContain("$\"{parameter.DisplayName} for {SelectedMetricActionTarget}\"");
         markup.ShouldContain("title=\"@ClearMetricSearchLabel\"");
         markup.ShouldContain("aria-label=\"@ClearMetricSearchLabel\"");
         markup.ShouldContain("private string ClearMetricSearchLabel");
@@ -4974,7 +4977,6 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Class=\"metrics-reference-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("role=\"radiogroup\"");
         markup.ShouldContain("aria-orientation=\"horizontal\"");
-        markup.ShouldContain("aria-label=\"@parameter.DisplayName\"");
         markup.ShouldContain("role=\"radio\"");
         markup.ShouldContain("aria-checked=\"@AriaState(IsToggleSelected(toggleValue, TrueValue))\"");
         markup.ShouldNotContain("metrics-latest-state");
@@ -4999,6 +5001,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("title=\"Stopped or not emitted.\"");
         markup.ShouldNotContain("aria-label=\"Dashboard bindings for selected metric\"");
         markup.ShouldNotContain("title=\"Show field\"");
+        markup.ShouldNotContain("aria-label=\"@parameter.DisplayName\"");
         markup.ShouldNotContain("aria-label=\"Metric details\"");
         markup.ShouldNotContain("Class=\"metrics-heading-icon\" />");
         markup.ShouldNotContain("class=\"metrics-empty-icon\">");
