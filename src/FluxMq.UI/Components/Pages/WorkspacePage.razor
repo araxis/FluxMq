@@ -38,7 +38,7 @@
                      aria-current="@WorkspaceTabCurrent(isActive)"
                      aria-keyshortcuts="Enter Space"
                      aria-label="@OpenPipelineLabel(w)"
-                     title="@($"Pipeline {w}")"
+                     title="@PipelineTabTitle(w)"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveWorkflow(w); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveWorkflow(w); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
@@ -82,7 +82,7 @@
                      aria-current="@WorkspaceTabCurrent(isActive)"
                      aria-keyshortcuts="Enter Space"
                      aria-label="@OpenDashboardLabel(d)"
-                     title="@($"Dashboard {d}")"
+                     title="@DashboardTabTitle(d)"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveDashboard(d); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveDashboard(d); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
@@ -110,7 +110,7 @@
                      aria-current="@WorkspaceTabCurrent(isActive)"
                      aria-keyshortcuts="Enter Space"
                      aria-label="@OpenTestLabel(t)"
-                     title="@($"Test {t}")"
+                     title="@TestTabTitle(t)"
                      @onkeydown="@((KeyboardEventArgs args) => RunFromKeyboardAsync(args, () => { active.SetActiveTest(t); _jsonView = false; }))"
                      @onclick="@(() => { active.SetActiveTest(t); _jsonView = false; })">
                     <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" Class="project-tab-icon" aria-hidden="true" />
@@ -581,11 +581,20 @@
     private static string OpenPipelineLabel(string pipelineName)
         => $"Open pipeline {pipelineName}";
 
+    private static string PipelineTabTitle(string pipelineName)
+        => $"Pipeline {pipelineName}";
+
     private static string OpenDashboardLabel(string dashboardName)
         => $"Open dashboard {dashboardName}";
 
+    private static string DashboardTabTitle(string dashboardName)
+        => $"Dashboard {dashboardName}";
+
     private static string OpenTestLabel(string testName)
         => $"Open test {testName}";
+
+    private static string TestTabTitle(string testName)
+        => $"Test {testName}";
 
     private static string OpenTopicsTabLabel(FlowWorkspaceService app)
         => $"Open topics for {app.Name}";

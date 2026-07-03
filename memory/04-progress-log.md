@@ -6352,3 +6352,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale inline-label scan for the touched label expressions, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidate is remaining WorkspacePage tab title specificity or other visible workspace chrome labels.
+- Workspace artifact tab title specificity result:
+  - Replaced inline WorkspacePage pipeline, dashboard, and test tab title expressions with helper-backed titles.
+  - Preserved WorkspacePage artifact tab selection, keyboard activation, delete artifact behavior, close-app behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspacePage guard to require helper-backed tab titles and reject the old inline title expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale inline-label/title scan for the touched expressions, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are remaining WorkspacePage static menu/action labels or other visible workspace chrome labels.
