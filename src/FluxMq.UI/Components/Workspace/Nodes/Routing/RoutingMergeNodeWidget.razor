@@ -52,11 +52,11 @@
                 <div class="routing-merge-port-composer" aria-label="Routing merge input ports">
                     <div class="routing-merge-port-header">
                         <span>Input port</span>
-                        <MudTooltip Text="Add input port">
+                        <MudTooltip Text="@AddInputPortLabel">
                             <MudIconButton Icon="@Icons.Material.Filled.Add"
                                            Size="Size.Small"
                                            Class="routing-merge-add-port"
-                                           aria-label="Add input port"
+                                           aria-label="@AddInputPortLabel"
                                            OnClick="@AddInput" />
                         </MudTooltip>
                     </div>
@@ -75,12 +75,12 @@
                                               Immediate="true"
                                               Class="routing-merge-input-name-field"
                                               Placeholder="Primary" />
-                                <MudTooltip Text="@(_inputDrafts.Count > 1 ? "Remove input port" : "Keep at least one input")">
+                                <MudTooltip Text="@RemoveInputPortLabel(input)">
                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                    Size="Size.Small"
                                                    Disabled="@(_inputDrafts.Count <= 1)"
                                                    Class="routing-merge-remove-port"
-                                                   aria-label="@($"Remove input port {input.Name}")"
+                                                   aria-label="@RemoveInputPortLabel(input)"
                                                    OnClick="@(() => RemoveInput(input))" />
                                 </MudTooltip>
                             </div>
@@ -141,6 +141,20 @@
         RoutingMergeNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
     private IReadOnlyList<string> InputPreview => NormalizedInputs.Take(4).ToArray();
     private int InputPreviewOverflow => Math.Max(0, NormalizedInputs.Count - 4);
+
+    private string AddInputPortLabel => $"Add input port to {Node.NodeName}";
+
+    private string RemoveInputPortLabel(PortDraft input)
+    {
+        if (_inputDrafts.Count <= 1)
+        {
+            return $"Keep at least one input port on {Node.NodeName}";
+        }
+
+        var name = input.Name?.Trim();
+        var target = string.IsNullOrWhiteSpace(name) ? "input port" : name;
+        return $"Remove {target} from {Node.NodeName}";
+    }
 
     protected override void OnParametersSet()
     {

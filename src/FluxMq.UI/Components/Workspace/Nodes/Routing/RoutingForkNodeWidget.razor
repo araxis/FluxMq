@@ -48,11 +48,11 @@
                 <div class="routing-fork-port-composer" aria-label="Routing fork output ports">
                     <div class="routing-fork-port-header">
                         <span>Output port</span>
-                        <MudTooltip Text="Add output port">
+                        <MudTooltip Text="@AddOutputPortLabel">
                             <MudIconButton Icon="@Icons.Material.Filled.Add"
                                            Size="Size.Small"
                                            Class="routing-fork-add-port"
-                                           aria-label="Add output port"
+                                           aria-label="@AddOutputPortLabel"
                                            OnClick="@AddOutput" />
                         </MudTooltip>
                     </div>
@@ -71,12 +71,12 @@
                                               Immediate="true"
                                               Class="routing-fork-output-name-field"
                                               Placeholder="Audit" />
-                                <MudTooltip Text="@(_outputDrafts.Count > 1 ? "Remove output port" : "Keep at least one output")">
+                                <MudTooltip Text="@RemoveOutputPortLabel(output)">
                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                    Size="Size.Small"
                                                    Disabled="@(_outputDrafts.Count <= 1)"
                                                    Class="routing-fork-remove-port"
-                                                   aria-label="@($"Remove output port {output.Name}")"
+                                                   aria-label="@RemoveOutputPortLabel(output)"
                                                    OnClick="@(() => RemoveOutput(output))" />
                                 </MudTooltip>
                             </div>
@@ -137,6 +137,20 @@
         RoutingForkNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
     private IReadOnlyList<string> OutputPreview => NormalizedOutputs.Take(4).ToArray();
     private int OutputPreviewOverflow => Math.Max(0, NormalizedOutputs.Count - 4);
+
+    private string AddOutputPortLabel => $"Add output port to {Node.NodeName}";
+
+    private string RemoveOutputPortLabel(PortDraft output)
+    {
+        if (_outputDrafts.Count <= 1)
+        {
+            return $"Keep at least one output port on {Node.NodeName}";
+        }
+
+        var name = output.Name?.Trim();
+        var target = string.IsNullOrWhiteSpace(name) ? "output port" : name;
+        return $"Remove {target} from {Node.NodeName}";
+    }
 
     protected override void OnParametersSet()
     {
