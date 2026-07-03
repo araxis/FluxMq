@@ -15,7 +15,8 @@
             {
                 <button type="button"
                         class="dashboard-query-preview-frame-refresh"
-                        title="Refresh sample data"
+                        title="@RefreshSampleLabel"
+                        aria-label="@RefreshSampleLabel"
                         @onclick="@RefreshSampleAsync">
                     <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" aria-hidden="true" />
                     <span>Refresh sample</span>
@@ -58,6 +59,10 @@
     private string PreviewSourceClass => IsLive
         ? "dashboard-query-preview-frame-source live"
         : "dashboard-query-preview-frame-source sample";
+
+    private string RefreshSampleLabel => IsLive
+        ? "Refresh live data for widget preview"
+        : "Refresh sample data for widget preview";
 
     private Task RefreshSampleAsync() => RefreshSample.InvokeAsync();
 }

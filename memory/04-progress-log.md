@@ -6292,3 +6292,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only DashboardTrackEditorDialog stale action-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: stop the current timed pass with a clean handoff, or resume later by auditing remaining high-use workspace chrome for stale static labels and keyboard semantics without broadening runtime or schema scope.
+- Dashboard query preview refresh-label specificity result:
+  - Replaced the literal Dashboard query preview refresh title with a helper-backed title and accessible label.
+  - Preserved widget preview rendering, sample refresh callback behavior, source display, result slot rendering, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardQueryPreviewFrame guard to require the helper-backed refresh label and reject the old literal refresh title.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardQueryPreviewFrame_UsesNeutralPreviewSourceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardQueryPreviewFrame stale refresh-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit with one focused surface at a time; likely candidates are remaining App Tree inline action expressions or Dashboard Inspector visual metric row action labels.

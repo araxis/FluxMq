@@ -6078,6 +6078,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Widget preview");
         markup.ShouldContain("Current style and draft query");
         markup.ShouldContain("Refresh sample");
+        markup.ShouldContain("title=\"@RefreshSampleLabel\"");
+        markup.ShouldContain("aria-label=\"@RefreshSampleLabel\"");
+        markup.ShouldContain("private string RefreshSampleLabel => IsLive");
         System.Text.RegularExpressions.Regex.Matches(
                 markup,
                 @"<MudIcon\b(?:(?!/>).)*?/>",
@@ -6094,6 +6097,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("dashboard-query-preview-frame-state");
         markup.ShouldNotContain("BadgeClass");
         markup.ShouldNotContain("dashboard-query-preview-frame-badge");
+        markup.ShouldNotContain("title=\"Refresh sample data\"");
+        markup.ShouldNotContain("aria-label=\"Refresh sample data\"");
 
         css.ShouldContain(".dashboard-query-preview-frame-source");
         css.ShouldContain(".dashboard-query-preview-frame-source.live");
