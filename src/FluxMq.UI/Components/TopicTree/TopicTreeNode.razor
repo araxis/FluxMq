@@ -10,6 +10,7 @@
          aria-level="@TopicNodeLevel()"
          aria-selected="@TopicNodeSelected()"
          aria-expanded="@TopicNodeExpanded()"
+         aria-controls="@TopicNodeControls()"
          aria-keyshortcuts="Enter Space"
          @onkeydown="SelectFromKeyboardAsync"
          @onclick="Select">
@@ -120,6 +121,11 @@
 
     private string? TopicNodeExpanded()
         => Node.HasChildren ? (_expanded ? "true" : "false") : null;
+
+    // The treeitem row mirrors the chevron's aria-controls so the expandable row points at the
+    // child group it toggles; present only when there are children (matching aria-expanded).
+    private string? TopicNodeControls()
+        => Node.HasChildren ? TopicNodeChildrenId() : null;
 
     private void Toggle() => _expanded = !_expanded;
     private static bool IsActivationKey(KeyboardEventArgs args)
