@@ -6111,3 +6111,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only ScenarioStepEditorDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Scenario report close-label specificity result:
+  - Replaced the static Scenario Run Report close action label with a title-aware close label using the existing report title.
+  - Preserved report summary/JSON rendering, copy/save actions, snackbar feedback, dialog close behavior, report action results, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused ScenarioRunReportDialog guard to require the helper-backed close label and reject the old static close label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunReportDialog_UsesFlatCompactReviewChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only ScenarioRunReportDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.

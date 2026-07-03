@@ -155,7 +155,7 @@
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        Class="scenario-report-close"
-                       aria-label="Close scenario report"
+                       aria-label="@CloseReportLabel"
                        OnClick="@Close">Close</MudButton>
         </div>
     </DialogActions>
@@ -211,6 +211,12 @@
     private string SaveJsonAriaLabel => $"Save JSON for {Title}";
 
     private string RunDetailsLabel => $"{Title} run details";
+
+    private string CloseReportLabel => $"Close {ReportTitleTargetLabel}";
+
+    private string ReportTitleTargetLabel => string.IsNullOrWhiteSpace(Title)
+        ? "scenario report"
+        : Title.Trim();
 
     private string CopySummaryTooltip
         => HasSummaryReport ? "Copy summary report" : "Summary report unavailable";

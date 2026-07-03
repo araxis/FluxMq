@@ -4553,7 +4553,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private string SaveJsonAriaLabel");
         markup.ShouldContain("scenario-report-empty\" role=\"status\"");
         markup.ShouldContain("scenario-report-close");
-        markup.ShouldContain("aria-label=\"Close scenario report\"");
+        markup.ShouldContain("aria-label=\"@CloseReportLabel\"");
+        markup.ShouldContain("private string CloseReportLabel => $\"Close {ReportTitleTargetLabel}\"");
+        markup.ShouldContain("private string ReportTitleTargetLabel => string.IsNullOrWhiteSpace(Title)");
+        markup.ShouldNotContain("aria-label=\"Close scenario report\"");
         markup.ShouldNotContain("aria-label=\"Scenario report summary\"");
         markup.ShouldNotContain("aria-label=\"Scenario report actions\"");
         markup.ShouldNotContain("aria-label=\"Scenario report export actions\"");
