@@ -300,10 +300,10 @@
             <div class="scenario-step-editor-action-buttons">
                 <MudButton OnClick="@Cancel"
                            Variant="Variant.Text"
-                           aria-label="Cancel step edit">Cancel</MudButton>
+                           aria-label="@CancelStepEditLabel">Cancel</MudButton>
                 <MudButton Color="Color.Primary"
                            Variant="Variant.Filled"
-                           aria-label="Apply step edit"
+                           aria-label="@ApplyStepEditLabel"
                            Disabled="@HasValidationIssues"
                            OnClick="@Submit">Apply</MudButton>
             </div>
@@ -367,6 +367,14 @@
     private bool IsDescriptorFieldEditor => !IsMqttPublish && !IsMqttTrigger && !IsEventEditor;
 
     private string DialogTitle => $"{StepDescriptor.DisplayName} step";
+
+    private string CancelStepEditLabel => $"Cancel editing {StepEditTargetLabel}";
+
+    private string ApplyStepEditLabel => $"Apply edits to {StepEditTargetLabel}";
+
+    private string StepEditTargetLabel => string.IsNullOrWhiteSpace(Step.Name)
+        ? DialogTitle
+        : Step.Name.Trim();
 
     private DashboardEventTypeDescriptor CurrentEventType => EventFilters.Find(_eventType);
 

@@ -4437,8 +4437,13 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("FieldInputType(currentField)");
         markup.ShouldContain("scenario-step-editor-actions");
         markup.ShouldContain("scenario-step-editor-action-buttons");
-        markup.ShouldContain("aria-label=\"Cancel step edit\"");
-        markup.ShouldContain("aria-label=\"Apply step edit\"");
+        markup.ShouldContain("aria-label=\"@CancelStepEditLabel\"");
+        markup.ShouldContain("aria-label=\"@ApplyStepEditLabel\"");
+        markup.ShouldContain("private string CancelStepEditLabel => $\"Cancel editing {StepEditTargetLabel}\"");
+        markup.ShouldContain("private string ApplyStepEditLabel => $\"Apply edits to {StepEditTargetLabel}\"");
+        markup.ShouldContain("private string StepEditTargetLabel => string.IsNullOrWhiteSpace(Step.Name)");
+        markup.ShouldNotContain("aria-label=\"Cancel step edit\"");
+        markup.ShouldNotContain("aria-label=\"Apply step edit\"");
         markup.ShouldContain("class=\"scenario-step-editor-validation invalid\"");
         markup.ShouldContain("ValidationSummaryText");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.ErrorOutline\" Size=\"Size.Small\" aria-hidden=\"true\"");
