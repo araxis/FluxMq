@@ -16,9 +16,9 @@ public static class DashboardTopicActivityVisualOptions
 
     public const string DefaultHeader = "Topic activity";
     public const string DefaultEmptyText = "No topic activity yet";
-    public const string DefaultHeaderColor = "#f3f7fb";
-    public const string DefaultTextColor = "#f3f7fb";
-    public const string DefaultMutedColor = "#9fb0c5";
+    public const string DefaultHeaderColor = "var(--mud-palette-text-primary)";
+    public const string DefaultTextColor = "var(--mud-palette-text-primary)";
+    public const string DefaultMutedColor = "var(--mud-palette-text-secondary)";
     public const string DefaultAccentColor = "#2ed3c6";
     public const int DefaultLimit = 8;
     public const int MinLimit = 1;

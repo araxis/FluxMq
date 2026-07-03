@@ -25,9 +25,9 @@ public static class DashboardEventTableVisualOptions
 
     public const string DefaultHeader = "Event table";
     public const string DefaultEmptyText = "No events yet";
-    public const string DefaultHeaderColor = "#9fb0c5";
-    public const string DefaultTextColor = "#f3f7fb";
-    public const string DefaultMutedColor = "#9fb0c5";
+    public const string DefaultHeaderColor = "var(--mud-palette-text-secondary)";
+    public const string DefaultTextColor = "var(--mud-palette-text-primary)";
+    public const string DefaultMutedColor = "var(--mud-palette-text-secondary)";
     public const int DefaultRowCount = 6;
     public const int MinRowCount = 1;
     public const int MaxRowCount = 25;

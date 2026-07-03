@@ -10,6 +10,26 @@ namespace FluxMq.UI.Tests;
 public sealed class DashboardEventFilterCatalogTests
 {
     [Fact]
+    public void DashboardWidgetTitleAndTextColors_DefaultToThemeTokens_SoTheyStayVisibleInLightTheme()
+    {
+        // These defaults are emitted as inline CSS custom properties on the widget. Hardcoded
+        // near-white hex (e.g. #f3f7fb) was invisible on the light theme's light background, so
+        // the defaults must resolve through theme tokens (var(--mud-palette-...)) instead.
+        DashboardTopicActivityVisualOptions.DefaultHeaderColor.ShouldStartWith("var(");
+        DashboardTopicActivityVisualOptions.DefaultTextColor.ShouldStartWith("var(");
+        DashboardTopicActivityVisualOptions.DefaultMutedColor.ShouldStartWith("var(");
+        DashboardTopicTreeVisualOptions.DefaultHeaderColor.ShouldStartWith("var(");
+        DashboardTopicTreeVisualOptions.DefaultTextColor.ShouldStartWith("var(");
+        DashboardTopicTreeVisualOptions.DefaultMutedColor.ShouldStartWith("var(");
+        DashboardEventTableVisualOptions.DefaultHeaderColor.ShouldStartWith("var(");
+        DashboardEventTableVisualOptions.DefaultTextColor.ShouldStartWith("var(");
+        DashboardEventTableVisualOptions.DefaultMutedColor.ShouldStartWith("var(");
+        DashboardLatestEventVisualOptions.DefaultHeaderColor.ShouldStartWith("var(");
+        DashboardLatestEventVisualOptions.DefaultDetailColor.ShouldStartWith("var(");
+        DashboardLatestEventVisualOptions.DefaultPayloadColor.ShouldStartWith("var(");
+    }
+
+    [Fact]
     public void DashboardWidgetFormatting_UsesDedicatedWidgetChromeMetadata()
     {
         var kpiWidget = new DashboardWidgetSnapshot(
@@ -7773,7 +7793,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AddCircle");
         markup.ShouldContain("DiagramCanvas");
         markup.ShouldContain("NavigatorWidget");
-        markup.ShouldContain("ViewStrokeColor=\"#38BDF8\"");
+        markup.ShouldContain("ViewStrokeColor=\"@NavigatorViewStrokeColor\"");
+        markup.ShouldContain("private string NavigatorViewStrokeColor => ThemeService.IsDarkMode");
         markup.ShouldContain("flow-link-condition-title");
         markup.ShouldContain("Label=\"Expression\"");
         markup.ShouldContain("Class=\"flow-link-condition-action apply\"");

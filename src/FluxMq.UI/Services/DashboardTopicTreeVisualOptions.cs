@@ -16,8 +16,8 @@ public static class DashboardTopicTreeVisualOptions
 
     public const string DefaultHeader = "Topic tree";
     public const string DefaultEmptyText = "No topic traffic yet";
-    public const string DefaultHeaderColor = "#f3f7fb";
-    public const string DefaultTextColor = "#f3f7fb";
-    public const string DefaultMutedColor = "#9fb0c5";
+    public const string DefaultHeaderColor = "var(--mud-palette-text-primary)";
+    public const string DefaultTextColor = "var(--mud-palette-text-primary)";
+    public const string DefaultMutedColor = "var(--mud-palette-text-secondary)";
     public const string DefaultAccentColor = "#2ed3c6";
 }
