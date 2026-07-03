@@ -6492,3 +6492,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale workspace-log row label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target: continue the high-use workspace polish audit from current search evidence, likely remaining app-level action labels or workspace panel row titles with focused guards.
+- MainLayout publisher toggle label specificity result:
+  - Replaced the inline MQTT publisher panel toggle tooltip and accessible label with a helper-backed label that includes the active app target.
+  - Preserved right panel open/close behavior, live tools policy, publisher panel rendering, project commands, runtime markers, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MainLayout guard to require the helper-backed publisher toggle label and reject the stale inline ternary.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MainLayout_RemovesSessionOnlyLeftRail" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale publisher-toggle label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue from current search evidence with one remaining high-use app-level action or panel-row label at a time.

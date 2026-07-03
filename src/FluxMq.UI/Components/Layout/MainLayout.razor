@@ -142,11 +142,11 @@
                 </MudTooltip>
                 @if (CanUseLiveTools)
                 {
-                    <MudTooltip Text="@(_rightOpen ? "Hide MQTT publisher" : "Show MQTT publisher")">
+                    <MudTooltip Text="@PublisherPanelToggleLabel">
                         <MudIconButton Icon="@(_rightOpen ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
                                        Size="Size.Small"
                                        Class="flux-icon-button"
-                                       aria-label="@(_rightOpen ? "Hide MQTT publisher" : "Show MQTT publisher")"
+                                       aria-label="@PublisherPanelToggleLabel"
                                        OnClick="@(() => _rightOpen = !_rightOpen)" />
                     </MudTooltip>
                 }
@@ -319,6 +319,10 @@
         : _stopping
             ? $"Stopping {ActiveProjectActionTarget}"
             : $"Stop {ActiveProjectActionTarget}";
+
+    private string PublisherPanelToggleLabel => _rightOpen
+        ? $"Hide MQTT publisher for {ActiveProjectActionTarget}"
+        : $"Show MQTT publisher for {ActiveProjectActionTarget}";
 
     private string ShellClass =>
         $"flux-shell {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}{(!HasActiveProject ? " no-active-project" : "")}{(!IsRightPanelVisible ? " right-collapsed" : "")}{(DragState.ActiveComponentDrag?.DidDrag == true ? " flux-component-drag-active" : "")}";

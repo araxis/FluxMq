@@ -2886,8 +2886,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private bool HasActiveProject => Projects.ActiveProject is not null;");
         markup.ShouldContain("var connectionsAvailable = await Live.EnsureConnectionsAsync(project.GetConnectionResources());");
         markup.ShouldContain("no-active-project");
-        markup.ShouldContain("Hide MQTT publisher");
-        markup.ShouldContain("Show MQTT publisher");
+        markup.ShouldContain("PublisherPanelToggleLabel");
         markup.ShouldContain("Text=\"@NewProjectActionLabel\"");
         markup.ShouldContain("aria-label=\"@NewProjectActionLabel\"");
         markup.ShouldContain("Text=\"@OpenProjectActionLabel\"");
@@ -2909,7 +2908,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private string RunProjectActionLabel");
         markup.ShouldContain("private string StopProjectActionLabel");
         markup.ShouldContain("aria-label=\"@_themeLabel\"");
-        markup.ShouldContain("aria-label=\"@(_rightOpen ? \"Hide MQTT publisher\" : \"Show MQTT publisher\")\"");
+        markup.ShouldContain("Text=\"@PublisherPanelToggleLabel\"");
+        markup.ShouldContain("aria-label=\"@PublisherPanelToggleLabel\"");
+        markup.ShouldContain("private string PublisherPanelToggleLabel => _rightOpen");
+        markup.ShouldContain("$\"Hide MQTT publisher for {ActiveProjectActionTarget}\"");
+        markup.ShouldContain("$\"Show MQTT publisher for {ActiveProjectActionTarget}\"");
         markup.ShouldContain("Class=\"flux-command-spin-icon\"");
         markup.ShouldContain("aria-hidden=\"true\"");
         markup.ShouldContain("<MudIcon Icon=\"@DragPreviewIcon(activeDrag.TargetKind)\" Size=\"Size.Small\" aria-hidden=\"true\" />");
@@ -2961,6 +2964,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("aria-label=\"Open file\"");
         markup.ShouldNotContain("aria-label=\"Run app\"");
         markup.ShouldNotContain("aria-label=\"Stop app\"");
+        markup.ShouldNotContain("aria-label=\"@(_rightOpen ? \"Hide MQTT publisher\" : \"Show MQTT publisher\")\"");
+        markup.ShouldNotContain("Text=\"@(_rightOpen ? \"Hide MQTT publisher\" : \"Show MQTT publisher\")\"");
         markup.ShouldNotContain("Workspace navigation");
         markup.ShouldNotContain("No active project");
         markup.ShouldNotContain("Class=\"flux-command-spin-icon\" />");
