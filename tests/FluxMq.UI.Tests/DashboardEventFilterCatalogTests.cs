@@ -6902,6 +6902,7 @@ public sealed class DashboardEventFilterCatalogTests
         visualRows.ShouldContain("DashboardInspectorMetricMove");
         visualRows.ShouldContain("VisualMetricLabel");
         visualRows.ShouldContain("var currentMetricLabel = VisualMetricLabel(currentMetric);");
+        visualRows.ShouldContain("aria-label=\"@MetricCardPositionLabel(currentMetricLabel, item.Index)\"");
         visualRows.ShouldContain("aria-label=\"@MetricCardCommandsLabel(currentMetricLabel)\"");
         visualRows.ShouldContain("title=\"@MoveMetricUpLabel(currentMetricLabel)\"");
         visualRows.ShouldContain("aria-label=\"@MoveMetricUpLabel(currentMetricLabel)\"");
@@ -6909,10 +6910,13 @@ public sealed class DashboardEventFilterCatalogTests
         visualRows.ShouldContain("aria-label=\"@MoveMetricDownLabel(currentMetricLabel)\"");
         visualRows.ShouldContain("title=\"@RemoveMetricCardLabel(currentMetricLabel)\"");
         visualRows.ShouldContain("aria-label=\"@RemoveMetricCardLabel(currentMetricLabel)\"");
+        visualRows.ShouldContain("private static string MetricCardPositionLabel(string metricLabel, int index)");
         visualRows.ShouldContain("private static string MetricCardCommandsLabel(string metricLabel)");
         visualRows.ShouldContain("private static string MoveMetricUpLabel(string metricLabel)");
         visualRows.ShouldContain("private static string MoveMetricDownLabel(string metricLabel)");
         visualRows.ShouldContain("private static string RemoveMetricCardLabel(string metricLabel)");
+        visualRows.ShouldContain("$\"{metricLabel} card position {index + 1}\"");
+        visualRows.ShouldNotContain("aria-label=\"@($\"Card position {item.Index + 1}\")\"");
         visualRows.ShouldNotContain("@($\"Move {VisualMetricLabel(currentMetric)} up\")");
         visualRows.ShouldNotContain("@($\"Move {VisualMetricLabel(currentMetric)} down\")");
         visualRows.ShouldNotContain("@($\"Remove {VisualMetricLabel(currentMetric)}\")");

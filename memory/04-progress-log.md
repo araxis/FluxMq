@@ -6532,3 +6532,13 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Source-only stale run-result label scan, neutral added-text scan, and `git diff --check` passed.
   - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
   - Next target for the one-hour goal window: stop with a clean handoff unless a new focused surface is explicitly selected; remaining search evidence includes dashboard visual metric position labels.
+- DashboardInspector visual metric position label specificity result:
+  - Replaced the inline visual metric card-position accessible label with a helper-backed label that includes the metric label and position.
+  - Preserved metric card ordering, add/remove/move controls, primary metric selection, card column editing, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardInspector visual metric rows guard to require the helper-backed position label and reject the stale inline label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale visual metric position label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target for the one-hour goal window: stop with a clean handoff; resume later only after a fresh current-state scan selects another focused high-use UI surface.
