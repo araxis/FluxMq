@@ -5,14 +5,14 @@
     min-width: 0;
 }
 
-.metrics-status-line {
+.metrics-runtime-facts {
     display: grid;
     gap: 3px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     min-width: 0;
 }
 
-.metrics-status-item {
+.metrics-runtime-fact {
     align-content: center;
     background: color-mix(in srgb, var(--flux-surface-2) 22%, transparent);
     border-radius: 4px;
@@ -23,7 +23,7 @@
     padding: 4px 6px;
 }
 
-.metrics-status-item span {
+.metrics-runtime-fact span {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
     font-weight: 760;
@@ -33,7 +33,7 @@
     white-space: normal;
 }
 
-.metrics-status-item strong {
+.metrics-runtime-fact strong {
     color: color-mix(in srgb, var(--mud-palette-text-primary) 70%, var(--mud-palette-text-secondary));
     font-size: 0.66rem;
     font-variant-numeric: tabular-nums;
@@ -370,7 +370,7 @@
 }
 
 @media (max-width: 720px) {
-    .metrics-status-line,
+    .metrics-runtime-facts,
     .metrics-readout-strip,
     .metrics-config-row,
     .metrics-readout-options {

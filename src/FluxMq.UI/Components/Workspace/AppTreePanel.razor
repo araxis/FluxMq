@@ -7,7 +7,7 @@
 @if (Projects.Projects.Count == 0)
 {
     <div class="tree-empty" role="status" aria-live="polite">
-        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Medium" />
+        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Medium" aria-hidden="true" />
         <div>
             <div class="tree-empty-title">No apps open</div>
             <div class="tree-empty-copy">Create or open a project from the top bar.</div>
@@ -16,7 +16,7 @@
 }
 else
 {
-    <div class="app-tree" aria-label="App structure tree">
+    <div class="app-tree" aria-label="@AppTreeLabel">
         @foreach (var app in Projects.Projects)
         {
             var a = app;
@@ -33,12 +33,15 @@ else
                      role="button"
                      tabindex="0"
                      aria-label="@AppRowLabel(a, isActive)"
+                     aria-current="@TreeItemCurrent(isActive)"
+                     aria-keyshortcuts="Enter Space"
                      title="@AppRowLabel(a, isActive)"
                      @onclick="@(() => SelectApp(a))"
                      @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboardAsync(args, a))">
                     <MudIcon Icon="@(isActive ? Icons.Material.Filled.FolderOpen : Icons.Material.Filled.Folder)"
                              Size="Size.Small"
-                             Class="app-row-icon" />
+                             Class="app-row-icon"
+                             aria-hidden="true" />
                     <div class="app-row-text">
                         <div class="app-name">@a.Name</div>
                         <div class="app-meta">
@@ -50,11 +53,11 @@ else
                         </div>
                     </div>
                     <div class="app-actions" @onclick:stopPropagation="true">
-                        <MudTooltip Text="Close app">
+                        <MudTooltip Text="@CloseAppLabel(a)">
                             <MudIconButton Size="Size.Small"
                                            Icon="@Icons.Material.Outlined.Cancel"
                                            Class="tree-icon-button"
-                                           aria-label="@($"Close app {a.Name}")"
+                                           aria-label="@CloseAppLabel(a)"
                                            OnClick="@(() => CloseAsync(a))" />
                         </MudTooltip>
                     </div>
@@ -72,52 +75,57 @@ else
                         "Add connection",
                         AddConnectionAsync)
 
-                    @if (!brokersCollapsed && conns.Count == 0)
-                    {
-                        <div class="tree-muted-row">No connections</div>
-                    }
-                    else if (!brokersCollapsed)
-                    {
-                        foreach (var conn in conns)
+                    <div id="@TreeSectionBodyId(a, BrokerSection)" class="tree-section-body">
+                        @if (!brokersCollapsed && conns.Count == 0)
                         {
-                            var c = conn;
-                            <div class="conn-item" @key="c.Id">
-                                <span class="@StateDotClass(c.State)"></span>
-                                <div class="conn-text">
-                                    <div class="conn-name">@c.ResourceName</div>
-                                    <div class="conn-endpoint">@c.Profile.Host:@c.Profile.Port</div>
-                                </div>
-                                <div class="conn-actions">
-                                    @if (c.State is MqttClientState.Disconnected or MqttClientState.Faulted)
-                                    {
-                                        <MudTooltip Text="Connect">
-                                            <MudIconButton Size="Size.Small"
-                                                           Icon="@Icons.Material.Filled.PlayArrow"
-                                                           Color="Color.Success"
-                                                           Class="tree-icon-button"
-                                                           OnClick="@(() => Live.ConnectAsync(c.Id))" />
-                                        </MudTooltip>
-                                    }
-                                    else
-                                    {
-                                        <MudTooltip Text="Disconnect">
-                                            <MudIconButton Size="Size.Small"
-                                                           Icon="@Icons.Material.Filled.Stop"
-                                                           Color="Color.Error"
-                                                           Class="tree-icon-button"
-                                                           OnClick="@(() => Live.DisconnectAsync(c.Id))" />
-                                        </MudTooltip>
-                                    }
-                                    <MudTooltip Text="Remove">
-                                        <MudIconButton Size="Size.Small"
-                                                       Icon="@Icons.Material.Filled.DeleteOutline"
-                                                       Class="tree-icon-button"
-                                                       OnClick="@(() => Live.RemoveConnectionAsync(c.Id))" />
-                                    </MudTooltip>
-                                </div>
-                            </div>
+                            <div class="tree-muted-row">No connections</div>
                         }
-                    }
+                        else if (!brokersCollapsed)
+                        {
+                            foreach (var conn in conns)
+                            {
+                                var c = conn;
+                                <div class="conn-item" @key="c.Id">
+                                    <span class="@ConnectionDotClass(c.State)"></span>
+                                    <div class="conn-text">
+                                        <div class="conn-name">@c.ResourceName</div>
+                                        <div class="conn-endpoint">@c.Profile.Host:@c.Profile.Port</div>
+                                    </div>
+                                    <div class="conn-actions">
+                                        @if (c.State is MqttClientState.Disconnected or MqttClientState.Faulted)
+                                        {
+                                            <MudTooltip Text="@ConnectConnectionLabel(c)">
+                                                <MudIconButton Size="Size.Small"
+                                                               Icon="@Icons.Material.Filled.PlayArrow"
+                                                               Color="Color.Success"
+                                                               Class="tree-icon-button"
+                                                               aria-label="@ConnectConnectionLabel(c)"
+                                                               OnClick="@(() => Live.ConnectAsync(c.Id))" />
+                                            </MudTooltip>
+                                        }
+                                        else
+                                        {
+                                            <MudTooltip Text="@DisconnectConnectionLabel(c)">
+                                                <MudIconButton Size="Size.Small"
+                                                               Icon="@Icons.Material.Filled.Stop"
+                                                               Color="Color.Error"
+                                                               Class="tree-icon-button"
+                                                               aria-label="@DisconnectConnectionLabel(c)"
+                                                               OnClick="@(() => Live.DisconnectAsync(c.Id))" />
+                                            </MudTooltip>
+                                        }
+                                        <MudTooltip Text="@RemoveConnectionLabel(c)">
+                                            <MudIconButton Size="Size.Small"
+                                                           Icon="@Icons.Material.Filled.DeleteOutline"
+                                                           Class="tree-icon-button"
+                                                           aria-label="@RemoveConnectionLabel(c)"
+                                                           OnClick="@(() => Live.RemoveConnectionAsync(c.Id))" />
+                                        </MudTooltip>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
                 </div>
 
                 <div class="tree-section">
@@ -132,31 +140,36 @@ else
                         "Add pipeline",
                         AddPipelineAsync)
 
-                    @if (!pipelinesCollapsed && a.WorkflowNames.Count == 0)
-                    {
-                        <div class="tree-muted-row">No pipelines</div>
-                    }
-                    else if (!pipelinesCollapsed)
-                    {
-                        foreach (var wf in a.WorkflowNames)
+                    <div id="@TreeSectionBodyId(a, PipelineSection)" class="tree-section-body">
+                        @if (!pipelinesCollapsed && a.WorkflowNames.Count == 0)
                         {
-                            var w = wf;
-                            var isPipeActive = a == Projects.ActiveProject &&
-                                a.ActiveArtifactKind == WorkspaceArtifactKind.Pipeline &&
-                                string.Equals(w, a.ActiveWorkflowName, StringComparison.Ordinal);
-                            <div class="pipe-item @(isPipeActive ? "active" : null)"
-                                 role="button"
-                                 tabindex="0"
-                                 aria-label="@($"Open pipeline {w}")"
-                                 @onclick="@(() => SelectPipeline(a, w))"
-                                 @onkeydown="@((KeyboardEventArgs args) => SelectPipelineFromKeyboardAsync(args, a, w))">
-                                <MudIcon Icon="@Icons.Material.Filled.Timeline"
-                                         Size="Size.Small"
-                                         Class="pipe-icon" />
-                                <span>@w</span>
-                            </div>
+                            <div class="tree-muted-row">No pipelines</div>
                         }
-                    }
+                        else if (!pipelinesCollapsed)
+                        {
+                            foreach (var wf in a.WorkflowNames)
+                            {
+                                var w = wf;
+                                var isPipeActive = a == Projects.ActiveProject &&
+                                    a.ActiveArtifactKind == WorkspaceArtifactKind.Pipeline &&
+                                    string.Equals(w, a.ActiveWorkflowName, StringComparison.Ordinal);
+                                <div class="pipe-item @(isPipeActive ? "active" : null)"
+                                     role="button"
+                                     tabindex="0"
+                                     aria-label="@OpenPipelineLabel(w)"
+                                     aria-current="@TreeItemCurrent(isPipeActive)"
+                                     aria-keyshortcuts="Enter Space"
+                                     @onclick="@(() => SelectPipeline(a, w))"
+                                     @onkeydown="@((KeyboardEventArgs args) => SelectPipelineFromKeyboardAsync(args, a, w))">
+                                    <MudIcon Icon="@Icons.Material.Filled.Timeline"
+                                             Size="Size.Small"
+                                             Class="pipe-icon"
+                                             aria-hidden="true" />
+                                    <span>@w</span>
+                                </div>
+                            }
+                        }
+                    </div>
                 </div>
 
                 <div class="tree-section">
@@ -171,24 +184,32 @@ else
                         "Add metric",
                         AddMetricAsync)
 
-                    @if (!metricsCollapsed && a.MetricNames.Count == 0)
-                    {
-                        <div class="tree-muted-row">No metrics</div>
-                    }
-                    else if (!metricsCollapsed)
-                    {
-                        <div class="artifact-item @(a == Projects.ActiveProject && a.ActiveArtifactKind == WorkspaceArtifactKind.Metrics ? "active" : null)"
-                             role="button"
-                             tabindex="0"
-                             aria-label="Open metric designer"
-                             @onclick="@(() => SelectMetrics(a))"
-                             @onkeydown="@((KeyboardEventArgs args) => SelectMetricsFromKeyboardAsync(args, a))">
-                            <MudIcon Icon="@Icons.Material.Filled.QueryStats"
-                                     Size="Size.Small"
-                                     Class="artifact-icon dashboard" />
-                            <span>Metric Designer</span>
-                        </div>
-                    }
+                    <div id="@TreeSectionBodyId(a, MetricSection)" class="tree-section-body">
+                        @if (!metricsCollapsed && a.MetricNames.Count == 0)
+                        {
+                            <div class="tree-muted-row">No metrics</div>
+                        }
+                        else if (!metricsCollapsed)
+                        {
+                            var isMetricsActive = a == Projects.ActiveProject &&
+                                a.ActiveArtifactKind == WorkspaceArtifactKind.Metrics;
+                            <div class="artifact-item @(isMetricsActive ? "active" : null)"
+                                 role="button"
+                                 tabindex="0"
+                                 aria-label="@MetricDesignerRowLabel(a, isMetricsActive)"
+                                 title="@MetricDesignerRowLabel(a, isMetricsActive)"
+                                 aria-current="@TreeItemCurrent(isMetricsActive)"
+                                 aria-keyshortcuts="Enter Space"
+                                 @onclick="@(() => SelectMetrics(a))"
+                                 @onkeydown="@((KeyboardEventArgs args) => SelectMetricsFromKeyboardAsync(args, a))">
+                                <MudIcon Icon="@Icons.Material.Filled.QueryStats"
+                                         Size="Size.Small"
+                                         Class="artifact-icon dashboard"
+                                         aria-hidden="true" />
+                                <span>Metric Designer</span>
+                            </div>
+                        }
+                    </div>
                 </div>
 
                 <div class="tree-section">
@@ -203,31 +224,36 @@ else
                         "Add dashboard",
                         AddDashboardAsync)
 
-                    @if (!dashboardsCollapsed && a.DashboardNames.Count == 0)
-                    {
-                        <div class="tree-muted-row">No dashboards</div>
-                    }
-                    else if (!dashboardsCollapsed)
-                    {
-                        foreach (var dashboard in a.DashboardNames)
+                    <div id="@TreeSectionBodyId(a, DashboardSection)" class="tree-section-body">
+                        @if (!dashboardsCollapsed && a.DashboardNames.Count == 0)
                         {
-                            var d = dashboard;
-                            var isDashboardActive = a == Projects.ActiveProject &&
-                                a.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard &&
-                                string.Equals(d, a.ActiveDashboardName, StringComparison.Ordinal);
-                            <div class="artifact-item @(isDashboardActive ? "active" : null)"
-                                 role="button"
-                                 tabindex="0"
-                                 aria-label="@($"Open dashboard {d}")"
-                                 @onclick="@(() => SelectDashboard(a, d))"
-                                 @onkeydown="@((KeyboardEventArgs args) => SelectDashboardFromKeyboardAsync(args, a, d))">
-                                <MudIcon Icon="@Icons.Material.Filled.Dashboard"
-                                         Size="Size.Small"
-                                         Class="artifact-icon dashboard" />
-                                <span>@d</span>
-                            </div>
+                            <div class="tree-muted-row">No dashboards</div>
                         }
-                    }
+                        else if (!dashboardsCollapsed)
+                        {
+                            foreach (var dashboard in a.DashboardNames)
+                            {
+                                var d = dashboard;
+                                var isDashboardActive = a == Projects.ActiveProject &&
+                                    a.ActiveArtifactKind == WorkspaceArtifactKind.Dashboard &&
+                                    string.Equals(d, a.ActiveDashboardName, StringComparison.Ordinal);
+                                <div class="artifact-item @(isDashboardActive ? "active" : null)"
+                                     role="button"
+                                     tabindex="0"
+                                     aria-label="@OpenDashboardLabel(d)"
+                                     aria-current="@TreeItemCurrent(isDashboardActive)"
+                                     aria-keyshortcuts="Enter Space"
+                                     @onclick="@(() => SelectDashboard(a, d))"
+                                     @onkeydown="@((KeyboardEventArgs args) => SelectDashboardFromKeyboardAsync(args, a, d))">
+                                    <MudIcon Icon="@Icons.Material.Filled.Dashboard"
+                                             Size="Size.Small"
+                                             Class="artifact-icon dashboard"
+                                             aria-hidden="true" />
+                                    <span>@d</span>
+                                </div>
+                            }
+                        }
+                    </div>
                 </div>
 
                 <div class="tree-section">
@@ -242,77 +268,85 @@ else
                         "Add test",
                         AddTestAsync)
 
-                    @if (!testsCollapsed && a.TestNames.Count == 0)
-                    {
-                        <div class="tree-empty-artifact-row tests"
-                             role="button"
-                             tabindex="0"
-                             aria-label="Create test scenario"
-                             @onclick="@(() => AddTestAsync(a))"
-                             @onkeydown="@((KeyboardEventArgs args) => AddTestFromKeyboardAsync(args, a))">
-                            <MudIcon Icon="@Icons.Material.Filled.FactCheck"
-                                     Size="Size.Small"
-                                     Class="tree-empty-artifact-icon" />
-                            <div class="tree-empty-artifact-copy">
-                                <span>No tests</span>
-                                <small>Create a scenario to design and run checks.</small>
-                            </div>
-                            <div class="tree-empty-artifact-cues" aria-hidden="true">
-                                <span>Design</span>
-                                <span>Run</span>
-                            </div>
-                            <MudIcon Icon="@Icons.Material.Filled.Add"
-                                     Size="Size.Small"
-                                     Class="tree-empty-artifact-add" />
-                        </div>
-                    }
-                    else if (!testsCollapsed)
-                    {
-                        foreach (var test in a.TestNames)
+                    <div id="@TreeSectionBodyId(a, TestSection)" class="tree-section-body">
+                        @if (!testsCollapsed && a.TestNames.Count == 0)
                         {
-                            var t = test;
-                            var isTestActive = a == Projects.ActiveProject &&
-                                a.ActiveArtifactKind == WorkspaceArtifactKind.Test &&
-                                string.Equals(t, a.ActiveTestName, StringComparison.Ordinal);
-                            var latestTestRun = LatestTestRun(a, t);
-                            <div class="@TestArtifactItemClass(isTestActive, latestTestRun)"
+                            <div class="tree-empty-artifact-row tests"
                                  role="button"
                                  tabindex="0"
-                                 title="@TestArtifactTitle(t, latestTestRun)"
-                                 aria-label="@TestArtifactTitle(t, latestTestRun)"
-                                 @onclick="@(() => SelectTest(a, t))"
-                                 @onkeydown="@((KeyboardEventArgs args) => SelectTestFromKeyboardAsync(args, a, t))">
-                                <span class="test-artifact-icon-frame" aria-hidden="true">
-                                    <MudIcon Icon="@Icons.Material.Filled.FactCheck"
-                                             Size="Size.Small"
-                                             Class="artifact-icon test" />
-                                </span>
-                                <div class="artifact-item-copy test-artifact-copy">
-                                    <span>@t</span>
-                                    <small>@TestRunMeta(latestTestRun)</small>
+                                 aria-label="@CreateTestScenarioLabel(a)"
+                                 aria-keyshortcuts="Enter Space"
+                                 @onclick="@(() => AddTestAsync(a))"
+                                 @onkeydown="@((KeyboardEventArgs args) => AddTestFromKeyboardAsync(args, a))">
+                                <MudIcon Icon="@Icons.Material.Filled.FactCheck"
+                                         Size="Size.Small"
+                                         Class="tree-empty-artifact-icon"
+                                         aria-hidden="true" />
+                                <div class="tree-empty-artifact-copy">
+                                    <span>No tests</span>
+                                    <small>Create a scenario to design and run checks.</small>
                                 </div>
-                                <div class="@TestRunSummaryClass(latestTestRun)"
-                                     aria-label="@TestRunStateLabel(latestTestRun)">
-                                    <span class="@TestRunStateClass(latestTestRun)">
-                                        <MudIcon Icon="@TestRunIcon(latestTestRun)" Size="Size.Small" />
-                                        <span>@TestRunText(latestTestRun)</span>
-                                    </span>
-                                    <span class="test-run-summary-meta">@TestRunDetailText(latestTestRun)</span>
+                                <div class="tree-empty-artifact-cues" aria-hidden="true">
+                                    <span>Design</span>
+                                    <span>Run</span>
                                 </div>
-                                <span class="tree-item-actions"
-                                      @onclick:stopPropagation="true"
-                                      @onmousedown:stopPropagation="true">
-                                    <MudTooltip Text="Delete test">
-                                        <MudIconButton Size="Size.Small"
-                                                       Icon="@Icons.Material.Filled.DeleteOutline"
-                                                       Class="tree-icon-button tree-delete-button"
-                                                       aria-label="@($"Delete test {t}")"
-                                                       OnClick="@(() => RemoveTestAsync(a, t))" />
-                                    </MudTooltip>
-                                </span>
+                                <MudIcon Icon="@Icons.Material.Filled.Add"
+                                         Size="Size.Small"
+                                         Class="tree-empty-artifact-add"
+                                         aria-hidden="true" />
                             </div>
                         }
-                    }
+                        else if (!testsCollapsed)
+                        {
+                            foreach (var test in a.TestNames)
+                            {
+                                var t = test;
+                                var isTestActive = a == Projects.ActiveProject &&
+                                    a.ActiveArtifactKind == WorkspaceArtifactKind.Test &&
+                                    string.Equals(t, a.ActiveTestName, StringComparison.Ordinal);
+                                var latestTestRun = LatestTestRun(a, t);
+                                <div class="@TestArtifactItemClass(isTestActive, latestTestRun)"
+                                     role="button"
+                                     tabindex="0"
+                                     title="@TestArtifactTitle(t, latestTestRun)"
+                                     aria-label="@TestArtifactTitle(t, latestTestRun)"
+                                     aria-current="@TreeItemCurrent(isTestActive)"
+                                     aria-keyshortcuts="Enter Space"
+                                     @onclick="@(() => SelectTest(a, t))"
+                                     @onkeydown="@((KeyboardEventArgs args) => SelectTestFromKeyboardAsync(args, a, t))">
+                                    <span class="test-artifact-icon-frame" aria-hidden="true">
+                                        <MudIcon Icon="@Icons.Material.Filled.FactCheck"
+                                                 Size="Size.Small"
+                                                 Class="artifact-icon test"
+                                                 aria-hidden="true" />
+                                    </span>
+                                    <div class="artifact-item-copy test-artifact-copy">
+                                        <span>@t</span>
+                                        <small>@TestRunMeta(latestTestRun)</small>
+                                    </div>
+                                    <div class="@TestRunSummaryClass(latestTestRun)"
+                                         aria-label="@TestRunSummaryLabel(latestTestRun)">
+                                        <span class="@TestRunMarkerClass(latestTestRun)">
+                                            <MudIcon Icon="@TestRunIcon(latestTestRun)" Size="Size.Small" aria-hidden="true" />
+                                            <span>@TestRunText(latestTestRun)</span>
+                                        </span>
+                                        <span class="test-run-summary-meta">@TestRunDetailText(latestTestRun)</span>
+                                    </div>
+                                    <span class="tree-item-actions"
+                                          @onclick:stopPropagation="true"
+                                          @onmousedown:stopPropagation="true">
+                                        <MudTooltip Text="@DeleteTestLabel(t)">
+                                            <MudIconButton Size="Size.Small"
+                                                           Icon="@Icons.Material.Filled.DeleteOutline"
+                                                           Class="tree-icon-button tree-delete-button"
+                                                           aria-label="@DeleteTestLabel(t)"
+                                                           OnClick="@(() => RemoveTestAsync(a, t))" />
+                                        </MudTooltip>
+                                    </span>
+                                </div>
+                            }
+                        }
+                    </div>
                 </div>
             </section>
         }
@@ -329,6 +363,11 @@ else
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
     private readonly Dictionary<FlowWorkspaceService, HashSet<string>> _collapsedSections = [];
 
+    private string AppTreeLabel
+        => Projects.ActiveProject is { } active
+            ? $"App structure tree for {active.Name}, {CountLabel(Projects.Projects.Count, "open app")}"
+            : $"App structure tree with {CountLabel(Projects.Projects.Count, "open app")}";
+
     private RenderFragment TreeSectionHeader(
         FlowWorkspaceService app,
         string section,
@@ -342,16 +381,20 @@ else
             role="button"
             tabindex="0"
             aria-expanded="@AriaExpanded(isCollapsed)"
+            aria-controls="@TreeSectionBodyId(app, section)"
             aria-label="@SectionHeaderLabel(title, count, isCollapsed)"
+            aria-keyshortcuts="Enter Space"
             @onclick="@(() => ToggleSection(app, section))"
             @onkeydown="@((KeyboardEventArgs args) => ToggleSectionFromKeyboardAsync(args, app, section))">
             <div class="tree-section-title">
                 <MudIcon Icon="@CollapseIcon(isCollapsed)"
                          Size="Size.Small"
-                         Class="tree-section-chevron" />
+                         Class="tree-section-chevron"
+                         aria-hidden="true" />
                 <MudIcon Icon="@icon"
                          Size="Size.Small"
-                         Class="@($"tree-section-icon {iconClass}")" />
+                         Class="@($"tree-section-icon {iconClass}")"
+                         aria-hidden="true" />
                 <span>@title</span>
                 <span class="tree-section-count">@count</span>
             </div>
@@ -405,12 +448,56 @@ else
     private static string SectionHeaderLabel(string title, int count, bool isCollapsed)
         => $"{title} {count}. {(isCollapsed ? "Collapsed" : "Expanded")}.";
 
+    private static string TreeSectionBodyId(FlowWorkspaceService app, string section)
+        => $"app-tree-section-{SanitizeIdToken(app.Name)}-{System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(app)}-{SanitizeIdToken(section)}";
+
+    private static string SanitizeIdToken(string value)
+    {
+        var builder = new System.Text.StringBuilder(value.Length);
+        foreach (var current in value)
+        {
+            builder.Append(char.IsLetterOrDigit(current) || current is '-' or '_' ? current : '-');
+        }
+
+        return builder.Length == 0 ? "section" : builder.ToString();
+    }
+
     private static string AppRowLabel(FlowWorkspaceService app, bool isActive)
     {
         var state = isActive ? "active" : "inactive";
         var saved = app.HasUnsavedChanges ? "unsaved changes" : "saved";
         return $"{app.Name}, {state}, {saved}, {BuildAppMeta(app)}";
     }
+
+    private static string MetricDesignerRowLabel(FlowWorkspaceService app, bool isActive)
+    {
+        var state = isActive ? "active" : "inactive";
+        return $"{app.Name} metric designer, {state}, {CountLabel(app.MetricNames.Count, "metric")}";
+    }
+
+    private static string OpenPipelineLabel(string pipelineName)
+        => $"Open pipeline {pipelineName}";
+
+    private static string OpenDashboardLabel(string dashboardName)
+        => $"Open dashboard {dashboardName}";
+
+    private static string DeleteTestLabel(string testName)
+        => $"Delete test {testName}";
+
+    private static string CloseAppLabel(FlowWorkspaceService app)
+        => $"Close app {app.Name}";
+
+    private static string ConnectConnectionLabel(ManagedConnection connection)
+        => $"Connect {connection.ResourceName}";
+
+    private static string DisconnectConnectionLabel(ManagedConnection connection)
+        => $"Disconnect {connection.ResourceName}";
+
+    private static string RemoveConnectionLabel(ManagedConnection connection)
+        => $"Remove connection {connection.ResourceName}";
+
+    private static string? TreeItemCurrent(bool isActive)
+        => isActive ? "true" : null;
 
     private static bool IsActivationKey(KeyboardEventArgs args)
         => args.Key is "Enter" or " " or "Spacebar";
@@ -537,10 +624,10 @@ else
 
     private static string TestRunMeta(ScenarioRunResult? latestRun)
         => latestRun is null
-            ? "Ready for first run"
+            ? "No run yet"
             : $"Latest {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}";
 
-    private static string TestRunStateLabel(ScenarioRunResult? latestRun)
+    private static string TestRunSummaryLabel(ScenarioRunResult? latestRun)
         => latestRun is null
             ? "No scenario run history"
             : $"Latest run {latestRun.Status}, {TestRunDetailText(latestRun)}";
@@ -570,13 +657,13 @@ else
             _ => "test-run-summary idle"
         };
 
-    private static string TestRunStateClass(ScenarioRunResult? latestRun)
+    private static string TestRunMarkerClass(ScenarioRunResult? latestRun)
         => latestRun?.Status switch
         {
-            ScenarioRunStatus.Passed => "test-run-state passed",
-            ScenarioRunStatus.Failed => "test-run-state failed",
-            ScenarioRunStatus.Canceled => "test-run-state canceled",
-            _ => "test-run-state idle"
+            ScenarioRunStatus.Passed => "test-run-marker passed",
+            ScenarioRunStatus.Failed => "test-run-marker failed",
+            ScenarioRunStatus.Canceled => "test-run-marker canceled",
+            _ => "test-run-marker idle"
         };
 
     private static string TestRunIcon(ScenarioRunResult? latestRun)
@@ -592,6 +679,9 @@ else
         => latestRun is null
             ? $"Test {testName}. No runs yet."
             : $"Test {testName}. Latest run {latestRun.Status} at {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}.";
+
+    private static string CreateTestScenarioLabel(FlowWorkspaceService app)
+        => $"Create test scenario for {app.Name}, {CountLabel(app.TestNames.Count, "test")}";
 
     private Task CloseAsync(FlowWorkspaceService app) => Projects.CloseProjectAsync(app).AsTask();
 
@@ -679,7 +769,7 @@ else
 
     private async Task AddTestFromKeyboardAsync(KeyboardEventArgs args, FlowWorkspaceService app)
     {
-        if (args.Key is "Enter" or " ")
+        if (IsActivationKey(args))
         {
             await AddTestAsync(app);
         }
@@ -702,7 +792,7 @@ else
         }
     }
 
-    private static string StateDotClass(MqttClientState state) => state switch
+    private static string ConnectionDotClass(MqttClientState state) => state switch
     {
         MqttClientState.Connected => "conn-dot live",
         MqttClientState.Connecting or MqttClientState.Reconnecting => "conn-dot pending",

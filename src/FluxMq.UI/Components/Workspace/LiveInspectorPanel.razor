@@ -10,15 +10,15 @@
 <div class="publisher-shell">
     <header class="publisher-header">
         <div class="publisher-title-lockup">
-            <span class="publisher-icon">
-                <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+            <span class="publisher-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="publisher-title-text">
                 <strong>MQTT Publisher</strong>
                 <span>@ActiveAppLabel</span>
             </span>
         </div>
-        <span class="@ConnectionBadgeClass">@ConnectionBadgeLabel</span>
+        <span class="@ConnectionMarkerClass">@ConnectionMarkerLabel</span>
     </header>
 
     <section class="publisher-panel publish-form-panel">
@@ -41,7 +41,7 @@
                 }
                 else
                 {
-                    <div class="publish-static-state">No MQTT clients</div>
+                    <div class="publish-empty" role="status" aria-live="polite">No MQTT clients</div>
                 }
             </label>
 
@@ -59,7 +59,7 @@
             </label>
 
             <div class="publish-row">
-                <label class="publish-qos-select" aria-label="Quality of service">
+                <label class="publish-qos-select" aria-label="@PublishQosLabel">
                     <select @bind="_publishQos">
                         <option value="@MqttQualityOfServiceLevel.AtMostOnce">QoS 0</option>
                         <option value="@MqttQualityOfServiceLevel.AtLeastOnce">QoS 1</option>
@@ -68,6 +68,8 @@
                 </label>
                 <button type="button"
                         class="publish-retain-toggle @(_retain ? "active" : null)"
+                        aria-label="@PublishRetainLabel"
+                        aria-pressed="@(_retain ? "true" : "false")"
                         @onclick="@(() => _retain = !_retain)">
                     <span>Retain</span>
                     <strong>@(_retain ? "On" : "Off")</strong>
@@ -76,7 +78,7 @@
                         class="publish-submit"
                         disabled="@(!CanPublish)"
                         @onclick="PublishAsync">
-                    <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Send" Size="Size.Small" aria-hidden="true" />
                     <span>@PublishButtonLabel</span>
                 </button>
             </div>
@@ -85,7 +87,7 @@
 
     <section class="publisher-panel diagnostics-panel">
         <div class="section-label">
-            <span>MQTT status</span>
+            <span>MQTT connection</span>
             @if (LatestDiagnostic is not null)
             {
                 <span>@LatestDiagnostic.Code</span>
@@ -94,12 +96,12 @@
 
         @if (LatestDiagnostic is null)
         {
-            <div class="status-line muted">Idle</div>
+            <div class="publisher-diagnostic muted">Idle</div>
         }
         else
         {
             <div class="@LatestDiagnosticClass">
-                <MudIcon Icon="@LatestDiagnosticIcon" Size="Size.Small" />
+                <MudIcon Icon="@LatestDiagnosticIcon" Size="Size.Small" aria-hidden="true" />
                 <span>@LatestDiagnostic.Message</span>
             </div>
         }
@@ -146,22 +148,22 @@
         var count => $"{count} clients"
     };
 
-    private string ConnectionBadgeLabel => SelectedConnection?.State.ToString() ?? "No client";
+    private string ConnectionMarkerLabel => SelectedConnection?.State.ToString() ?? "No client";
 
-    private string ConnectionBadgeClass => SelectedConnection?.State switch
+    private string ConnectionMarkerClass => SelectedConnection?.State switch
     {
-        MqttClientState.Connected => "connection-badge connected",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-badge pending",
-        MqttClientState.Faulted => "connection-badge faulted",
-        _ => "connection-badge"
+        MqttClientState.Connected => "connection-marker connected",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-marker pending",
+        MqttClientState.Faulted => "connection-marker faulted",
+        _ => "connection-marker"
     };
 
     private string LatestDiagnosticClass => LatestDiagnostic?.Severity switch
     {
-        "Error" => "status-line error",
-        "Warning" => "status-line warning",
-        "Info" => "status-line info",
-        _ => "status-line muted"
+        "Error" => "publisher-diagnostic error",
+        "Warning" => "publisher-diagnostic warning",
+        "Info" => "publisher-diagnostic info",
+        _ => "publisher-diagnostic muted"
     };
 
     private string LatestDiagnosticIcon => LatestDiagnostic?.Severity switch
@@ -173,6 +175,12 @@
     };
 
     private string PublishButtonLabel => _busy ? "Publishing" : "Publish";
+
+    private string PublishQosLabel => $"Quality of service, {_publishQos}";
+
+    private string PublishRetainLabel => _retain
+        ? "Publish retained message, enabled"
+        : "Publish retained message, disabled";
 
     private string PayloadMeta
     {

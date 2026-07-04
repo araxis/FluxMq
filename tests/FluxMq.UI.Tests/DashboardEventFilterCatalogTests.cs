@@ -10,6 +10,26 @@ namespace FluxMq.UI.Tests;
 public sealed class DashboardEventFilterCatalogTests
 {
     [Fact]
+    public void DashboardWidgetTitleAndTextColors_DefaultToThemeTokens_SoTheyStayVisibleInLightTheme()
+    {
+        // These defaults are emitted as inline CSS custom properties on the widget. Hardcoded
+        // near-white hex (e.g. #f3f7fb) was invisible on the light theme's light background, so
+        // the defaults must resolve through theme tokens (var(--mud-palette-...)) instead.
+        DashboardTopicActivityVisualOptions.DefaultHeaderColor.ShouldStartWith("var(");
+        DashboardTopicActivityVisualOptions.DefaultTextColor.ShouldStartWith("var(");
+        DashboardTopicActivityVisualOptions.DefaultMutedColor.ShouldStartWith("var(");
+        DashboardTopicTreeVisualOptions.DefaultHeaderColor.ShouldStartWith("var(");
+        DashboardTopicTreeVisualOptions.DefaultTextColor.ShouldStartWith("var(");
+        DashboardTopicTreeVisualOptions.DefaultMutedColor.ShouldStartWith("var(");
+        DashboardEventTableVisualOptions.DefaultHeaderColor.ShouldStartWith("var(");
+        DashboardEventTableVisualOptions.DefaultTextColor.ShouldStartWith("var(");
+        DashboardEventTableVisualOptions.DefaultMutedColor.ShouldStartWith("var(");
+        DashboardLatestEventVisualOptions.DefaultHeaderColor.ShouldStartWith("var(");
+        DashboardLatestEventVisualOptions.DefaultDetailColor.ShouldStartWith("var(");
+        DashboardLatestEventVisualOptions.DefaultPayloadColor.ShouldStartWith("var(");
+    }
+
+    [Fact]
     public void DashboardWidgetFormatting_UsesDedicatedWidgetChromeMetadata()
     {
         var kpiWidget = new DashboardWidgetSnapshot(
@@ -2349,6 +2369,26 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void PropertyGridColorPicker_PreservesCssThemeTokenColors()
+    {
+        var root = FindRepositoryRoot();
+        var path = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridColorPicker.razor");
+        var markup = File.ReadAllText(path);
+
+        // CSS theme tokens (e.g. var(--mud-palette-text-primary), used as widget colour defaults)
+        // must be treated as valid colour values and preserved verbatim, so the swatch resolves to
+        // the real theme colour instead of falling back to a fixed colour.
+        markup.ShouldContain("StartsWith(\"var(\"");
+        markup.ShouldContain("color = candidate;");
+    }
+
+    [Fact]
     public void PropertyGridColorPicker_UsesAlphaCapableFrameworkPicker()
     {
         var root = FindRepositoryRoot();
@@ -2368,6 +2408,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AutoClose=\"true\"");
         markup.ShouldContain("OnClosed=\"@ClosePicker\"");
         markup.ShouldContain("<MudPopover");
+        markup.ShouldContain("aria-haspopup=\"dialog\"");
+        markup.ShouldContain("aria-expanded=\"@_pickerOpen\"");
+        markup.ShouldContain("aria-controls=\"@_popoverId\"");
+        markup.ShouldContain("id=\"@_popoverId\"");
+        markup.ShouldContain("role=\"dialog\"");
+        markup.ShouldContain("private readonly string _popoverId");
         markup.ShouldContain("ShowAlpha=\"true\"");
         markup.ShouldContain("ShowColorField=\"true\"");
         markup.ShouldContain("ShowInputs=\"true\"");
@@ -2427,6 +2473,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridRow.razor.css"));
+        var selectMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridSelect.razor"));
         var selectCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2434,6 +2487,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridSelect.razor.css"));
+        var iconSegmentMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridIconSegment.razor"));
         var iconSegmentCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2441,6 +2501,13 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "PropertyGridIconSegment.razor.css"));
+        var colorPickerMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "PropertyGridColorPicker.razor"));
         var colorPickerCss = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2469,6 +2536,27 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspector.razor.css"));
+        var appMetricRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorAppMetricRows.razor"));
+        var cellStyleRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorCellStyleRows.razor"));
+        var layoutRows = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardInspectorLayoutRows.razor"));
         var visualMetricRows = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -2476,19 +2564,52 @@ public sealed class DashboardEventFilterCatalogTests
             "Components",
             "Workspace",
             "DashboardInspectorVisualMetricRows.razor"));
+        var inspectorControlMarkups = new[]
+        {
+            propertyGrid,
+            rowMarkup,
+            selectMarkup,
+            iconSegmentMarkup,
+            colorPickerMarkup,
+            inspector,
+            appMetricRows,
+            cellStyleRows,
+            layoutRows,
+            visualMetricRows
+        };
 
         propertyGrid.ShouldContain("DefaultNameColumnWidth = 116");
+        inspectorControlMarkups
+            .SelectMany(static markup => markup.Split('\n'))
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         propertyGrid.ShouldContain("MinNameColumnWidth = 78");
         propertyGrid.ShouldContain("MaxNameColumnWidth = 176");
         propertyGrid.ShouldContain("--property-grid-name-width: min({_nameColumnWidth.ToString(\"0\", CultureInfo.InvariantCulture)}px, 39%);");
-        propertyGrid.ShouldContain("aria-label=\"Dashboard property editor\"");
+        propertyGrid.ShouldContain("aria-label=\"@GridAriaLabel\"");
+        propertyGrid.ShouldContain("private string GridAriaLabel");
+        propertyGrid.ShouldContain("$\"Dashboard property editor, {Groups.Count.ToString(CultureInfo.InvariantCulture)} groups\"");
+        propertyGrid.ShouldContain("title=\"@NameColumnResizeLabel\"");
+        propertyGrid.ShouldContain("aria-label=\"@NameColumnResizeLabel\"");
+        propertyGrid.ShouldContain("private string NameColumnResizeLabel");
+        propertyGrid.ShouldContain("$\"Resize property name column, {NameColumnWidthValue} pixels\"");
+        propertyGrid.ShouldNotContain("aria-label=\"Dashboard property editor\"");
+        propertyGrid.ShouldNotContain("title=\"Resize property name column\"");
+        propertyGrid.ShouldNotContain("aria-label=\"Resize property name column\"");
+        propertyGrid.ShouldContain("aria-keyshortcuts=\"ArrowLeft ArrowRight Home End Enter\"");
         propertyGrid.ShouldContain("role=\"rowgroup\"");
         propertyGrid.ShouldContain("aria-label=\"@GroupAriaLabel(group, collapsed)\"");
+        propertyGrid.ShouldContain("aria-controls=\"@GroupBodyId(group)\"");
         propertyGrid.ShouldContain("aria-label=\"@GroupHeaderAriaLabel(group, collapsed)\"");
         propertyGrid.ShouldContain("title=\"@group.Title\"");
+        propertyGrid.ShouldContain("id=\"@GroupBodyId(group)\"");
         propertyGrid.ShouldContain("aria-label=\"@FormatSettingCount(group.SettingCount)\"");
         propertyGrid.ShouldContain("private static string GroupAriaLabel");
         propertyGrid.ShouldContain("private static string GroupHeaderAriaLabel");
+        propertyGrid.ShouldContain("private static string GroupBodyId");
+        propertyGrid.ShouldContain("private static string SanitizeIdToken");
         propertyGridCss.ShouldContain("container-name: property-grid;");
         propertyGridCss.ShouldContain("position: sticky;");
         propertyGridCss.ShouldContain("grid-template-columns: 20px minmax(0, 1fr) auto;");
@@ -2512,6 +2633,20 @@ public sealed class DashboardEventFilterCatalogTests
         rowCss.ShouldContain("width: calc(100% - 4px);");
         rowCss.ShouldContain(".property-grid-help ::deep .mud-icon-root");
         rowCss.ShouldContain("grid-template-columns: minmax(0, 1fr);");
+        selectMarkup.ShouldContain("aria-haspopup=\"listbox\"");
+        selectMarkup.ShouldContain("aria-expanded=\"@_isOpen\"");
+        selectMarkup.ShouldContain("aria-controls=\"@_listboxId\"");
+        selectMarkup.ShouldContain("id=\"@_listboxId\"");
+        selectMarkup.ShouldContain("role=\"listbox\"");
+        selectMarkup.ShouldContain("aria-activedescendant=\"@SelectedOptionId\"");
+        selectMarkup.ShouldContain("aria-label=\"@ResolvedAriaLabel\"");
+        selectMarkup.ShouldContain("id=\"@OptionId(index)\"");
+        selectMarkup.ShouldContain("private readonly string _listboxId");
+        selectMarkup.ShouldContain("private string? SelectedOptionId");
+        selectMarkup.ShouldContain("private string OptionId(int index)");
+        selectMarkup.ShouldContain("string.Equals(args.Key, \"Spacebar\", StringComparison.Ordinal)");
+        selectMarkup.ShouldContain("@onclick=\"@(() => SelectOptionAsync(option))\"");
+        selectMarkup.ShouldContain("@onmousedown=\"@(() => SelectOptionAsync(option))\"");
         selectCss.ShouldContain("max-height: 160px;");
         selectCss.ShouldContain("right: 5px;");
         iconSegmentCss.ShouldContain("min-height: 19px;");
@@ -2521,36 +2656,58 @@ public sealed class DashboardEventFilterCatalogTests
         colorPickerCss.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) 24px;");
         colorPickerCss.ShouldContain("width: calc(100% - 4px);");
         alignmentPadCss.ShouldContain("grid-template-columns: repeat(3, 16px);");
-        inspector.ShouldContain("role=\"complementary\" aria-label=\"Dashboard inspector\"");
+        alignmentPadCss.ShouldContain(".property-grid-alignment-pad-button span");
+        alignmentPadCss.ShouldContain("border-radius: 50%;");
+        alignmentPadCss.ShouldNotContain("border-radius: 999px;");
+        inspector.ShouldContain("role=\"complementary\" aria-label=\"@InspectorRegionLabel(propertyGroups)\"");
+        inspector.ShouldContain("private string InspectorRegionLabel(IReadOnlyList<PropertyGridGroup> groups)");
+        inspector.ShouldContain("var targetLabel = string.Equals(InspectorTitle, \"Dashboard inspector\", StringComparison.Ordinal)");
+        inspector.ShouldContain("return $\"{targetLabel}, {InspectorModeLabel}, {InspectorGroupCountLabel(groups.Count)}, {InspectorPropertyCountLabel(groups)}\"");
+        inspector.ShouldNotContain("role=\"complementary\" aria-label=\"Dashboard inspector\"");
         inspector.ShouldContain("var propertyGroups = PropertyGroups;");
         inspector.ShouldContain("class=\"@InspectorHeaderClass\"");
         inspector.ShouldContain("dashboard-inspector-meta-strip");
-        inspector.ShouldContain("dashboard-inspector-live-strip dashboard-inspector-status-chip");
-        inspector.ShouldContain("role=\"status\"");
-        inspector.ShouldContain("title=\"@InspectorStatusLabel\"");
+        inspector.ShouldContain("aria-label=\"@InspectorMetaSummaryLabel\"");
+        inspector.ShouldContain("private string InspectorMetaSummaryLabel");
+        inspector.ShouldContain("private string WidgetCommandGroupLabel");
+        inspector.ShouldContain("private string ResetWidgetPropertiesLabel");
+        inspector.ShouldContain("aria-label=\"@WidgetCommandGroupLabel\"");
+        inspector.ShouldContain("Text=\"@ResetWidgetPropertiesLabel\"");
+        inspector.ShouldContain("aria-label=\"@ResetWidgetPropertiesLabel\"");
         inspector.ShouldContain("dashboard-inspector-reset-command");
         inspector.ShouldContain("@InspectorModeLabel");
-        inspector.ShouldContain("@InspectorStatusIcon");
-        inspector.ShouldContain("@InspectorStatusLabel");
         inspector.ShouldContain("@InspectorGroupCountLabel(propertyGroups.Count)");
         inspector.ShouldContain("@InspectorPropertyCountLabel(propertyGroups)");
         inspector.ShouldContain("dashboard-inspector-property-shell");
+        inspector.ShouldContain("dashboard-inspector-empty\" role=\"status\" aria-live=\"polite\"");
         inspector.ShouldContain("dashboard-inspector-empty-icon");
         inspector.ShouldContain("dashboard-inspector-empty-card");
         inspector.ShouldContain("private string InspectorModeClass");
-        inspector.ShouldContain("Widget edits apply immediately");
-        inspector.ShouldContain("Cell edits apply immediately");
+        inspector.ShouldContain("Empty cell");
+        inspector.ShouldNotContain("Cell ready");
+        inspector.ShouldNotContain("dashboard-inspector-live-strip");
+        inspector.ShouldNotContain("dashboard-inspector-status-chip");
+        inspector.ShouldNotContain("title=\"@InspectorStatusLabel\"");
+        inspector.ShouldNotContain("@InspectorStatusIcon");
+        inspector.ShouldNotContain("@InspectorStatusLabel");
+        inspector.ShouldNotContain("Widget edits apply immediately");
+        inspector.ShouldNotContain("Cell edits apply immediately");
+        inspector.ShouldNotContain("Select a target to edit");
+        inspector.ShouldNotContain("aria-label=\"Inspector selection summary\"");
+        inspector.ShouldNotContain("aria-label=\"Widget commands\"");
+        inspector.ShouldNotContain("aria-label=\"Reset widget properties\"");
+        inspector.ShouldNotContain("Text=\"Reset widget properties to defaults\"");
         inspector.ShouldContain("private static string InspectorPropertyCountLabel");
         inspectorCss.ShouldContain("flex: 0 0 324px;");
         inspectorCss.ShouldContain("grid-template-columns: 24px minmax(0, 1fr) auto;");
         inspectorCss.ShouldContain(".dashboard-inspector-header.widget");
         inspectorCss.ShouldContain(".dashboard-inspector-reset-command");
-        inspectorCss.ShouldContain(".dashboard-inspector-status-chip");
         inspectorCss.ShouldContain(".dashboard-inspector-heading");
         inspectorCss.ShouldContain("flex-wrap: nowrap;");
         inspectorCss.ShouldContain(".dashboard-inspector-meta-strip span");
         inspectorCss.ShouldContain("flex: 0 1 auto;");
-        inspectorCss.ShouldContain(".dashboard-inspector-live-strip");
+        inspectorCss.ShouldNotContain(".dashboard-inspector-status-chip");
+        inspectorCss.ShouldNotContain(".dashboard-inspector-live-strip");
         inspectorCss.ShouldContain(".dashboard-inspector-property-shell");
         inspectorCss.ShouldContain("overflow: hidden;");
         inspectorCss.ShouldNotContain(".dashboard-inspector-empty::before");
@@ -2561,12 +2718,34 @@ public sealed class DashboardEventFilterCatalogTests
         inspectorCss.ShouldContain("overflow-wrap: anywhere;");
         inspectorCss.ShouldContain("align-content: center;");
         inspectorCss.ShouldContain(".dashboard-inspector-meta-strip span:nth-child(n + 3)");
-        inspectorCss.ShouldContain(".dashboard-inspector-reset-command span,");
+        inspectorCss.ShouldContain(".dashboard-inspector-reset-command span {");
         visualMetricRows.ShouldContain("KeyboardArrowUp");
         visualMetricRows.ShouldContain("KeyboardArrowDown");
         visualMetricRows.ShouldContain("Icons.Material.Filled.Close");
-        visualMetricRows.ShouldContain("aria-label=\"@($\"Move {VisualMetricLabel(currentMetric)} up\")\"");
-        visualMetricRows.ShouldContain("aria-label=\"Add metric card\"");
+        visualMetricRows.ShouldContain("var currentMetricLabel = VisualMetricLabel(currentMetric);");
+        visualMetricRows.ShouldContain("aria-label=\"@MetricCardCommandsLabel(currentMetricLabel)\"");
+        visualMetricRows.ShouldContain("title=\"@MoveMetricUpLabel(currentMetricLabel)\"");
+        visualMetricRows.ShouldContain("aria-label=\"@MoveMetricUpLabel(currentMetricLabel)\"");
+        visualMetricRows.ShouldContain("title=\"@MoveMetricDownLabel(currentMetricLabel)\"");
+        visualMetricRows.ShouldContain("aria-label=\"@MoveMetricDownLabel(currentMetricLabel)\"");
+        visualMetricRows.ShouldContain("title=\"@RemoveMetricCardLabel(currentMetricLabel)\"");
+        visualMetricRows.ShouldContain("aria-label=\"@RemoveMetricCardLabel(currentMetricLabel)\"");
+        visualMetricRows.ShouldContain("private static string MetricCardCommandsLabel(string metricLabel)");
+        visualMetricRows.ShouldContain("private static string MoveMetricUpLabel(string metricLabel)");
+        visualMetricRows.ShouldContain("private static string MoveMetricDownLabel(string metricLabel)");
+        visualMetricRows.ShouldContain("private static string RemoveMetricCardLabel(string metricLabel)");
+        visualMetricRows.ShouldNotContain("@($\"Move {VisualMetricLabel(currentMetric)} up\")");
+        visualMetricRows.ShouldNotContain("@($\"Move {VisualMetricLabel(currentMetric)} down\")");
+        visualMetricRows.ShouldNotContain("@($\"Remove {VisualMetricLabel(currentMetric)}\")");
+        visualMetricRows.ShouldNotContain("title=\"Move up\"");
+        visualMetricRows.ShouldNotContain("title=\"Move down\"");
+        visualMetricRows.ShouldNotContain("title=\"Remove\"");
+        visualMetricRows.ShouldContain("title=\"@AddMetricCardLabel\"");
+        visualMetricRows.ShouldContain("aria-label=\"@AddMetricCardLabel\"");
+        visualMetricRows.ShouldContain("private string AddMetricCardLabel => string.IsNullOrWhiteSpace(MetricToAdd)");
+        visualMetricRows.ShouldContain("$\"Add metric card for {VisualMetricLabel(MetricToAdd)}\"");
+        visualMetricRows.ShouldNotContain("title=\"Add metric card\"");
+        visualMetricRows.ShouldNotContain("aria-label=\"Add metric card\"");
     }
 
     [Fact]
@@ -2590,27 +2769,51 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("Icons.Material.Filled.Send");
         markup.ShouldContain("MQTT Publisher");
+        markup.ShouldContain("class=\"publisher-icon\" aria-hidden=\"true\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("MQTT client");
-        markup.ShouldContain("MQTT status");
+        markup.ShouldContain("MQTT connection");
         markup.ShouldContain("ActiveAppLabel");
         markup.ShouldContain("ClientCountLabel");
-        markup.ShouldContain("ConnectionBadgeClass");
+        markup.ShouldContain("ConnectionMarkerClass");
+        markup.ShouldContain("ConnectionMarkerLabel");
         markup.ShouldContain("EnsureLiveConnectionsForActiveProject");
         markup.ShouldContain("Live.AddConnectionIfAbsent(profile, subscription, name)");
         markup.ShouldContain("Live.ConnectAsync(connection.Id)");
         markup.ShouldContain("Live.PublishAsync(");
         markup.ShouldContain("RecordManualMqttPublish");
         markup.ShouldContain("diagnostics-panel");
+        markup.ShouldContain("publisher-diagnostic muted");
+        markup.ShouldContain("LatestDiagnosticClass");
         markup.ShouldContain("publish-form-grid");
         markup.ShouldContain("publish-field broker");
         markup.ShouldContain("publish-field topic");
         markup.ShouldContain("publish-field payload");
         markup.ShouldContain("publish-qos-select");
+        markup.ShouldContain("aria-label=\"@PublishQosLabel\"");
+        markup.ShouldContain("private string PublishQosLabel => $\"Quality of service, {_publishQos}\"");
         markup.ShouldContain("publish-retain-toggle");
+        markup.ShouldContain("aria-label=\"@PublishRetainLabel\"");
+        markup.ShouldContain("private string PublishRetainLabel => _retain");
+        markup.ShouldContain("\"Publish retained message, enabled\"");
+        markup.ShouldContain("\"Publish retained message, disabled\"");
+        markup.ShouldNotContain("aria-label=\"Quality of service\"");
+        markup.ShouldNotContain("aria-label=\"Publish retained message\"");
+        markup.ShouldContain("aria-pressed=\"@(_retain ? \"true\" : \"false\")\"");
         markup.ShouldContain("publish-submit");
+        markup.ShouldContain("publish-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("No MQTT clients");
         markup.ShouldNotContain("Selected client");
         markup.ShouldNotContain("ConnectSelectedAsync");
+        markup.ShouldNotContain("publish-static-state");
         markup.ShouldNotContain("publisher-empty-state");
         markup.ShouldNotContain("client-summary");
         markup.ShouldNotContain("Add an app MQTT connection to publish messages.");
@@ -2630,13 +2833,21 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("select-pill");
         markup.ShouldNotContain("pill-button");
         markup.ShouldNotContain("section-badge");
+        markup.ShouldNotContain("ConnectionBadgeClass");
+        markup.ShouldNotContain("connection-badge");
+        markup.ShouldNotContain("MQTT state");
+        markup.ShouldNotContain("ConnectionStateClass");
+        markup.ShouldNotContain("ConnectionStateLabel");
+        markup.ShouldNotContain("MQTT status");
+        markup.ShouldNotContain("status-line");
 
         css.ShouldContain(".publisher-header");
         css.ShouldContain(".publisher-title-lockup");
         css.ShouldContain(".publisher-icon");
-        css.ShouldContain(".connection-badge.connected");
-        css.ShouldContain(".connection-badge.pending");
-        css.ShouldContain(".connection-badge.faulted");
+        css.ShouldContain(".connection-marker.connected");
+        css.ShouldContain(".connection-marker.pending");
+        css.ShouldContain(".connection-marker.faulted");
+        css.ShouldNotContain(".connection-state");
         css.ShouldContain(".publisher-panel");
         css.ShouldContain(".publish-form-grid");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
@@ -2645,19 +2856,22 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-column: 1 / -1;");
         css.ShouldContain("text-transform: none;");
         css.ShouldContain("height: 30px;");
+        css.ShouldContain(".publish-empty");
         css.ShouldContain("min-height: 88px;");
         css.ShouldContain("max-height: 150px;");
         css.ShouldContain(".publish-qos-select");
         css.ShouldContain(".publish-retain-toggle.active");
         css.ShouldContain(".diagnostics-panel");
-        css.ShouldContain(".status-line.info");
-        css.ShouldContain(".status-line.warning");
-        css.ShouldContain(".status-line.error");
+        css.ShouldContain(".publisher-diagnostic.info");
+        css.ShouldContain(".publisher-diagnostic.warning");
+        css.ShouldContain(".publisher-diagnostic.error");
+        css.ShouldNotContain(".status-line");
         css.ShouldNotContain(".client-panel");
         css.ShouldNotContain(".client-summary");
         css.ShouldNotContain(".client-state-dot");
         css.ShouldNotContain(".client-action");
         css.ShouldNotContain(".client-error");
+        css.ShouldNotContain(".publish-static-state");
         css.ShouldNotContain(".publisher-empty-state");
         css.ShouldNotContain(".inspector-tabs");
         css.ShouldNotContain(".inspector-tab");
@@ -2670,6 +2884,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".select-pill");
         css.ShouldNotContain(".pill-button");
         css.ShouldNotContain(".section-badge");
+        css.ShouldNotContain(".connection-badge");
         css.ShouldNotContain("border-radius: 999px;");
     }
 
@@ -2709,11 +2924,95 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("<LiveInspectorPanel />");
         markup.ShouldContain("@if (HasActiveProject)");
         markup.ShouldContain("private bool HasActiveProject => Projects.ActiveProject is not null;");
+        markup.ShouldContain("var connectionsAvailable = await Live.EnsureConnectionsAsync(project.GetConnectionResources());");
         markup.ShouldContain("no-active-project");
-        markup.ShouldContain("Hide MQTT publisher");
-        markup.ShouldContain("Show MQTT publisher");
+        markup.ShouldContain("PublisherPanelToggleLabel");
+        markup.ShouldContain("Text=\"@NewProjectActionLabel\"");
+        markup.ShouldContain("aria-label=\"@NewProjectActionLabel\"");
+        markup.ShouldContain("Text=\"@OpenProjectActionLabel\"");
+        markup.ShouldContain("aria-label=\"@OpenProjectActionLabel\"");
+        markup.ShouldContain("Text=\"@SaveProjectActionLabel\"");
+        markup.ShouldContain("aria-label=\"@SaveProjectActionLabel\"");
+        markup.ShouldContain("Text=\"@SaveProjectAsActionLabel\"");
+        markup.ShouldContain("aria-label=\"@SaveProjectAsActionLabel\"");
+        markup.ShouldContain("Text=\"@ValidateProjectActionLabel\"");
+        markup.ShouldContain("aria-label=\"@ValidateProjectActionLabel\"");
+        markup.ShouldContain("Text=\"@RunProjectActionLabel\"");
+        markup.ShouldContain("aria-label=\"@RunProjectActionLabel\"");
+        markup.ShouldContain("Text=\"@StopProjectActionLabel\"");
+        markup.ShouldContain("aria-label=\"@StopProjectActionLabel\"");
+        markup.ShouldContain("private string ActiveProjectActionTarget");
+        markup.ShouldContain("private string NewProjectActionLabel => \"Create new project\";");
+        markup.ShouldContain("private string OpenProjectActionLabel => \"Open project file\";");
+        markup.ShouldContain("private string SaveProjectActionLabel");
+        markup.ShouldContain("private string RunProjectActionLabel");
+        markup.ShouldContain("private string StopProjectActionLabel");
+        markup.ShouldContain("aria-label=\"@_themeLabel\"");
+        markup.ShouldContain("Text=\"@PublisherPanelToggleLabel\"");
+        markup.ShouldContain("aria-label=\"@PublisherPanelToggleLabel\"");
+        markup.ShouldContain("private string PublisherPanelToggleLabel => _rightOpen");
+        markup.ShouldContain("$\"Hide MQTT publisher for {ActiveProjectActionTarget}\"");
+        markup.ShouldContain("$\"Show MQTT publisher for {ActiveProjectActionTarget}\"");
+        markup.ShouldContain("Class=\"flux-command-spin-icon\"");
+        markup.ShouldContain("aria-hidden=\"true\"");
+        markup.ShouldContain("<MudIcon Icon=\"@DragPreviewIcon(activeDrag.TargetKind)\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("flux-bottom-bar");
+        markup.ShouldContain("AppRuntimeMarkerClass");
+        markup.ShouldContain("AppRuntimeSummaryLabel");
+        markup.ShouldContain("AppRuntimeTooltip");
+        markup.ShouldContain("role=\"status\"");
+        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("aria-label=\"@AppRuntimeSummaryLabel\"");
+        System.Text.RegularExpressions.Regex.IsMatch(
+            markup,
+            @"<div class=""@AppRuntimeMarkerClass""(?=[^>]*role=""status"")(?=[^>]*aria-live=""polite"")(?=[^>]*aria-label=""@AppRuntimeSummaryLabel"")[^>]*>",
+            System.Text.RegularExpressions.RegexOptions.Singleline).ShouldBeTrue();
+        markup.ShouldContain("<span class=\"flux-app-runtime-dot\" aria-hidden=\"true\"></span>");
+        markup.ShouldContain("LiveConnectionMarkerClass");
+        markup.ShouldContain("LiveConnectionSummaryLabel");
+        markup.ShouldContain("aria-label=\"@LiveConnectionSummaryLabel\"");
+        System.Text.RegularExpressions.Regex.IsMatch(
+            markup,
+            @"<div class=""@LiveConnectionMarkerClass""(?=[^>]*aria-label=""@LiveConnectionSummaryLabel"")(?![^>]*role=""status"")[^>]*>",
+            System.Text.RegularExpressions.RegexOptions.Singleline).ShouldBeTrue();
+        markup.ShouldContain("<span class=\"flux-live-connection-dot\" aria-hidden=\"true\"></span>");
+        markup.ShouldContain("LiveConnectionDotClass");
+        markup.ShouldContain("<span class=\"@LiveConnectionDotClass\" aria-hidden=\"true\"></span>");
+        System.Text.RegularExpressions.Regex.IsMatch(
+            markup,
+            @"<div class=""flux-bottom-group""(?=[^>]*role=""status"")(?=[^>]*aria-live=""polite"")(?=[^>]*aria-label=""@LiveConnectionSummaryLabel"")[^>]*>",
+            System.Text.RegularExpressions.RegexOptions.Singleline).ShouldBeTrue();
+        markup.ShouldContain("private string LiveConnectionSummaryLabel => $\"MQTT {Live.State}\";");
+        markup.ShouldNotContain("flux-statusbar");
+        markup.ShouldNotContain("FlowStateClass");
+        markup.ShouldNotContain("ActiveProjectStateLabel");
+        markup.ShouldNotContain("ActiveProjectStateTooltip");
+        markup.ShouldNotContain("RunStateClass");
+        markup.ShouldNotContain("flux-flowstate");
+        markup.ShouldNotContain("flux-flow-dot");
+        markup.ShouldNotContain("flux-runstate");
+        markup.ShouldNotContain("flux-run-dot");
+        markup.ShouldNotContain("LiveStateDotClass");
+        markup.ShouldNotContain("StatusDotClass");
+        markup.ShouldNotContain("brokersReady");
+        markup.ShouldNotContain("Text=\"Open file\"");
+        markup.ShouldNotContain("Text=\"Save\"");
+        markup.ShouldNotContain("Text=\"Save as\"");
+        markup.ShouldNotContain("Text=\"Validate app\"");
+        markup.ShouldNotContain("Text=\"Run app\"");
+        markup.ShouldNotContain("Text=\"Stop app\"");
+        markup.ShouldNotContain("aria-label=\"Open file\"");
+        markup.ShouldNotContain("aria-label=\"Run app\"");
+        markup.ShouldNotContain("aria-label=\"Stop app\"");
+        markup.ShouldNotContain("aria-label=\"@(_rightOpen ? \"Hide MQTT publisher\" : \"Show MQTT publisher\")\"");
+        markup.ShouldNotContain("Text=\"@(_rightOpen ? \"Hide MQTT publisher\" : \"Show MQTT publisher\")\"");
         markup.ShouldNotContain("Workspace navigation");
         markup.ShouldNotContain("No active project");
+        markup.ShouldNotContain("Class=\"flux-command-spin-icon\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@DragPreviewIcon(activeDrag.TargetKind)\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<span class=\"flux-app-runtime-dot\"></span>");
+        markup.ShouldNotContain("<span class=\"flux-live-connection-dot\"></span>");
+        markup.ShouldNotContain("<span class=\"@LiveConnectionDotClass\"></span>");
         markup.ShouldNotContain("flux-rail");
         markup.ShouldNotContain("flux-left-panel");
         markup.ShouldNotContain("left-collapsed");
@@ -2721,10 +3020,20 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("<SessionPanel />");
 
         css.ShouldContain("--flux-right-width: 360px;");
+        css.ShouldContain("--flux-bottom-height: 28px;");
         css.ShouldContain("\"top top\"");
         css.ShouldContain("\"main right\"");
-        css.ShouldContain("\"status status\"");
+        css.ShouldContain("\"bottom bottom\"");
+        css.ShouldContain("\"bottom\";");
         css.ShouldContain(".flux-breadcrumb");
+        css.ShouldContain(".flux-bottom-bar");
+        css.ShouldContain(".flux-live-dot");
+        css.ShouldContain(".flux-app-runtime-marker");
+        css.ShouldContain(".flux-app-runtime-marker.valid");
+        css.ShouldContain(".flux-app-runtime-dot");
+        css.ShouldContain(".flux-live-connection-marker");
+        css.ShouldContain(".flux-live-connection-marker.live");
+        css.ShouldContain(".flux-live-connection-dot");
         css.ShouldContain("font-size: 12.5px;");
         css.ShouldContain("font-weight: 650;");
         css.ShouldContain(".flux-shell.right-collapsed");
@@ -2733,6 +3042,15 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-rows: minmax(0, 1fr);");
         css.ShouldContain("\"main\"");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) var(--flux-right-width);");
+        css.ShouldNotContain("--flux-status-height");
+        css.ShouldNotContain("\"status status\"");
+        css.ShouldNotContain("\"status\";");
+        css.ShouldNotContain(".flux-statusbar");
+        css.ShouldNotContain(".flux-status-dot");
+        css.ShouldNotContain(".flux-flowstate");
+        css.ShouldNotContain(".flux-flow-dot");
+        css.ShouldNotContain(".flux-runstate");
+        css.ShouldNotContain(".flux-run-dot");
         css.ShouldNotContain("--flux-rail-width");
         css.ShouldNotContain("--flux-left-width");
         css.ShouldNotContain(".flux-rail");
@@ -2796,11 +3114,24 @@ public sealed class DashboardEventFilterCatalogTests
             "Services",
             "TopicExplorerMonitorResolver.cs"));
 
-        markup.ShouldContain("aria-label=\"Topic tree\"");
-        markup.ShouldContain("aria-label=\"Topic last state and history\"");
-        markup.ShouldContain("aria-label=\"Latest topic message\"");
-        markup.ShouldContain("aria-label=\"Publish MQTT message\"");
-        markup.ShouldContain("aria-label=\"Topic message history\"");
+        markup.ShouldContain("aria-label=\"@TopicExplorerTreeLabel\"");
+        markup.ShouldContain("private string TopicExplorerTreeLabel => $\"{TopicSourceLabel} topic tree, {BrokerCountLabel(BrokerGroups.Count)}, {TopicCountLabel(TopicCount)}\"");
+        markup.ShouldContain("private static string BrokerCountLabel(int count)");
+        markup.ShouldContain("private static string TopicCountLabel(int count)");
+        markup.ShouldNotContain("aria-label=\"Topic tree\"");
+        markup.ShouldContain("aria-label=\"@TopicExplorerDetailLabel\"");
+        markup.ShouldContain("private string TopicExplorerDetailLabel => $\"{SelectedTopicLabel} latest message and history\"");
+        markup.ShouldNotContain("aria-label=\"Topic latest message and history\"");
+        markup.ShouldNotContain("aria-label=\"Topic last state and history\"");
+        markup.ShouldContain("aria-label=\"@LatestTopicMessageLabel\"");
+        markup.ShouldContain("private string LatestTopicMessageLabel => $\"{SelectedTopicLabel} latest topic message\"");
+        markup.ShouldNotContain("aria-label=\"Latest topic message\"");
+        markup.ShouldContain("aria-label=\"@PublishPanelLabel\"");
+        markup.ShouldContain("private string PublishPanelLabel => $\"Publish MQTT message for {SelectedTopicLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Publish MQTT message\"");
+        markup.ShouldContain("aria-label=\"@TopicHistoryPanelLabel\"");
+        markup.ShouldContain("private string TopicHistoryPanelLabel => $\"{SelectedTopicLabel} message history, {HistorySummaryLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Topic message history\"");
         markup.ShouldContain("<h2>Topics</h2>");
         markup.ShouldContain("@implements IDisposable");
         markup.ShouldContain("@using System.Globalization");
@@ -2820,18 +3151,60 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("topic-broker-group");
         markup.ShouldContain("topic-broker-row");
         markup.ShouldContain("topic-broker-main");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIconButton\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static iconButton => !iconButton.Contains("aria-label=", StringComparison.Ordinal) &&
+                !iconButton.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        markup.ShouldContain("class=\"topic-explorer-title-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("class=\"topic-broker-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("topic-broker-connection");
         markup.ShouldContain("topic-broker-edit");
         markup.ShouldContain("Icons.Material.Filled.Settings");
         markup.ShouldContain("OpenBrokerMonitorEditorAsync");
-        markup.ShouldContain("Broker monitor settings");
-        markup.ShouldContain("Open broker monitor settings");
+        markup.ShouldContain("aria-label=\"@SelectBrokerLabel(group)\"");
+        markup.ShouldContain("private string SelectBrokerLabel(TopicBrokerGroup group)");
+        markup.ShouldContain("$\"Select broker {group.Name}, {BrokerConnectionLabel(group)}, {TopicCountLabel(group.TopicCount)}\"");
+        markup.ShouldContain("<MudTooltip Text=\"@BrokerMonitorSettingsLabel(group)\">");
+        markup.ShouldContain("aria-label=\"@BrokerMonitorSettingsLabel(group)\"");
+        markup.ShouldContain("private string BrokerMonitorSettingsLabel(TopicBrokerGroup group)");
+        markup.ShouldContain("$\"Open broker monitor settings for {group.Name}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Select broker {group.Name}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Open broker monitor settings {group.Name}\")\"");
+        markup.ShouldNotContain("<MudTooltip Text=\"Broker monitor settings\">");
         markup.ShouldContain("PreserveCandidateExplorerNames");
         markup.ShouldContain("topic-broker-tree");
+        markup.ShouldContain("topic-session-note");
+        markup.ShouldContain("Class=\"topic-session-live-button\"");
+        markup.ShouldContain("aria-label=\"@SwitchToLiveTrafficLabel\"");
+        markup.ShouldContain("private string SwitchToLiveTrafficLabel => Live.SelectedStoredSession is { } session");
+        markup.ShouldContain("$\"Switch {session.Name} to live traffic\"");
+        markup.ShouldNotContain("aria-label=\"Switch to live traffic\"");
+        markup.ShouldContain("aria-label=\"@ClearTopicSelectionLabel\"");
+        markup.ShouldContain("<MudTooltip Text=\"@ClearTopicSelectionLabel\">");
+        markup.ShouldContain("private string ClearTopicSelectionLabel => $\"Clear topic selection for {SelectedTopicLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Clear topic selection\"");
+        markup.ShouldNotContain("<MudTooltip Text=\"Clear topic selection\">");
+        markup.ShouldContain("OnClick=\"@Live.ClearStoredSessionSelection\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Sensors\"");
+        markup.ShouldNotContain("<button type=\"button\" @onclick=\"@Live.ClearStoredSessionSelection\">Switch to live</button>");
         markup.ShouldContain("BrokerGroups.Count brokers");
         markup.ShouldContain("VisibleBrokerGroups");
         markup.ShouldContain("BrokerLabel(LastMessage)");
         markup.ShouldContain("topic-stats-panel");
-        markup.ShouldContain("aria-label=\"Topic scope statistics\"");
+        markup.ShouldContain("aria-label=\"@TopicStatsPanelLabel\"");
+        markup.ShouldContain("private string TopicStatsPanelLabel => $\"{SelectedTopicLabel} topic scope statistics, {MessageCountLabel(HistoryMessages.Count)}\"");
+        markup.ShouldNotContain("aria-label=\"Topic scope statistics\"");
         markup.ShouldContain("var topicStats = TopicStats;");
         markup.ShouldContain("TopicStats => BuildTopicScopeStats(HistoryMessages)");
         markup.ShouldContain("TopicStatsScopeLabel");
@@ -2859,7 +3232,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("PublishButtonLabel");
         markup.ShouldContain("CanPublish");
         markup.ShouldContain("topic-publish-assist");
-        markup.ShouldContain("aria-label=\"Publish assist\"");
+        markup.ShouldContain("aria-label=\"@PublishAssistLabel\"");
+        markup.ShouldContain("private string PublishAssistLabel => $\"Publish assist for {SelectedTopicLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Publish assist\"");
         markup.ShouldContain("Use message");
         markup.ShouldContain("Use latest");
         markup.ShouldContain("Use selected");
@@ -2874,7 +3249,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("_publishRetain = message.Retain");
         markup.ShouldContain("FindPublishConnectionForBroker(BrokerLabel(message))");
         markup.ShouldContain("topic-publish-recent");
-        markup.ShouldContain("aria-label=\"Recent publishes\"");
+        markup.ShouldContain("aria-label=\"@RecentPublishesLabel\"");
+        markup.ShouldContain("private string RecentPublishesLabel => $\"Recent publishes, {RecentPublishCountLabel}\"");
+        markup.ShouldContain("private string RecentPublishCountLabel => _recentPublishes.Count switch");
+        markup.ShouldNotContain("aria-label=\"Recent publishes\"");
         markup.ShouldContain("MaxRecentPublishes");
         markup.ShouldContain("_recentPublishes");
         markup.ShouldContain("TopicRecentPublish");
@@ -2885,7 +3263,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("RecentPublishMeta");
         markup.ShouldContain("RecentPublishTitle");
         markup.ShouldContain("No recent publishes");
-        markup.ShouldContain("Clear recent publishes");
+        markup.ShouldContain("<MudTooltip Text=\"@ClearRecentPublishesLabel\">");
+        markup.ShouldContain("aria-label=\"@ClearRecentPublishesLabel\"");
+        markup.ShouldContain("private string ClearRecentPublishesLabel => $\"Clear {RecentPublishCountLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Clear recent publishes\"");
+        markup.ShouldNotContain("<MudTooltip Text=\"Clear recent publishes\">");
         markup.ShouldContain("PayloadInspector.Inspect(payloadBytes)");
         markup.ShouldContain("connection.ResourceName");
         markup.ShouldContain("PublishConnectionOptionLabel(connection)");
@@ -2905,10 +3287,18 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Live.ConnectAsync(connection.Id)");
         markup.ShouldContain("Live.PublishAsync(");
         markup.ShouldContain("RecordManualMqttPublish");
-        markup.ShouldContain("aria-label=\"Publish broker\"");
-        markup.ShouldContain("aria-label=\"Publish quality of service\"");
+        markup.ShouldContain("aria-label=\"@PublishBrokerLabel\"");
+        markup.ShouldContain("private string PublishBrokerLabel => $\"Publish broker for {SelectedTopicLabel}, {PublishClientCountLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Publish broker\"");
+        markup.ShouldContain("aria-label=\"@PublishQosLabel\"");
+        markup.ShouldContain("private string PublishQosLabel => $\"Publish quality of service for {SelectedTopicLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Publish quality of service\"");
         markup.ShouldContain("MqttQualityOfServiceLevel.AtMostOnce");
         markup.ShouldContain("topic-publish-retain");
+        markup.ShouldContain("aria-label=\"@PublishRetainLabel\"");
+        markup.ShouldContain("private string PublishRetainLabel => _publishRetain");
+        markup.ShouldNotContain("aria-label=\"Publish retained message\"");
+        markup.ShouldContain("aria-pressed=\"@(_publishRetain ? \"true\" : \"false\")\"");
         markup.ShouldContain("topic-publish-submit");
         markup.ShouldContain("No app brokers");
         markup.ShouldContain("<MudTh>Broker</MudTh>");
@@ -2931,12 +3321,20 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("class=\"topic-col-time\"");
         markup.ShouldContain("class=\"topic-col-topic\"");
         markup.ShouldContain("class=\"topic-col-retain\"");
-        markup.ShouldContain("role=\"search\" aria-label=\"History filters\"");
+        markup.ShouldContain("role=\"search\" aria-label=\"@TopicHistoryFiltersLabel\"");
+        markup.ShouldContain("private string TopicHistoryFiltersLabel => $\"{SelectedTopicLabel} history filters\"");
+        markup.ShouldNotContain("role=\"search\" aria-label=\"History filters\"");
         markup.ShouldContain("Placeholder=\"Filter history\"");
         markup.ShouldContain("topic-history-filter");
         markup.ShouldContain("topic-history-select");
-        markup.ShouldContain("Filter history quality of service");
-        markup.ShouldContain("Filter history retain state");
+        markup.ShouldContain("aria-label=\"@HistoryQosFilterLabel\"");
+        markup.ShouldContain("private string HistoryQosFilterLabel => $\"Filter {SelectedTopicLabel} history by QoS, {HistoryQosFilterText(HistoryQosFilter)}\"");
+        markup.ShouldContain("private static string HistoryQosFilterText(string filter)");
+        markup.ShouldNotContain("aria-label=\"Filter history quality of service\"");
+        markup.ShouldContain("aria-label=\"@HistoryRetainFilterLabel\"");
+        markup.ShouldContain("private string HistoryRetainFilterLabel => $\"Filter {SelectedTopicLabel} history by retain state, {HistoryRetainFilterText(HistoryRetainFilter)}\"");
+        markup.ShouldContain("private static string HistoryRetainFilterText(string filter)");
+        markup.ShouldNotContain("aria-label=\"Filter history retain state\"");
         markup.ShouldContain("<option value=\"@HistoryFilterAll\">All</option>");
         markup.ShouldContain("<option value=\"@HistoryQos0\">QoS 0</option>");
         markup.ShouldContain("<option value=\"@HistoryQos1\">QoS 1</option>");
@@ -2944,11 +3342,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("<option value=\"@HistoryRetained\">Retained</option>");
         markup.ShouldContain("<option value=\"@HistoryNotRetained\">Not retained</option>");
         markup.ShouldContain("ResetHistoryFilters");
-        markup.ShouldContain("aria-label=\"Reset history filters\"");
+        markup.ShouldContain("aria-label=\"@ResetHistoryFiltersLabel\"");
+        markup.ShouldContain("<MudTooltip Text=\"@ResetHistoryFiltersLabel\">");
+        markup.ShouldContain("private string ResetHistoryFiltersLabel => $\"Reset history filters for {SelectedTopicLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Reset history filters\"");
+        markup.ShouldNotContain("<MudTooltip Text=\"Reset history filters\">");
         markup.ShouldContain("ExportVisibleHistoryAsync");
         markup.ShouldContain("ExportHistoryLabel");
         markup.ShouldContain("CanExportHistory");
-        markup.ShouldContain("aria-label=\"Export visible history as JSON\"");
+        markup.ShouldContain("aria-label=\"@ExportVisibleHistoryLabel\"");
+        markup.ShouldContain("private string ExportVisibleHistoryLabel => $\"{ExportHistoryLabel} for {SelectedTopicLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Export visible history as JSON\"");
         markup.ShouldContain("BuildHistoryExportJson");
         markup.ShouldContain("SuggestedHistoryExportPath");
         markup.ShouldContain("WriteHistoryExportAsync");
@@ -2970,12 +3374,33 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("MessageCountLabel(HistoryMessages.Count)");
         markup.ShouldContain("private MqttEnvelope? SelectedHistoryMessage");
         markup.ShouldContain("var messages = VisibleHistoryMessages;");
-        markup.ShouldContain("aria-label=\"Selected MQTT message details\"");
+        markup.ShouldContain("aria-label=\"@SelectedMessageDetailsLabel\"");
+        markup.ShouldContain("private string SelectedMessageDetailsLabel => SelectedHistoryMessage is { } message");
+        markup.ShouldContain("$\"Selected MQTT message details for {BrokerLabel(message)} / {message.Topic}\"");
+        markup.ShouldNotContain("aria-label=\"Selected MQTT message details\"");
         markup.ShouldContain("Message details");
         markup.ShouldContain("SelectedHistoryPayloadPreview");
         markup.ShouldContain("SelectedHistoryReceivedLabel");
-        markup.ShouldContain("role=\"tablist\" aria-label=\"Latest payload views\"");
-        markup.ShouldContain("role=\"tablist\" aria-label=\"Selected payload views\"");
+        markup.ShouldContain("role=\"tablist\" aria-label=\"@LatestPayloadViewsLabel\"");
+        markup.ShouldContain("private string LatestPayloadViewsLabel => $\"{SelectedTopicLabel} latest payload views\"");
+        markup.ShouldNotContain("role=\"tablist\" aria-label=\"Latest payload views\"");
+        markup.ShouldContain("role=\"tablist\" aria-label=\"@SelectedPayloadViewsLabel\"");
+        markup.ShouldContain("private string SelectedPayloadViewsLabel => SelectedHistoryMessage is { } message");
+        markup.ShouldContain("$\"Selected payload views for {BrokerLabel(message)} / {message.Topic}\"");
+        markup.ShouldNotContain("role=\"tablist\" aria-label=\"Selected payload views\"");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space ArrowLeft ArrowRight Home End\"").Count.ShouldBe(2);
+        markup.ShouldContain("id=\"@LatestPayloadViewTabId(view)\"");
+        markup.ShouldContain("aria-controls=\"@LatestPayloadPanelId\"");
+        markup.ShouldContain("id=\"@LatestPayloadPanelId\"");
+        markup.ShouldContain("aria-labelledby=\"@LatestPayloadViewTabId(_lastPayloadView)\"");
+        markup.ShouldContain("id=\"@SelectedPayloadViewTabId(view)\"");
+        markup.ShouldContain("aria-controls=\"@SelectedPayloadPanelId\"");
+        markup.ShouldContain("id=\"@SelectedPayloadPanelId\"");
+        markup.ShouldContain("aria-labelledby=\"@SelectedPayloadViewTabId(_selectedHistoryPayloadView)\"");
+        markup.ShouldContain("@onkeydown=\"@((KeyboardEventArgs args) => OnLatestPayloadViewTabKeyDown(args, view))\"");
+        markup.ShouldContain("@onkeydown=\"@((KeyboardEventArgs args) => OnSelectedPayloadViewTabKeyDown(args, view))\"");
+        markup.ShouldContain("private static string LatestPayloadViewTabId");
+        markup.ShouldContain("private static string SelectedPayloadViewTabId");
         markup.ShouldContain("PayloadViewOptions");
         markup.ShouldContain("SelectedPayloadViewOptions");
         markup.ShouldContain("@foreach (var view in PayloadViewOptions)");
@@ -2990,6 +3415,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("PayloadViewButtonClass");
         markup.ShouldContain("PayloadViewLabel(view)");
         markup.ShouldContain("PayloadViewIcon(view)");
+        markup.ShouldContain("OnLatestPayloadViewTabKeyDown");
+        markup.ShouldContain("OnSelectedPayloadViewTabKeyDown");
+        markup.ShouldContain("ResolvePayloadView");
         markup.ShouldContain("DisplayPayloadView(LastInspection, _lastPayloadView)");
         markup.ShouldContain("DisplaySelectedPayloadView");
         markup.ShouldContain("DisplaySelectedPayloadDiff");
@@ -3009,17 +3437,43 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Snackbar.Add");
         markup.ShouldContain("Icons.Material.Filled.ContentCopy");
         markup.ShouldContain("Icons.Material.Filled.CompareArrows");
-        markup.ShouldContain("aria-label=\"Copy latest payload view\"");
-        markup.ShouldContain("aria-label=\"Copy selected payload view\"");
+        markup.ShouldContain("<MudTooltip Text=\"@CopyLatestPayloadViewLabel\">");
+        markup.ShouldContain("aria-label=\"@CopyLatestPayloadViewLabel\"");
+        markup.ShouldContain("private string CopyLatestPayloadViewLabel => $\"Copy latest {PayloadViewLabel(_lastPayloadView)} payload view for {SelectedTopicLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Copy latest payload view\"");
+        markup.ShouldNotContain("<MudTooltip Text=\"Copy latest payload view\">");
+        markup.ShouldContain("<MudTooltip Text=\"@CopySelectedPayloadViewLabel\">");
+        markup.ShouldContain("aria-label=\"@CopySelectedPayloadViewLabel\"");
+        markup.ShouldContain("private string CopySelectedPayloadViewLabel => $\"Copy selected {PayloadViewLabel(_selectedHistoryPayloadView)} payload view for {SelectedTopicLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Copy selected payload view\"");
+        markup.ShouldNotContain("<MudTooltip Text=\"Copy selected payload view\">");
         markup.ShouldContain("Select a history row to inspect MQTT metadata and payload.");
         markup.ShouldContain("LastMessage is null");
-        markup.ShouldContain("topic-last-state");
+        markup.ShouldContain("topic-latest-message");
+        markup.ShouldContain("LatestMessageSubtitle");
+        markup.ShouldNotContain("topic-last-state");
+        markup.ShouldNotContain("LastStateSubtitle");
         markup.ShouldContain("topic-last-payload");
         markup.ShouldContain("topic-last-meta");
+        markup.ShouldContain("aria-label=\"@LatestMessageMetadataLabel\"");
+        markup.ShouldContain("private string LatestMessageMetadataLabel => LastMessage is { } message");
+        markup.ShouldContain("$\"Latest message metadata for {BrokerLabel(message)} / {message.Topic}\"");
+        markup.ShouldNotContain("aria-label=\"Latest message metadata\"");
         markup.ShouldContain("topic-no-traffic");
         markup.ShouldContain("topic-monitor-list");
+        markup.ShouldContain("aria-label=\"@BrokerMonitorsLabel\"");
+        markup.ShouldContain("private string BrokerMonitorsLabel => $\"{BrokerCountLabel(NoTrafficBrokerGroups.Count)} shown for {SelectedTopicLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Broker monitors\"");
+        markup.ShouldNotContain("aria-label=\"Broker monitor status\"");
         markup.ShouldContain("NoTrafficBrokerGroups");
         markup.ShouldContain("MonitorRowClass");
+        markup.ShouldContain("topic-monitor-connection");
+        markup.ShouldContain("BrokerConnectionClass");
+        markup.ShouldContain("BrokerConnectionLabel");
+        markup.ShouldNotContain("BrokerStateClass");
+        markup.ShouldNotContain("BrokerStateLabel");
+        markup.ShouldNotContain("topic-broker-state");
+        markup.ShouldNotContain("topic-monitor-state");
         markup.ShouldContain("One broker monitor is subscribed to #.");
         markup.ShouldContain("No history for the current selection.");
         markup.ShouldContain("topic-history-panel");
@@ -3061,10 +3515,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".topic-broker-edit");
         css.ShouldContain(".topic-broker-edit ::deep .mud-icon-root");
         css.ShouldContain("font-size: 16px;");
-        css.ShouldContain(".topic-broker-row.live .topic-broker-state");
+        css.ShouldContain(".topic-broker-row.live .topic-broker-connection");
         css.ShouldContain(".topic-broker-tree");
         css.ShouldContain(".topic-broker-empty");
-        css.ShouldContain(".topic-last-state");
+        css.ShouldContain(".topic-session-note ::deep .topic-session-live-button");
+        css.ShouldContain(".topic-session-note ::deep .topic-session-live-button .mud-icon-root");
+        css.ShouldNotContain(".topic-session-note button");
+        css.ShouldContain(".topic-latest-message");
+        css.ShouldNotContain(".topic-last-state");
         css.ShouldContain("flex: 0 0 clamp(218px, 38%, 360px);");
         css.ShouldContain(".topic-last-body");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);");
@@ -3119,8 +3577,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".topic-no-traffic-copy");
         css.ShouldContain(".topic-monitor-list");
         css.ShouldContain(".topic-monitor-row");
+        css.ShouldContain(".topic-monitor-dot");
+        css.ShouldContain("border-radius: 50%;");
         css.ShouldContain("grid-template-columns: 8px minmax(92px, 0.3fr) minmax(140px, 1fr) auto auto;");
-        css.ShouldContain(".topic-monitor-row.live .topic-monitor-state");
+        css.ShouldContain(".topic-monitor-row.live .topic-monitor-connection");
+        css.ShouldNotContain(".topic-broker-state");
+        css.ShouldNotContain(".topic-monitor-state");
+        css.ShouldNotContain("border-radius: 999px;");
         css.ShouldContain(".topic-history-panel");
         css.ShouldContain(".topic-history-header");
         css.ShouldContain(".topic-history-toolbar");
@@ -3168,12 +3631,16 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, min(320px, 100%));");
         css.ShouldContain("justify-items: center;");
         css.ShouldContain("text-align: center;");
-        css.ShouldContain(".topic-empty-state ::deep .mud-icon-root");
+        markup.ShouldContain("topic-empty-panel\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("topic-publish-recent-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldNotContain("topic-empty-state");
+        css.ShouldContain(".topic-empty-panel ::deep .mud-icon-root");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("flex-basis: clamp(252px, 40vh, 360px);");
         css.ShouldContain(".topic-publish-actions {");
         css.ShouldContain("flex-wrap: wrap;");
         css.ShouldNotContain(".topic-payload-frame");
+        css.ShouldNotContain(".topic-empty-state");
         css.ShouldNotContain(".topic-payload-empty");
         css.ShouldNotContain(".topic-last-empty");
         css.ShouldNotContain(".topic-last-meta div:last-child:nth-child(odd)");
@@ -3219,6 +3686,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("[Parameter] public bool PreserveCandidateExplorerNames { get; set; }");
         markup.ShouldContain("@SaveLabel");
         markup.ShouldContain("PreferredExplorerName(candidate)");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("CA certificate path");
         markup.ShouldContain("Client certificate path");
         markup.ShouldContain("Client certificate password");
@@ -3242,6 +3710,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Typo=\"Typo.subtitle2\">@draft.DisplayName");
         markup.ShouldNotContain("Typo=\"Typo.caption\" Color=\"Color.Secondary\">@draft.Endpoint");
         markup.ShouldNotContain("<MudChip");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("<MudIconButton Icon=\"@Icons.Material.Filled.FolderOpen\"");
         markup.ShouldNotContain("<input");
         markup.ShouldNotContain("mud-input-root");
@@ -3276,6 +3745,164 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void TopicTreeNode_UsesCompactBranchLineChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "TopicTree",
+            "TopicTreeNode.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "TopicTree",
+            "TopicTreeNode.razor.css"));
+        var viewMarkup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "TopicTree",
+            "TopicTreeView.razor"));
+        var viewCss = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "TopicTree",
+            "TopicTreeView.razor.css"));
+
+        markup.ShouldContain("topic-node-branch");
+        markup.ShouldContain("class=\"topic-node-branch\" aria-hidden=\"true\"");
+        markup.ShouldContain("style=\"@($\"--topic-depth:{Node.Depth};\")\"");
+        markup.ShouldContain("TopicSelected.InvokeAsync(Node.FullPath)");
+        markup.ShouldContain("Node.Children.Values.OrderBy(n => n.Name)");
+        markup.ShouldContain("role=\"treeitem\"");
+        markup.ShouldContain("tabindex=\"0\"");
+        markup.ShouldContain("aria-label=\"@Node.FullPath\"");
+        markup.ShouldContain("aria-level=\"@TopicNodeLevel()\"");
+        markup.ShouldContain("aria-selected=\"@TopicNodeSelected()\"");
+        markup.ShouldContain("aria-expanded=\"@TopicNodeExpanded()\"");
+        markup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
+        markup.ShouldContain("@onkeydown=\"SelectFromKeyboardAsync\"");
+        markup.ShouldContain("id=\"@TopicNodeChildrenId()\"");
+        markup.ShouldContain("class=\"topic-node-children\"");
+        markup.ShouldContain("role=\"group\"");
+        markup.ShouldContain("aria-label=\"@TopicNodeChildrenLabel()\"");
+        markup.ShouldContain("<button type=\"button\"");
+        markup.ShouldContain("class=\"topic-node-chevron\"");
+        markup.ShouldContain("aria-label=\"@TopicNodeChevronLabel()\"");
+        markup.ShouldContain("aria-expanded=\"@(_expanded ? \"true\" : \"false\")\"");
+        markup.ShouldContain("aria-controls=\"@TopicNodeChildrenId()\"");
+        markup.ShouldContain("@onclick=\"Toggle\"");
+        markup.ShouldContain("@onclick:stopPropagation");
+        markup.ShouldContain("topic-node-chevron-static");
+        markup.ShouldContain("aria-hidden=\"true\"");
+        markup.ShouldContain("private string TopicNodeChevronLabel()");
+        markup.ShouldContain("private string TopicNodeChildrenId()");
+        markup.ShouldContain("private string TopicNodeChildrenLabel()");
+        markup.ShouldContain("private static string ToElementIdPart(string value)");
+        markup.ShouldContain("private int TopicNodeLevel()");
+        markup.ShouldContain("private string TopicNodeSelected()");
+        markup.ShouldContain("private string? TopicNodeExpanded()");
+        markup.ShouldContain("private Task SelectFromKeyboardAsync(KeyboardEventArgs args)");
+        markup.ShouldNotContain("IgnoreChevronClick");
+        markup.ShouldNotContain("@onclick=\"IgnoreChevronClick\"");
+        markup.ShouldNotContain("<span class=\"topic-node-chevron\" @onclick=\"Toggle\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal) &&
+                !icon.Contains("aria-label=", StringComparison.Ordinal) &&
+                !icon.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+
+        css.ShouldContain(".topic-node-branch");
+        css.ShouldContain("border-radius: 1px;");
+        css.ShouldContain("width: 1px;");
+        css.ShouldContain("left: calc(7px + (var(--topic-depth) * 14px));");
+        css.ShouldContain("appearance: none;");
+        css.ShouldContain("background: transparent;");
+        css.ShouldContain("border: 0;");
+        css.ShouldContain(".topic-node-row:focus-visible");
+        css.ShouldContain(".topic-node-chevron:focus-visible");
+        css.ShouldContain(".topic-node-chevron-static");
+        css.ShouldNotContain("border-radius: 999px;");
+
+        viewMarkup.ShouldContain("class=\"topic-tree-nodes\" role=\"tree\" aria-label=\"@TopicTreeLabel\"");
+        viewMarkup.ShouldContain("private string TopicTreeLabel");
+        viewMarkup.ShouldContain("Topic tree with {topicText} and {messageText}");
+        viewMarkup.ShouldContain("Filtered topic tree for {Filter.Trim()}, {topicText} and {messageText}");
+        viewMarkup.ShouldContain("private static int CountTopics(IEnumerable<TopicNode> nodes)");
+        viewMarkup.ShouldNotContain("aria-label=\"Topics\"");
+        viewMarkup.ShouldContain("role=\"treeitem\"");
+        viewMarkup.ShouldContain("aria-label=\"@node.FullPath\"");
+        viewMarkup.ShouldContain("aria-level=\"@TopicNodeLevel(node)\"");
+        viewMarkup.ShouldContain("aria-selected=\"@TopicNodeSelected(node)\"");
+        viewMarkup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
+        viewMarkup.ShouldContain("class=\"topic-node-flat-icon\" aria-hidden=\"true\"");
+        viewMarkup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.SearchOff\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        viewMarkup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Topic\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        System.Text.RegularExpressions.Regex.Matches(
+                viewMarkup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal) &&
+                !icon.Contains("aria-label=", StringComparison.Ordinal) &&
+                !icon.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        viewMarkup.ShouldContain("@onkeydown=\"@((KeyboardEventArgs args) => SelectTopicFromKeyboardAsync(args, node.FullPath))\"");
+        viewMarkup.ShouldContain("private static int TopicNodeLevel(TopicNode node)");
+        viewMarkup.ShouldContain("private string TopicNodeSelected(TopicNode node)");
+        viewMarkup.ShouldContain("private Task SelectTopicFromKeyboardAsync(KeyboardEventArgs args, string? topic)");
+        viewCss.ShouldContain(".topic-node-flat:focus-visible");
+    }
+
+    [Fact]
+    public void StartupSplash_UsesCompactLoadingChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "StartupSplash.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "StartupSplash.razor.css"));
+
+        markup.ShouldContain("startup-splash");
+        markup.ShouldContain("startup-splash-content");
+        markup.ShouldContain("startup-splash-rail");
+        markup.ShouldContain("brand/fluxmq-loader.svg");
+        markup.ShouldContain("brand/fluxmq-wordmark.svg");
+        markup.ShouldContain("MQTT flow studio");
+
+        css.ShouldContain(".startup-splash-rail");
+        css.ShouldContain("height: 3px;");
+        css.ShouldContain("border-radius: 3px;");
+        css.ShouldContain("animation: startup-splash-progress 1.8s ease-in-out infinite;");
+        css.ShouldContain("@media (prefers-reduced-motion: reduce)");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
     public void TestStudio_UsesFlatCompactWorkspaceChrome()
     {
         var root = FindRepositoryRoot();
@@ -3294,21 +3921,56 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "TestStudio.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Test studio workspace\"");
+        markup.ShouldContain("aria-label=\"@TestStudioLabel\"");
+        markup.ShouldContain("private string TestStudioLabel");
+        markup.ShouldContain("{scenario.Name} test studio workspace");
+        markup.ShouldContain("Test studio workspace with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Test studio workspace\"");
+        markup.ShouldContain("aria-label=\"@TestStudioToolbarLabel\"");
+        markup.ShouldContain("Test studio toolbar for {scenario.Name}");
+        markup.ShouldContain("Test studio toolbar with no active scenario");
         markup.ShouldContain("test-studio-title-icon");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Science\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("aria-label=\"@TestStudioMetaLabel\"");
+        markup.ShouldContain("Test studio counts for {scenario.Name}");
+        markup.ShouldContain("Test studio counts with no active scenario");
         markup.ShouldContain("@TestCountLabel");
         markup.ShouldContain("@ActiveScenarioLabel");
         markup.ShouldContain("@RunCountLabel");
         markup.ShouldContain("test-studio-mode-switch");
         markup.ShouldContain("role=\"tablist\"");
+        markup.ShouldContain("aria-label=\"@TestStudioModeLabel\"");
+        markup.ShouldContain("Test studio mode for {scenario.Name}");
+        markup.ShouldContain("Test studio mode with no active scenario");
+        markup.ShouldContain("id=\"@DesignerTabId\"");
+        markup.ShouldContain("aria-controls=\"@DesignerPanelId\"");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space ArrowLeft ArrowRight Home End\"").Count.ShouldBe(2);
+        markup.ShouldContain("@onkeydown=\"@OnDesignerTabKeyDown\"");
         markup.ShouldContain("ModeButtonClass(TestStudioMode.Designer)");
+        markup.ShouldContain("id=\"@RunnerTabId\"");
+        markup.ShouldContain("aria-controls=\"@RunnerPanelId\"");
+        markup.ShouldContain("@onkeydown=\"@OnRunnerTabKeyDown\"");
         markup.ShouldContain("ModeButtonClass(TestStudioMode.Runner)");
-        markup.ShouldContain("Icons.Material.Filled.EditNote");
-        markup.ShouldContain("Icons.Material.Filled.PlayCircle");
+        markup.ShouldContain("SelectModeFromKeyboard");
+        markup.ShouldContain("PreviousMode");
+        markup.ShouldContain("NextMode");
+        markup.ShouldContain("role=\"tabpanel\"");
+        markup.ShouldContain("aria-labelledby=\"@DesignerTabId\"");
+        markup.ShouldContain("aria-labelledby=\"@RunnerTabId\"");
+        markup.ShouldContain("private const string DesignerPanelId");
+        markup.ShouldContain("private const string RunnerPanelId");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.EditNote\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.PlayCircle\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Science\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.EditNote\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.PlayCircle\" Size=\"Size.Small\" />");
         markup.ShouldContain("TestScenarioDesigner Project=\"@Project\"");
         markup.ShouldContain("TestRunnerConsole Project=\"@Project\"");
         markup.ShouldNotContain("MudToggleGroup");
         markup.ShouldNotContain("MudToggleItem");
+        markup.ShouldNotContain("aria-label=\"Test studio summary\"");
+        markup.ShouldNotContain("aria-label=\"Test studio toolbar\"");
+        markup.ShouldNotContain("aria-label=\"Test studio mode\"");
 
         css.ShouldContain(".test-studio-title-icon");
         css.ShouldContain(".test-studio-meta span");
@@ -3346,55 +4008,122 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "TestRunnerConsole.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Test runner console\"");
+        markup.ShouldContain("aria-label=\"@TestRunnerConsoleLabel\"");
+        markup.ShouldContain("private string TestRunnerConsoleLabel");
+        markup.ShouldContain("{scenario.Name} test runner console");
+        markup.ShouldContain("Test runner console with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Test runner console\"");
         markup.ShouldContain("test-runner-title-icon");
         markup.ShouldContain("test-runner-meta-strip");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("@NoTestEmptyTitle");
         markup.ShouldContain("@NoTestSelectionHint");
+        markup.ShouldContain("test-runner-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"@TestRunnerSetupStateLabel\"");
+        markup.ShouldContain("private string TestRunnerSetupStateLabel");
+        markup.ShouldContain("Test runner setup state with no tests");
+        markup.ShouldContain("Test runner setup state with {FormatCount(Project.TestNames.Count, \"test\")}");
+        markup.ShouldNotContain("aria-label=\"Test runner scenario setup state\"");
         markup.ShouldContain("test-runner-empty-cues");
+        markup.ShouldContain("aria-label=\"@TestRunnerSetupLabel\"");
+        markup.ShouldContain("private string TestRunnerSetupLabel");
+        markup.ShouldContain("Test runner setup with no tests");
+        markup.ShouldContain("Test runner setup with {FormatCount(Project.TestNames.Count, \"test\")}");
+        markup.ShouldNotContain("aria-label=\"Test runner setup\"");
+        markup.ShouldContain("aria-label=\"@ScenarioRunnerMetaLabel\"");
+        markup.ShouldContain("Scenario runner facts for {scenario.Name}");
+        markup.ShouldContain("Scenario runner facts with no active scenario");
         markup.ShouldContain("@ScenarioStepLabel");
         markup.ShouldContain("@ScenarioPhaseLabel");
         markup.ShouldContain("@RunHistorySummaryLabel");
-        markup.ShouldContain("RunStatusClass(result.Status)");
-        markup.ShouldContain("ActiveRunStateClass");
+        markup.ShouldContain("aria-label=\"@RunHistoryPanelLabel\"");
+        markup.ShouldContain("private string RunHistoryPanelLabel");
+        markup.ShouldContain("Recent runs for {scenario.Name}");
+        markup.ShouldContain("Recent runs with no active scenario");
+        markup.ShouldContain("aria-label=\"@ShowLatestRunLabel\"");
+        markup.ShouldContain("private string ShowLatestRunLabel");
+        markup.ShouldContain("Show latest run for {scenario.Name}");
+        markup.ShouldContain("Show latest scenario run");
+        markup.ShouldNotContain("aria-label=\"Recent scenario runs\"");
+        markup.ShouldNotContain("aria-label=\"Show latest scenario run\"");
+        markup.ShouldContain("RunMarkerClass(result.Status)");
+        markup.ShouldContain("aria-label=\"@RunResultStatusLabel(result)\"");
+        markup.ShouldContain("private string RunResultStatusLabel(ScenarioRunResult result)");
+        markup.ShouldContain("$\"{RunResultScopeLabel}, {result.Status}, finished {FormatRunTime(result)}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Run result {result.Status}\")\"");
+        markup.ShouldContain("ActiveRunMarkerClass");
+        markup.ShouldContain("ActiveRunMarkerIcon");
+        markup.ShouldContain("ActiveRunMarkerText");
+        markup.ShouldContain("ActiveRunMarkerColor");
         markup.ShouldContain("test-run-history-panel");
         markup.ShouldContain("No run history");
         markup.ShouldContain("test-run-history-row");
         markup.ShouldContain("RunHistoryItemClass(historyRun)");
         markup.ShouldContain("RunHistoryAriaLabel(historyRun)");
-        markup.ShouldContain("RunHistoryStatusClass(historyRun)");
+        markup.ShouldContain("RunHistoryMarkerClass(historyRun)");
         markup.ShouldContain("RunHistoryIssueLabel(historyRun)");
         markup.ShouldContain("test-runner-report-actions");
+        markup.ShouldContain("aria-label=\"@ReportActionsLabel\"");
+        markup.ShouldContain("private string ReportActionsLabel");
+        markup.ShouldContain("Scenario report actions for {ActiveRunScopeText} run");
         markup.ShouldContain("Class=\"test-runner-icon-action\"");
         markup.ShouldContain("aria-label=\"@ViewReportTooltip\"");
         markup.ShouldContain("aria-label=\"@CopyReportTooltip\"");
         markup.ShouldContain("aria-label=\"@SaveReportTooltip\"");
         markup.ShouldContain("Class=\"test-runner-run-action\"");
         markup.ShouldContain("test-runner-workspace");
-        markup.ShouldContain("test-runner-status-strip");
+        markup.ShouldContain("test-runner-preflight-strip");
+        markup.ShouldContain("aria-label=\"@ScenarioPreflightLabel\"");
+        markup.ShouldContain("private string ScenarioPreflightLabel");
+        markup.ShouldContain("Preflight checks for {scenario.Name}");
+        markup.ShouldContain("Preflight checks with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Scenario preflight\"");
         markup.ShouldContain("PreflightItemClass");
         markup.ShouldContain("test-runner-result-strip");
         markup.ShouldContain("@FirstRunStripClass");
         markup.ShouldContain("@FirstRunAriaLabel");
         markup.ShouldContain("@FirstRunIcon");
-        markup.ShouldContain("@FirstRunStateLabel");
+        markup.ShouldContain("@FirstRunSummaryLabel");
         markup.ShouldContain("@FirstRunTitle");
+        markup.ShouldContain("Run scenario to begin");
         markup.ShouldContain("@FirstRunDescription");
         markup.ShouldContain("@FirstRunEventModeLabel");
         markup.ShouldContain("test-runner-first-run-cues");
+        markup.ShouldContain("aria-label=\"@FirstRunFactsLabel\"");
+        markup.ShouldContain("private string FirstRunFactsLabel");
+        markup.ShouldContain("First run facts for {scenario.Name}");
+        markup.ShouldContain("First run facts with no active scenario");
+        markup.ShouldNotContain("aria-label=\"First run facts\"");
         markup.ShouldContain("RunSummaryClass(latest)");
         markup.ShouldContain("RunSummaryAriaLabel(latest)");
         markup.ShouldContain("test-runner-result-scope");
         markup.ShouldContain("RunResultScopeLabel");
+        markup.ShouldContain("FormatRunIdText");
         markup.ShouldContain("test-runner-main");
         markup.ShouldContain("test-runner-section timeline");
+        markup.ShouldContain("aria-label=\"@ScenarioTimelineLabel\"");
+        markup.ShouldContain("private string ScenarioTimelineLabel");
+        markup.ShouldContain("Timeline for {scenario.Name}");
+        markup.ShouldContain("Timeline with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Scenario timeline\"");
         markup.ShouldContain("test-runner-section activity");
+        markup.ShouldContain("aria-label=\"@ScenarioActivityLabel\"");
+        markup.ShouldContain("private string ScenarioActivityLabel");
+        markup.ShouldContain("Activity for {scenario.Name}: {ActivitySummaryLabel}");
+        markup.ShouldContain("Activity with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Scenario activity\"");
         markup.ShouldContain("test-runner-activity-grid");
         markup.ShouldContain("test-runner-stream-block");
         markup.ShouldContain("TimelineStepLabel(step, stepResult)");
         markup.ShouldContain("TimelineStepMeta(stepResult)");
+        markup.ShouldContain("test-runner-step-marker");
         markup.ShouldContain("test-runner-step-copy");
         markup.ShouldContain("StepStatusIcon(stepResult)");
+        markup.ShouldContain("stepResult?.Status.ToString() ?? \"Idle\"");
+        markup.ShouldContain("? \"Idle\"");
         markup.ShouldContain("RuntimeEventRowClass(flowEvent)");
         markup.ShouldContain("RuntimeEventLabel(flowEvent)");
         markup.ShouldContain("RuntimeEventIcon(flowEvent)");
@@ -3413,21 +4142,48 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@RuntimeEventCountLabel");
         markup.ShouldContain("@ActivitySummaryLabel");
         markup.ShouldContain("@RunnerLogCountLabel");
+        markup.ShouldContain("var connectionsAvailable = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());");
         markup.ShouldNotContain("MudChip");
+        markup.ShouldNotContain("ActiveRunChip");
+        markup.ShouldNotContain("FormatRunIdChip");
         markup.ShouldNotContain("RunStatusPillClass(result.Status)");
+        markup.ShouldNotContain("RunStateClass(result.Status)");
+        markup.ShouldNotContain("RunStatusClass(result.Status)");
+        markup.ShouldNotContain("aria-label=\"@($\"Run state {result.Status}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Run status {result.Status}\")\"");
+        markup.ShouldNotContain("RunHistoryStatusClass");
+        markup.ShouldNotContain("RunHistoryStateClass");
+        markup.ShouldNotContain("ActiveRunStateClass");
+        markup.ShouldNotContain("ActiveRunStateIcon");
+        markup.ShouldNotContain("ActiveRunStateText");
+        markup.ShouldNotContain("ActiveRunStateColor");
+        markup.ShouldNotContain("DiagnosisStateLabel");
+        markup.ShouldNotContain("PreflightStateLabel");
+        markup.ShouldNotContain("FirstRunStateLabel");
+        markup.ShouldNotContain("test-runner-step-state");
         markup.ShouldNotContain("ActiveRunPillClass");
         markup.ShouldNotContain("test-runner-status-pill");
+        markup.ShouldNotContain("test-runner-status-strip");
+        markup.ShouldNotContain("test-runner-status-item");
+        markup.ShouldNotContain("Runner ready");
+        markup.ShouldNotContain("var ready = await Live.EnsureConnectionsAsync");
+        markup.ShouldNotContain("if (!ready)");
+        markup.ShouldNotContain("First run readiness");
+        markup.ShouldNotContain("Ready for first run");
+        markup.ShouldNotContain("?? \"Ready\"");
+        markup.ShouldNotContain("? \"Ready\"");
+        markup.ShouldNotContain("test-runner-result-strip empty ready");
 
         css.ShouldContain(".test-runner-title-icon");
         css.ShouldContain(".test-runner-empty-cues");
         css.ShouldContain(".test-runner-empty-cues span");
         css.ShouldContain(".test-runner-meta-strip span,");
-        css.ShouldContain(".test-runner-status-state");
+        css.ShouldContain(".test-runner-run-marker");
         css.ShouldContain(".test-run-history-panel");
         css.ShouldContain(".test-run-history-empty strong");
         css.ShouldContain(".test-run-history-empty small");
         css.ShouldContain(".test-run-history-row");
-        css.ShouldContain(".test-run-history-status");
+        css.ShouldContain(".test-run-history-marker");
         css.ShouldContain("::deep .test-run-history-item.selected .test-run-history-row");
         css.ShouldContain(".test-runner-report-actions");
         css.ShouldContain(".test-runner-report-actions ::deep .mud-icon-button");
@@ -3436,10 +4192,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("flex-wrap: nowrap;");
         css.ShouldContain(".test-runner-workspace");
         css.ShouldContain("grid-template-rows: auto auto minmax(0, 1fr);");
-        css.ShouldContain(".test-runner-status-strip");
+        css.ShouldContain(".test-runner-preflight-strip");
         css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
         css.ShouldContain(".test-runner-result-strip");
-        css.ShouldContain(".test-runner-result-strip.empty.ready");
+        css.ShouldContain(".test-runner-result-strip.empty.runnable");
         css.ShouldContain(".test-runner-result-strip.empty.warning");
         css.ShouldContain(".test-runner-result-strip.history");
         css.ShouldContain(".test-runner-result-scope");
@@ -3448,6 +4204,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-runner-first-run-cues span");
         css.ShouldContain(".test-runner-main");
         css.ShouldContain("grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.35fr);");
+        css.ShouldContain(".test-runner-step-marker");
         css.ShouldContain(".test-runner-step-copy");
         css.ShouldContain(".test-runner-step-copy small");
         css.ShouldContain(".test-runner-timeline-step.passed strong");
@@ -3469,7 +4226,18 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr);");
         css.ShouldNotContain(".test-runner-panel-title");
         css.ShouldNotContain(".test-runner-status-pill");
+        css.ShouldNotContain(".test-runner-status-state");
+        css.ShouldNotContain(".test-runner-status-strip");
+        css.ShouldNotContain(".test-runner-status-item");
+        css.ShouldNotContain(".test-run-history-status");
+        css.ShouldNotContain(".test-runner-run-state");
+        css.ShouldNotContain(".test-run-history-state");
+        css.ShouldNotContain(".test-runner-step-state");
+        css.ShouldNotContain(".test-runner-result-strip.empty.ready");
         css.ShouldNotContain("border-radius: 999px;");
+        markup.ShouldNotContain("aria-label=\"Test runner setup state\"");
+        markup.ShouldNotContain("aria-label=\"Scenario runner summary\"");
+        markup.ShouldNotContain("aria-label=\"Scenario report actions\"");
     }
 
     [Fact]
@@ -3491,42 +4259,97 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "TestScenarioDesigner.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Test scenario designer\"");
+        markup.ShouldContain("aria-label=\"@TestScenarioDesignerLabel\"");
+        markup.ShouldContain("private string TestScenarioDesignerLabel");
+        markup.ShouldContain("{scenario.Name} test scenario designer");
+        markup.ShouldContain("Test scenario designer with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Test scenario designer\"");
         markup.ShouldContain("test-scenario-heading-icon");
         markup.ShouldContain("test-scenario-title-copy");
         markup.ShouldContain("test-scenario-meta-strip");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("@NoTestEmptyTitle");
         markup.ShouldContain("@NoTestSelectionHint");
+        markup.ShouldContain("test-scenario-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"@TestScenarioSetupStateLabel\"");
+        markup.ShouldContain("private string TestScenarioSetupStateLabel");
+        markup.ShouldContain("Test scenario designer setup with no tests");
+        markup.ShouldContain("Test scenario designer setup with {FormatTestCount(Project.TestNames.Count)}");
         markup.ShouldContain("test-scenario-empty-cues");
+        markup.ShouldContain("aria-label=\"@ScenarioDesignerSetupLabel\"");
+        markup.ShouldContain("private string ScenarioDesignerSetupLabel");
+        markup.ShouldContain("Scenario designer setup with no tests");
+        markup.ShouldContain("Scenario designer setup with {FormatTestCount(Project.TestNames.Count)}");
         markup.ShouldContain("@NoStepsEmptyTitle");
         markup.ShouldContain("@NoStepsEmptyText");
+        markup.ShouldContain("test-scenario-empty\" role=\"status\" aria-live=\"polite\" aria-label=\"@EmptyScenarioLabel\"");
+        markup.ShouldContain("private string EmptyScenarioLabel");
+        markup.ShouldContain("{scenario.Name} has no steps");
+        markup.ShouldContain("Empty scenario with no active scenario");
+        markup.ShouldContain("aria-label=\"@ScenarioStarterCuesLabel\"");
+        markup.ShouldContain("private string ScenarioStarterCuesLabel");
+        markup.ShouldContain("Starter cues for {scenario.Name}");
+        markup.ShouldContain("Scenario starter cues with no active scenario");
+        markup.ShouldNotContain("aria-label=\"Test scenario designer setup state\"");
+        markup.ShouldNotContain("aria-label=\"Scenario designer setup\"");
+        markup.ShouldNotContain("aria-label=\"Empty scenario\"");
+        markup.ShouldNotContain("aria-label=\"Scenario starter cues\"");
         markup.ShouldContain("@ScenarioStepTypeCountText");
         markup.ShouldContain("@PhaseCountText");
         markup.ShouldContain("@RunModeText");
         markup.ShouldContain("@RecentRunCountText");
+        markup.ShouldContain("aria-label=\"@ScenarioDesignerMetaLabel\"");
+        markup.ShouldContain("Scenario designer facts for {scenario.Name}");
+        markup.ShouldContain("Scenario designer facts with no active scenario");
         markup.ShouldContain("test-scenario-workspace");
         markup.ShouldContain("test-scenario-builder-strip");
+        markup.ShouldContain("aria-label=\"@ScenarioBuilderFactsLabel\"");
+        markup.ShouldContain("Scenario builder facts for {scenario.Name}");
+        markup.ShouldContain("Scenario builder facts with no active scenario");
         markup.ShouldContain("BuilderMetricClass");
         markup.ShouldContain("@ActivePhaseCountText");
-        markup.ShouldContain("@RunnerStateText");
+        markup.ShouldContain("@RunnerSummaryText");
+        markup.ShouldContain("? \"Running\" : \"Idle\"");
         markup.ShouldContain("RunContextClass(result)");
         markup.ShouldContain("RunContextAriaLabel(result)");
-        markup.ShouldContain("test-run-context-status");
+        markup.ShouldContain("ActiveRunMarkerIcon");
+        markup.ShouldContain("ActiveRunMarkerText");
+        markup.ShouldContain("ActiveRunMarkerColor");
+        markup.ShouldContain("test-run-context-marker");
         markup.ShouldContain("test-run-context-meta");
         markup.ShouldContain("test-run-context-reset");
         markup.ShouldContain("ReportActionsClass");
         markup.ShouldContain("ReportActionsLabel");
         markup.ShouldContain("test-run-history-panel");
+        markup.ShouldContain("aria-label=\"@RunHistoryPanelLabel\"");
+        markup.ShouldContain("private string RunHistoryPanelLabel");
+        markup.ShouldContain("Recent runs for {scenario.Name}");
+        markup.ShouldContain("Recent runs with no active scenario");
+        markup.ShouldContain("aria-label=\"@ShowLatestRunLabel\"");
+        markup.ShouldContain("title=\"@ShowLatestRunLabel\"");
+        markup.ShouldContain("private string ShowLatestRunLabel");
+        markup.ShouldContain("Show latest run for {scenario.Name}");
+        markup.ShouldContain("Show latest scenario run");
+        markup.ShouldNotContain("aria-label=\"Recent scenario runs\"");
+        markup.ShouldNotContain("aria-label=\"Show latest run\"");
+        markup.ShouldNotContain("title=\"Show latest run\"");
+        markup.ShouldNotContain("aria-label=\"Show latest scenario run\"");
         markup.ShouldContain("No run history");
         markup.ShouldContain("test-run-history-row");
         markup.ShouldContain("RunHistoryItemClass(historyRun)");
         markup.ShouldContain("RunHistoryAriaLabel(historyRun)");
-        markup.ShouldContain("RunHistoryStatusClass(historyRun)");
+        markup.ShouldContain("RunHistoryMarkerClass(historyRun)");
         markup.ShouldContain("RunHistoryIssueLabel(historyRun)");
         markup.ShouldContain("PhaseLanesClass");
         markup.ShouldContain("PhaseLaneClass(phase)");
         markup.ShouldContain("test-scenario-report-actions");
         markup.ShouldContain("test-scenario-build-actions");
+        markup.ShouldContain("aria-label=\"@ScenarioBuildActionsLabel\"");
+        markup.ShouldContain("Scenario build actions for {scenario.Name}");
+        markup.ShouldContain("Scenario build actions with no active scenario");
         markup.ShouldContain("Class=\"test-scenario-icon-action\"");
         markup.ShouldContain("aria-label=\"@ViewReportTooltip\"");
         markup.ShouldContain("aria-label=\"@CopyReportTooltip\"");
@@ -3541,30 +4364,71 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("test-step-title-block");
         markup.ShouldContain("test-step-meta");
         markup.ShouldContain("StepCardClass(step, stepResult)");
+        markup.ReplaceLineEndings("\n")
+            .ShouldContain("class=\"@StepCardClass(step, stepResult)\"\n                                             role=\"group\"");
         markup.ShouldContain("StepCardLabel(step, stepResult)");
+        markup.ShouldContain("MoveStepEarlierLabel(step)");
+        markup.ShouldContain("MoveStepLaterLabel(step)");
+        markup.ShouldContain("EditStepLabel(step)");
+        markup.ShouldContain("DeleteStepLabel(step)");
+        markup.ShouldContain("Move {step.Name} earlier");
+        markup.ShouldContain("Move {step.Name} later");
+        markup.ShouldContain("Edit {step.Name}");
+        markup.ShouldContain("Delete {step.Name}");
+        markup.ShouldNotContain("aria-label=\"Move step earlier\"");
+        markup.ShouldNotContain("aria-label=\"Move step later\"");
+        markup.ShouldNotContain("aria-label=\"Edit step\"");
+        markup.ShouldNotContain("aria-label=\"Delete step\"");
+        markup.ShouldNotContain("title=\"Move earlier\"");
+        markup.ShouldNotContain("title=\"Move later\"");
+        markup.ShouldNotContain("title=\"Edit step\"");
+        markup.ShouldNotContain("title=\"Delete step\"");
         markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("StepStatusIcon(stepResult)");
+        markup.ShouldContain("StepResultMarkerClass(stepResult.Status)");
         markup.ShouldContain("test-step-result-strip");
         markup.ShouldContain("StepResultMetaLabel(stepResult)");
         markup.ShouldContain("StepResultScopeLabel");
+        markup.ShouldContain("FormatRunIdText");
         markup.ShouldContain("StepResultEventLabel(stepResult)");
-        markup.ShouldContain("test-step-status idle");
+        markup.ShouldContain("test-step-result-marker idle");
+        markup.ShouldContain("var connectionsAvailable = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());");
         markup.ShouldNotContain("MudChip");
+        markup.ShouldNotContain("ActiveRunChip");
+        markup.ShouldNotContain("FormatRunIdChip");
+        markup.ShouldNotContain("RunHistoryStatusClass");
+        markup.ShouldNotContain("RunHistoryStateClass");
+        markup.ShouldNotContain("ActiveRunStateIcon");
+        markup.ShouldNotContain("ActiveRunStateText");
+        markup.ShouldNotContain("ActiveRunStateColor");
+        markup.ShouldNotContain("@RunnerStateText");
+        markup.ShouldNotContain("StepStatusClass(stepResult.Status)");
         markup.ShouldNotContain("test-step-badges");
+        markup.ShouldNotContain("test-run-context-status");
+        markup.ShouldNotContain("test-run-context-state");
+        markup.ShouldNotContain("test-step-status idle");
+        markup.ShouldNotContain("test-step-state idle");
+        markup.ShouldNotContain("Designer ready");
+        markup.ShouldNotContain("var ready = await Live.EnsureConnectionsAsync");
+        markup.ShouldNotContain("if (!ready)");
+        markup.ShouldNotContain("? \"Running\" : \"Ready\"");
+        markup.ShouldNotContain("aria-label=\"Test scenario setup state\"");
+        markup.ShouldNotContain("aria-label=\"Scenario designer summary\"");
+        markup.ShouldNotContain("aria-label=\"Scenario build actions\"");
+        markup.ShouldNotContain("aria-label=\"Scenario build summary\"");
 
         css.ShouldContain(".test-scenario-heading-icon");
-        css.ShouldContain(".test-scenario-meta-strip span,");
-        css.ShouldContain(".test-run-status");
+        css.ShouldContain(".test-scenario-meta-strip span");
         css.ShouldContain(".test-run-context");
         css.ShouldContain(".test-run-context.latest");
         css.ShouldContain(".test-run-context.history");
-        css.ShouldContain(".test-run-context-status");
+        css.ShouldContain(".test-run-context-marker");
         css.ShouldContain(".test-run-context-reset");
         css.ShouldContain(".test-run-history-panel");
         css.ShouldContain(".test-run-history-empty strong");
         css.ShouldContain(".test-run-history-empty small");
         css.ShouldContain(".test-run-history-row");
-        css.ShouldContain(".test-run-history-status");
+        css.ShouldContain(".test-run-history-marker");
         css.ShouldContain("::deep .test-run-history-item.selected .test-run-history-row");
         css.ShouldContain(".test-scenario-empty-cues");
         css.ShouldContain(".test-scenario-empty-cues span");
@@ -3583,7 +4447,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain("min-height: 42px;");
         css.ShouldContain("flex-wrap: nowrap;");
-        css.ShouldContain("grid-template-columns: repeat(auto-fit, minmax(206px, 1fr));");
+        css.ShouldContain("grid-auto-columns: minmax(206px, 1fr);");
         css.ShouldContain(".test-phase-lanes.drop-active");
         css.ShouldContain(".test-phase-lane.drop-target");
         css.ShouldContain(".test-phase-lane.empty.drop-target .test-phase-empty");
@@ -3594,7 +4458,15 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-step-card.selected");
         css.ShouldContain(".test-step-card.history");
         css.ShouldContain(".test-step-meta");
+        css.ShouldContain(".test-step-result-marker");
         css.ShouldNotContain(".test-step-badges");
+        css.ShouldNotContain(".test-run-status");
+        css.ShouldNotContain(".test-run-history-status");
+        css.ShouldNotContain(".test-run-context-status");
+        css.ShouldNotContain(".test-run-context-state");
+        css.ShouldNotContain(".test-run-history-state");
+        css.ShouldNotContain(".test-step-status");
+        css.ShouldNotContain(".test-step-state");
         css.ShouldNotContain("border-radius: 999px;");
         css.ShouldContain(".test-step-card.configured .test-step-index");
         css.ShouldContain(".test-step-card.issue");
@@ -3632,6 +4504,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("scenario-step-editor-title");
         markup.ShouldContain("scenario-step-editor-title-copy");
+        markup.ShouldContain("Icon=\"@StepDescriptor.Icon\" Size=\"Size.Small\" aria-hidden=\"true\"");
         markup.ShouldContain("Class=\"scenario-step-editor\"");
         markup.ShouldContain("aria-label=\"@DialogTitle\"");
         markup.ShouldContain("Class=\"scenario-step-editor-toggle\"");
@@ -3645,10 +4518,24 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("FieldInputType(currentField)");
         markup.ShouldContain("scenario-step-editor-actions");
         markup.ShouldContain("scenario-step-editor-action-buttons");
-        markup.ShouldContain("aria-label=\"Cancel step edit\"");
-        markup.ShouldContain("aria-label=\"Apply step edit\"");
-        markup.ShouldContain("ValidationStateClass");
-        markup.ShouldContain("ValidationStateText");
+        markup.ShouldContain("aria-label=\"@CancelStepEditLabel\"");
+        markup.ShouldContain("aria-label=\"@ApplyStepEditLabel\"");
+        markup.ShouldContain("private string CancelStepEditLabel => $\"Cancel editing {StepEditTargetLabel}\"");
+        markup.ShouldContain("private string ApplyStepEditLabel => $\"Apply edits to {StepEditTargetLabel}\"");
+        markup.ShouldContain("private string StepEditTargetLabel => string.IsNullOrWhiteSpace(Step.Name)");
+        markup.ShouldNotContain("aria-label=\"Cancel step edit\"");
+        markup.ShouldNotContain("aria-label=\"Apply step edit\"");
+        markup.ShouldContain("class=\"scenario-step-editor-validation invalid\"");
+        markup.ShouldContain("ValidationSummaryText");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.ErrorOutline\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldNotContain("Icon=\"@StepDescriptor.Icon\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.ErrorOutline\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("ValidationStateText");
+        markup.ShouldNotContain("ValidationStateClass");
+        markup.ShouldNotContain("Ready to apply");
+        markup.ShouldNotContain("scenario-step-editor-state");
+        markup.ShouldNotContain("scenario-step-editor-state ready");
+        markup.ShouldNotContain("scenario-step-editor-validation ready");
         markup.ShouldContain("Disabled=\"@HasValidationIssues\"");
         markup.ShouldContain("BuildValidationMessages");
         markup.ShouldContain("AddRequiredMessage(messages, _connectionField.Label, _connection)");
@@ -3670,11 +4557,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
         css.ShouldContain(".scenario-step-editor-actions");
         css.ShouldContain("justify-content: space-between;");
-        css.ShouldContain(".scenario-step-editor-state");
-        css.ShouldContain(".scenario-step-editor-state.ready");
-        css.ShouldContain("display: none;");
-        css.ShouldContain(".scenario-step-editor-state.invalid");
+        css.ShouldContain(".scenario-step-editor-validation");
+        css.ShouldNotContain(".scenario-step-editor-state");
+        css.ShouldNotContain(".scenario-step-editor-state.ready");
+        css.ShouldNotContain(".scenario-step-editor-validation.ready");
+        css.ShouldNotContain("display: none;");
+        css.ShouldContain(".scenario-step-editor-validation.invalid");
         css.ShouldContain(".scenario-step-editor-action-buttons");
+        css.ShouldContain("margin-left: auto;");
         css.ShouldContain("min-height: 28px;");
         css.ShouldContain("@media (max-width: 560px)");
         css.ShouldContain("flex-direction: column;");
@@ -3705,30 +4595,80 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("scenario-report-title");
         markup.ShouldContain("scenario-report-toolbar");
         markup.ShouldContain("scenario-report-meta-strip");
-        markup.ShouldContain("scenario-report-export-state");
-        markup.ShouldContain("role=\"status\"");
-        markup.ShouldContain("aria-live=\"polite\"");
+        markup.ShouldContain("aria-label=\"@ReportMetaSummaryLabel\"");
+        markup.ShouldContain("aria-label=\"@ReportToolbarLabel\"");
+        markup.ShouldContain("aria-label=\"@ReportExportActionsLabel\"");
+        markup.ShouldContain("private string ReportMetaSummaryLabel");
+        markup.ShouldContain("private string ReportToolbarLabel");
+        markup.ShouldContain("private string ReportExportActionsLabel");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@RunScopeIcon\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.FactCheck\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.FormatListNumbered\" Size=\"Size.Small\" aria-hidden=\"true\"");
         markup.ShouldContain("scenario-report-summary-grid");
         markup.ShouldContain("IssueMetricClass");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Tag\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Schedule\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Timer\" Size=\"Size.Small\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@IssueIcon\" Size=\"Size.Small\" aria-hidden=\"true\"");
         markup.ShouldContain("scenario-report-viewer");
+        markup.ShouldContain("aria-label=\"@RunDetailsLabel\"");
+        markup.ShouldContain("private string RunDetailsLabel");
         markup.ShouldContain("HasSummaryReport");
         markup.ShouldContain("HasJsonReport");
         markup.ShouldContain("scenario-report-empty");
-        markup.ShouldContain("<pre>@TextReport</pre>");
-        markup.ShouldContain("<pre>@JsonReport</pre>");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Medium\" aria-hidden=\"true\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Medium\" aria-hidden=\"true\"");
+        markup.ShouldContain("<pre aria-label=\"Text scenario report\">@TextReport</pre>");
+        markup.ShouldContain("<pre aria-label=\"Scenario report JSON\">@JsonReport</pre>");
         markup.ShouldContain("scenario-report-action-group");
         markup.ShouldContain("Disabled=\"@(!HasSummaryReport)\"");
         markup.ShouldContain("Disabled=\"@(!HasJsonReport)\"");
+        markup.ShouldContain("aria-label=\"@CopySummaryAriaLabel\"");
+        markup.ShouldContain("aria-label=\"@SaveSummaryAriaLabel\"");
+        markup.ShouldContain("aria-label=\"@CopyJsonAriaLabel\"");
+        markup.ShouldContain("aria-label=\"@SaveJsonAriaLabel\"");
+        markup.ShouldContain("private string CopySummaryAriaLabel");
+        markup.ShouldContain("private string SaveSummaryAriaLabel");
+        markup.ShouldContain("private string CopyJsonAriaLabel");
+        markup.ShouldContain("private string SaveJsonAriaLabel");
+        markup.ShouldContain("scenario-report-empty\" role=\"status\"");
         markup.ShouldContain("scenario-report-close");
-        markup.ShouldContain("aria-label=\"Close scenario report\"");
+        markup.ShouldContain("aria-label=\"@CloseReportLabel\"");
+        markup.ShouldContain("private string CloseReportLabel => $\"Close {ReportTitleTargetLabel}\"");
+        markup.ShouldContain("private string ReportTitleTargetLabel => string.IsNullOrWhiteSpace(Title)");
+        markup.ShouldNotContain("aria-label=\"Close scenario report\"");
+        markup.ShouldNotContain("aria-label=\"Scenario report summary\"");
+        markup.ShouldNotContain("aria-label=\"Scenario report actions\"");
+        markup.ShouldNotContain("aria-label=\"Scenario report export actions\"");
+        markup.ShouldNotContain("aria-label=\"Copy summary report\"");
+        markup.ShouldNotContain("aria-label=\"Save summary report\"");
+        markup.ShouldNotContain("aria-label=\"Copy JSON report\"");
+        markup.ShouldNotContain("aria-label=\"Save JSON report\"");
+        markup.ShouldNotContain("aria-label=\"Run details\"");
+        markup.ShouldNotContain("scenario-report-export-state");
+        markup.ShouldNotContain("ExportState");
+        markup.ShouldNotContain("AvailableReportFormatCount");
+        markup.ShouldNotContain("formats ready");
+        markup.ShouldNotContain("No export content");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@RunScopeIcon\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.FactCheck\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.FormatListNumbered\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Tag\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Schedule\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Timer\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@IssueIcon\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.Article\" Size=\"Size.Medium\" />");
+        markup.ShouldNotContain("Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Medium\" />");
+        markup.ShouldContain("scenario-report-empty\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("MudTextField");
 
         css.ShouldContain(".scenario-report-title");
         css.ShouldContain(".scenario-report-toolbar");
         css.ShouldContain(".scenario-report-meta-strip");
-        css.ShouldContain(".scenario-report-export-state");
-        css.ShouldContain("height: 24px;");
+        css.ShouldNotContain(".scenario-report-export-state");
         css.ShouldContain(".scenario-report-summary-grid");
         css.ShouldContain("grid-template-columns: repeat(4, minmax(0, 1fr));");
         css.ShouldContain("min-height: min(62vh, 540px);");
@@ -3774,12 +4714,27 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("new-app-dialog-grid connection");
         markup.ShouldContain("new-app-dialog-security-row");
         markup.ShouldContain("new-app-dialog-actions");
-        markup.ShouldContain("aria-label=\"Create app\"");
+        markup.ShouldContain("aria-label=\"@CancelNewAppLabel\"");
+        markup.ShouldContain("aria-label=\"@CreateNewAppLabel\"");
+        markup.ShouldContain("private string CancelNewAppLabel => $\"Cancel {NewAppTargetLabel} setup\"");
+        markup.ShouldContain("private string CreateNewAppLabel => $\"Create {NewAppTargetLabel} with {FirstPipelineTargetLabel}\"");
+        markup.ShouldContain("private string NewAppTargetLabel => string.IsNullOrWhiteSpace(_appName)");
+        markup.ShouldContain("private string FirstPipelineTargetLabel => string.IsNullOrWhiteSpace(_pipelineName)");
+        markup.ShouldNotContain("aria-label=\"Cancel new app\"");
+        markup.ShouldNotContain("aria-label=\"Create app\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Apps\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Lock\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("_port is >= 1 and <= 65535");
         markup.ShouldNotContain("new-app-dialog-status");
         markup.ShouldNotContain("FormStatusClass");
         markup.ShouldNotContain("FormStatusText");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Apps\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Lock\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("MudDivider");
         markup.ShouldNotContain("HelperText=");
 
@@ -3823,7 +4778,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("add-connection-dialog-grid broker");
         markup.ShouldContain("add-connection-dialog-checkbox-cell");
         markup.ShouldContain("add-connection-dialog-actions");
-        markup.ShouldContain("aria-label=\"Add connection\"");
+        markup.ShouldContain("aria-label=\"@AddConnectionLabel\"");
+        markup.ShouldContain("aria-label=\"@CancelConnectionLabel\"");
+        markup.ShouldContain("private string AddConnectionLabel => $\"Add connection for {ConnectionTargetLabel}\";");
+        markup.ShouldContain("private string CancelConnectionLabel => $\"Cancel new connection for {ConnectionTargetLabel}\";");
+        markup.ShouldContain("private string ConnectionTargetLabel");
+        markup.ShouldContain("return $\"{name} at {host}:{_port.ToString(System.Globalization.CultureInfo.InvariantCulture)}\";");
+        markup.ShouldNotContain("aria-label=\"Add connection\"");
+        markup.ShouldNotContain("aria-label=\"Cancel new connection\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Dns\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Lock\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("_port is >= 1 and <= 65535");
         markup.ShouldContain("_keepAliveSeconds > 0");
         markup.ShouldContain("Label=\"Broker name\"");
@@ -3852,6 +4817,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("FormStatusClass");
         markup.ShouldNotContain("FormStatusText");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Dns\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Lock\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("Label=\"TLS\"");
         markup.ShouldNotContain("<input");
 
@@ -3909,6 +4877,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("MaxHeight=\"320\"");
         markup.ShouldContain("Class=\"metrics-type-filter-icon\" Icon=\"@Icons.Material.Filled.FilterAlt\"");
         markup.ShouldContain("<MudSelectItem T=\"string\" Value=\"@AllTypes\">All types</MudSelectItem>");
+        markup.ShouldContain("<strong>@EditorEmptyTitle</strong>");
+        markup.ShouldContain("Rows.Count == 0 ? \"No metrics yet\" : \"No metric selected\"");
+        markup.ShouldNotContain("Ready to edit");
         markup.ShouldNotContain("Adornment=\"Adornment.Start\"");
         markup.ShouldNotContain("AdornmentIcon=\"@Icons.Material.Filled.FilterAlt\"");
         markup.ShouldNotContain("class=\"metrics-toolbar\"");
@@ -3949,6 +4920,178 @@ public sealed class DashboardEventFilterCatalogTests
     }
 
     [Fact]
+    public void MetricDesigner_UsesNeutralMetricMarkerHooks()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "MetricDesigner.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "MetricDesigner.razor.css"));
+
+        markup.ShouldContain("metrics-type-summary");
+        markup.ShouldContain("metrics-latest-marker live");
+        markup.ShouldContain("metrics-latest-marker muted");
+        markup.ShouldContain("@if (ShowUnsavedIndicator)");
+        markup.ShouldContain("metrics-unsaved-indicator dirty");
+        markup.ShouldContain("metrics-unsaved-dot");
+        markup.ShouldContain("metrics-side-indicator live");
+        markup.ShouldContain("metrics-side-indicator danger");
+        markup.ShouldContain("metrics-preview-marker");
+        markup.ShouldContain("aria-label=\"@MetricListPaneLabel\"");
+        markup.ShouldContain("private string MetricListPaneLabel");
+        markup.ShouldContain("$\"Metric resources, {MetricCountText}, {MetricFilterStateLabel}\"");
+        markup.ShouldContain("aria-label=\"@MetricSearchLabel\"");
+        markup.ShouldContain("private string MetricSearchLabel");
+        markup.ShouldContain("$\"Search metrics, current query {_search}\"");
+        markup.ShouldContain("aria-label=\"@MetricTypeFilterLabel\"");
+        markup.ShouldContain("private string MetricTypeFilterLabel");
+        markup.ShouldContain("Metric type filter, {selected.DisplayName}");
+        markup.ShouldContain("aria-label=\"@MetricEditorPaneLabel\"");
+        markup.ShouldContain("private string MetricEditorPaneLabel");
+        markup.ShouldContain("$\"Metric editor for {SelectedMetricActionTarget}\"");
+        markup.ShouldContain("title=\"@UnsavedMetricChangesLabel\"");
+        markup.ShouldContain("private string UnsavedMetricChangesLabel => $\"Unsaved changes for {SelectedMetricActionTarget}\"");
+        markup.ShouldContain("aria-label=\"@DisplayNameFieldLabel\"");
+        markup.ShouldContain("private string DisplayNameFieldLabel => $\"Display name for {SelectedMetricActionTarget}\"");
+        markup.ShouldContain("aria-label=\"@ChangeMetricTypeLabel\"");
+        markup.ShouldContain("private string ChangeMetricTypeLabel => $\"Change metric type for {SelectedMetricActionTarget}\"");
+        markup.ShouldContain("aria-label=\"@DescriptionFieldLabel\"");
+        markup.ShouldContain("private string DescriptionFieldLabel => $\"Description for {SelectedMetricActionTarget}\"");
+        markup.ShouldContain("aria-label=\"@MetricDetailsLabel\"");
+        markup.ShouldContain("private string MetricDetailsLabel");
+        markup.ShouldContain("Metric details for {(_draft.DisplayName.Length == 0 ? _draft.Id : _draft.DisplayName)}");
+        markup.ShouldContain("title=\"@NoReadingTitle\"");
+        markup.ShouldContain("private string NoReadingTitle => $\"No live reading for {SelectedMetricActionTarget}\"");
+        markup.ShouldContain("aria-label=\"@MetricReferenceListLabel\"");
+        markup.ShouldContain("private string MetricReferenceListLabel");
+        markup.ShouldContain("$\"Dashboard bindings for {SelectedMetricActionTarget}, {ReferenceSummaries.Count.ToString(CultureInfo.InvariantCulture)} references\"");
+        markup.ShouldContain("title=\"@ShowMetricFieldLabel(item)\"");
+        markup.ShouldContain("private static string ShowMetricFieldLabel(MetricValidationItem item)");
+        markup.ShouldContain("aria-label=\"@ParameterFieldLabel(parameter)\"");
+        markup.ShouldContain("private string ParameterFieldLabel(MetricParamSpec parameter)");
+        markup.ShouldContain("$\"{parameter.DisplayName} for {SelectedMetricActionTarget}\"");
+        markup.ShouldContain("title=\"@ClearMetricSearchLabel\"");
+        markup.ShouldContain("aria-label=\"@ClearMetricSearchLabel\"");
+        markup.ShouldContain("private string ClearMetricSearchLabel");
+        markup.ShouldContain("$\"Clear metric search for {_search}\"");
+        markup.ShouldNotContain("title=\"Clear search\"");
+        markup.ShouldNotContain("aria-label=\"Clear search\"");
+        markup.ShouldContain("Text=\"@ResetMetricFiltersLabel\"");
+        markup.ShouldContain("aria-label=\"@ResetMetricFiltersLabel\"");
+        markup.ShouldContain("private string ResetMetricFiltersLabel => $\"Reset metric filters, {MetricFilterStateLabel}\"");
+        markup.ShouldContain("private string MetricFilterStateLabel");
+        markup.ShouldContain("private string TypeFilterLabel(string typeId)");
+        markup.ShouldNotContain("Text=\"Reset filters\"");
+        markup.ShouldNotContain("aria-label=\"Reset filters\"");
+        markup.ShouldContain("Text=\"@CancelMetricChangesLabel\"");
+        markup.ShouldContain("aria-label=\"@CancelMetricChangesLabel\"");
+        markup.ShouldContain("private string CancelMetricChangesLabel => $\"Cancel changes for {SelectedMetricActionTarget}\"");
+        markup.ShouldNotContain("Text=\"Cancel changes\"");
+        markup.ShouldNotContain("aria-label=\"Cancel changes\"");
+        markup.ShouldContain("title=\"@RenameMetricLabel\"");
+        markup.ShouldContain("aria-label=\"@RenameMetricLabel\"");
+        markup.ShouldContain("private string RenameMetricLabel => $\"Rename {SelectedMetricActionTarget}\"");
+        markup.ShouldNotContain("title=\"Rename metric\"");
+        markup.ShouldNotContain("aria-label=\"Rename metric\"");
+        markup.ShouldContain("Text=\"@DuplicateMetricLabel\"");
+        markup.ShouldContain("aria-label=\"@DuplicateMetricLabel\"");
+        markup.ShouldContain("private string DuplicateMetricLabel => $\"Duplicate {SelectedMetricActionTarget}\"");
+        markup.ShouldNotContain("Text=\"Duplicate metric\"");
+        markup.ShouldNotContain("aria-label=\"Duplicate metric\"");
+        markup.ShouldContain("Text=\"@DeleteMetricLabel\"");
+        markup.ShouldContain("aria-label=\"@DeleteMetricLabel\"");
+        markup.ShouldContain("private string DeleteMetricLabel => $\"Delete {SelectedMetricActionTarget}\"");
+        markup.ShouldNotContain("Text=\"Delete metric\"");
+        markup.ShouldNotContain("aria-label=\"Delete metric\"");
+        markup.ShouldContain("metrics-list-empty create-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metrics-list-empty filter-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metrics-editor-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metrics-preview-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metrics-reference-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("aria-label=\"@MetricRowLabel(current)\"");
+        markup.ShouldContain("class=\"metrics-param-help\" role=\"img\" tabindex=\"0\" aria-label=\"@assistiveText\"");
+        markup.ShouldContain("private static string MetricRowLabel(MetricDesignerRow row)");
+        markup.ShouldContain("Select metric {row.DisplayName} ({row.Id})");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        markup.ShouldContain("Class=\"metrics-heading-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("class=\"metrics-empty-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("class=\"metrics-empty-icon muted\" aria-hidden=\"true\"");
+        markup.ShouldContain("Class=\"metrics-reference-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("role=\"radiogroup\"");
+        markup.ShouldContain("aria-orientation=\"horizontal\"");
+        markup.ShouldContain("role=\"radio\"");
+        markup.ShouldContain("aria-checked=\"@AriaState(IsToggleSelected(toggleValue, TrueValue))\"");
+        markup.ShouldNotContain("metrics-latest-state");
+        markup.ShouldNotContain("metrics-preview-state");
+        markup.ShouldNotContain("ShowEditorState");
+        markup.ShouldNotContain("metrics-editor-state");
+        markup.ShouldNotContain("metrics-state-dot");
+        markup.ShouldNotContain("metrics-list-empty create-state");
+        markup.ShouldNotContain("metrics-list-empty filter-state");
+        markup.ShouldNotContain("metrics-type-pill");
+        markup.ShouldNotContain("metrics-latest-pill");
+        markup.ShouldNotContain("metrics-side-badge");
+        markup.ShouldNotContain("metrics-preview-status");
+        markup.ShouldNotContain("aria-label=\"Metric resources\"");
+        markup.ShouldNotContain("aria-label=\"Search metrics\"");
+        markup.ShouldNotContain("aria-label=\"Metric type\"");
+        markup.ShouldNotContain("aria-label=\"Metric editor\"");
+        markup.ShouldNotContain("title=\"This metric has unsaved changes\"");
+        markup.ShouldNotContain("aria-label=\"Display name\"");
+        markup.ShouldNotContain("aria-label=\"Change metric type\"");
+        markup.ShouldNotContain("aria-label=\"Description\"");
+        markup.ShouldNotContain("title=\"Stopped or not emitted.\"");
+        markup.ShouldNotContain("aria-label=\"Dashboard bindings for selected metric\"");
+        markup.ShouldNotContain("title=\"Show field\"");
+        markup.ShouldNotContain("aria-label=\"@parameter.DisplayName\"");
+        markup.ShouldNotContain("aria-label=\"Metric details\"");
+        markup.ShouldNotContain("Class=\"metrics-heading-icon\" />");
+        markup.ShouldNotContain("class=\"metrics-empty-icon\">");
+        markup.ShouldNotContain("class=\"metrics-empty-icon muted\">");
+        markup.ShouldNotContain("Class=\"metrics-reference-icon\" />");
+
+        css.ShouldContain(".metrics-type-summary");
+        css.ShouldContain(".metrics-type-summary ::deep .mud-icon-root");
+        css.ShouldContain(".metrics-latest-marker");
+        css.ShouldContain(".metrics-latest-marker.live");
+        css.ShouldContain(".metrics-latest-marker.muted");
+        css.ShouldContain(".metrics-unsaved-indicator");
+        css.ShouldContain(".metrics-unsaved-indicator.dirty");
+        css.ShouldContain(".metrics-unsaved-dot");
+        css.ShouldContain("border-radius: 50%;");
+        css.ShouldContain(".metrics-side-indicator");
+        css.ShouldContain(".metrics-side-indicator.live");
+        css.ShouldContain(".metrics-side-indicator.danger");
+        css.ShouldContain(".metrics-preview-marker");
+        css.ShouldContain(".metrics-list-empty.filter-empty");
+        css.ShouldNotContain(".metrics-latest-state");
+        css.ShouldNotContain(".metrics-preview-state");
+        css.ShouldNotContain(".metrics-editor-state");
+        css.ShouldNotContain(".metrics-state-dot");
+        css.ShouldNotContain(".metrics-list-empty.create-state");
+        css.ShouldNotContain(".metrics-list-empty.filter-state");
+        css.ShouldNotContain(".metrics-type-pill");
+        css.ShouldNotContain(".metrics-latest-pill");
+        css.ShouldNotContain(".metrics-side-badge");
+        css.ShouldNotContain(".metrics-preview-status");
+        css.ShouldNotContain("border-radius: 999px;");
+    }
+
+    [Fact]
     public void MetricCreateDialog_UsesFlatCompactCreationChrome()
     {
         var root = FindRepositoryRoot();
@@ -3969,18 +5112,47 @@ public sealed class DashboardEventFilterCatalogTests
             "Dialogs",
             "MetricCreateDialog.razor.css"));
 
-        markup.ShouldContain("metric-create-title-icon");
+        markup.ShouldContain("class=\"metric-create-title-icon\" aria-hidden=\"true\"");
         markup.ShouldContain("metric-create-title-copy");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("role=\"form\" aria-label=\"Create metric\"");
         markup.ShouldContain("role=\"search\"");
-        markup.ShouldContain("aria-label=\"Create metric\"");
+        markup.ShouldContain("title=\"@ClearMetricTypeSearchLabel\"");
+        markup.ShouldContain("aria-label=\"@ClearMetricTypeSearchLabel\"");
+        markup.ShouldContain("private string ClearMetricTypeSearchLabel => string.IsNullOrWhiteSpace(_search)");
+        markup.ShouldContain("$\"Clear metric type search for {_search}\"");
+        markup.ShouldNotContain("title=\"Clear search\"");
+        markup.ShouldNotContain("aria-label=\"Clear search\"");
+        markup.ShouldContain("aria-activedescendant=\"@SelectedMetricTypeOptionId\"");
+        markup.ShouldContain("id=\"@MetricTypeOptionId(current)\"");
+        markup.ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
+        markup.ShouldContain("MetricTypeOptionLabel(MetricDescriptor descriptor)");
+        markup.ShouldContain("private string? SelectedMetricTypeOptionId");
+        markup.ShouldContain("MetricTypeOptionId(MetricDescriptor descriptor)");
+        markup.ShouldContain("SanitizeIdToken(string value)");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        markup.ShouldContain("aria-label=\"@CancelMetricCreateLabel\"");
+        markup.ShouldContain("aria-label=\"@CreateMetricLabel\"");
+        markup.ShouldContain("private string CancelMetricCreateLabel => $\"Cancel metric creation for {MetricCreateTargetLabel}\"");
+        markup.ShouldContain("private string CreateMetricLabel => $\"Create metric {MetricCreateTargetLabel}\"");
+        markup.ShouldContain("private string MetricCreateTargetLabel => string.IsNullOrWhiteSpace(_name)");
+        markup.ShouldNotContain("aria-label=\"Cancel metric creation\"");
+        markup.ShouldNotContain("                       aria-label=\"Create metric\"");
         markup.ShouldContain("Color=\"Color.Primary\"");
         markup.ShouldContain("Variant=\"Variant.Filled\"");
         markup.ShouldContain("aria-invalid=\"@(!CanCreate)\"");
         markup.ShouldContain("metric-create-count");
-        markup.ShouldContain("metric-create-empty-defaults");
+        markup.ShouldContain("metric-create-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("metric-create-empty-defaults\" role=\"status\" aria-live=\"polite\"");
         markup.ShouldNotContain("Class=\"metric-create-submit\"");
         markup.ShouldNotContain("metric-create-status");
         markup.ShouldNotContain("CreateStatusClass");
@@ -4037,6 +5209,23 @@ public sealed class DashboardEventFilterCatalogTests
             markup.ShouldContain($"{prefix}-title-icon");
             markup.ShouldContain($"{prefix}-title-copy");
             markup.ShouldContain("aria-label=");
+            System.Text.RegularExpressions.Regex.Matches(
+                    markup,
+                    @"<MudIcon\b(?:(?!/>).)*?/>",
+                    System.Text.RegularExpressions.RegexOptions.Singleline)
+                .Cast<System.Text.RegularExpressions.Match>()
+                .Select(static match => match.Value)
+                .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+                .ToArray()
+                .ShouldBeEmpty();
+            if (prefix == "metric-confirm")
+            {
+                markup.ShouldContain("class=\"metric-confirm-title-icon @ToneClass\" aria-hidden=\"true\"");
+            }
+            else
+            {
+                markup.ShouldContain($"class=\"{prefix}-title-icon\" aria-hidden=\"true\"");
+            }
             markup.ShouldNotContain("MudStack");
             markup.ShouldNotContain("MudGrid");
             markup.ShouldNotContain("MudDivider");
@@ -4047,10 +5236,12 @@ public sealed class DashboardEventFilterCatalogTests
             css.ShouldContain($".{prefix}-title-copy");
             if (prefix is "metric-confirm" or "metric-delete")
             {
-                markup.ShouldContain($"{prefix}-status");
+                markup.ShouldContain($"{prefix}-tone");
+                markup.ShouldNotContain($"{prefix}-status");
                 markup.ShouldContain("role=\"status\"");
                 markup.ShouldContain("aria-live=\"polite\"");
-                css.ShouldContain($".{prefix}-status");
+                css.ShouldContain($".{prefix}-tone");
+                css.ShouldNotContain($".{prefix}-status");
                 css.ShouldContain("grid-template-columns: 26px minmax(0, 1fr) auto;");
             }
             else
@@ -4069,27 +5260,121 @@ public sealed class DashboardEventFilterCatalogTests
         }
 
         File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
-            .ShouldContain("metric-confirm-status");
+            .ShouldContain("metric-confirm-tone");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldNotContain("metric-confirm-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
             .ShouldContain("role=\"status\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
             .ShouldContain("role=\"alert\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelConfirmationLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("aria-label=\"@ConfirmActionLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("private string CancelConfirmationLabel => $\"Cancel {ConfirmationTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldContain("private string ConfirmActionLabel => $\"{ConfirmText} for {ConfirmationTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricConfirmDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel confirmation\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
-            .ShouldContain("metric-delete-status");
+            .ShouldContain("metric-delete-tone");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("metric-delete-empty\" role=\"status\" aria-live=\"polite\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldNotContain("metric-delete-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldNotContain("DeleteStatusText");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldContain("role=\"status\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
             .ShouldContain("role=\"alert\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelMetricDeleteLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("aria-label=\"@DeleteMetricLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("private string CancelMetricDeleteLabel => $\"Cancel delete for {MetricDeleteTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldContain("private string DeleteMetricLabel => $\"Delete {MetricDeleteTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel metric delete\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDeleteDialog.razor"))
+            .ShouldNotContain("aria-label=\"Delete metric\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
             .ShouldNotContain("metric-rename-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
             .ShouldNotContain("RenameStatusText");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelMetricRenameLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldContain("aria-label=\"@RenameMetricLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldContain("private string CancelMetricRenameLabel => $\"Cancel rename for {CurrentMetricTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldContain("private string RenameMetricLabel => $\"Rename {CurrentMetricTargetLabel} to {MetricRenameTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel metric rename\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor"))
+            .ShouldNotContain("                       aria-label=\"Rename metric\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
             .ShouldNotContain("metric-duplicate-status");
         File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
             .ShouldNotContain("DuplicateStatusText");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelMetricDuplicateLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldContain("aria-label=\"@DuplicateMetricLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldContain("private string CancelMetricDuplicateLabel => $\"Cancel duplicate for {SourceMetricTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldContain("private string DuplicateMetricLabel => $\"Duplicate {SourceMetricTargetLabel} as {DuplicateMetricTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel metric duplicate\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricDuplicateDialog.razor"))
+            .ShouldNotContain("                       aria-label=\"Duplicate metric\"");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldNotContain("metric-type-change-status");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("metric-type-change-empty\" role=\"status\" aria-live=\"polite\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("metric-type-change-empty-defaults\" role=\"status\" aria-live=\"polite\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-activedescendant=\"@SelectedMetricTypeOptionId\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("id=\"@MetricTypeOptionId(current)\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-label=\"@MetricTypeOptionLabel(current)\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-label=\"@CancelMetricTypeChangeLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-label=\"@SubmitTypeChangeLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("private string CancelMetricTypeChangeLabel => $\"Cancel type change from {CurrentTypeTargetLabel}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("private string SubmitTypeChangeLabel => CanChange && SelectedDescriptor is { } descriptor");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldNotContain("aria-label=\"Cancel metric type change\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("title=\"@ClearMetricTypeSearchLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("aria-label=\"@ClearMetricTypeSearchLabel\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("private string ClearMetricTypeSearchLabel => string.IsNullOrWhiteSpace(_search)");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("$\"Clear metric type search for {_search}\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldNotContain("title=\"Clear search\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldNotContain("aria-label=\"Clear search\"");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("MetricTypeOptionLabel(MetricDescriptor descriptor)");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("private string? SelectedMetricTypeOptionId");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("MetricTypeOptionId(MetricDescriptor descriptor)");
+        File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
+            .ShouldContain("SanitizeIdToken(string value)");
         File.ReadAllText(Path.Combine(dialogPath, "MetricTypeChangeDialog.razor"))
             .ShouldNotContain("TypeChangeStatusText");
         File.ReadAllText(Path.Combine(dialogPath, "MetricRenameDialog.razor.css"))
@@ -4136,10 +5421,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("CancelAriaLabel");
         markup.ShouldContain("SubmitAriaLabel");
         markup.ShouldContain("DialogResult.Ok(_name.Trim())");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AddCircle\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldNotContain("new-pipeline-dialog-status");
         markup.ShouldNotContain("FormStatusClass");
         markup.ShouldNotContain("FormStatusText");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.AddCircle\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("MudGrid");
         markup.ShouldNotContain("MudStack");
 
@@ -4182,10 +5469,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Disabled=\"@(!IsValid)\"");
         markup.ShouldContain("OnKeyDown");
         markup.ShouldContain("DialogResult.Ok(_path.Trim())");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.SaveAs\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldNotContain("save-as-dialog-status");
         markup.ShouldNotContain("FormStatusClass");
         markup.ShouldNotContain("FormStatusText");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.SaveAs\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("HelperText=");
         markup.ShouldNotContain("MudStack");
 
@@ -4231,13 +5520,25 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("start-recording-summary");
         markup.ShouldContain("aria-label=\"Recording project\"");
         markup.ShouldContain("aria-label=\"Recording session name\"");
-        markup.ShouldContain("aria-label=\"Start recording\"");
+        markup.ShouldContain("aria-label=\"@StartRecordingLabel\"");
+        markup.ShouldContain("aria-label=\"@CancelRecordingLabel\"");
+        markup.ShouldContain("private string StartRecordingLabel => $\"Start recording {RecordingTargetLabel}\";");
+        markup.ShouldContain("private string CancelRecordingLabel => $\"Cancel recording {RecordingTargetLabel}\";");
+        markup.ShouldContain("private string RecordingTargetLabel => $\"{RecordingSessionName} in {RecordingProjectName}\";");
+        markup.ShouldContain("private string RecordingProjectName => string.IsNullOrWhiteSpace(_project) ? \"Default\" : _project.Trim();");
+        markup.ShouldContain("private string RecordingSessionName => string.IsNullOrWhiteSpace(_session) ? DefaultSessionName : _session.Trim();");
+        markup.ShouldNotContain("                       aria-label=\"Start recording\"");
+        markup.ShouldNotContain("aria-label=\"Cancel recording\"");
         markup.ShouldContain("DefaultSessionName");
         markup.ShouldContain("ProjectSummaryText");
         markup.ShouldContain("OnKeyDown");
         markup.ShouldContain("StartRecordingResult(project, session)");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.FiberManualRecord\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.FolderOpen\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldNotContain("start-recording-status");
         markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.FiberManualRecord\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.FolderOpen\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("MudStack");
         markup.ShouldNotContain("<MudText Typo=\"Typo.h6\">Start Recording</MudText>");
 
@@ -4278,20 +5579,53 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("<section class=\"payload-inspector\" aria-label=\"@Title\">");
         markup.ShouldContain("payload-inspector-header");
-        markup.ShouldContain("payload-format-badge @FormatClass");
+        markup.ShouldContain("class=\"payload-format-marker @FormatMarkerClass\" aria-hidden=\"true\"");
+        markup.ShouldContain("<MudIcon Icon=\"@FormatIcon\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@FormatIcon\" Size=\"Size.Small\" />");
         markup.ShouldContain("payload-meta-strip");
         markup.ShouldContain("payload-view-switch");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Subject\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Tag\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.DataObject\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Subject\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Tag\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"Size.Small\" />");
+        markup.ShouldContain("id=\"@PayloadViewTabId(FormattedView)\"");
         markup.ShouldContain("role=\"tab\"");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space ArrowLeft ArrowRight Home End\"").Count.ShouldBe(4);
         markup.ShouldContain("aria-selected=\"@IsActiveView(FormattedView)\"");
+        markup.ShouldContain("aria-controls=\"@PayloadViewPanelId\"");
+        markup.ShouldContain("@onkeydown=\"@OnFormattedViewTabKeyDown\"");
+        markup.ShouldContain("@onkeydown=\"@OnRawViewTabKeyDown\"");
+        markup.ShouldContain("@onkeydown=\"@OnHexViewTabKeyDown\"");
+        markup.ShouldContain("@onkeydown=\"@OnMetaViewTabKeyDown\"");
+        markup.ShouldContain("PayloadViewOrder");
+        markup.ShouldContain("SelectPayloadViewFromKeyboard");
+        markup.ShouldContain("ResolvePayloadView");
+        markup.ShouldContain("role=\"tabpanel\"");
+        markup.ShouldContain("aria-labelledby=\"@PayloadViewTabId(_activeView)\"");
+        markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("payload-inspector-meta-list");
         markup.ShouldContain("private const string FormattedView = \"formatted\";");
-        markup.ShouldContain("private string FormatClass");
+        markup.ShouldContain("private readonly string _payloadViewIdPrefix");
+        markup.ShouldContain("private string PayloadViewPanelId");
+        markup.ShouldContain("private string PayloadViewTabId(string view)");
+        markup.ShouldContain("private string FormatMarkerClass");
         markup.ShouldContain("private string FormatIcon");
+        markup.ShouldNotContain("payload-format-state");
+        markup.ShouldNotContain("private string FormatClass");
+        markup.ShouldNotContain("payload-format-badge");
         markup.ShouldNotContain("MudToggleGroup");
         markup.ShouldNotContain("MudChip");
         markup.ShouldNotContain("<MudPaper");
 
         css.ShouldContain("border-radius: 5px;");
+        css.ShouldContain(".payload-format-marker");
+        css.ShouldContain(".payload-format-marker.scalar");
+        css.ShouldContain(".payload-format-marker.structured");
+        css.ShouldContain(".payload-format-marker.binary");
         css.ShouldContain(".payload-inspector-header");
         css.ShouldContain("min-height: 38px;");
         css.ShouldContain(".payload-view-switch");
@@ -4302,6 +5636,25 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".payload-inspector-meta-list div");
         css.ShouldContain("grid-template-columns: 76px minmax(0, 1fr);");
         css.ShouldContain("@media (max-width: 520px)");
+        css.ShouldNotContain(".payload-format-state");
+        css.ShouldNotContain(".payload-format-badge");
+    }
+
+    [Fact]
+    public void EmptyView_HidesDecorativeInboxIcon()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "EmptyView.razor"));
+
+        markup.ShouldContain("<div class=\"empty-view\" role=\"status\" aria-live=\"polite\">");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Outlined.Inbox\" Color=\"Color.Secondary\" Size=\"Size.Large\" aria-hidden=\"true\" />");
+        markup.ShouldContain("@(Message ?? \"No data\")");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Outlined.Inbox\" Color=\"Color.Secondary\" Size=\"Size.Large\" />");
     }
 
     [Fact]
@@ -4324,16 +5677,84 @@ public sealed class DashboardEventFilterCatalogTests
             "WorkspaceLogPanel.razor.css"));
 
         markup.ShouldContain("Logs.Count > 0");
-        markup.ShouldContain("role=\"search\" aria-label=\"Log filters\"");
+        markup.ShouldContain("role=\"search\" aria-label=\"@WorkspaceLogFiltersLabel\"");
+        markup.ShouldContain("private string WorkspaceLogFiltersLabel => string.IsNullOrWhiteSpace(ForcedScope)");
+        markup.ShouldContain("$\"{ScopeLabel(ForcedScope)} workspace log filters\"");
+        markup.ShouldContain("role=\"log\" aria-label=\"@WorkspaceLogListLabel\"");
+        markup.ShouldContain("private string WorkspaceLogListLabel => HasActiveFilters");
+        markup.ShouldContain("FormatLogCount(FilteredLogs.Count)");
+        markup.ShouldContain("private static string FormatLogCount(int count)");
         markup.ShouldContain("workspace-log-stats");
+        markup.ShouldContain("aria-label=\"@WorkspaceLogActionsLabel\"");
+        markup.ShouldContain("private string WorkspaceLogActionsLabel => Logs.Count == 0");
+        markup.ShouldContain("$\"Workspace log commands, {FormatLogCount(Logs.Count)} total\"");
+        markup.ShouldContain("aria-label=\"@WorkspaceLogStatsLabel\"");
+        markup.ShouldContain("private string WorkspaceLogStatsLabel => ProblemCount > 0");
+        markup.ShouldContain("$\"Workspace log totals, {FormatLogCount(Logs.Count)} total and {ProblemCount} {ProblemCountLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Workspace log commands\"");
+        markup.ShouldNotContain("aria-label=\"Workspace log total and problem count\"");
+        markup.ShouldNotContain("aria-label=\"Log commands\"");
+        markup.ShouldNotContain("aria-label=\"Log summary\"");
+        markup.ShouldNotContain("role=\"search\" aria-label=\"Log filters\"");
+        markup.ShouldNotContain("role=\"log\" aria-label=\"Workspace logs\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("WorkspaceLogFilter.Problems");
         markup.ShouldContain("workspace-log-segment");
+        markup.ShouldContain("aria-label=\"@ScopeFilterGroupLabel\"");
+        markup.ShouldContain("aria-label=\"@SeverityFilterGroupLabel\"");
+        markup.ShouldContain("private string ScopeFilterGroupLabel");
+        markup.ShouldContain("$\"Workspace log scope filter, {ScopeOptions.Count.ToString(CultureInfo.InvariantCulture)} options\"");
+        markup.ShouldContain("private string SeverityFilterGroupLabel");
+        markup.ShouldContain("$\"Workspace log level filter, {SeverityOptions.Length.ToString(CultureInfo.InvariantCulture)} options\"");
+        markup.ShouldNotContain("aria-label=\"Workspace log scope filter\"");
+        markup.ShouldNotContain("aria-label=\"Workspace log level filter\"");
+        markup.ShouldContain("aria-label=\"@FixedScopeLabel\"");
+        markup.ShouldContain("private string FixedScopeLabel");
+        markup.ShouldContain("$\"{ScopeLabel(ForcedScope)} fixed workspace log scope\"");
+        markup.ShouldContain("aria-label=\"@LogSearchLabel\"");
+        markup.ShouldContain("private string LogSearchLabel");
+        markup.ShouldContain("$\"Search {ScopeLabel(EffectiveScope).ToLowerInvariant()} workspace logs\"");
+        markup.ShouldNotContain("aria-label=\"Fixed scope\"");
+        markup.ShouldNotContain("aria-label=\"Search logs\"");
+        markup.ShouldNotContain("aria-label=\"Scope filter\"");
+        markup.ShouldNotContain("aria-label=\"Level filter\"");
+        markup.ShouldContain("aria-label=\"@ScopeFilterButtonLabel(scope)\"");
+        markup.ShouldContain("aria-label=\"@SeverityFilterButtonLabel(severity)\"");
+        markup.ShouldContain("private static string ScopeFilterButtonLabel(string scope)");
+        markup.ShouldContain("private static string SeverityFilterButtonLabel(string severity)");
         markup.ShouldContain("[Parameter] public WorkspaceLogQuery? InitialQuery { get; set; }");
         markup.ShouldContain("InitialQuery.Equals(_appliedInitialQuery)");
         markup.ShouldContain("_severity = string.IsNullOrWhiteSpace(InitialQuery.Severity)");
         markup.ShouldContain("_search = InitialQuery.Search");
-        markup.ShouldContain("Copy visible logs");
-        markup.ShouldContain("Export visible logs");
+        markup.ShouldContain("Text=\"@CopyVisibleLogsLabel\"");
+        markup.ShouldContain("Text=\"@ExportVisibleLogsLabel\"");
+        markup.ShouldContain("Text=\"@ResetLogFiltersLabel\"");
+        markup.ShouldContain("Text=\"@ClearLogsLabel\"");
+        markup.ShouldContain("aria-label=\"@CopyVisibleLogsLabel\"");
+        markup.ShouldContain("aria-label=\"@ExportVisibleLogsLabel\"");
+        markup.ShouldContain("aria-label=\"@ResetLogFiltersLabel\"");
+        markup.ShouldContain("aria-label=\"@ClearLogsLabel\"");
+        markup.ShouldContain("private string VisibleLogActionTargetLabel => HasActiveFilters");
+        markup.ShouldContain("private string CopyVisibleLogsLabel => $\"Copy {VisibleLogActionTargetLabel}\"");
+        markup.ShouldContain("private string ExportVisibleLogsLabel => $\"Export {VisibleLogActionTargetLabel}\"");
+        markup.ShouldContain("private string ResetLogFiltersLabel => string.IsNullOrWhiteSpace(ForcedScope)");
+        markup.ShouldContain("private string ClearLogsLabel => $\"Clear {FormatLogCount(Logs.Count)}\"");
+        markup.ShouldNotContain("Text=\"Copy visible logs\"");
+        markup.ShouldNotContain("Text=\"Export visible logs\"");
+        markup.ShouldNotContain("Text=\"Reset filters\"");
+        markup.ShouldNotContain("Text=\"Clear logs\"");
+        markup.ShouldNotContain("aria-label=\"Copy visible logs\"");
+        markup.ShouldNotContain("aria-label=\"Export visible logs\"");
+        markup.ShouldNotContain("aria-label=\"Reset log filters\"");
+        markup.ShouldNotContain("aria-label=\"Clear logs\"");
         markup.ShouldContain("Disabled=\"@(FilteredLogs.Count == 0)\"");
         markup.ShouldContain("CopyVisibleLogsAsync");
         markup.ShouldContain("ExportVisibleLogsAsync");
@@ -4345,8 +5766,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("workspace-logs-{stamp}.json");
         markup.ShouldContain("WriteLogExportAsync");
         markup.ShouldContain("File.WriteAllTextAsync(fullPath, content)");
-        markup.ShouldContain("aria-label=\"@($\"{SeverityLabel(entry)} log at {FormatLogTime(entry)} from {SourceCode(entry)}\")\"");
+        markup.ShouldContain("aria-label=\"@WorkspaceLogRowLabel(entry)\"");
+        markup.ShouldContain("private static string WorkspaceLogRowLabel(WorkspaceLogEntry entry)");
+        markup.ShouldContain("$\"Workspace log row, {SeverityLabel(entry)} at {FormatLogTime(entry)} on {FormatLogDate(entry)}, {EntryScopeLabel(entry)}, {SourceCode(entry)}\"");
         markup.ShouldContain("workspace-log-row-icon");
+        markup.ShouldContain("title=\"@WorkspaceLogSeverityTitle(entry)\"");
+        markup.ShouldContain("private static string WorkspaceLogSeverityTitle(WorkspaceLogEntry entry)");
+        markup.ShouldContain("$\"{SeverityLabel(entry)} log severity\"");
+        markup.ShouldNotContain("aria-label=\"@($\"{SeverityLabel(entry)} log at {FormatLogTime(entry)} from {SourceCode(entry)}\")\"");
+        markup.ShouldNotContain("title=\"@SeverityLabel(entry)\"");
         markup.ShouldContain("DetailLabels(entry)");
         markup.ShouldContain("SeverityIcon(entry)");
         markup.ShouldContain("workspace-log-empty\" role=\"status\" aria-live=\"polite\"");
@@ -4412,20 +5840,44 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "AppJsonPanel.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Application JSON toolbar\"");
-        markup.ShouldContain("app-json-title-icon");
+        markup.ShouldContain("aria-label=\"@AppJsonToolbarLabel\"");
+        markup.ShouldContain("private string AppJsonToolbarLabel => Project.HasUnsavedChanges");
+        markup.ShouldContain("$\"Application JSON toolbar for {Project.Name}, unsaved changes\"");
+        markup.ShouldContain("$\"Application JSON toolbar for {Project.Name}\"");
+        markup.ShouldNotContain("aria-label=\"Application JSON toolbar\"");
+        markup.ShouldContain("class=\"app-json-title-icon\" aria-hidden=\"true\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("<strong>App JSON</strong>");
         markup.ShouldContain("@FileLabel");
+        markup.ShouldContain("aria-label=\"@AppJsonMetaLabel\"");
+        markup.ShouldContain("private string AppJsonMetaLabel => $\"Application JSON summary for {Project.Name}: {JsonLineCountLabel}, {JsonSizeLabel}\"");
+        markup.ShouldContain("private string JsonLineCountLabel => JsonLineCount == 1 ? \"1 line\" : $\"{JsonLineCount} lines\"");
+        markup.ShouldNotContain("aria-label=\"Application JSON line and size summary\"");
         markup.ShouldContain("@JsonLineCount lines");
         markup.ShouldContain("@JsonSizeLabel");
-        markup.ShouldContain("app-json-state unsaved");
+        markup.ShouldContain("app-json-unsaved-indicator");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\">Unsaved</span>");
-        markup.ShouldContain("aria-label=\"Copy JSON\"");
+        markup.ShouldNotContain("app-json-state");
+        markup.ShouldContain("Text=\"@CopyAppJsonLabel\"");
+        markup.ShouldContain("aria-label=\"@CopyAppJsonLabel\"");
+        markup.ShouldContain("private string CopyAppJsonLabel => $\"Copy application JSON for {Project.Name}\"");
+        markup.ShouldNotContain("Text=\"Copy JSON\"");
+        markup.ShouldNotContain("aria-label=\"Copy JSON\"");
         markup.ShouldContain("Disabled=\"@string.IsNullOrWhiteSpace(_fullJson)\"");
         markup.ShouldContain("app-json-editor-shell");
         markup.ShouldContain("app-json-empty");
         markup.ShouldContain("No JSON available");
-        markup.ShouldContain("aria-label=\"Application definition JSON\"");
+        markup.ShouldContain("aria-label=\"@AppJsonEditorLabel\"");
+        markup.ShouldContain("private string AppJsonEditorLabel => $\"Application definition JSON for {Project.Name}\"");
+        markup.ShouldNotContain("aria-label=\"Application definition JSON\"");
         markup.ShouldContain("<StandaloneCodeEditor @ref=\"_editor\"");
         markup.ShouldContain("CssClass=\"app-json-monaco-editor\"");
         markup.ShouldContain("ConstructionOptions=\"@EditorConstructionOptions\"");
@@ -4449,6 +5901,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("MudStack Row=\"true\"");
         markup.ShouldNotContain("Visual view");
         markup.ShouldNotContain("app-json-view-button");
+        markup.ShouldNotContain("aria-label=\"JSON summary\"");
         markup.ShouldNotContain("ReturnToVisualViewAsync");
 
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto auto;");
@@ -4456,8 +5909,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("padding: 5px 8px;");
         css.ShouldContain("height: 26px;");
         css.ShouldContain(".app-json-meta span,");
-        css.ShouldContain(".app-json-state.unsaved");
-        css.ShouldContain(".app-json-state.unsaved::before");
+        css.ShouldContain(".app-json-unsaved-indicator");
+        css.ShouldContain(".app-json-unsaved-indicator::before");
+        css.ShouldContain("border-radius: 50%;");
+        css.ShouldNotContain("border-radius: 999px;");
+        css.ShouldNotContain(".app-json-state");
         css.ShouldContain(".app-json-toolbar ::deep .mud-icon-button");
         css.ShouldContain(".app-json-editor-shell ::deep .app-json-monaco-editor");
         css.ShouldContain(".app-json-editor-shell ::deep .app-json-monaco-editor .monaco-editor,");
@@ -4586,37 +6042,102 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "DashboardDesigner.razor.css"));
 
-        razor.ShouldContain("role=\"region\" aria-label=\"Dashboard designer\"");
-        razor.ShouldContain("class=\"dashboard-toolbar\" role=\"toolbar\" aria-label=\"Dashboard toolbar\"");
+        razor.ShouldContain("role=\"region\" aria-label=\"@DashboardDesignerLabel\"");
+        razor.ShouldContain("private string DashboardDesignerLabel => string.IsNullOrWhiteSpace(Project.ActiveDashboardName)");
+        razor.ShouldContain("$\"{DashboardTitle} dashboard designer\"");
+        razor.ShouldNotContain("role=\"region\" aria-label=\"Dashboard designer\"");
+        razor.ShouldContain("class=\"dashboard-toolbar\" role=\"toolbar\" aria-label=\"@DashboardToolbarLabel\"");
+        razor.ShouldContain("private string DashboardToolbarLabel => $\"{DashboardTitle} dashboard toolbar\";");
+        razor.ShouldNotContain("aria-label=\"Dashboard toolbar\"");
         razor.ShouldContain("dashboard-meta-strip");
-        razor.ShouldContain("@DashboardStatusLabel");
+        razor.ShouldContain("aria-label=\"@DashboardMetaSummaryLabel\"");
+        razor.ShouldContain("@DashboardSummaryLabel");
+        razor.ShouldContain("aria-label=\"@DashboardToolbarActionsLabel\"");
+        razor.ShouldContain("aria-label=\"@DashboardEditCommandsLabel\"");
+        razor.ShouldContain("aria-label=\"@GridLayoutCommandsLabel\"");
+        razor.ShouldContain("aria-label=\"@SelectionCommandsLabel\"");
+        razor.ShouldContain("private string DashboardMetaSummaryLabel");
+        razor.ShouldContain("private string DashboardToolbarActionsLabel");
+        razor.ShouldContain("private string DashboardEditCommandsLabel");
+        razor.ShouldContain("private string GridLayoutCommandsLabel");
+        razor.ShouldContain("private string SelectionCommandsLabel");
+        razor.ShouldNotContain("@DashboardStatusLabel");
+        razor.ShouldNotContain("aria-label=\"Dashboard summary\"");
+        razor.ShouldNotContain("aria-label=\"Dashboard mode and commands\"");
+        razor.ShouldNotContain("aria-label=\"Dashboard edit commands\"");
+        razor.ShouldNotContain("aria-label=\"Grid layout commands\"");
+        razor.ShouldNotContain("aria-label=\"Selection commands\"");
+        razor.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         razor.ShouldContain("@GridSizeLabel");
         razor.ShouldContain("@CellCountLabel");
         razor.ShouldContain("@WidgetCountLabel");
         razor.ShouldContain("dashboard-mode-shell");
-        razor.ShouldContain("DashboardModeStateClass");
+        razor.ShouldContain("DashboardModeIndicatorClass");
+        razor.ShouldNotContain("DashboardModeStateClass");
+        razor.ShouldNotContain("dashboard-mode-state");
         razor.ShouldContain("dashboard-tool-group dashboard-tool-group-grid");
         razor.ShouldContain("dashboard-tool-group dashboard-tool-group-selection");
-        razor.ShouldContain("aria-label=\"Dashboard layout editor\"");
-        razor.ShouldContain("role=\"grid\" aria-label=\"Dashboard layout grid\"");
-        razor.ShouldContain("aria-label=\"Live dashboard grid\"");
+        razor.ShouldContain("aria-label=\"@DashboardLayoutEditorLabel\"");
+        razor.ShouldContain("private string DashboardLayoutEditorLabel => $\"{DashboardTitle} dashboard layout editor\";");
+        razor.ShouldNotContain("aria-label=\"Dashboard layout editor\"");
+        razor.ShouldContain("role=\"grid\" aria-label=\"@DashboardLayoutGridLabel\"");
+        razor.ShouldContain("private string DashboardLayoutGridLabel => $\"{DashboardTitle} editable dashboard layout grid\";");
+        razor.ShouldNotContain("aria-label=\"Dashboard layout grid\"");
+        razor.ShouldContain("aria-multiselectable=\"true\"");
+        razor.ShouldContain("aria-label=\"@LiveDashboardGridLabel\"");
+        razor.ShouldContain("private string LiveDashboardGridLabel => $\"{DashboardTitle} live dashboard grid\";");
+        razor.ShouldNotContain("aria-label=\"Live dashboard grid\"");
         razor.ShouldContain("aria-label=\"@CellAriaLabel(currentCell)\"");
         razor.ShouldContain("title=\"@CellAriaLabel(currentCell)\"");
         razor.ShouldContain("tabindex=\"0\"");
         razor.ShouldContain("SelectCellFromKeyboard");
         razor.ShouldContain("private static bool IsActivationKey");
+        razor.ShouldContain("Text=\"@GridPickerButtonLabel\"");
         razor.ShouldContain("aria-label=\"@GridPickerButtonLabel\"");
+        razor.ShouldNotContain("Text=\"Set grid layout\"");
+        razor.ShouldContain("Text=\"@MergeSelectedCellsLabel\"");
+        razor.ShouldContain("aria-label=\"@MergeSelectedCellsLabel\"");
+        razor.ShouldContain("private string MergeSelectedCellsLabel => SelectedCells.Count switch");
+        razor.ShouldContain("$\"Merge {SelectedCells.Count.ToString(CultureInfo.InvariantCulture)} selected cells in {DashboardTitle}\"");
+        razor.ShouldNotContain("Text=\"Merge selected cells\"");
+        razor.ShouldNotContain("aria-label=\"Merge selected cells\"");
+        razor.ShouldContain("Text=\"@SplitPickerButtonLabel\"");
         razor.ShouldContain("aria-label=\"@SplitPickerButtonLabel\"");
+        razor.ShouldNotContain("Text=\"Split selected cell\"");
+        razor.ShouldContain("aria-label=\"@CloseGridPickerLabel\"");
+        razor.ShouldContain("private string CloseGridPickerLabel => $\"Close {DashboardTitle} grid layout picker\";");
+        razor.ShouldNotContain("aria-label=\"Close grid layout picker\"");
+        razor.ShouldContain("@onclick=\"@CloseGridPicker\"");
+        razor.ShouldContain("aria-label=\"@CloseSplitPickerLabel\"");
+        razor.ShouldContain("private string CloseSplitPickerLabel => SelectedCells.Count == 1");
+        razor.ShouldContain("$\"Close split picker for {CellTitle(SelectedCells[0])}\"");
+        razor.ShouldContain("$\"Close {DashboardTitle} split picker\"");
+        razor.ShouldNotContain("aria-label=\"Close split picker\"");
+        razor.ShouldContain("@onclick=\"@CloseSplitPicker\"");
+        razor.ShouldNotContain("class=\"dashboard-picker-backdrop\" @onclick");
+        razor.ShouldContain("title=\"@GridPickerCellAriaLabel(r, c)\"");
+        razor.ShouldContain("aria-label=\"@GridPickerCellAriaLabel(r, c)\"");
+        razor.ShouldNotContain("title=\"@($\"Set grid to {c} columns x {r} rows\")\"");
+        razor.ShouldContain("title=\"@SplitPickerCellAriaLabel(r, c)\"");
+        razor.ShouldContain("aria-label=\"@SplitPickerCellAriaLabel(r, c)\"");
+        razor.ShouldNotContain("title=\"@($\"Split selected cell to {c} columns x {r} rows\")\"");
         razor.ShouldContain("GridPickerCellAriaLabel");
         razor.ShouldContain("SplitPickerCellAriaLabel");
         razor.ShouldContain("disabled=\"@IsSplitPickerCellDisabled(r, c)\"");
         razor.ShouldContain("private string CellAriaLabel");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.SelectAll\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.SelectAll\" Size=\"Size.Small\" />");
 
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain(".dashboard-meta-strip span");
         css.ShouldContain(".dashboard-mode-shell");
-        css.ShouldContain(".dashboard-mode-state.edit");
-        css.ShouldContain(".dashboard-mode-state.live");
+        css.ShouldContain(".dashboard-mode-indicator.edit");
+        css.ShouldContain(".dashboard-mode-indicator.live");
+        css.ShouldNotContain(".dashboard-mode-state");
         css.ShouldContain(".dashboard-tool-group");
         css.ShouldContain("min-height: 32px;");
         css.ShouldContain("@media (max-width: 980px)");
@@ -4643,19 +6164,32 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardDesigner.razor.css"));
 
         razor.ShouldContain("dashboard-live-head");
+        razor.ShouldContain("class=\"dashboard-live-frame\" role=\"group\" aria-label=\"@LivePreviewFrameLabel\"");
+        razor.ShouldContain("private string LivePreviewFrameLabel => $\"{DashboardTitle} live dashboard preview\";");
+        razor.ShouldNotContain("aria-label=\"Live dashboard preview\"");
         razor.ShouldContain("dashboard-live-summary");
+        razor.ShouldContain("aria-label=\"@LivePreviewSummaryLabel\"");
+        razor.ShouldContain("private string LivePreviewSummaryLabel");
         razor.ShouldContain("@LivePreviewSubtitle");
-        razor.ShouldContain("@LivePreviewStateLabel");
+        razor.ShouldContain("@LivePreviewContentLabel");
+        razor.ShouldContain("LivePreviewContentClass");
+        razor.ShouldNotContain("aria-label=\"Live preview summary\"");
+        razor.ShouldNotContain("@LivePreviewStateLabel");
+        razor.ShouldNotContain("LivePreviewStateClass");
         razor.ShouldContain("SwitchToEditMode");
         razor.ShouldContain("dashboard-live-viewport");
         razor.ShouldContain("dashboard-live-empty-note");
         razor.ShouldContain("No widgets in live preview");
         razor.ShouldContain("Read-only runtime view without layout controls.");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Widgets\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldContain("class=\"dashboard-live-widget\"");
 
         css.ShouldContain(".dashboard-live-head");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto auto;");
-        css.ShouldContain(".dashboard-live-summary .ready");
+        razor.ShouldContain("HasDashboardWidgets ? \"active\" : \"empty\"");
+        css.ShouldContain(".dashboard-live-summary .active");
         css.ShouldContain(".dashboard-live-summary .empty");
+        css.ShouldNotContain(".dashboard-live-summary .ready");
         css.ShouldContain("::deep .dashboard-live-edit-button");
         css.ShouldContain(".dashboard-live-viewport");
         css.ShouldContain(".dashboard-live-empty-note");
@@ -4663,6 +6197,57 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("transform: translate(-50%, -50%);");
         css.ShouldContain("text-align: center;");
         css.ShouldContain("max-width: calc(100% - 16px);");
+    }
+
+    [Fact]
+    public void DashboardQueryPreviewFrame_UsesNeutralPreviewSourceChrome()
+    {
+        var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardQueryPreviewFrame.razor"));
+        var css = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components",
+            "Workspace",
+            "DashboardQueryPreviewFrame.razor.css"));
+
+        markup.ShouldContain("Widget preview");
+        markup.ShouldContain("Current style and draft query");
+        markup.ShouldContain("Refresh sample");
+        markup.ShouldContain("title=\"@RefreshSampleLabel\"");
+        markup.ShouldContain("aria-label=\"@RefreshSampleLabel\"");
+        markup.ShouldContain("private string RefreshSampleLabel => IsLive");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        markup.ShouldContain("PreviewSourceClass");
+        markup.ShouldContain("dashboard-query-preview-frame-source live");
+        markup.ShouldContain("dashboard-query-preview-frame-source sample");
+        markup.ShouldNotContain("DataStateClass");
+        markup.ShouldNotContain("dashboard-query-preview-frame-state");
+        markup.ShouldNotContain("BadgeClass");
+        markup.ShouldNotContain("dashboard-query-preview-frame-badge");
+        markup.ShouldNotContain("title=\"Refresh sample data\"");
+        markup.ShouldNotContain("aria-label=\"Refresh sample data\"");
+
+        css.ShouldContain(".dashboard-query-preview-frame-source");
+        css.ShouldContain(".dashboard-query-preview-frame-source.live");
+        css.ShouldContain(".dashboard-query-preview-frame-source.sample");
+        css.ShouldNotContain(".dashboard-query-preview-frame-state");
+        css.ShouldNotContain(".dashboard-query-preview-frame-badge");
     }
 
     [Fact]
@@ -4685,12 +6270,18 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardDesigner.razor.css"));
 
         razor.ShouldContain("class=\"@DashboardGridFrameClass\"");
-        razor.ShouldContain("dashboard-drop-status");
-        razor.ShouldContain("DashboardDragStatusText");
-        razor.ShouldContain("drop-ready");
+        razor.ShouldContain("dashboard-drop-hint");
+        razor.ShouldContain("DashboardDragHintText");
+        razor.ShouldNotContain("dashboard-drop-status");
+        razor.ShouldNotContain("DashboardDragStatusText");
+        razor.ShouldContain("drop-target");
         razor.ShouldContain("move-target");
         razor.ShouldContain("dashboard-cell-drop-mark");
+        razor.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
+        razor.ShouldNotContain("drop-ready");
         razor.ShouldContain("role=\"status\" aria-live=\"polite\"");
+        razor.ShouldContain("<MudIcon Icon=\"@DashboardDragHintIcon\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@DashboardDragHintIcon\" Size=\"Size.Small\" />");
         razor.ShouldContain("dashboard-grid-empty-icon");
         razor.ShouldContain("@EmptyGridHint");
         css.ShouldContain("grid-template-columns: 42px minmax(max-content, 1fr);");
@@ -4698,15 +6289,16 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("overscroll-behavior: contain;");
         css.ShouldContain("border-right: 1px solid var(--flux-border-soft);");
         css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-grid");
-        css.ShouldContain(".dashboard-drop-status");
+        css.ShouldContain(".dashboard-drop-hint");
+        css.ShouldNotContain(".dashboard-drop-status");
         css.ShouldContain(".dashboard-grid-empty-icon");
         css.ShouldContain("left: 8px;");
         css.ShouldContain("max-width: min(340px, calc(100% - 16px));");
         css.ShouldContain(".dashboard-track-handle:focus-visible");
         css.ShouldContain(".dashboard-cell:focus-visible");
-        css.ShouldContain(".dashboard-cell.drop-ready");
-        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready");
-        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready .dashboard-cell-drop-mark");
+        css.ShouldContain(".dashboard-cell.drop-target");
+        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-target");
+        css.ShouldContain(".dashboard-grid-frame.adding-widget .dashboard-cell.drop-target .dashboard-cell-drop-mark");
         css.ShouldContain(".dashboard-cell.move-target");
         css.ShouldContain(".dashboard-cell.selected::after");
         css.ShouldContain(".dashboard-cell.dropping::after");
@@ -4715,6 +6307,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".dashboard-cell.moving-source::before");
         css.ShouldContain(".dashboard-cell-drop-mark");
         css.ShouldContain(".dashboard-cell:hover .dashboard-cell-placeholder");
+        css.ShouldNotContain(".dashboard-cell.drop-ready");
     }
 
     [Fact]
@@ -4784,14 +6377,34 @@ public sealed class DashboardEventFilterCatalogTests
         razor.ShouldContain("dashboard-track-editor-title");
         razor.ShouldContain("dashboard-track-editor-preview");
         razor.ShouldContain("dashboard-track-editor-toggle");
+        razor.ShouldContain("<MudIcon Icon=\"@AxisIcon\" Size=\"MudBlazor.Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.ArrowForward\" Size=\"MudBlazor.Size.Small\" Color=\"Color.Secondary\" aria-hidden=\"true\" />");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Settings\" Size=\"MudBlazor.Size.Small\" aria-hidden=\"true\" />");
+        razor.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"MudBlazor.Size.Small\" aria-hidden=\"true\" />");
         razor.ShouldContain("<MudToggleGroup T=\"string\"");
         razor.ShouldContain("SelectionMode=\"SelectionMode.SingleSelection\"");
         razor.ShouldContain("@TrackCode");
         razor.ShouldContain("@CurrentSummary");
+        razor.ShouldContain("aria-label=\"@TrackSummaryLabel\"");
+        razor.ShouldContain("private string TrackSummaryLabel => $\"{Title} sizing facts\"");
+        razor.ShouldContain("aria-label=\"@ResetTrackEditLabel\"");
+        razor.ShouldContain("aria-label=\"@CancelTrackEditLabel\"");
+        razor.ShouldContain("aria-label=\"@ApplyTrackEditLabel\"");
+        razor.ShouldContain("private string ResetTrackEditLabel => $\"Reset sizing edits for {Title}\"");
+        razor.ShouldContain("private string CancelTrackEditLabel => $\"Cancel editing {Title} sizing\"");
+        razor.ShouldContain("private string ApplyTrackEditLabel => $\"Apply sizing changes to {Title}\"");
         razor.ShouldContain("@ResultSize");
         razor.ShouldContain("@ModeDescription");
         razor.ShouldContain("StartIcon=\"@Icons.Material.Filled.RestartAlt\"");
         razor.ShouldContain("Disabled=\"@(!CanSubmit)\"");
+        razor.ShouldNotContain("<MudIcon Icon=\"@AxisIcon\" Size=\"MudBlazor.Size.Small\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.ArrowForward\" Size=\"MudBlazor.Size.Small\" Color=\"Color.Secondary\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Settings\" Size=\"MudBlazor.Size.Small\" />");
+        razor.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Info\" Size=\"MudBlazor.Size.Small\" />");
+        razor.ShouldNotContain("aria-label=\"Track summary\"");
+        razor.ShouldNotContain("aria-label=\"Reset\"");
+        razor.ShouldNotContain("aria-label=\"Cancel\"");
+        razor.ShouldNotContain("aria-label=\"Apply\"");
 
         css.ShouldContain(".dashboard-track-editor-preview");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr);");
@@ -4869,14 +6482,46 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "DashboardDesigner.razor.css"));
 
-        catalog.ShouldContain("Click to place in the selected cell, or drag to choose a cell");
+        catalog.ShouldContain("title=\"@CatalogItemTitle(item)\"");
+        catalog.ShouldContain("private string CatalogItemTitle(CatalogEntry item)");
+        catalog.ShouldContain("WorkspaceArtifactKind.Dashboard => $\"Click to place {item.DisplayName} in the selected cell, or drag to choose a cell\"");
         catalog.ShouldContain("Use the edit action on the placed widget to configure it.");
+        catalog.ShouldNotContain("title=\"@CatalogItemTitle\"");
+        catalog.ShouldNotContain("WorkspaceArtifactKind.Dashboard when CanUseItem => \"Click to place in the selected cell, or drag to choose a cell\"");
         catalogCss.ShouldContain(".component-catalog.dashboard .catalog-add-button");
         catalogCss.ShouldContain(".component-catalog.dashboard .catalog-drag-grip");
 
-        designer.ShouldContain("Drag to move widget; use toolbar to edit");
+        designer.ShouldContain("var currentWidgetLabel = WidgetLabel(currentCell.Widget);");
+        designer.ShouldContain("title=\"@WidgetMoveLabel(currentWidgetLabel)\"");
+        designer.ShouldContain("private static string WidgetMoveLabel(string widgetLabel)");
+        designer.ShouldNotContain("title=\"@($\"Drag {currentWidgetLabel} to move; use toolbar to edit\")\"");
+        designer.ShouldContain("DropTargetHint(MoveTargetCellName, $\"Move {WidgetLabel(_movingWidgetName)}\")");
+        designer.ShouldContain("DropTargetHint(_hoveredDropCellName, $\"Place {DashboardComponentDragLabel}\")");
+        designer.ShouldContain("private string DashboardComponentDragLabel");
         designer.ShouldContain("class=\"dashboard-cell-widget-action edit\"");
-        designer.ShouldContain("Edit {WidgetLabel(currentCell.Widget)} settings");
+        designer.ShouldContain("title=\"@WidgetEditLabel(currentWidgetLabel)\"");
+        designer.ShouldContain("aria-label=\"@WidgetEditLabel(currentWidgetLabel)\"");
+        designer.ShouldContain("private static string WidgetEditLabel(string widgetLabel)");
+        designer.ShouldNotContain("title=\"@($\"Edit {currentWidgetLabel} settings\")\"");
+        designer.ShouldNotContain("aria-label=\"@($\"Edit {currentWidgetLabel} settings\")\"");
+        designer.ShouldContain("title=\"@WidgetSimulateLabel(currentWidgetLabel)\"");
+        designer.ShouldContain("aria-label=\"@WidgetSimulateLabel(currentWidgetLabel)\"");
+        designer.ShouldContain("private static string WidgetSimulateLabel(string widgetLabel)");
+        designer.ShouldNotContain("title=\"@($\"Simulate {currentWidgetLabel} data\")\"");
+        designer.ShouldNotContain("aria-label=\"@($\"Simulate {currentWidgetLabel} data\")\"");
+        designer.ShouldContain("title=\"@WidgetDeleteLabel(currentWidgetLabel)\"");
+        designer.ShouldContain("aria-label=\"@WidgetDeleteLabel(currentWidgetLabel)\"");
+        designer.ShouldContain("private static string WidgetDeleteLabel(string widgetLabel)");
+        designer.ShouldNotContain("title=\"@($\"Delete {currentWidgetLabel}\")\"");
+        designer.ShouldNotContain("aria-label=\"@($\"Delete {currentWidgetLabel}\")\"");
+        designer.ShouldNotContain("Drag to move widget; use toolbar to edit");
+        designer.ShouldNotContain("DropTargetHint(MoveTargetCellName, \"Move widget\")");
+        designer.ShouldNotContain("DropTargetHint(_hoveredDropCellName, \"Place widget\")");
+        designer.ShouldNotContain("title=\"Edit widget settings\"");
+        designer.ShouldNotContain("title=\"Simulate widget data\"");
+        designer.ShouldNotContain("aria-label=\"Simulate widget data\"");
+        designer.ShouldNotContain("title=\"Delete widget\"");
+        designer.ShouldNotContain("aria-label=\"Delete widget\"");
         designer.ShouldContain("Icons.Material.Filled.Settings");
         designer.ShouldContain("OpenWidgetEditorAsync(currentCell.Widget)");
         designer.ShouldContain("SelectSingleCell(targetCellName)");
@@ -5040,6 +6685,19 @@ public sealed class DashboardEventFilterCatalogTests
         layoutRows.ShouldContain("DeleteWidget");
         layoutRows.ShouldContain("property-grid-action-strip");
         layoutRows.ShouldContain("property-grid-icon-action");
+        layoutRows.ShouldContain("title=\"@DuplicateWidgetActionLabel\"");
+        layoutRows.ShouldContain("aria-label=\"@DuplicateWidgetActionLabel\"");
+        layoutRows.ShouldContain("title=\"@DeleteWidgetActionLabel\"");
+        layoutRows.ShouldContain("aria-label=\"@DeleteWidgetActionLabel\"");
+        layoutRows.ShouldContain("private string WidgetActionLabel");
+        layoutRows.ShouldContain("private string DuplicateWidgetActionLabel => $\"Duplicate {WidgetActionLabel}\";");
+        layoutRows.ShouldContain("private string DeleteWidgetActionLabel => $\"Delete {WidgetActionLabel}\";");
+        layoutRows.ShouldNotContain("@($\"Duplicate {WidgetActionLabel}\")");
+        layoutRows.ShouldNotContain("@($\"Delete {WidgetActionLabel}\")");
+        layoutRows.ShouldNotContain("title=\"Duplicate widget\"");
+        layoutRows.ShouldNotContain("aria-label=\"Duplicate widget\"");
+        layoutRows.ShouldNotContain("title=\"Delete widget\"");
+        layoutRows.ShouldNotContain("aria-label=\"Delete widget\"");
         layoutRows.ShouldContain("Icons.Material.Filled.ContentCopy");
         layoutRows.ShouldContain("Icons.Material.Filled.DeleteOutline");
         layoutRows.ShouldNotContain("layout-action-strip");
@@ -5058,7 +6716,11 @@ public sealed class DashboardEventFilterCatalogTests
         styleRows.ShouldContain("Icons.Material.Filled.CloseFullscreen");
         styleRows.ShouldContain("Icons.Material.Filled.Check");
         styleRows.ShouldContain("Icons.Material.Filled.Close");
-        styleRows.ShouldContain("Reset cell style");
+        styleRows.ShouldContain("title=\"@ResetCellStyleLabel\"");
+        styleRows.ShouldContain("aria-label=\"@ResetCellStyleLabel\"");
+        styleRows.ShouldContain("private const string ResetCellStyleLabel = \"Reset selected cell style to defaults\";");
+        styleRows.ShouldNotContain("title=\"Reset cell style\"");
+        styleRows.ShouldNotContain("aria-label=\"Reset cell style\"");
         styleRows.ShouldContain("Icons.Material.Filled.RestartAlt");
         styleRows.ShouldNotContain("property-grid-action-button");
         propertyGridRowCss.ShouldContain(".property-grid-action-strip");
@@ -5092,7 +6754,13 @@ public sealed class DashboardEventFilterCatalogTests
         inspector.ShouldNotContain("<PropertyGridRow Name=\"Metric query\">");
         inspector.ShouldNotContain("private RenderFragment RenderMetricParameterField");
         inspector.ShouldNotContain("CurrentBindingMetrics(");
-        appRows.ShouldContain("Open metric");
+        appRows.ShouldContain("title=\"@OpenMetricLabel\"");
+        appRows.ShouldContain("aria-label=\"@OpenMetricLabel\"");
+        appRows.ShouldContain("private string OpenMetricLabel => string.IsNullOrWhiteSpace(MetricId)");
+        appRows.ShouldContain("$\"Open metric {MetricActionTargetLabel}\"");
+        appRows.ShouldContain("private string MetricActionTargetLabel");
+        appRows.ShouldNotContain("title=\"Open metric\"");
+        appRows.ShouldNotContain("aria-label=\"Open metric\"");
         appRows.ShouldContain("property-grid-action-strip");
         appRows.ShouldContain("property-grid-icon-action");
         appRows.ShouldContain("Icons.Material.Filled.OpenInNew");
@@ -5273,6 +6941,25 @@ public sealed class DashboardEventFilterCatalogTests
         visualRows.ShouldContain("visual-metric-add-button");
         visualRows.ShouldContain("DashboardInspectorMetricMove");
         visualRows.ShouldContain("VisualMetricLabel");
+        visualRows.ShouldContain("var currentMetricLabel = VisualMetricLabel(currentMetric);");
+        visualRows.ShouldContain("aria-label=\"@MetricCardPositionLabel(currentMetricLabel, item.Index)\"");
+        visualRows.ShouldContain("aria-label=\"@MetricCardCommandsLabel(currentMetricLabel)\"");
+        visualRows.ShouldContain("title=\"@MoveMetricUpLabel(currentMetricLabel)\"");
+        visualRows.ShouldContain("aria-label=\"@MoveMetricUpLabel(currentMetricLabel)\"");
+        visualRows.ShouldContain("title=\"@MoveMetricDownLabel(currentMetricLabel)\"");
+        visualRows.ShouldContain("aria-label=\"@MoveMetricDownLabel(currentMetricLabel)\"");
+        visualRows.ShouldContain("title=\"@RemoveMetricCardLabel(currentMetricLabel)\"");
+        visualRows.ShouldContain("aria-label=\"@RemoveMetricCardLabel(currentMetricLabel)\"");
+        visualRows.ShouldContain("private static string MetricCardPositionLabel(string metricLabel, int index)");
+        visualRows.ShouldContain("private static string MetricCardCommandsLabel(string metricLabel)");
+        visualRows.ShouldContain("private static string MoveMetricUpLabel(string metricLabel)");
+        visualRows.ShouldContain("private static string MoveMetricDownLabel(string metricLabel)");
+        visualRows.ShouldContain("private static string RemoveMetricCardLabel(string metricLabel)");
+        visualRows.ShouldContain("$\"{metricLabel} card position {index + 1}\"");
+        visualRows.ShouldNotContain("aria-label=\"@($\"Card position {item.Index + 1}\")\"");
+        visualRows.ShouldNotContain("@($\"Move {VisualMetricLabel(currentMetric)} up\")");
+        visualRows.ShouldNotContain("@($\"Move {VisualMetricLabel(currentMetric)} down\")");
+        visualRows.ShouldNotContain("@($\"Remove {VisualMetricLabel(currentMetric)}\")");
         visualRows.ShouldContain("CardColumnsChanged");
         visualRowsCss.ShouldContain(".visual-metric-row");
         visualRowsCss.ShouldContain("grid-template-columns: 20px minmax(0, 1fr) auto;");
@@ -5386,6 +7073,9 @@ public sealed class DashboardEventFilterCatalogTests
             "DashboardDesigner.razor.css"));
 
         markup.ShouldContain("dashboard-cell-placeholder");
+        markup.ShouldContain("title=\"@CellPlaceholderTitle(cell)\"");
+        markup.ShouldContain("private static string CellPlaceholderTitle(DashboardCellSnapshot cell)");
+        markup.ShouldNotContain("title=\"@($\"{CellTitle(cell)} {CellSpan(cell)}\")\"");
         css.ShouldContain(".dashboard-cell-placeholder");
         css.ShouldContain("align-items: flex-start;");
         css.ShouldContain("max-width: 100%;");
@@ -5460,6 +7150,67 @@ public sealed class DashboardEventFilterCatalogTests
         widgetView.ShouldContain("DashboardWidgetCatalog.AreaChartType");
         widgetView.ShouldContain("DashboardWidgetCatalog.BarChartType");
         widgetView.ShouldContain("DashboardWidgetCatalog.DonutChartType");
+    }
+
+    [Fact]
+    public void DashboardWidgets_HideDecorativeHeaderIcons()
+    {
+        var root = FindRepositoryRoot();
+        var widgetsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgets");
+        var widgetFiles = Directory
+            .GetFiles(widgetsPath, "*.razor")
+            .Append(Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgetView.razor"))
+            .ToArray();
+        var headerIconFiles = widgetFiles
+            .Where(static file => File.ReadAllText(file).Contains("dashboard-widget-icon", StringComparison.Ordinal))
+            .ToArray();
+
+        widgetFiles.Length.ShouldBeGreaterThanOrEqualTo(10);
+        headerIconFiles.Length.ShouldBeGreaterThanOrEqualTo(10);
+        foreach (var file in widgetFiles)
+        {
+            var markup = File.ReadAllText(file);
+            System.Text.RegularExpressions.Regex.Matches(
+                    markup,
+                    @"<MudIcon\b(?:(?!/>).)*?/>",
+                    System.Text.RegularExpressions.RegexOptions.Singleline)
+                .Cast<System.Text.RegularExpressions.Match>()
+                .Select(static match => match.Value)
+                .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+                .ToArray()
+                .ShouldBeEmpty();
+            if (headerIconFiles.Contains(file, StringComparer.Ordinal))
+            {
+                markup.ShouldContain("class=\"dashboard-widget-icon\" aria-hidden=\"true\"");
+            }
+
+            markup.ShouldNotContain("<div class=\"dashboard-widget-icon\">");
+        }
+
+        File.ReadAllText(Path.Combine(widgetsPath, "DashboardLatestEventWidget.razor"))
+            .ShouldContain("class=\"dashboard-widget-payload\" aria-label=\"Latest event payload\"");
+    }
+
+    [Fact]
+    public void DashboardWidgets_ExposeEmptyStatesAsStatusMessages()
+    {
+        var root = FindRepositoryRoot();
+        var widgetsPath = Path.Combine(root, "src", "FluxMq.UI", "Components", "Workspace", "DashboardWidgets");
+        var widgetFiles = Directory.GetFiles(widgetsPath, "*.razor");
+        var emptyWidgets = widgetFiles
+            .Select(static file => (File: file, Markup: File.ReadAllText(file)))
+            .Where(static widget => widget.Markup.Contains("dashboard-widget-empty", StringComparison.Ordinal))
+            .ToArray();
+
+        emptyWidgets.Length.ShouldBeGreaterThanOrEqualTo(8);
+        foreach (var (_, markup) in emptyWidgets)
+        {
+            System.Text.RegularExpressions.Regex.Matches(markup, "dashboard-widget-empty").Count
+                .ShouldBe(System.Text.RegularExpressions.Regex.Matches(markup, "class=\"dashboard-widget-empty\" role=\"status\" aria-live=\"polite\"").Count);
+        }
+
+        File.ReadAllText(Path.Combine(widgetsPath, "DashboardTopicBars.razor"))
+            .ShouldContain("dashboard-topic-empty\" role=\"status\" aria-live=\"polite\"");
     }
 
     [Fact]
@@ -5754,6 +7505,8 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShouldShowRequirements(item)");
         markup.ShouldContain("catalog-item-meta");
+        markup.ShouldContain("aria-label=\"@CatalogRequirementMetaLabel(item)\"");
+        markup.ShouldContain("CatalogRequirementMetaLabel(CatalogEntry item)");
         markup.ShouldContain("catalog-item-meta-value");
         markup.ShouldContain("RequirementLabel(requirement)");
         markup.ShouldContain("CatalogItemClass(item)");
@@ -5783,6 +7536,7 @@ public sealed class DashboardEventFilterCatalogTests
         appCss.ShouldContain(".flux-drag-preview.over-designer .mud-icon-root");
         markup.ShouldNotContain("catalog-item-badges");
         markup.ShouldNotContain("catalog-item-badge");
+        markup.ShouldNotContain("aria-label=\"Widget data requirements\"");
         css.ShouldNotContain(".catalog-item-badges");
         css.ShouldNotContain(".catalog-item-badge");
     }
@@ -5811,20 +7565,48 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dashboard-widget-editor-title-icon");
         markup.ShouldContain("dashboard-widget-editor-title-copy");
         markup.ShouldContain("dashboard-widget-editor-meta-strip");
+        markup.ShouldContain("aria-label=\"@WidgetSummaryLabel\"");
+        markup.ShouldContain("private string WidgetSummaryLabel => $\"{Profile.Title} widget facts for {Widget.Name}\"");
         markup.ShouldContain("role=\"form\" aria-label=\"@EditorAriaLabel\"");
         markup.ShouldContain("@EditorModeLabel");
         markup.ShouldContain("@EditorDetailLabel");
         markup.ShouldContain("Rounded=\"false\"");
         markup.ShouldContain("dashboard-widget-editor-section-head");
-        markup.ShouldContain("dashboard-widget-editor-action-status");
         markup.ShouldContain("dashboard-widget-editor-action-spacer");
         markup.ShouldContain("dashboard-widget-editor-actions");
+        markup.ShouldContain("aria-label=\"@ResetWidgetEditLabel\"");
+        markup.ShouldContain("aria-label=\"@CancelWidgetEditLabel\"");
+        markup.ShouldContain("aria-label=\"@ApplyWidgetEditLabel\"");
+        markup.ShouldContain("private string ResetWidgetEditLabel => $\"Reset edits for {WidgetEditTargetLabel}\"");
+        markup.ShouldContain("private string CancelWidgetEditLabel => $\"Cancel editing {WidgetEditTargetLabel}\"");
+        markup.ShouldContain("private string ApplyWidgetEditLabel => $\"Apply edits for {WidgetEditTargetLabel}\"");
+        markup.ShouldContain("private string WidgetEditTargetLabel => string.IsNullOrWhiteSpace(_draft.Title)");
+        markup.ShouldContain("dashboard-widget-editor-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Profile.Icon\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Speed\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.ShowChart\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Dashboard\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.FilterAltOff\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" aria-hidden=\"true\" />");
         markup.ShouldContain("StartIcon=\"@Icons.Material.Filled.RestartAlt\"");
         markup.ShouldContain("Disabled=\"@(!HasChanges)\"");
-        markup.ShouldContain("ActionStatusLabel");
         markup.ShouldContain("ConfigurationEquals");
         markup.ShouldContain("FilterAltOff");
+        markup.ShouldNotContain("dashboard-widget-editor-action-status");
+        markup.ShouldNotContain("ActionStatusLabel");
+        markup.ShouldNotContain("No changes");
+        markup.ShouldNotContain("Unsaved changes");
+        markup.ShouldNotContain("aria-label=\"Reset\"");
+        markup.ShouldNotContain("aria-label=\"Cancel\"");
+        markup.ShouldNotContain("aria-label=\"Apply\"");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Profile.Icon\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Speed\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.ShowChart\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Dashboard\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.FilterAltOff\" Size=\"Size.Small\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Small\" />");
         markup.ShouldNotContain("<MudDivider />");
+        markup.ShouldNotContain("aria-label=\"Widget summary\"");
 
         css.ShouldContain(".dashboard-widget-editor-title-icon");
         css.ShouldContain(".dashboard-widget-editor-title-copy");
@@ -5835,11 +7617,11 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: 30px minmax(0, 1fr);");
         css.ShouldContain("position: sticky;");
         css.ShouldContain(".dashboard-widget-editor-section-head");
-        css.ShouldContain(".dashboard-widget-editor-action-status");
         css.ShouldContain(".dashboard-widget-editor-action-spacer");
         css.ShouldContain(".dashboard-widget-editor-actions");
         css.ShouldContain("grid-template-columns: repeat(3, minmax(0, 1fr));");
         css.ShouldContain("@media (max-width: 700px)");
+        css.ShouldNotContain(".dashboard-widget-editor-action-status");
     }
 
     [Fact]
@@ -5864,11 +7646,24 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"@CatalogPanelLabel\"");
         markup.ShouldContain("catalog-title-copy");
         markup.ShouldContain("catalog-title-label");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("catalog-meta-strip");
+        markup.ShouldContain("aria-label=\"@CatalogMetaLabel\"");
+        markup.ShouldContain("private string CatalogMetaLabel");
+        markup.ShouldContain("$\"{CatalogTitle} summary, {CatalogModeLabel}, {CatalogUseAvailabilityLabel.ToLowerInvariant()}, {CatalogFilterScopeLabel.ToLowerInvariant()} results\"");
+        markup.ShouldNotContain("aria-label=\"Catalog mode, availability, and filter\"");
         markup.ShouldContain("@CatalogModeLabel");
-        markup.ShouldContain("@CatalogUseStateLabel");
-        markup.ShouldContain("@CatalogSearchStateLabel");
-        markup.ShouldContain("CatalogUseStateClass");
+        markup.ShouldContain("@CatalogUseAvailabilityLabel");
+        markup.ShouldContain("@CatalogFilterScopeLabel");
+        markup.ShouldContain("CatalogUseAvailabilityClass");
         markup.ShouldContain("aria-label=\"@SearchPlaceholder\"");
         markup.ShouldContain("aria-label=\"@CatalogListLabel\"");
         markup.ShouldContain("private string CatalogListLabel");
@@ -5876,26 +7671,44 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@EmptyIcon");
         markup.ShouldContain("@EmptyHintLabel");
         markup.ShouldContain("catalog-item-affordance");
+        markup.ShouldContain("role=\"button\"");
+        markup.ShouldContain("tabindex=\"@(!CanUseItem ? \"-1\" : \"0\")\"");
         markup.ShouldContain("CatalogItemAriaLabel(item)");
+        markup.ShouldContain("aria-disabled=\"@CatalogItemDisabled\"");
         markup.ShouldContain("aria-grabbed=\"@CatalogItemGrabbed(item)\"");
+        markup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
+        markup.ShouldContain("args.Key is \"Enter\" or \" \" or \"Spacebar\"");
+        markup.ShouldContain("private string CatalogItemDisabled");
         markup.ShouldContain("ShouldShowStepMetadata(item)");
         markup.ShouldContain("catalog-step-meta");
+        markup.ShouldContain("aria-label=\"@CatalogStepMetaLabel(item)\"");
+        markup.ShouldContain("CatalogStepMetaLabel(CatalogEntry item)");
         markup.ShouldContain("StepPhaseMetaClass(item)");
         markup.ShouldContain("StepKindLabel(item)");
         markup.ShouldContain("StepParameterLabel(item)");
+        markup.ShouldContain("Available");
         markup.ShouldContain("descriptor.DefaultPhase");
         markup.ShouldContain("descriptor.Fields.Count");
+        markup.ShouldNotContain("CatalogUseState");
+        markup.ShouldNotContain("CatalogSearchStateLabel");
+        markup.ShouldNotContain("Catalog state");
         markup.ShouldNotContain("catalog-step-badges");
+        markup.ShouldNotContain("aria-label=\"Test step metadata\"");
         markup.ShouldNotContain("StepPhaseBadgeClass(item)");
         markup.ShouldNotContain("catalog-item-badge");
+        markup.ShouldNotContain(">Ready<");
+        markup.ShouldNotContain("catalog-use-state ready");
+        markup.ShouldNotContain("catalog-use-state");
 
         css.ShouldContain(".catalog-title-copy");
         css.ShouldContain(".catalog-title-label");
         css.ShouldContain(".catalog-meta-strip span,");
         css.ShouldContain("background: var(--flux-canvas);");
         css.ShouldContain("border-bottom: 1px solid var(--flux-border-soft);");
-        css.ShouldContain(".catalog-use-state.ready");
-        css.ShouldContain(".catalog-use-state.inactive");
+        css.ShouldContain(".catalog-use-availability.available");
+        css.ShouldContain(".catalog-use-availability.inactive");
+        css.ShouldNotContain(".catalog-use-state.ready");
+        css.ShouldNotContain(".catalog-use-state");
         css.ShouldContain(".catalog-empty ::deep .mud-icon-root");
         css.ShouldContain("grid-template-columns: minmax(0, min(280px, 100%));");
         css.ShouldContain("flex: 1 1 auto;");
@@ -5949,30 +7762,84 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "FlowDesigner.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Flow designer canvas\"");
-        markup.ShouldContain("aria-label=\"Pipeline diagram canvas\"");
+        markup.ShouldContain("aria-label=\"@FlowDesignerRegionLabel\"");
+        markup.ShouldContain("private string FlowDesignerRegionLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} flow designer canvas\"");
+        markup.ShouldNotContain("aria-label=\"Flow designer canvas\"");
+        markup.ShouldContain("aria-label=\"@PipelineDiagramCanvasLabel\"");
+        markup.ShouldContain("private string PipelineDiagramCanvasLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} pipeline diagram canvas\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline diagram canvas\"");
         markup.ShouldContain("flow-canvas-title-copy");
         markup.ShouldContain("flow-canvas-meta-strip");
+        markup.ShouldContain("aria-label=\"@PipelineCanvasSummaryLabel\"");
+        markup.ShouldContain("private string PipelineCanvasSummaryLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} pipeline summary\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas summary\"");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        markup.ShouldContain(": \"Pipeline loaded\";");
+        markup.ShouldNotContain(": \"Ready\";");
         markup.ShouldContain("@WorkflowModeLabel");
         markup.ShouldContain("@WorkflowSelectionLabel");
+        markup.ShouldContain("aria-label=\"@PipelineCanvasActionsLabel\"");
+        markup.ShouldContain("private string PipelineCanvasActionsLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} runtime and canvas commands\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas runtime and commands\"");
+        markup.ShouldContain("flow-runtime-marker @RuntimeMarkerClass");
+        markup.ShouldContain("flow-runtime-marker-dot");
+        markup.ShouldContain("@RuntimeMarkerLabel");
         markup.ShouldContain("flow-canvas-metrics");
+        markup.ShouldContain("aria-label=\"@PipelineCanvasMetricsLabel\"");
+        markup.ShouldContain("private string PipelineCanvasMetricsLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} pipeline canvas metrics\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas metrics\"");
         markup.ShouldContain("flow-canvas-stat");
         markup.ShouldContain("flow-canvas-command-group");
+        markup.ShouldContain("aria-label=\"@PipelineCanvasCommandLabel\"");
+        markup.ShouldContain("private string PipelineCanvasCommandLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"{Flow.ActiveWorkflowName} canvas commands\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas commands\"");
+        markup.ShouldContain("aria-label=\"@ZoomToFitLabel\"");
+        markup.ShouldContain("private string ZoomToFitLabel => Flow.ActiveWorkflowName is null");
+        markup.ShouldContain("$\"Zoom {Flow.ActiveWorkflowName} pipeline canvas to fit\"");
+        markup.ShouldNotContain("aria-label=\"Zoom to fit\"");
         markup.ShouldContain("role=\"status\" aria-live=\"polite\"");
         markup.ShouldContain("@EmptyCanvasHint");
         markup.ShouldContain("flow-canvas-empty-icon");
         markup.ShouldContain("AddCircle");
         markup.ShouldContain("DiagramCanvas");
         markup.ShouldContain("NavigatorWidget");
-        markup.ShouldContain("ViewStrokeColor=\"#38BDF8\"");
+        markup.ShouldContain("ViewStrokeColor=\"@NavigatorViewStrokeColor\"");
+        markup.ShouldContain("private string NavigatorViewStrokeColor => ThemeService.IsDarkMode");
         markup.ShouldContain("flow-link-condition-title");
         markup.ShouldContain("Label=\"Expression\"");
         markup.ShouldContain("Class=\"flow-link-condition-action apply\"");
-        markup.ShouldContain("aria-label=\"Apply link condition\"");
-        markup.ShouldContain("aria-label=\"Clear link condition\"");
+        markup.ShouldContain("Text=\"@ApplyLinkConditionLabel\"");
+        markup.ShouldContain("aria-label=\"@ApplyLinkConditionLabel\"");
+        markup.ShouldContain("private string ApplyLinkConditionLabel => _selectedWorkflowLink is null");
+        markup.ShouldContain("$\"Apply condition to {SelectedLinkLabel}\"");
+        markup.ShouldContain("Text=\"@ClearLinkConditionLabel\"");
+        markup.ShouldContain("aria-label=\"@ClearLinkConditionLabel\"");
+        markup.ShouldContain("private string ClearLinkConditionLabel => _selectedWorkflowLink is null");
+        markup.ShouldContain("$\"Clear condition from {SelectedLinkLabel}\"");
+        markup.ShouldNotContain("Text=\"Apply condition\"");
+        markup.ShouldNotContain("Text=\"Clear condition\"");
+        markup.ShouldNotContain("aria-label=\"Apply link condition\"");
+        markup.ShouldNotContain("aria-label=\"Clear link condition\"");
         markup.ShouldNotContain("ViewStrokeColor=\"#FBBF24\"");
         markup.ShouldNotContain("flow-link-condition-meta");
         markup.ShouldNotContain("Icons.Material.Filled.Link");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas state and commands\"");
+        markup.ShouldNotContain("aria-label=\"Pipeline canvas status and commands\"");
+        markup.ShouldNotContain("flow-state");
+        markup.ShouldNotContain("flow-state-dot");
+        markup.ShouldNotContain("RuntimeStateLabel");
+        markup.ShouldNotContain("RuntimeStateClass");
+        markup.ShouldNotContain(">Ready<");
         markup.IndexOf("class=\"flow-canvas-header\"", StringComparison.Ordinal)
             .ShouldBeLessThan(markup.IndexOf("class=\"flow-canvas\" role=\"group\"", StringComparison.Ordinal));
 
@@ -5985,6 +7852,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("height: auto;");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain(".flow-canvas-title-copy");
+        css.ShouldContain(".flow-runtime-marker");
+        css.ShouldContain(".flow-runtime-marker.valid");
+        css.ShouldContain(".flow-runtime-marker-dot");
         css.ShouldContain(".flow-canvas-metrics");
         css.ShouldContain(".flow-canvas-stat");
         css.ShouldContain(".flow-canvas-stat:not(:last-child)::after");
@@ -6009,6 +7879,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("#A78BFA");
         css.ShouldNotContain("#DDD6FE");
         css.ShouldNotContain(".flow-link-condition-meta");
+        css.ShouldNotContain(".flow-state");
+        css.ShouldNotContain(".flow-state-dot");
         css.ShouldNotContain("flex-wrap: nowrap;");
         css.ShouldContain("max-width: min(100%, 340px);");
         css.ShouldContain("grid-row: auto;");
@@ -6018,6 +7890,9 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("top: 10px;");
         markup.ShouldNotContain("flow-canvas-chip");
         css.ShouldNotContain(".flow-canvas-chip");
+        css.ShouldNotContain("[class$=\"-contract-label\"]");
+        css.ShouldNotContain("[class$=\"-contracts\"]");
+        css.ShouldNotContain("[class$=\"-contract\"]");
     }
 
     [Fact]
@@ -6046,7 +7921,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"@MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldNotContain("<HeaderBadge>");
         markup.ShouldNotContain("mqtt-trigger-component-badge");
         markup.ShouldNotContain("mqtt-trigger-component-icon");
@@ -6091,7 +7966,17 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Add\"");
         markup.ShouldContain("Variant=\"Variant.Text\"");
         markup.ShouldContain("Color=\"Color.Primary\"");
-        markup.ShouldContain("aria-label=\"Add subscription\"");
+        markup.ShouldContain("Text=\"@AddSubscriptionLabel\"");
+        markup.ShouldContain("aria-label=\"@AddSubscriptionLabel\"");
+        markup.ShouldContain("private string AddSubscriptionLabel => $\"Add subscription to {Node.NodeName}\";");
+        markup.ShouldContain("Text=\"@RemoveSubscriptionLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@RemoveSubscriptionLabel(index)\"");
+        markup.ShouldContain("private string RemoveSubscriptionLabel(int index)");
+        markup.ShouldContain("$\"Remove {target} from {Node.NodeName}\"");
+        markup.ShouldNotContain("Text=\"Add subscription\"");
+        markup.ShouldNotContain("aria-label=\"Add subscription\"");
+        markup.ShouldNotContain("Text=\"Remove subscription\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Remove subscription {index + 1}\")\"");
         markup.ShouldContain("<MudTd DataLabel=\"Topic filter\">");
         markup.ShouldContain("<MudTd DataLabel=\"QoS\">");
         markup.ShouldContain("<MudTd DataLabel=\"Retained\">");
@@ -6111,8 +7996,20 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Disabled=\"@(_draftSubscriptions.Count <= 1)\"");
         markup.ShouldContain("Class=\"mqtt-trigger-qos-select\"");
         markup.ShouldContain("mqtt-trigger-table-check");
-        markup.ShouldContain("Receive retained messages for subscription");
-        markup.ShouldContain("Keep retain flag for subscription");
+        markup.ShouldContain("aria-label=\"@SubscriptionTopicFilterLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@SubscriptionQualityOfServiceLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@SubscriptionReceiveRetainedLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@SubscriptionRetainFlagLabel(index)\"");
+        markup.ShouldContain("private string SubscriptionTopicFilterLabel(int index)");
+        markup.ShouldContain("private string SubscriptionQualityOfServiceLabel(int index)");
+        markup.ShouldContain("private string SubscriptionReceiveRetainedLabel(int index)");
+        markup.ShouldContain("private string SubscriptionRetainFlagLabel(int index)");
+        markup.ShouldContain("private string SubscriptionLabelTarget(int index)");
+        markup.ShouldContain("$\"subscription {index + 1} for {topicFilter}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Topic filter {index + 1}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"QoS for subscription {index + 1}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Receive retained messages for subscription {index + 1}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Keep retain flag for subscription {index + 1}\")\"");
         markup.ShouldNotContain("AdornmentIcon=\"@Icons.Material.Filled.Tag\"");
         markup.ShouldNotContain("mqtt-trigger-hero");
         markup.ShouldNotContain("mqtt-trigger-status");
@@ -6224,7 +8121,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("connection-state-trigger-summary");
@@ -6360,18 +8257,23 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("state-reducer-summary");
         markup.ShouldContain("state-reducer-meta");
         markup.ShouldContain("EngineCaption");
         markup.ShouldContain("KeyCaption");
         markup.ShouldContain("MaxKeysCaption");
         markup.ShouldContain("BufferCaption");
-        markup.ShouldContain("state-reducer-contracts");
-        markup.ShouldContain("aria-label=\"State reducer contract fields\"");
+        markup.ShouldContain("state-reducer-types");
+        markup.ShouldContain("aria-label=\"State reducer data types\"");
+        markup.ShouldContain("state-reducer-type-label");
         markup.ShouldContain("state-reducer-token");
         markup.ShouldContain("StateReducerInput");
         markup.ShouldContain("StateReducerResult");
+        markup.ShouldNotContain("state-reducer-contracts");
+        markup.ShouldNotContain("aria-label=\"State reducer contract fields\"");
+        markup.ShouldNotContain("state-reducer-contract-label");
+        markup.ShouldNotContain(">Contract<");
         markup.ShouldContain("state-reducer-expression-preview");
         markup.ShouldContain("state-reducer-editor");
         markup.ShouldContain("aria-label=\"State reducer settings\"");
@@ -6465,9 +8367,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".state-reducer-meta");
         css.ShouldContain("grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.36fr) minmax(0, 0.68fr) minmax(0, 0.58fr);");
         css.ShouldNotContain("grid-template-columns: 70px minmax(0, 1fr) 62px 54px;");
-        css.ShouldContain(".state-reducer-contracts");
-        css.ShouldContain(".state-reducer-contract");
-        css.ShouldContain(".state-reducer-contract-label");
+        css.ShouldContain(".state-reducer-types");
+        css.ShouldContain(".state-reducer-type-row");
+        css.ShouldContain(".state-reducer-type-label");
+        css.ShouldNotContain(".state-reducer-contracts");
+        css.ShouldNotContain(".state-reducer-contract");
+        css.ShouldNotContain(".state-reducer-contract-label");
         css.ShouldContain("flex: 0 0 100%;");
         css.ShouldContain("white-space: normal;");
         css.ShouldContain(".state-reducer-token");
@@ -6571,7 +8476,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@implements IDisposable");
         markup.ShouldContain("@inject AppThemeService ThemeService");
         markup.ShouldContain("@inject IJSRuntime JsRuntime");
@@ -6582,12 +8487,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("AssertionCaption");
         markup.ShouldContain("InputTypeCaption");
         markup.ShouldContain("BufferCaption");
-        markup.ShouldContain("flow-assertion-contracts");
+        markup.ShouldContain("flow-assertion-output-fields");
+        markup.ShouldContain("flow-assertion-output-label");
         markup.ShouldContain("aria-label=\"Assertion output fields\"");
         markup.ShouldContain("flow-assertion-token");
         markup.ShouldContain("result");
         markup.ShouldContain("passed");
         markup.ShouldContain("failed");
+        markup.ShouldNotContain("flow-assertion-contracts");
+        markup.ShouldNotContain("flow-assertion-contract-label");
         markup.ShouldContain("flow-assertion-expression-preview");
         markup.ShouldContain("flow-assertion-editor");
         markup.ShouldContain("aria-label=\"Flow assertion settings\"");
@@ -6673,9 +8581,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".flow-assertion-meta");
         css.ShouldContain("grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.6fr) minmax(0, 0.42fr);");
         css.ShouldContain("-webkit-line-clamp: 2;");
-        css.ShouldContain(".flow-assertion-contracts");
-        css.ShouldContain(".flow-assertion-contract");
-        css.ShouldContain(".flow-assertion-contract-label");
+        css.ShouldContain(".flow-assertion-output-fields");
+        css.ShouldContain(".flow-assertion-output-row");
+        css.ShouldContain(".flow-assertion-output-label");
+        css.ShouldNotContain(".flow-assertion-contracts");
+        css.ShouldNotContain(".flow-assertion-contract");
+        css.ShouldNotContain(".flow-assertion-contract-label");
         css.ShouldContain("display: flex;");
         css.ShouldContain("flex-wrap: wrap;");
         css.ShouldContain("flex: 0 0 100%;");
@@ -6797,7 +8708,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@implements IDisposable");
         markup.ShouldContain("@inject AppThemeService ThemeService");
         markup.ShouldContain("@inject IJSRuntime JsRuntime");
@@ -6847,12 +8758,24 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("aria-label=\"Topic pattern filters\"");
         markup.ShouldContain("aria-label=\"Condition expression\"");
         markup.ShouldContain("message-filter-pattern-row");
-        markup.ShouldContain("aria-label=\"@($\"Topic pattern {index + 1}\")\"");
+        markup.ShouldContain("aria-label=\"@TopicPatternFieldLabel(index)\"");
+        markup.ShouldContain("private string TopicPatternFieldLabel(int index)");
+        markup.ShouldContain("$\"Edit {target} for {Node.NodeName}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Topic pattern {index + 1}\")\"");
         markup.ShouldContain("ValueChanged=\"@(value => SetPattern(index, value))\"");
-        markup.ShouldContain("aria-label=\"Add topic pattern\"");
+        markup.ShouldContain("Text=\"@AddPatternLabel\"");
+        markup.ShouldContain("aria-label=\"@AddPatternLabel\"");
+        markup.ShouldContain("private string AddPatternLabel => $\"Add topic pattern to {Node.NodeName}\"");
         markup.ShouldContain("AddPattern");
-        markup.ShouldContain("aria-label=\"@($\"Remove topic pattern {index + 1}\")\"");
+        markup.ShouldContain("Text=\"@RemovePatternLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@RemovePatternLabel(index)\"");
+        markup.ShouldContain("private string RemovePatternLabel(int index)");
+        markup.ShouldContain("$\"Remove {target} from {Node.NodeName}\"");
         markup.ShouldContain("RemovePattern(index)");
+        markup.ShouldNotContain("Text=\"Add pattern\"");
+        markup.ShouldNotContain("Text=\"Remove pattern\"");
+        markup.ShouldNotContain("aria-label=\"Add topic pattern\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Remove topic pattern {index + 1}\")\"");
         markup.ShouldContain("RefreshDialogAsync");
         markup.ShouldContain("DialogRefresh.RefreshAsync(Node.NodeName)");
         markup.ShouldContain("private string? ValidateEditor()");
@@ -7027,14 +8950,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogContentClass=\"json-schema-validator-dialog\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("json-schema-validator-summary");
         markup.ShouldContain("json-schema-validator-meta");
         markup.ShouldContain("SchemaTargetCaption");
         markup.ShouldContain("SchemaIdCaption");
-        markup.ShouldContain("json-schema-validator-contracts");
+        markup.ShouldContain("json-schema-validator-fields");
+        markup.ShouldContain("json-schema-validator-field-label");
         markup.ShouldContain("aria-label=\"Validator input fields\"");
         markup.ShouldContain("aria-label=\"Validator output fields\"");
         markup.ShouldContain("json-schema-validator-token");
@@ -7042,6 +8966,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("result");
         markup.ShouldContain("valid");
         markup.ShouldContain("invalid");
+        markup.ShouldNotContain("json-schema-validator-contracts");
+        markup.ShouldNotContain("json-schema-validator-contract-label");
         markup.ShouldContain("json-schema-validator-editor");
         markup.ShouldContain("aria-label=\"JSON schema validator settings\"");
         markup.ShouldContain("json-schema-validator-config-row");
@@ -7066,7 +8992,6 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("@bind-Value=\"_schemaPath\"");
         markup.ShouldContain("json-schema-validator-file-source");
         markup.ShouldContain("aria-label=\"JSON schema file source\"");
-        markup.ShouldNotContain("json-schema-validator-field-label");
         markup.ShouldNotContain("Source</span>");
         markup.ShouldNotContain("Schema ID</span>");
         markup.ShouldNotContain("Schema file</span>");
@@ -7104,9 +9029,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1.34fr) minmax(0, 0.66fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) 90px;");
         css.ShouldContain("-webkit-line-clamp: 2;");
-        css.ShouldContain(".json-schema-validator-contracts");
-        css.ShouldContain(".json-schema-validator-contract");
-        css.ShouldContain(".json-schema-validator-contract-label");
+        css.ShouldContain(".json-schema-validator-fields");
+        css.ShouldContain(".json-schema-validator-field-row");
+        css.ShouldContain(".json-schema-validator-field-label");
+        css.ShouldNotContain(".json-schema-validator-contracts");
+        css.ShouldNotContain(".json-schema-validator-contract");
+        css.ShouldNotContain(".json-schema-validator-contract-label");
         css.ShouldContain("flex: 0 0 100%;");
         css.ShouldContain("white-space: normal;");
         css.ShouldNotContain("grid-template-columns: repeat(3, minmax(0, auto));");
@@ -7120,7 +9048,6 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("gap: 7px;");
         css.ShouldNotContain(".json-schema-validator-editor-surface");
         css.ShouldContain(".json-schema-validator-config-row");
-        css.ShouldNotContain(".json-schema-validator-field-label");
         css.ShouldContain(".json-schema-validator-schema-area");
         css.ShouldContain("display: grid;");
         css.ShouldContain("flex: 1 1 auto;");
@@ -7204,20 +9131,44 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.ExtraExtraLarge\"");
         markup.ShouldContain("EditDialogContentClass=\"dynamic-mapper-dialog\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIconButton\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static iconButton => !iconButton.Contains("aria-label=", StringComparison.Ordinal) &&
+                !iconButton.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("dynamic-mapper-summary");
         markup.ShouldContain("dynamic-mapper-meta");
         markup.ShouldContain("dynamic-mapper-meta-item input");
         markup.ShouldContain("EngineCaption");
-        markup.ShouldContain("OutputContractCaption");
-        markup.ShouldContain("dynamic-mapper-contracts");
+        markup.ShouldContain("OutputModeCaption");
+        markup.ShouldContain("dynamic-mapper-fields");
+        markup.ShouldContain("dynamic-mapper-field-label");
         markup.ShouldContain("aria-label=\"Mapper input variables\"");
-        markup.ShouldContain("aria-label=\"Mapper output fields\"");
         markup.ShouldContain("SummaryVariables");
-        markup.ShouldContain("SummaryOutputFields");
         markup.ShouldContain("dynamic-mapper-token");
+        markup.ShouldNotContain("aria-label=\"Mapper output fields\"");
+        markup.ShouldNotContain("Output fields");
+        markup.ShouldNotContain("SummaryOutputFields");
+        markup.ShouldNotContain("SummaryOutputOverflow");
+        markup.ShouldNotContain("dynamic-mapper-contracts");
+        markup.ShouldNotContain("dynamic-mapper-contract-label");
         markup.ShouldContain("dynamic-mapper-editor");
         markup.ShouldContain("aria-label=\"Dynamic mapper settings\"");
         markup.ShouldContain("dynamic-mapper-control-row");
@@ -7226,13 +9177,20 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ValueChanged=\"@SetInputType\"");
         markup.ShouldContain("Label=\"Engine\"");
         markup.ShouldContain("ValueChanged=\"@SetEngine\"");
-        markup.ShouldContain("Label=\"Result contract\"");
-        markup.ShouldContain("ValueChanged=\"@SetOutputContract\"");
+        markup.ShouldContain("Label=\"Result mode\"");
+        markup.ShouldContain("Class=\"dynamic-mapper-result-mode-field\"");
+        markup.ShouldNotContain("Label=\"Result contract\"");
+        markup.ShouldNotContain("Class=\"dynamic-mapper-contract-field\"");
+        markup.ShouldContain("ValueChanged=\"@SetOutputMode\"");
+        markup.ShouldNotContain("OutputContractCaption");
+        markup.ShouldNotContain("OutputContractLabel");
+        markup.ShouldNotContain("SetOutputContract");
         markup.ShouldContain("Label=\"Typed schema\"");
         markup.ShouldContain("ValueChanged=\"@SetOutputType\"");
         markup.ShouldContain("Label=\"JSON Schema file\"");
         markup.ShouldContain("ValueChanged=\"@SetOutputSchemaPath\"");
         markup.ShouldContain("PickOutputSchemaFileAsync");
+        markup.ShouldContain("aria-label=\"Select schema file\"");
         markup.ShouldContain("dynamic-mapper-workspace");
         markup.ShouldContain("dynamic-mapper-input-workspace");
         markup.ShouldContain("dynamic-mapper-expression-workspace");
@@ -7245,8 +9203,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("dynamic-mapper-workspace-header");
         markup.ShouldContain("dynamic-mapper-workspace-actions");
         markup.ShouldContain("dynamic-mapper-heading-token");
+        markup.ShouldContain("Preview unavailable.");
+        markup.ShouldNotContain("Preview is not ready.");
         markup.ShouldNotContain("OutputShapeLabel");
         markup.ShouldContain("ReloadWorkspaceSample");
+        markup.ShouldContain("aria-label=\"Reload sample input\"");
         markup.ShouldContain("dynamic-mapper-input-error");
         markup.ShouldContain("role=\"alert\"");
         markup.ShouldContain("private string? ValidateEditor()");
@@ -7304,7 +9265,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.58fr) minmax(0, 0.54fr);");
         css.ShouldNotContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 76px 72px;");
         css.ShouldContain("-webkit-line-clamp: 2;");
-        css.ShouldContain(".dynamic-mapper-contracts");
+        css.ShouldContain(".dynamic-mapper-fields");
+        css.ShouldContain(".dynamic-mapper-field-row");
+        css.ShouldContain(".dynamic-mapper-field-label");
+        css.ShouldNotContain(".dynamic-mapper-contracts");
+        css.ShouldNotContain(".dynamic-mapper-contract");
+        css.ShouldNotContain(".dynamic-mapper-contract-label");
+        css.ShouldNotContain(".dynamic-mapper-contract-field");
         css.ShouldContain(".dynamic-mapper-token");
         css.ShouldContain("flex-wrap: wrap;");
         css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
@@ -7338,7 +9305,19 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("height: 100%;");
         css.ShouldContain("min-height: 0;");
         css.ShouldContain(".dynamic-mapper-workspace-actions");
-        css.ShouldContain(".dynamic-mapper-result-status");
+        markup.ShouldContain("PreviewResultMarkerClass");
+        markup.ShouldContain("PreviewResultMarkerText");
+        markup.ShouldContain("dynamic-mapper-result-marker ok");
+        markup.ShouldNotContain("PreviewResultStateClass");
+        markup.ShouldNotContain("PreviewResultStateText");
+        markup.ShouldNotContain("dynamic-mapper-result-state");
+        markup.ShouldNotContain("PreviewStatusClass");
+        markup.ShouldNotContain("PreviewStatusText");
+        css.ShouldContain(".dynamic-mapper-result-marker");
+        css.ShouldContain(".dynamic-mapper-result-marker.ok");
+        css.ShouldContain(".dynamic-mapper-result-marker.error");
+        css.ShouldNotContain(".dynamic-mapper-result-state");
+        css.ShouldNotContain(".dynamic-mapper-result-status");
         css.ShouldContain("min-height: 27px;");
         css.ShouldContain("min-height: 25px;");
         css.ShouldContain("font-size: 0.58rem;");
@@ -7402,7 +9381,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldNotContain("EditDialogMaxWidth=");
@@ -7492,7 +9471,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldNotContain("EditDialogMaxWidth=");
@@ -7572,7 +9551,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldNotContain("EditDialogMaxWidth=");
@@ -7661,7 +9640,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("condition-router-summary");
         markup.ShouldContain("condition-router-meta");
         markup.ShouldContain("InputTypeCaption");
@@ -7675,6 +9654,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SummaryVariables");
         markup.ShouldContain("VariableOverflow");
         markup.ShouldContain("condition-router-token");
+        markup.ShouldContain("title=\"@SummaryVariableTitle(variable)\"");
+        markup.ShouldContain("private string SummaryVariableTitle(ConditionVariable variable)");
+        markup.ShouldContain("$\"{variable.Name}: {variable.Type} in {Node.NodeName}\"");
+        markup.ShouldNotContain("title=\"@($\"{variable.Name}: {variable.Type}\")\"");
         markup.ShouldContain("condition-router-editor");
         markup.ShouldContain("aria-label=\"Condition router settings\"");
         markup.ShouldNotContain("condition-router-config-row");
@@ -7720,6 +9703,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("condition-router-variable-strip");
         markup.ShouldContain("condition-router-variable-label");
         markup.ShouldContain("condition-router-variable-token");
+        markup.ShouldContain("title=\"@VariableReferenceTitle(variable)\"");
+        markup.ShouldContain("private string VariableReferenceTitle(ConditionVariable variable)");
+        markup.ShouldContain("$\"{variable.Name} {variable.Type} example {variable.Example} in {Node.NodeName}\"");
+        markup.ShouldNotContain("title=\"@($\"{variable.Type}: {variable.Example}\")\"");
         markup.ShouldContain("Variables");
         markup.ShouldNotContain("condition-router-variable-reference-grid");
         markup.ShouldNotContain("condition-router-variable-reference-row");
@@ -7866,7 +9853,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject AppThemeService ThemeService");
         markup.ShouldContain("@inject IJSRuntime JsRuntime");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
@@ -7879,12 +9866,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("BufferCaption");
         markup.ShouldContain("routing-switch-expression");
         markup.ShouldContain("aria-label=\"Routing switch expression\"");
+        markup.ShouldContain("routing-switch-summary-label");
         markup.ShouldContain("ExpressionPreview");
         markup.ShouldContain("routing-switch-routes");
         markup.ShouldContain("aria-label=\"Routing switch routes\"");
         markup.ShouldContain("RoutePreview");
         markup.ShouldContain("RoutePreviewOverflow");
         markup.ShouldContain("routing-switch-token");
+        markup.ShouldNotContain("routing-switch-contract-label");
         markup.ShouldContain("routing-switch-editor");
         markup.ShouldContain("aria-label=\"Routing switch settings\"");
         markup.ShouldContain("routing-switch-rule-row");
@@ -7938,9 +9927,18 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("routing-switch-route-list");
         markup.ShouldContain("AddRoute");
         markup.ShouldContain("Class=\"routing-switch-route-add\"");
+        markup.ShouldContain("Text=\"@AddRouteLabel\"");
+        markup.ShouldContain("aria-label=\"@AddRouteLabel\"");
+        markup.ShouldContain("private string AddRouteLabel => $\"Add route to {Node.NodeName}\";");
         markup.ShouldContain("routing-switch-route-row");
-        markup.ShouldContain("aria-label=\"@($\"Route match key {index + 1}\")\"");
-        markup.ShouldContain("aria-label=\"@($\"Route output port {index + 1}\")\"");
+        markup.ShouldContain("aria-label=\"@RouteMatchKeyLabel(route, index)\"");
+        markup.ShouldContain("aria-label=\"@RouteOutputPortLabel(route, index)\"");
+        markup.ShouldContain("private string RouteMatchKeyLabel(RouteDraft route, int index)");
+        markup.ShouldContain("private string RouteOutputPortLabel(RouteDraft route, int index)");
+        markup.ShouldContain("$\"Edit match key {target} for {Node.NodeName}\"");
+        markup.ShouldContain("$\"Edit output port {target} for {Node.NodeName}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Route match key {index + 1}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Route output port {index + 1}\")\"");
         markup.ShouldContain("Value=\"@route.Key\"");
         markup.ShouldContain("ValueChanged=\"@(value => SetRouteKeyAsync(route, value))\"");
         markup.ShouldContain("Value=\"@route.OutputPort\"");
@@ -7950,6 +9948,14 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Class=\"routing-switch-route-key-field\"");
         markup.ShouldContain("Class=\"routing-switch-route-output-field\"");
         markup.ShouldContain("RemoveRoute(route)");
+        markup.ShouldContain("Text=\"@RemoveRouteLabel(route)\"");
+        markup.ShouldContain("aria-label=\"@RemoveRouteLabel(route)\"");
+        markup.ShouldContain("private string RemoveRouteLabel(RouteDraft route)");
+        markup.ShouldContain("$\"Remove {target} from {Node.NodeName}\"");
+        markup.ShouldNotContain("Text=\"Add route\"");
+        markup.ShouldNotContain("aria-label=\"Add route\"");
+        markup.ShouldNotContain("Text=\"Remove route\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Remove route {route.Key}\")\"");
         markup.ShouldContain("FormatRouteDrafts");
         markup.ShouldContain("private StandaloneCodeEditor? _editor;");
         markup.ShouldContain("private StandaloneCodeEditor? _initializedEditor;");
@@ -8032,6 +10038,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("-webkit-line-clamp: 2;");
         css.ShouldContain(".routing-switch-expression");
         css.ShouldContain(".routing-switch-routes");
+        css.ShouldContain(".routing-switch-summary-label");
+        css.ShouldNotContain(".routing-switch-contract-label");
         css.ShouldContain("display: flex;");
         css.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         css.ShouldContain(".routing-switch-token");
@@ -8175,7 +10183,7 @@ public sealed class DashboardEventFilterCatalogTests
         forkMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         forkMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
         forkMarkup.ShouldContain("ShowDisplayName=\"true\"");
-        forkMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        forkMarkup.ShouldContain("ShowCategoryToken=\"false\"");
         forkMarkup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         forkMarkup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         forkMarkup.ShouldContain("routing-fork-summary");
@@ -8185,9 +10193,11 @@ public sealed class DashboardEventFilterCatalogTests
         forkMarkup.ShouldContain("BufferCaption");
         forkMarkup.ShouldContain("routing-fork-ports");
         forkMarkup.ShouldContain("aria-label=\"Routing fork outputs\"");
+        forkMarkup.ShouldContain("routing-fork-summary-label");
         forkMarkup.ShouldContain("OutputPreview");
         forkMarkup.ShouldContain("OutputPreviewOverflow");
         forkMarkup.ShouldContain("routing-fork-token");
+        forkMarkup.ShouldNotContain("routing-fork-contract-label");
         forkMarkup.ShouldContain("routing-fork-editor");
         forkMarkup.ShouldContain("aria-label=\"Routing fork settings\"");
         forkMarkup.ShouldContain("routing-fork-layout");
@@ -8209,7 +10219,9 @@ public sealed class DashboardEventFilterCatalogTests
         forkMarkup.ShouldContain("aria-label=\"Routing fork output ports\"");
         forkMarkup.ShouldContain("routing-fork-port-header");
         forkMarkup.ShouldContain("Class=\"routing-fork-add-port\"");
-        forkMarkup.ShouldContain("aria-label=\"Add output port\"");
+        forkMarkup.ShouldContain("Text=\"@AddOutputPortLabel\"");
+        forkMarkup.ShouldContain("aria-label=\"@AddOutputPortLabel\"");
+        forkMarkup.ShouldContain("private string AddOutputPortLabel => $\"Add output port to {Node.NodeName}\";");
         forkMarkup.ShouldContain("routing-fork-port-row");
         forkMarkup.ShouldContain("_outputDrafts");
         forkMarkup.ShouldContain("AddOutput");
@@ -8218,8 +10230,19 @@ public sealed class DashboardEventFilterCatalogTests
         forkMarkup.ShouldContain("ValueChanged=\"@(value => SetOutputNameAsync(output, value))\"");
         forkMarkup.ShouldContain("Immediate=\"true\"");
         forkMarkup.ShouldNotContain("@bind-Value=\"output.Name\"");
-        forkMarkup.ShouldContain("aria-label=\"@($\"Output port {index + 1}\")\"");
-        forkMarkup.ShouldContain("aria-label=\"@($\"Remove output port {output.Name}\")\"");
+        forkMarkup.ShouldContain("aria-label=\"@OutputPortFieldLabel(output, index)\"");
+        forkMarkup.ShouldContain("private string OutputPortFieldLabel(PortDraft output, int index)");
+        forkMarkup.ShouldContain("$\"Edit output port {target} for {Node.NodeName}\"");
+        forkMarkup.ShouldNotContain("aria-label=\"@($\"Output port {index + 1}\")\"");
+        forkMarkup.ShouldContain("Text=\"@RemoveOutputPortLabel(output)\"");
+        forkMarkup.ShouldContain("aria-label=\"@RemoveOutputPortLabel(output)\"");
+        forkMarkup.ShouldContain("private string RemoveOutputPortLabel(PortDraft output)");
+        forkMarkup.ShouldContain("$\"Keep at least one output port on {Node.NodeName}\"");
+        forkMarkup.ShouldContain("$\"Remove {target} from {Node.NodeName}\"");
+        forkMarkup.ShouldNotContain("Text=\"Add output port\"");
+        forkMarkup.ShouldNotContain("aria-label=\"Add output port\"");
+        forkMarkup.ShouldNotContain("Text=\"@(_outputDrafts.Count > 1 ? \"Remove output port\" : \"Keep at least one output\")\"");
+        forkMarkup.ShouldNotContain("aria-label=\"@($\"Remove output port {output.Name}\")\"");
         forkMarkup.ShouldContain("Class=\"routing-fork-output-name-field\"");
         forkMarkup.ShouldContain("private async Task AddOutput()");
         forkMarkup.ShouldContain("private async Task RemoveOutput(PortDraft output)");
@@ -8270,6 +10293,8 @@ public sealed class DashboardEventFilterCatalogTests
         forkCss.ShouldContain("display: -webkit-box;");
         forkCss.ShouldContain("-webkit-line-clamp: 2;");
         forkCss.ShouldContain(".routing-fork-ports");
+        forkCss.ShouldContain(".routing-fork-summary-label");
+        forkCss.ShouldNotContain(".routing-fork-contract-label");
         forkCss.ShouldContain("display: flex;");
         forkCss.ShouldContain("flex-wrap: wrap;");
         forkCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
@@ -8344,7 +10369,7 @@ public sealed class DashboardEventFilterCatalogTests
         mergeMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         mergeMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
         mergeMarkup.ShouldContain("ShowDisplayName=\"true\"");
-        mergeMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        mergeMarkup.ShouldContain("ShowCategoryToken=\"false\"");
         mergeMarkup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         mergeMarkup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         mergeMarkup.ShouldContain("routing-merge-summary");
@@ -8356,9 +10381,11 @@ public sealed class DashboardEventFilterCatalogTests
         mergeMarkup.ShouldNotContain("FlowMergeItem");
         mergeMarkup.ShouldContain("routing-merge-ports");
         mergeMarkup.ShouldContain("aria-label=\"Routing merge inputs\"");
+        mergeMarkup.ShouldContain("routing-merge-summary-label");
         mergeMarkup.ShouldContain("InputPreview");
         mergeMarkup.ShouldContain("InputPreviewOverflow");
         mergeMarkup.ShouldContain("routing-merge-token");
+        mergeMarkup.ShouldNotContain("routing-merge-contract-label");
         mergeMarkup.ShouldContain("routing-merge-editor");
         mergeMarkup.ShouldContain("aria-label=\"Routing merge settings\"");
         mergeMarkup.ShouldContain("routing-merge-layout");
@@ -8380,7 +10407,9 @@ public sealed class DashboardEventFilterCatalogTests
         mergeMarkup.ShouldContain("aria-label=\"Routing merge input ports\"");
         mergeMarkup.ShouldContain("routing-merge-port-header");
         mergeMarkup.ShouldContain("Class=\"routing-merge-add-port\"");
-        mergeMarkup.ShouldContain("aria-label=\"Add input port\"");
+        mergeMarkup.ShouldContain("Text=\"@AddInputPortLabel\"");
+        mergeMarkup.ShouldContain("aria-label=\"@AddInputPortLabel\"");
+        mergeMarkup.ShouldContain("private string AddInputPortLabel => $\"Add input port to {Node.NodeName}\";");
         mergeMarkup.ShouldContain("routing-merge-port-row");
         mergeMarkup.ShouldContain("_inputDrafts");
         mergeMarkup.ShouldContain("AddInput");
@@ -8389,8 +10418,19 @@ public sealed class DashboardEventFilterCatalogTests
         mergeMarkup.ShouldContain("ValueChanged=\"@(value => SetInputNameAsync(input, value))\"");
         mergeMarkup.ShouldContain("Immediate=\"true\"");
         mergeMarkup.ShouldNotContain("@bind-Value=\"input.Name\"");
-        mergeMarkup.ShouldContain("aria-label=\"@($\"Input port {index + 1}\")\"");
-        mergeMarkup.ShouldContain("aria-label=\"@($\"Remove input port {input.Name}\")\"");
+        mergeMarkup.ShouldContain("aria-label=\"@InputPortFieldLabel(input, index)\"");
+        mergeMarkup.ShouldContain("private string InputPortFieldLabel(PortDraft input, int index)");
+        mergeMarkup.ShouldContain("$\"Edit input port {target} for {Node.NodeName}\"");
+        mergeMarkup.ShouldNotContain("aria-label=\"@($\"Input port {index + 1}\")\"");
+        mergeMarkup.ShouldContain("Text=\"@RemoveInputPortLabel(input)\"");
+        mergeMarkup.ShouldContain("aria-label=\"@RemoveInputPortLabel(input)\"");
+        mergeMarkup.ShouldContain("private string RemoveInputPortLabel(PortDraft input)");
+        mergeMarkup.ShouldContain("$\"Keep at least one input port on {Node.NodeName}\"");
+        mergeMarkup.ShouldContain("$\"Remove {target} from {Node.NodeName}\"");
+        mergeMarkup.ShouldNotContain("Text=\"Add input port\"");
+        mergeMarkup.ShouldNotContain("aria-label=\"Add input port\"");
+        mergeMarkup.ShouldNotContain("Text=\"@(_inputDrafts.Count > 1 ? \"Remove input port\" : \"Keep at least one input\")\"");
+        mergeMarkup.ShouldNotContain("aria-label=\"@($\"Remove input port {input.Name}\")\"");
         mergeMarkup.ShouldContain("Class=\"routing-merge-input-name-field\"");
         mergeMarkup.ShouldContain("private async Task AddInput()");
         mergeMarkup.ShouldContain("private async Task RemoveInput(PortDraft input)");
@@ -8441,6 +10481,8 @@ public sealed class DashboardEventFilterCatalogTests
         mergeCss.ShouldContain("display: -webkit-box;");
         mergeCss.ShouldContain("-webkit-line-clamp: 2;");
         mergeCss.ShouldContain(".routing-merge-ports");
+        mergeCss.ShouldContain(".routing-merge-summary-label");
+        mergeCss.ShouldNotContain(".routing-merge-contract-label");
         mergeCss.ShouldContain("display: flex;");
         mergeCss.ShouldContain("flex-wrap: wrap;");
         mergeCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
@@ -8539,7 +10581,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("routing-window-summary");
@@ -8733,7 +10775,7 @@ public sealed class DashboardEventFilterCatalogTests
         correlationMarkup.ShouldContain("@inject IJSRuntime JsRuntime");
         correlationMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
         correlationMarkup.ShouldContain("ShowDisplayName=\"true\"");
-        correlationMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        correlationMarkup.ShouldContain("ShowCategoryToken=\"false\"");
         correlationMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         correlationMarkup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         correlationMarkup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
@@ -8745,10 +10787,12 @@ public sealed class DashboardEventFilterCatalogTests
         correlationMarkup.ShouldContain("BufferCaption");
         correlationMarkup.ShouldContain("routing-correlation-rules");
         correlationMarkup.ShouldContain("aria-label=\"Routing correlation rules\"");
+        correlationMarkup.ShouldContain("routing-correlation-summary-label");
         correlationMarkup.ShouldContain("KeyExpressionCaption");
         correlationMarkup.ShouldContain("SideExpressionCaption");
         correlationMarkup.ShouldContain("CaseCaption");
         correlationMarkup.ShouldContain("PendingCaption");
+        correlationMarkup.ShouldNotContain("routing-correlation-contract-label");
         correlationMarkup.ShouldContain("routing-correlation-editor");
         correlationMarkup.ShouldContain("aria-label=\"Routing correlation settings\"");
         correlationMarkup.ShouldContain("routing-correlation-rule-row");
@@ -8858,6 +10902,8 @@ public sealed class DashboardEventFilterCatalogTests
         correlationCss.ShouldContain("display: -webkit-box;");
         correlationCss.ShouldContain("-webkit-line-clamp: 2;");
         correlationCss.ShouldContain(".routing-correlation-rules");
+        correlationCss.ShouldContain(".routing-correlation-summary-label");
+        correlationCss.ShouldNotContain(".routing-correlation-contract-label");
         correlationCss.ShouldContain("flex-wrap: wrap;");
         correlationCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
         correlationCss.ShouldContain("flex: 0 0 100%;");
@@ -8936,7 +10982,7 @@ public sealed class DashboardEventFilterCatalogTests
         joinMarkup.ShouldContain("@inject IJSRuntime JsRuntime");
         joinMarkup.ShouldContain("ShowHeaderIcon=\"false\"");
         joinMarkup.ShouldContain("ShowDisplayName=\"true\"");
-        joinMarkup.ShouldContain("ShowCategoryChip=\"false\"");
+        joinMarkup.ShouldContain("ShowCategoryToken=\"false\"");
         joinMarkup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         joinMarkup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         joinMarkup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
@@ -8950,6 +10996,8 @@ public sealed class DashboardEventFilterCatalogTests
         joinMarkup.ShouldContain("BufferCaption");
         joinMarkup.ShouldContain("routing-join-rules");
         joinMarkup.ShouldContain("aria-label=\"Routing join rules\"");
+        joinMarkup.ShouldContain("routing-join-summary-label");
+        joinMarkup.ShouldNotContain("routing-join-contract-label");
         joinMarkup.ShouldContain("routing-join-editor");
         joinMarkup.ShouldContain("aria-label=\"Routing join settings\"");
         joinMarkup.ShouldContain("routing-join-rule-row");
@@ -9044,6 +11092,8 @@ public sealed class DashboardEventFilterCatalogTests
         joinCss.ShouldContain("display: -webkit-box;");
         joinCss.ShouldContain("-webkit-line-clamp: 2;");
         joinCss.ShouldContain(".routing-join-rules");
+        joinCss.ShouldContain(".routing-join-summary-label");
+        joinCss.ShouldNotContain(".routing-join-contract-label");
         joinCss.ShouldContain("display: flex;");
         joinCss.ShouldContain("flex-wrap: wrap;");
         joinCss.ShouldNotContain("grid-template-columns: repeat(4, minmax(0, auto));");
@@ -9144,7 +11194,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("http-client-summary");
         markup.ShouldContain("http-client-meta");
         markup.ShouldContain("http-client-meta-item target");
@@ -9266,7 +11316,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("payload-inspector-node-summary");
         markup.ShouldContain("payload-inspector-node-meta");
         markup.ShouldContain("payload-inspector-node-meta-item behavior");
@@ -9447,7 +11497,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("default-node-summary");
         markup.ShouldContain("default-node-description");
         markup.ShouldContain("SummaryCaption");
@@ -9550,7 +11600,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("generic-node-summary");
         markup.ShouldContain("generic-node-description");
         markup.ShouldContain("SummaryCaption");
@@ -9693,19 +11743,24 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("metrics-summary");
-        markup.ShouldContain("metrics-status-line");
-        markup.ShouldContain("metrics-status-item");
+        markup.ShouldContain("metrics-runtime-facts");
+        markup.ShouldContain("metrics-runtime-fact");
+        markup.ShouldContain("aria-label=\"MQTT metrics runtime facts\"");
         markup.ShouldContain("RateWindowCaption");
         markup.ShouldContain("ReadoutLayoutCaption");
         markup.ShouldContain("metrics-readout-strip");
         markup.ShouldContain("--metric-readout-columns:@readoutColumns");
         markup.ShouldContain("MetricReadouts");
         markup.ShouldContain("metrics-readout-token @readout.CssClass");
+        markup.ShouldContain("aria-label=\"@MetricReadoutLabel(readout)\"");
+        markup.ShouldContain("private string MetricReadoutLabel(MetricDisplayReadout readout)");
+        markup.ShouldContain("$\"{readout.Label}: {readout.Value} for {Node.NodeName}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"{readout.Label}: {readout.Value}\")\"");
         markup.ShouldContain("aria-label=\"MQTT metrics readouts\"");
         markup.ShouldContain("metrics-topic-list");
         markup.ShouldContain("metrics-topic-list-header");
@@ -9715,6 +11770,8 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("metrics-empty");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("metrics-last-line");
+        markup.ShouldNotContain("metrics-status-line");
+        markup.ShouldNotContain("metrics-status-item");
         markup.ShouldNotContain("contract");
         markup.ShouldNotContain("Ready to save");
         markup.ShouldContain("metrics-editor");
@@ -9756,7 +11813,12 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ReadoutOptionClass(selected, disabled)");
         markup.ShouldContain("metrics-readout-option-tile");
         markup.ShouldContain("metrics-readout-option-name");
-        markup.ShouldContain("aria-label=\"@($\"Show {option.Label}\")\"");
+        markup.ShouldContain("aria-label=\"@DisplayMetricOptionLabel(option, selected, disabled)\"");
+        markup.ShouldContain("private string DisplayMetricOptionLabel(MetricDisplayOption option, bool selected, bool disabled)");
+        markup.ShouldContain("$\"Keep {option.Label} visible for {Node.NodeName}\"");
+        markup.ShouldContain("$\"Hide {option.Label} readout for {Node.NodeName}\"");
+        markup.ShouldContain("$\"Show {option.Label} readout for {Node.NodeName}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Show {option.Label}\")\"");
         markup.ShouldContain("ToggleDisplayMetric");
         markup.ShouldContain("Class=\"metrics-readout-option-check\"");
         markup.ShouldNotContain("metrics-panel-header");
@@ -9795,9 +11857,11 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("metrics-readout-table\" aria-label");
 
         css.ShouldContain(".metrics-summary");
-        css.ShouldContain(".metrics-status-line");
-        css.ShouldContain(".metrics-status-item");
+        css.ShouldContain(".metrics-runtime-facts");
+        css.ShouldContain(".metrics-runtime-fact");
         css.ShouldContain("grid-template-columns: repeat(2, minmax(0, 1fr));");
+        css.ShouldNotContain(".metrics-status-line");
+        css.ShouldNotContain(".metrics-status-item");
         css.ShouldNotContain("grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);");
         css.ShouldContain(".metrics-readout-strip");
         css.ShouldContain("grid-template-columns: repeat(var(--metric-readout-columns), minmax(0, 1fr));");
@@ -9923,7 +11987,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("payload-inspect-summary");
         markup.ShouldContain("payload-inspect-meta");
         markup.ShouldContain("payload-inspect-meta-item input");
@@ -10046,7 +12110,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("metric-source-summary");
@@ -10061,6 +12125,10 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ParameterPreview");
         markup.ShouldContain("ParameterPreviewOverflow");
         markup.ShouldContain("metric-source-token");
+        markup.ShouldContain("title=\"@ParameterPreviewTitle(parameter)\"");
+        markup.ShouldContain("private string ParameterPreviewTitle(KeyValuePair<string, string> parameter)");
+        markup.ShouldContain("$\"{parameter.Key}: {parameter.Value} in {Node.NodeName}\"");
+        markup.ShouldNotContain("title=\"@($\"{parameter.Key}: {parameter.Value}\")\"");
         markup.ShouldNotContain("metric-source-contract");
         markup.ShouldNotContain("aria-label=\"Metric source output fields\"");
         markup.ShouldNotContain("Output fields");
@@ -10242,7 +12310,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Large\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("generated-source-summary");
         markup.ShouldContain("generated-source-meta");
@@ -10300,7 +12368,23 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("Immediate=\"true\"");
         markup.ShouldNotContain("Label=\"Topic\"");
         markup.ShouldContain("Placeholder=\"@($\"Topic {index + 1}\")\"");
-        markup.ShouldContain("aria-label=\"@($\"Generated message {index + 1} topic\")\"");
+        markup.ShouldContain("aria-label=\"@GeneratedMessageTopicLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@GeneratedMessagePayloadLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@GeneratedMessageQosLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@GeneratedMessageRetainLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@GeneratedMessageReceivedAtLabel(index)\"");
+        markup.ShouldContain("private string GeneratedMessageTopicLabel(int index)");
+        markup.ShouldContain("private string GeneratedMessagePayloadLabel(int index)");
+        markup.ShouldContain("private string GeneratedMessageQosLabel(int index)");
+        markup.ShouldContain("private string GeneratedMessageRetainLabel(int index)");
+        markup.ShouldContain("private string GeneratedMessageReceivedAtLabel(int index)");
+        markup.ShouldContain("private string GeneratedMessageLabelTarget(int index)");
+        markup.ShouldContain("$\"generated message {index + 1} on {topic}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Generated message {index + 1} topic\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Generated message {index + 1} payload\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Generated message {index + 1} QoS\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Generated message {index + 1} retained\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Generated message {index + 1} received at\")\"");
         markup.ShouldContain("generated-source-qos-field");
         markup.ShouldContain("Label=\"QoS\"");
         markup.ShouldContain("generated-source-retain-toggle");
@@ -10314,9 +12398,18 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Label=\"Received at\"");
         markup.ShouldContain("Placeholder=\"Received at\"");
         markup.ShouldContain("AddMessageAsync");
-        markup.ShouldContain("aria-label=\"Add generated message\"");
+        markup.ShouldContain("Text=\"@AddGeneratedMessageLabel\"");
+        markup.ShouldContain("aria-label=\"@AddGeneratedMessageLabel\"");
+        markup.ShouldContain("private string AddGeneratedMessageLabel => $\"Add generated message to {Node.NodeName}\";");
         markup.ShouldContain("RemoveMessage(index)");
-        markup.ShouldContain("aria-label=\"@($\"Remove generated message {index + 1}\")\"");
+        markup.ShouldContain("Text=\"@RemoveGeneratedMessageLabel(index)\"");
+        markup.ShouldContain("aria-label=\"@RemoveGeneratedMessageLabel(index)\"");
+        markup.ShouldContain("private string RemoveGeneratedMessageLabel(int index)");
+        markup.ShouldContain("$\"Remove {target} from {Node.NodeName}\"");
+        markup.ShouldNotContain("Text=\"Add message\"");
+        markup.ShouldNotContain("aria-label=\"Add generated message\"");
+        markup.ShouldNotContain("Text=\"Remove message\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Remove generated message {index + 1}\")\"");
         markup.ShouldContain("ValidateEditor");
         markup.ShouldContain("Add at least one generated message before saving.");
         markup.ShouldContain("Each generated message needs a topic.");
@@ -10448,7 +12541,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("private string? ValidateEditor()");
@@ -10608,7 +12701,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("EditDialogMaxWidth=\"MaxWidth.Medium\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("private string? ValidateEditor()");
@@ -10792,7 +12885,7 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("CategoryColor=\"@Color.Warning\"");
         markup.ShouldContain("ShowHeaderIcon=\"false\"");
         markup.ShouldContain("ShowDisplayName=\"true\"");
-        markup.ShouldContain("ShowCategoryChip=\"false\"");
+        markup.ShouldContain("ShowCategoryToken=\"false\"");
         markup.ShouldContain("@inject NodeEditDialogRefreshService DialogRefresh");
         markup.ShouldContain("EditorValidationError=\"@ValidateEditor\"");
         markup.ShouldContain("timer-node-summary");
@@ -11044,18 +13137,48 @@ public sealed class DashboardEventFilterCatalogTests
             "FlowDesigner.razor.css"));
 
         shellMarkup.ShouldContain("flow-node-action flow-node-toggle");
+        shellMarkup.ShouldContain("aria-label=\"@NodeToggleLabel\"");
+        shellMarkup.ShouldContain("private string NodeToggleLabel => Node.IsCollapsed ? \"Expand node\" : \"Collapse node\";");
         shellMarkup.ShouldContain("ShowHeaderIcon");
         shellMarkup.ShouldContain("ShowDisplayName");
-        shellMarkup.ShouldContain("ShowCategoryChip");
-        shellMarkup.ShouldContain("HeaderBadge");
+        shellMarkup.ShouldContain("ShowCategoryToken");
+        shellMarkup.ShouldContain("HeaderState");
+        shellMarkup.ShouldNotContain("HeaderBadge");
         shellMarkup.ShouldContain("EditDialogContentClass");
         shellMarkup.ShouldContain("EditorValidationError");
+        shellMarkup.ShouldNotContain("nameof(NodeEditDialog.CategoryColor)");
         shellMarkup.ShouldContain("flow-node-type-icon");
+        shellMarkup.ShouldContain("Class=\"flow-node-type-icon\" aria-hidden=\"true\"");
         shellMarkup.ShouldContain("flow-node-name");
         shellMarkup.ShouldContain("flow-node-display-name");
         shellMarkup.ShouldNotContain("Color=\"Color.Secondary\" Class=\"flow-node-display-name\"");
         shellMarkup.ShouldContain("flow-node-action flow-node-edit");
+        shellMarkup.ShouldContain("aria-label=\"Edit node\"");
         shellMarkup.ShouldContain("Icons.Material.Filled.Settings");
+        shellMarkup.ShouldContain("role=\"img\"");
+        shellMarkup.ShouldContain("aria-label=\"@DiagnosticAccessibilityLabel(diagnostic)\"");
+        shellMarkup.ShouldContain("private static string DiagnosticAccessibilityLabel(WorkspaceDiagnostic diagnostic)");
+        System.Text.RegularExpressions.Regex.Matches(
+                shellMarkup,
+                @"<MudIconButton\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static iconButton => !iconButton.Contains("aria-label=", StringComparison.Ordinal) &&
+                !iconButton.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        System.Text.RegularExpressions.Regex.Matches(
+                shellMarkup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal) &&
+                !icon.Contains("aria-label=", StringComparison.Ordinal) &&
+                !icon.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         shellMarkup.ShouldContain("flow-node-category-token");
         shellMarkup.ShouldContain("flow-node-divider");
         shellMarkup.ShouldContain("flow-node-activity");
@@ -11135,7 +13258,7 @@ public sealed class DashboardEventFilterCatalogTests
             markup.ShouldNotContain("flow-node-filters");
             markup.ShouldNotContain("d-flex flex-wrap gap-1");
             markup.ShouldNotContain("ShowHeaderIcon=\"true\"");
-            markup.ShouldNotContain("ShowCategoryChip=\"true\"");
+            markup.ShouldNotContain("ShowCategoryToken=\"true\"");
 
             if (markup.Contains("<Body>", StringComparison.Ordinal))
             {
@@ -11147,6 +13270,33 @@ public sealed class DashboardEventFilterCatalogTests
                 markup.Contains("node-ui-editor", StringComparison.Ordinal).ShouldBeTrue(file);
             }
         }
+    }
+
+    [Fact]
+    public void WorkspaceStatusMessages_UseExplicitPoliteLiveSemantics()
+    {
+        var root = FindRepositoryRoot();
+        var componentDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components");
+        var violations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<[^>]*\brole\s*=\s*""status""[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("aria-live=\"polite\"", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+
+        violations.ShouldBeEmpty();
     }
 
     [Fact]
@@ -11227,18 +13377,102 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("@onclick=\"@(() => SelectLogs())\"");
         markup.ShouldContain("<AppJsonPanel Project=\"@active\" />");
         markup.ShouldContain("class=\"project-tab project-tab-json-view @(_jsonView ? \"project-tab-active\" : \"\")\"");
-        markup.ShouldContain("title=\"App JSON\"");
+        markup.ShouldContain("role=\"button\"");
+        markup.ShouldContain("tabindex=\"0\"");
+        markup.ShouldContain("aria-current=\"@WorkspaceTabCurrent(isActive)\"");
+        markup.ShouldContain("aria-current=\"@WorkspaceTabCurrent(metricsActive)\"");
+        markup.ShouldContain("aria-current=\"@WorkspaceTabCurrent(topicsActive)\"");
+        markup.ShouldContain("aria-current=\"@WorkspaceTabCurrent(logsActive)\"");
+        markup.ShouldContain("aria-current=\"@WorkspaceTabCurrent(_jsonView)\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                "class=\"workspace-empty\" role=\"status\" aria-live=\"polite\"")
+            .Count.ShouldBe(2);
+        markup.ShouldContain("No app open");
+        markup.ShouldContain("No artifacts");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(7);
+        markup.ShouldContain("aria-label=\"@OpenPipelineLabel(w)\"");
+        markup.ShouldContain("title=\"@PipelineTabTitle(w)\"");
+        markup.ShouldContain("aria-label=\"@OpenMetricsTabLabel(active)\"");
+        markup.ShouldContain("title=\"@OpenMetricsTabLabel(active)\"");
+        markup.ShouldContain("aria-label=\"@OpenDashboardLabel(d)\"");
+        markup.ShouldContain("title=\"@DashboardTabTitle(d)\"");
+        markup.ShouldContain("aria-label=\"@OpenTestLabel(t)\"");
+        markup.ShouldContain("title=\"@TestTabTitle(t)\"");
+        markup.ShouldContain("aria-label=\"@OpenTopicsTabLabel(active)\"");
+        markup.ShouldContain("title=\"@OpenTopicsTabLabel(active)\"");
+        markup.ShouldContain("aria-label=\"@OpenLogsTabLabel(active)\"");
+        markup.ShouldContain("title=\"@OpenLogsTabLabel(active)\"");
+        markup.ShouldContain("aria-label=\"@OpenAppJsonTabLabel(active)\"");
+        markup.ShouldContain("title=\"@OpenAppJsonTabLabel(active)\"");
+        markup.ShouldContain("title=\"@DeleteArtifactTabLabel(\"pipeline\", w)\"");
+        markup.ShouldContain("aria-label=\"@DeleteArtifactTabLabel(\"pipeline\", w)\"");
+        markup.ShouldContain("title=\"@DeleteArtifactTabLabel(\"dashboard\", d)\"");
+        markup.ShouldContain("aria-label=\"@DeleteArtifactTabLabel(\"dashboard\", d)\"");
+        markup.ShouldContain("title=\"@DeleteArtifactTabLabel(\"test\", t)\"");
+        markup.ShouldContain("aria-label=\"@DeleteArtifactTabLabel(\"test\", t)\"");
+        markup.ShouldContain("private static string OpenMetricsTabLabel");
+        markup.ShouldContain("private static string OpenPipelineLabel(string pipelineName)");
+        markup.ShouldContain("private static string PipelineTabTitle(string pipelineName)");
+        markup.ShouldContain("private static string OpenDashboardLabel(string dashboardName)");
+        markup.ShouldContain("private static string DashboardTabTitle(string dashboardName)");
+        markup.ShouldContain("private static string OpenTestLabel(string testName)");
+        markup.ShouldContain("private static string TestTabTitle(string testName)");
+        markup.ShouldNotContain("@($\"Open pipeline {w}\")");
+        markup.ShouldNotContain("@($\"Pipeline {w}\")");
+        markup.ShouldNotContain("@($\"Open dashboard {d}\")");
+        markup.ShouldNotContain("@($\"Dashboard {d}\")");
+        markup.ShouldNotContain("@($\"Open test {t}\")");
+        markup.ShouldNotContain("@($\"Test {t}\")");
+        markup.ShouldContain("private static string OpenTopicsTabLabel");
+        markup.ShouldContain("private static string OpenLogsTabLabel");
+        markup.ShouldContain("private static string OpenAppJsonTabLabel");
+        markup.ShouldContain("private static string DeleteArtifactTabLabel");
+        markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveWorkflow(w); _jsonView = false; })");
+        markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveMetrics(); _jsonView = false; })");
+        markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveDashboard(d); _jsonView = false; })");
+        markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveTest(t); _jsonView = false; })");
+        markup.ShouldContain("RunFromKeyboardAsync(args, () => { active.SetActiveTopics(); _jsonView = false; })");
+        markup.ShouldContain("RunFromKeyboardAsync(args, SelectLogs)");
+        markup.ShouldContain("RunFromKeyboardAsync(args, ToggleJsonView)");
         markup.ShouldContain("Icon=\"@Icons.Material.Filled.Code\"");
+        markup.ShouldContain("AriaLabel=\"@AddArtifactMenuLabel(active)\"");
+        markup.ShouldContain("private static string AddArtifactMenuLabel(FlowWorkspaceService app)");
+        markup.ShouldNotContain("AriaLabel=\"Add artifact\"");
+        markup.Split("Class=\"project-tab-icon\" aria-hidden=\"true\"", StringSplitOptions.None).Length.ShouldBe(8);
         markup.ShouldContain("<span class=\"project-tab-name\">App JSON</span>");
         markup.ShouldContain("<span class=\"project-tabbar-app-name\">@active.Name</span>");
-        markup.ShouldContain("aria-label=\"@($\"Close app {active.Name}\")\"");
+        markup.ShouldContain("title=\"@CloseAppLabel(active)\"");
+        markup.ShouldContain("aria-label=\"@CloseAppLabel(active)\"");
+        markup.ShouldContain("private static string CloseAppLabel(FlowWorkspaceService app)");
+        markup.ShouldNotContain("@($\"Close app {active.Name}\")");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Close\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Close\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.DeleteOutline\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal) &&
+                !icon.Contains("aria-label=", StringComparison.Ordinal) &&
+                !icon.Contains("AriaLabel=", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("@onclick:stopPropagation=\"true\"");
         markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
         markup.ShouldContain("@onclick=\"@ToggleJsonView\"");
+        markup.ShouldNotContain(">x</button>");
         markup.ShouldContain("private void ToggleJsonView()");
         markup.ShouldContain("private void OpenJsonView()");
         markup.ShouldContain("private void CloseJsonView()");
-        markup.ShouldContain("SyncActiveArtifactState();");
+        markup.ShouldContain("private static string? WorkspaceTabCurrent");
+        markup.ShouldContain("private static bool IsActivationKey");
+        markup.ShouldContain("private static Task RunFromKeyboardAsync");
+        markup.ShouldContain("SyncActiveArtifactSelection();");
+        markup.ShouldContain("private void SyncActiveArtifactSelection()");
+        markup.ShouldNotContain("SyncActiveArtifactState");
         markup.ShouldNotContain("private string JsonToggleTitle");
         markup.ShouldNotContain("project-tabbar-app-toggle");
         markup.ShouldNotContain("project-tab-json-active");
@@ -11250,6 +13484,16 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("private void OpenLogs(WorkspaceLogQuery query)");
         markup.ShouldContain("_pendingLogQuery = query;");
         markup.ShouldContain("active.SetActiveLogs();");
+        markup.ShouldNotContain("aria-label=\"Open metrics\"");
+        markup.ShouldNotContain("aria-label=\"Open topics\"");
+        markup.ShouldNotContain("aria-label=\"Open logs\"");
+        markup.ShouldNotContain("aria-label=\"Open app JSON\"");
+        markup.ShouldNotContain("title=\"Delete pipeline\"");
+        markup.ShouldNotContain("title=\"Delete dashboard\"");
+        markup.ShouldNotContain("title=\"Delete test\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Delete pipeline {w}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Delete dashboard {d}\")\"");
+        markup.ShouldNotContain("aria-label=\"@($\"Delete test {t}\")\"");
         css.ShouldContain(".project-tabbar {");
         css.ShouldContain("position: relative;");
         css.ShouldContain("z-index: 12;");
@@ -11258,6 +13502,103 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".project-tab-json {");
         css.ShouldNotContain(".project-tab-json:hover");
         css.ShouldNotContain(".project-tab-json-active");
+    }
+
+    [Fact]
+    public void WorkspaceRoleButtons_UseExplicitAccessibleNames()
+    {
+        var root = FindRepositoryRoot();
+        var componentDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components");
+        var violations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<[^>]*\brole\s*=\s*""button""[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("aria-label=", StringComparison.Ordinal) &&
+                        !item.Tag.Contains("aria-labelledby=", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceListboxes_ExposeActiveOptionRelationships()
+    {
+        var root = FindRepositoryRoot();
+        var componentDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components");
+        var listboxViolations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<[^>]*\brole\s*=\s*""listbox""[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("aria-activedescendant=", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+        var optionViolations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<[^>]*\brole\s*=\s*""option""[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("id=", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+
+        listboxViolations.Concat(optionViolations).ToArray().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspacePreformattedBlocks_ExposeAccessibleNames()
+    {
+        var root = FindRepositoryRoot();
+        var componentDirectory = Path.Combine(
+            root,
+            "src",
+            "FluxMq.UI",
+            "Components");
+        var violations = Directory.GetFiles(componentDirectory, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(file =>
+            {
+                var markup = File.ReadAllText(file);
+                return System.Text.RegularExpressions.Regex.Matches(
+                        markup,
+                        @"<pre\b[^>]*>",
+                        System.Text.RegularExpressions.RegexOptions.Singleline)
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(match => (File: file, Tag: match.Value))
+                    .Where(static item => !item.Tag.Contains("aria-label=", StringComparison.Ordinal) &&
+                        !item.Tag.Contains("aria-labelledby=", StringComparison.Ordinal));
+            })
+            .Select(item => $"{Path.GetRelativePath(root, item.File)}: {item.Tag.Replace('\r', ' ').Replace('\n', ' ').Trim()}")
+            .ToArray();
+
+        violations.ShouldBeEmpty();
     }
 
     [Fact]
@@ -11283,7 +13624,7 @@ public sealed class DashboardEventFilterCatalogTests
 
         markup.ShouldContain("node-edit-dialog-title");
         markup.ShouldContain("node-edit-dialog-heading");
-        markup.ShouldContain("node-edit-dialog-status");
+        markup.ShouldContain("node-edit-dialog-validation");
         markup.ShouldContain("node-edit-dialog-content");
         markup.ShouldContain("ContentClassName");
         markup.ShouldContain("[Parameter] public string? ContentClass");
@@ -11291,15 +13632,15 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("node-edit-dialog-section node-edit-dialog-identity");
         markup.ShouldContain("aria-label=\"Node identity\"");
         markup.ShouldContain("node-edit-dialog-editor");
-        markup.ShouldContain("aria-describedby=\"@StatusElementId\"");
+        markup.ShouldContain("aria-describedby=\"@ValidationElementId\"");
         markup.ShouldContain("role=\"status\"");
         markup.ShouldContain("aria-live=\"polite\"");
         markup.ShouldContain("OnNodeIdKeyDown");
         markup.ShouldContain("@if (!CanSubmit)");
-        markup.ShouldContain("StatusElementId");
-        markup.ShouldContain("SubmitStatusText");
-        markup.ShouldContain("<span id=\"node-edit-dialog-status\"");
-        markup.ShouldContain("class=\"node-edit-dialog-action-status\"");
+        markup.ShouldContain("ValidationElementId");
+        markup.ShouldContain("SubmitValidationText");
+        markup.ShouldContain("<span id=\"node-edit-dialog-validation\"");
+        markup.ShouldContain("class=\"node-edit-dialog-validation-message\"");
         markup.ShouldContain("[Parameter] public Func<string?>? EditorValidationError");
         markup.ShouldContain("private string? _editorError;");
         markup.ShouldContain("private string? EditorError => _editorError;");
@@ -11308,11 +13649,20 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("string.IsNullOrWhiteSpace(EditorError)");
         markup.ShouldContain("NodeIdError ?? EditorError ?? \"Review required\"");
         markup.ShouldNotContain("Ready to save");
+        markup.ShouldNotContain("StatusElementId");
+        markup.ShouldNotContain("SubmitStatusText");
+        markup.ShouldNotContain("node-edit-dialog-action-status");
         markup.ShouldNotContain("SubmitStatusClass");
         markup.ShouldContain("node-edit-dialog-actions");
-        markup.ShouldContain("aria-label=\"Cancel node edit\"");
-        markup.ShouldContain("aria-label=\"Save node edit\"");
+        markup.ShouldContain("aria-label=\"@CancelNodeEditLabel\"");
+        markup.ShouldContain("aria-label=\"@SaveNodeEditLabel\"");
+        markup.ShouldContain("private string CancelNodeEditLabel => $\"Cancel editing {NodeEditTargetLabel}\"");
+        markup.ShouldContain("private string SaveNodeEditLabel => $\"Save edits for {NodeEditTargetLabel}\"");
+        markup.ShouldContain("private string NodeEditTargetLabel => string.IsNullOrWhiteSpace(NodeDisplayName)");
+        markup.ShouldNotContain("aria-label=\"Cancel node edit\"");
+        markup.ShouldNotContain("aria-label=\"Save node edit\"");
         markup.ShouldContain("Color=\"Color.Primary\"");
+        markup.ShouldNotContain("[Parameter] public Color CategoryColor");
         markup.ShouldNotContain("Color=\"@CategoryColor\"");
         markup.ShouldNotContain("HelperText=");
         markup.ShouldNotContain("ErrorText=");
@@ -11382,11 +13732,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".node-edit-dialog-content.json-schema-validator-dialog ::deep(.json-schema-validator-schema-area)");
         css.ShouldContain(".node-edit-dialog-content.json-schema-validator-dialog ::deep(.json-schema-validator-inline-source .schema-monaco-editor .overflow-guard)");
         css.ShouldNotContain(".node-edit-dialog-editor ::deep(.dynamic-mapper-workbench .dynamic-mapper-panel)");
+        css.ShouldNotContain(".node-edit-dialog-editor ::deep(.mud-chip)");
         css.ShouldNotContain("height: 96px;");
         css.ShouldNotContain("height: 280px;");
         css.ShouldNotContain("height: 570px;");
-        css.ShouldContain(".node-edit-dialog-action-status");
-        css.ShouldNotContain(".node-edit-dialog-action-status.ready");
+        css.ShouldContain(".node-edit-dialog-validation-message");
+        css.ShouldNotContain(".node-edit-dialog-action-status");
+        css.ShouldNotContain(".node-edit-dialog-validation-message.ready");
         css.ShouldContain("min-height: 28px;");
         css.ShouldNotContain("text-overflow: ellipsis;");
         css.ShouldNotContain("white-space: nowrap;");
@@ -11435,8 +13787,13 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".workspace-artifact-shell-pipeline .workspace-artifact-tools");
         css.ShouldContain("padding: 6px;");
         css.ShouldContain(".workspace-artifact-tools:focus-within");
+        css.ShouldContain(".project-tab-close ::deep .mud-icon-root");
         css.ShouldNotContain(".workspace-artifact-region:focus-within");
         css.ShouldNotContain(".workspace-designer-region:focus-within");
+        css.ShouldNotContain(".artifact-workspace-state");
+        css.ShouldNotContain(".artifact-workspace-icon");
+        css.ShouldNotContain(".artifact-workspace-title");
+        css.ShouldNotContain(".artifact-workspace-meta");
         css.ShouldNotContain("box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mud-palette-primary) 34%, var(--flux-border));");
     }
 
@@ -11460,17 +13817,63 @@ public sealed class DashboardEventFilterCatalogTests
             "AppTreePanel.razor.css"));
 
         markup.ShouldContain("tree-empty\" role=\"status\" aria-live=\"polite\"");
-        markup.ShouldContain("app-tree\" aria-label=\"App structure tree\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.AccountTree\" Size=\"Size.Medium\" aria-hidden=\"true\" />");
+        markup.ShouldContain("app-tree\" aria-label=\"@AppTreeLabel\"");
+        markup.ShouldContain("private string AppTreeLabel");
+        markup.ShouldContain("App structure tree for {active.Name}, {CountLabel(Projects.Projects.Count, \"open app\")}");
+        markup.ShouldContain("App structure tree with {CountLabel(Projects.Projects.Count, \"open app\")}");
+        markup.ShouldNotContain("aria-label=\"App structure tree\"");
         markup.ShouldContain("aria-label=\"@AppRowLabel(a, isActive)\"");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isActive)\"");
         markup.ShouldContain("title=\"@AppRowLabel(a, isActive)\"");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""app-row-icon""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("private static string AppRowLabel");
-        markup.ShouldContain("aria-label=\"@($\"Close app {a.Name}\")\"");
+        markup.ShouldContain("private static string? TreeItemCurrent");
+        System.Text.RegularExpressions.Regex.Matches(markup, "aria-keyshortcuts=\"Enter Space\"").Count.ShouldBe(7);
+        markup.ShouldContain("Text=\"@CloseAppLabel(a)\"");
+        markup.ShouldContain("aria-label=\"@CloseAppLabel(a)\"");
+        markup.ShouldContain("private static string CloseAppLabel(FlowWorkspaceService app)");
+        markup.ShouldNotContain("@($\"Close app {a.Name}\")");
+        markup.ShouldNotContain("Text=\"Close app\"");
         markup.ShouldContain("tree-empty-artifact-row tests");
         markup.ShouldContain("role=\"button\"");
-        markup.ShouldContain("aria-label=\"Create test scenario\"");
+        markup.ShouldContain("aria-label=\"@CreateTestScenarioLabel(a)\"");
+        markup.ShouldContain("private static string CreateTestScenarioLabel(FlowWorkspaceService app)");
+        markup.ShouldContain("=> $\"Create test scenario for {app.Name}, {CountLabel(app.TestNames.Count, \"test\")}\";");
+        markup.ShouldNotContain("aria-label=\"Create test scenario\"");
         markup.ShouldContain("AddTestFromKeyboardAsync(args, a)");
+        markup.ShouldContain("if (IsActivationKey(args))");
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""tree-empty-artifact-icon""\s+aria-hidden=""true""").ShouldBeTrue();
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""tree-empty-artifact-add""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("tree-empty-artifact-copy");
         markup.ShouldContain("tree-empty-artifact-cues");
+        markup.ShouldContain("@ConnectionDotClass(c.State)");
+        markup.ShouldContain("Text=\"@ConnectConnectionLabel(c)\"");
+        markup.ShouldContain("aria-label=\"@ConnectConnectionLabel(c)\"");
+        markup.ShouldContain("Text=\"@DisconnectConnectionLabel(c)\"");
+        markup.ShouldContain("aria-label=\"@DisconnectConnectionLabel(c)\"");
+        markup.ShouldContain("Text=\"@RemoveConnectionLabel(c)\"");
+        markup.ShouldContain("aria-label=\"@RemoveConnectionLabel(c)\"");
+        markup.ShouldContain("private static string ConnectConnectionLabel(ManagedConnection connection)");
+        markup.ShouldContain("private static string DisconnectConnectionLabel(ManagedConnection connection)");
+        markup.ShouldContain("private static string RemoveConnectionLabel(ManagedConnection connection)");
+        markup.ShouldNotContain("@($\"Connect {c.ResourceName}\")");
+        markup.ShouldNotContain("@($\"Disconnect {c.ResourceName}\")");
+        markup.ShouldNotContain("@($\"Remove connection {c.ResourceName}\")");
+        markup.ShouldNotContain("Text=\"Connect\"");
+        markup.ShouldNotContain("Text=\"Disconnect\"");
+        markup.ShouldNotContain("Text=\"Remove\"");
+        markup.ShouldContain("private static string ConnectionDotClass");
+        markup.ShouldNotContain("StateDotClass");
         markup.ShouldContain("TreeSectionHeader(");
         markup.ShouldContain("private RenderFragment TreeSectionHeader");
         markup.ShouldContain("BrokerSection");
@@ -11480,10 +13883,38 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("SelectAppFromKeyboardAsync(args, a)");
         markup.ShouldContain("ToggleSectionFromKeyboardAsync(args, app, section)");
         markup.ShouldContain("SelectPipelineFromKeyboardAsync(args, a, w)");
+        markup.ShouldContain("aria-label=\"@OpenPipelineLabel(w)\"");
+        markup.ShouldContain("private static string OpenPipelineLabel(string pipelineName)");
+        markup.ShouldNotContain("@($\"Open pipeline {w}\")");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isPipeActive)\"");
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""pipe-icon""\s+aria-hidden=""true""").ShouldBeTrue();
         markup.ShouldContain("SelectMetricsFromKeyboardAsync(args, a)");
+        markup.ShouldContain("var isMetricsActive = a == Projects.ActiveProject");
+        markup.ShouldContain("aria-label=\"@MetricDesignerRowLabel(a, isMetricsActive)\"");
+        markup.ShouldContain("title=\"@MetricDesignerRowLabel(a, isMetricsActive)\"");
+        markup.ShouldContain("private static string MetricDesignerRowLabel");
+        markup.ShouldContain("return $\"{app.Name} metric designer, {state}, {CountLabel(app.MetricNames.Count, \"metric\")}\";");
+        markup.ShouldNotContain("aria-label=\"Open metric designer\"");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isMetricsActive)\"");
+        System.Text.RegularExpressions.Regex.Matches(markup, @"Class=""artifact-icon dashboard""\s+aria-hidden=""true""").Count.ShouldBe(2);
         markup.ShouldContain("SelectDashboardFromKeyboardAsync(args, a, d)");
+        markup.ShouldContain("aria-label=\"@OpenDashboardLabel(d)\"");
+        markup.ShouldContain("private static string OpenDashboardLabel(string dashboardName)");
+        markup.ShouldNotContain("@($\"Open dashboard {d}\")");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isDashboardActive)\"");
         markup.ShouldContain("SelectTestFromKeyboardAsync(args, a, t)");
+        markup.ShouldContain("aria-current=\"@TreeItemCurrent(isTestActive)\"");
         markup.ShouldContain("aria-expanded=\"@AriaExpanded(isCollapsed)\"");
+        markup.ShouldContain("aria-controls=\"@TreeSectionBodyId(app, section)\"");
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""tree-section-chevron""\s+aria-hidden=""true""").ShouldBeTrue();
+        System.Text.RegularExpressions.Regex.IsMatch(markup, @"Class=""@\(\$""tree-section-icon \{iconClass\}""\)""\s+aria-hidden=""true""").ShouldBeTrue();
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, BrokerSection)\"");
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, PipelineSection)\"");
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, MetricSection)\"");
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, DashboardSection)\"");
+        markup.ShouldContain("id=\"@TreeSectionBodyId(a, TestSection)\"");
+        markup.ShouldContain("private static string TreeSectionBodyId");
+        markup.ShouldContain("private static string SanitizeIdToken");
         markup.ShouldContain("aria-label=\"@addTooltip\"");
         markup.ShouldContain("private static bool IsActivationKey");
         markup.ShouldContain("private static Task RunFromKeyboardAsync");
@@ -11491,17 +13922,30 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("LatestTestRun(a, t)");
         markup.ShouldContain("test-artifact-icon-frame");
         markup.ShouldContain("test-artifact-copy");
+        markup.ShouldContain("TestRunMeta(latestTestRun)");
         markup.ShouldContain("TestRunSummaryClass(latestTestRun)");
+        markup.ShouldContain("aria-label=\"@TestRunSummaryLabel(latestTestRun)\"");
+        markup.ShouldContain("private static string TestRunSummaryLabel");
         markup.ShouldContain("TestRunDetailText(latestTestRun)");
-        markup.ShouldContain("TestRunStateClass(latestTestRun)");
+        markup.ShouldContain("TestRunMarkerClass(latestTestRun)");
+        markup.ShouldContain("No run yet");
+        markup.ShouldNotContain("TestRunStateLabel");
+        markup.ShouldNotContain("TestRunStateClass(latestTestRun)");
+        markup.ShouldNotContain("test-run-state");
         markup.ShouldContain("tree-item-actions");
         markup.ShouldContain("tree-delete-button");
+        markup.ShouldContain("Text=\"@DeleteTestLabel(t)\"");
+        markup.ShouldContain("aria-label=\"@DeleteTestLabel(t)\"");
+        markup.ShouldContain("private static string DeleteTestLabel(string testName)");
+        markup.ShouldNotContain("@($\"Delete test {t}\")");
+        markup.ShouldNotContain("Text=\"Delete test\"");
         markup.ShouldContain("RemoveTestAsync(a, t)");
         markup.ShouldContain("ShowMessageBoxAsync(");
         markup.ShouldContain("private static string TestArtifactTitle");
         markup.ShouldContain("private static string TestRunIssueText");
         markup.ShouldNotContain("TestRunPillClass(latestTestRun)");
         markup.ShouldNotContain("test-run-pill");
+        markup.ShouldNotContain("Ready for first run");
 
         css.ShouldContain(".tree-empty-artifact-row");
         css.ShouldContain(".tree-empty ::deep .mud-icon-root");
@@ -11530,7 +13974,8 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".test-artifact-copy small");
         css.ShouldContain(".test-run-summary");
         css.ShouldContain(".test-run-summary-meta");
-        css.ShouldContain(".test-run-state");
+        css.ShouldContain(".test-run-marker");
+        css.ShouldNotContain(".test-run-state");
         css.ShouldContain(".tree-item-actions");
         css.ShouldContain("opacity: 0.58;");
         css.ShouldContain(".tree-item-actions ::deep .tree-delete-button");
@@ -11563,48 +14008,94 @@ public sealed class DashboardEventFilterCatalogTests
             "wwwroot",
             "app.css"));
 
-        markup.ShouldContain("aria-label=\"App structure navigation\"");
+        markup.ShouldContain("aria-label=\"@StructureNavigationLabel(active)\"");
+        markup.ShouldContain("private static string StructureNavigationLabel(FlowWorkspaceService app)");
+        markup.ShouldContain("$\"{app.Name} structure navigation, {BuildAppMeta(app)}\"");
+        markup.ShouldNotContain("aria-label=\"App structure navigation\"");
+        markup.Split('\n')
+            .Where(static line => line.Contains("<MudIcon ", StringComparison.Ordinal) &&
+                !line.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("StructureMenuLabel(\"Brokers\", conns.Count)");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Brokers\", conns.Count, \"broker connection\")");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Pipelines\", active.WorkflowNames.Count, \"pipeline\")");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Dashboards\", active.DashboardNames.Count, \"dashboard\")");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Metrics\", active.MetricNames.Count, \"metric\")");
+        markup.ShouldContain("StructureMenuAriaLabel(active, \"Tests\", active.TestNames.Count, \"test\")");
+        markup.ShouldContain("private static string StructureMenuAriaLabel(FlowWorkspaceService app, string sectionLabel, int count, string singular)");
+        markup.ShouldContain("$\"{app.Name} {sectionLabel.ToLowerInvariant()} menu, {CountLabel(count, singular)}\"");
+        (markup.Split("AriaLabel=\"@StructureMenuAriaLabel", StringSplitOptions.None).Length - 1).ShouldBe(5);
+        markup.ShouldNotContain("AriaLabel=\"Brokers\"");
+        markup.ShouldNotContain("AriaLabel=\"Pipelines\"");
+        markup.ShouldNotContain("AriaLabel=\"Dashboards\"");
+        markup.ShouldNotContain("AriaLabel=\"Metrics\"");
+        markup.ShouldNotContain("AriaLabel=\"Tests\"");
         markup.ShouldContain("<span class=\"app-structure-name\">@active.Name</span>");
         (markup.Split("Modal=\"false\"", StringSplitOptions.None).Length - 1).ShouldBe(5);
         markup.ShouldContain("app-menu-artifact-row");
         markup.ShouldContain("app-menu-artifact-name");
         markup.ShouldContain("app-menu-empty");
-        markup.ShouldContain("app-menu-state-row");
-        markup.ShouldContain("app-menu-state-icon");
-        markup.ShouldContain("app-menu-state-copy");
-        markup.ShouldContain("app-menu-state-text");
+        markup.ShouldContain("app-structure-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("app-menu-empty-row");
+        markup.ShouldContain("app-menu-empty-row\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("app-menu-empty-icon");
+        markup.ShouldContain("app-menu-empty-copy");
+        markup.ShouldContain("app-menu-empty-text");
         markup.ShouldContain("app-menu-command-item");
         markup.ShouldContain("app-menu-command-row");
         markup.ShouldContain("app-menu-command-icon");
         markup.ShouldContain("app-menu-command-copy");
         markup.ShouldContain("app-menu-command-cue");
-        markup.ShouldContain("MenuStateRow(");
+        markup.ShouldContain("MenuEmptyRow(");
         markup.ShouldContain("MenuCommandRow(");
-        markup.ShouldContain("private static RenderFragment MenuStateRow");
+        markup.ShouldContain("private static RenderFragment MenuEmptyRow");
         markup.ShouldContain("private static RenderFragment MenuCommandRow");
+        markup.ShouldContain("AddCommandLabel(active, \"broker connection\")");
+        markup.ShouldContain("AddCommandLabel(active, \"pipeline\")");
+        markup.ShouldContain("AddCommandLabel(active, \"dashboard\")");
+        markup.ShouldContain("AddCommandLabel(active, \"metric\")");
+        markup.ShouldContain("AddCommandLabel(active, \"test\")");
+        markup.ShouldContain("private static string AddCommandLabel(FlowWorkspaceService app, string artifactLabel)");
+        markup.ShouldContain("$\"Add {artifactLabel} to {app.Name}\"");
+        (markup.Split("aria-label=\"@AddCommandLabel", StringSplitOptions.None).Length - 1).ShouldBe(5);
+        (markup.Split("title=\"@AddCommandLabel", StringSplitOptions.None).Length - 1).ShouldBe(5);
+        markup.ShouldNotContain("aria-label=\"Add connection\"");
+        markup.ShouldNotContain("aria-label=\"Add pipeline\"");
+        markup.ShouldNotContain("aria-label=\"Add dashboard\"");
+        markup.ShouldNotContain("aria-label=\"Add metric\"");
+        markup.ShouldNotContain("aria-label=\"Add test\"");
         markup.ShouldContain("app-menu-broker-item");
         markup.ShouldContain("app-menu-broker-row");
         markup.ShouldContain("app-menu-broker-icon-frame");
         markup.ShouldContain("app-menu-broker-copy");
-        markup.ShouldContain("app-menu-broker-state");
+        markup.ShouldContain("app-menu-broker-connection");
         markup.ShouldContain("BrokerEndpointLabel(c)");
         markup.ShouldContain("BrokerItemTitle(c)");
         markup.ShouldContain("BrokerRowClass(c)");
-        markup.ShouldContain("BrokerStateClass(c)");
-        markup.ShouldContain("BrokerStateText(c)");
+        markup.ShouldContain("BrokerConnectionClass(c)");
+        markup.ShouldContain("BrokerConnectionText(c)");
         markup.ShouldContain("private static string BrokerEndpointLabel");
-        markup.ShouldContain("private static string BrokerStateText");
+        markup.ShouldContain("private static string BrokerConnectionText");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Pipeline, w)\"");
+        markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Pipeline, w)\"");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Dashboard, d)\"");
+        markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Dashboard, d)\"");
         markup.ShouldContain("Class=\"@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Metrics, \"Metrics\")\"");
+        markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Metrics, \"Metrics\")\"");
+        markup.ShouldContain("title=\"@MetricDesignerItemLabel(active)\"");
+        markup.ShouldContain("aria-label=\"@MetricDesignerItemLabel(active)\"");
+        markup.ShouldContain("private static string MetricDesignerItemLabel(FlowWorkspaceService app)");
+        markup.ShouldContain("$\"Open {app.Name} metric designer, {CountLabel(app.MetricNames.Count, \"metric\")}\"");
+        markup.ShouldNotContain("title=\"Open metric designer\"");
+        markup.ShouldNotContain("aria-label=\"Open metric designer\"");
         markup.ShouldContain("app-menu-artifact-item");
         markup.ShouldContain("app-menu-compact-artifact-row");
         markup.ShouldContain("app-menu-artifact-icon-frame pipeline");
         markup.ShouldContain("app-menu-artifact-icon-frame dashboard");
         markup.ShouldContain("app-menu-artifact-icon-frame metrics");
         markup.ShouldContain("app-menu-metrics-row");
-        markup.ShouldContain("app-menu-artifact-state");
+        markup.ShouldContain("app-menu-artifact-action");
         markup.ShouldContain("@CountLabel(active.MetricNames.Count, \"metric\")");
         markup.ShouldContain("private string ArtifactMenuItemClass");
         markup.ShouldContain("Broker profile");
@@ -11618,19 +14109,28 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("app-menu-test-icon-frame");
         markup.ShouldContain("app-menu-artifact-copy");
         markup.ShouldContain("app-menu-artifact-meta");
+        markup.ShouldContain("TestRunMenuMeta(latestTestRun)");
         markup.ShouldContain("TestRunMenuRowClass(latestTestRun)");
         markup.ShouldContain("TestRunMenuSummaryClass(latestTestRun)");
+        markup.ShouldContain("TestRunMenuSummaryLabel(latestTestRun)");
         markup.ShouldContain("TestRunMenuDetailText(latestTestRun)");
-        markup.ShouldContain("TestRunMenuStateClass(latestTestRun)");
+        markup.ShouldContain("TestRunMenuMarkerClass(latestTestRun)");
         markup.ShouldContain("app-menu-inline-action");
         markup.ShouldContain("app-menu-delete-button");
         markup.ShouldContain("aria-label=\"@DeleteLabel(");
+        markup.ShouldContain("Text=\"@DeleteLabel(\"pipeline\", w)\"");
+        markup.ShouldContain("Text=\"@DeleteLabel(\"dashboard\", d)\"");
+        markup.ShouldContain("Text=\"@DeleteLabel(\"test\", t)\"");
+        markup.ShouldContain("aria-current=\"@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Test, t)\"");
         markup.ShouldContain("@onclick:stopPropagation=\"true\"");
         markup.ShouldContain("@onmousedown:stopPropagation=\"true\"");
         markup.ShouldContain("private static string DeleteLabel");
         markup.ShouldContain("private static ScenarioRunResult? LatestTestRun");
         markup.ShouldContain("private string TestArtifactItemClass");
+        markup.ShouldContain("private string? ArtifactMenuItemCurrent");
+        markup.ShouldContain("private bool IsArtifactActive");
         markup.ShouldContain("private static string TestRunMenuIssueText");
+        markup.ShouldContain("No run yet");
         markup.ShouldContain("No run");
         markup.ShouldContain("No history");
         markup.ShouldNotContain("app-structure-current");
@@ -11641,6 +14141,9 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("app-structure-menu active");
         markup.ShouldNotContain("app-menu-danger");
         markup.ShouldNotContain("Class=\"app-menu-muted\">No");
+        markup.ShouldNotContain("Text=\"Delete pipeline\"");
+        markup.ShouldNotContain("Text=\"Delete dashboard\"");
+        markup.ShouldNotContain("Text=\"Delete test\"");
         css.ShouldNotContain(".app-structure-current");
         css.ShouldNotContain(".app-structure-meta");
         css.ShouldNotContain(".app-structure-menu.active");
@@ -11651,10 +14154,23 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldNotContain("Delete @w");
         markup.ShouldNotContain("Delete @d");
         markup.ShouldNotContain("Delete @t");
+        markup.ShouldNotContain("app-menu-state-row");
+        markup.ShouldNotContain("app-menu-state-icon");
+        markup.ShouldNotContain("app-menu-state-copy");
+        markup.ShouldNotContain("app-menu-state-text");
+        markup.ShouldNotContain("MenuStateRow");
         markup.ShouldNotContain("app-menu-state-token");
+        markup.ShouldNotContain("app-menu-broker-state");
+        markup.ShouldNotContain("app-menu-artifact-state");
+        markup.ShouldNotContain("app-menu-test-state");
+        markup.ShouldNotContain("BrokerStateClass");
+        markup.ShouldNotContain("BrokerStateText");
+        markup.ShouldNotContain("TestRunMenuStateClass");
+        markup.ShouldNotContain("TestRunMenuStateLabel");
         markup.ShouldNotContain("app-menu-broker-pill");
         markup.ShouldNotContain("app-menu-artifact-token");
         markup.ShouldNotContain("app-menu-test-pill");
+        markup.ShouldNotContain("Ready for first run");
 
         css.ShouldContain("height: 28px;");
         css.ShouldContain("max-width: 132px;");
@@ -11671,22 +14187,22 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain("font-size: 11.5px;");
         css.ShouldNotContain(".app-structure-app,\r\n.app-structure-empty");
         css.ShouldNotContain(".app-structure-app,\n.app-structure-empty");
-        css.ShouldContain(".app-menu-state-row,");
+        css.ShouldContain(".app-menu-empty-row,");
         css.ShouldContain(".app-menu-command-row");
         css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) auto;");
-        css.ShouldContain(".app-menu-state-icon,");
+        css.ShouldContain(".app-menu-empty-icon,");
         css.ShouldContain(".app-menu-command-icon");
-        css.ShouldContain(".app-menu-state-copy,");
+        css.ShouldContain(".app-menu-empty-copy,");
         css.ShouldContain(".app-menu-command-copy");
-        css.ShouldContain(".app-menu-state-text");
+        css.ShouldContain(".app-menu-empty-text");
         css.ShouldContain(".app-menu-command-cue");
         css.ShouldContain(".app-menu-broker-row");
         css.ShouldContain(".app-menu-broker-icon-frame");
         css.ShouldContain(".app-menu-broker-copy");
-        css.ShouldContain(".app-menu-broker-state");
-        css.ShouldContain(".app-menu-broker-state.live");
-        css.ShouldContain(".app-menu-broker-state.faulted");
-        css.ShouldContain(".app-menu-broker-state.pending");
+        css.ShouldContain(".app-menu-broker-connection");
+        css.ShouldContain(".app-menu-broker-connection.live");
+        css.ShouldContain(".app-menu-broker-connection.faulted");
+        css.ShouldContain(".app-menu-broker-connection.pending");
         css.ShouldContain(".app-menu-artifact-row");
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) 24px;");
         css.ShouldContain(".app-menu-compact-artifact-row");
@@ -11696,7 +14212,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-menu-artifact-icon-frame.pipeline");
         css.ShouldContain(".app-menu-artifact-icon-frame.dashboard");
         css.ShouldContain(".app-menu-artifact-icon-frame.metrics");
-        css.ShouldContain(".app-menu-artifact-state");
+        css.ShouldContain(".app-menu-artifact-action");
         css.ShouldContain(".app-menu-test-row");
         css.ShouldContain("grid-template-columns: 22px minmax(0, 1fr) minmax(94px, auto) 24px;");
         css.ShouldContain(".app-menu-test-icon-frame");
@@ -11704,7 +14220,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-menu-artifact-meta");
         css.ShouldContain(".app-menu-test-summary");
         css.ShouldContain(".app-menu-test-summary-meta");
-        css.ShouldContain(".app-menu-test-state");
+        css.ShouldContain(".app-menu-test-marker");
         css.ShouldContain("max-width: 92px;");
         css.ShouldContain(".app-menu-inline-action");
         css.ShouldContain("opacity: 0;");
@@ -11712,7 +14228,14 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-menu-inline-action ::deep .app-menu-delete-button");
         css.ShouldContain("height: 24px;");
         css.ShouldNotContain(".app-structure-menu ::deep .app-menu-danger");
+        css.ShouldNotContain(".app-menu-state-row");
+        css.ShouldNotContain(".app-menu-state-icon");
+        css.ShouldNotContain(".app-menu-state-copy");
+        css.ShouldNotContain(".app-menu-state-text");
         css.ShouldNotContain(".app-menu-state-token");
+        css.ShouldNotContain(".app-menu-broker-state");
+        css.ShouldNotContain(".app-menu-artifact-state");
+        css.ShouldNotContain(".app-menu-test-state");
         css.ShouldNotContain(".app-menu-broker-pill");
         css.ShouldNotContain(".app-menu-artifact-token");
         css.ShouldNotContain(".app-menu-test-pill");
@@ -11775,8 +14298,19 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "AppsPanel.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Open apps panel\"");
+        markup.ShouldContain("aria-label=\"@AppsPanelLabel\"");
+        markup.ShouldContain("private string AppsPanelLabel => $\"Open apps, {ProjectCountLabel}\";");
+        markup.ShouldNotContain("aria-label=\"Open apps panel\"");
         markup.ShouldContain("apps-panel-title-icon");
+        System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<MudIcon\b(?:(?!/>).)*?/>",
+                System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Cast<System.Text.RegularExpressions.Match>()
+            .Select(static match => match.Value)
+            .Where(static icon => !icon.Contains("aria-hidden=\"true\"", StringComparison.Ordinal))
+            .ToArray()
+            .ShouldBeEmpty();
         markup.ShouldContain("<strong>Open Apps</strong>");
         markup.ShouldContain("@ProjectCountLabel");
         markup.ShouldContain("apps-empty\" role=\"status\" aria-live=\"polite\"");
@@ -11785,14 +14319,23 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("role=\"button\"");
         markup.ShouldContain("tabindex=\"0\"");
         markup.ShouldContain("aria-label=\"@AppTileLabel(a, isActive)\"");
+        markup.ShouldContain("aria-current=\"@AppTileCurrent(isActive)\"");
+        markup.ShouldContain("aria-keyshortcuts=\"Enter Space\"");
         markup.ShouldContain("title=\"@AppTileLabel(a, isActive)\"");
         markup.ShouldContain("SelectAppFromKeyboard(args, a)");
         markup.ShouldContain("private static bool IsActivationKey");
         markup.ShouldContain("\"Spacebar\"");
         markup.ShouldContain("app-tile-meta");
-        markup.ShouldContain("app-state active");
-        markup.ShouldContain("app-state unsaved");
+        markup.ShouldContain("app-tile-markers");
+        markup.ShouldContain("app-marker active");
+        markup.ShouldContain("app-marker unsaved");
+        markup.ShouldNotContain("app-tile-states");
+        markup.ShouldNotContain("app-state active");
+        markup.ShouldNotContain("app-state unsaved");
+        markup.ShouldContain("Text=\"@CloseLabel(a)\"");
         markup.ShouldContain("aria-label=\"@CloseLabel(a)\"");
+        markup.ShouldNotContain("Text=\"Close app\"");
+        markup.ShouldContain("private static string? AppTileCurrent");
         markup.ShouldContain("private static string BuildAppMeta");
         markup.ShouldContain("private static string FileLabel");
         markup.ShouldContain("private static string AppTileLabel");
@@ -11817,7 +14360,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain(".app-tile-close");
         css.ShouldContain("opacity: 0.58;");
         css.ShouldContain(".app-tile:hover .app-tile-close");
-        css.ShouldContain(".app-state.unsaved");
+        css.ShouldContain(".app-tile-markers");
+        css.ShouldContain(".app-marker.unsaved");
+        css.ShouldNotContain(".app-tile-states");
+        css.ShouldNotContain(".app-state");
         css.ShouldContain("max-width: 64px;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("@media (max-width: 760px)");
@@ -11843,8 +14389,20 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "ConnectionPanel.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Connections panel\"");
+        markup.ShouldContain("aria-label=\"@ConnectionsPanelLabel\"");
+        markup.ShouldContain("private string ConnectionsPanelLabel => $\"Connections, {ConnectionCountLabel}\";");
+        markup.ShouldNotContain("aria-label=\"Connections panel\"");
+        markup.ShouldContain("Text=\"@AddConnectionLabel\"");
+        markup.ShouldContain("aria-label=\"@AddConnectionLabel\"");
+        markup.ShouldContain("private string AddConnectionLabel => VisibleConnections.Count == 0");
+        markup.ShouldContain("? \"Add first broker connection\"");
+        markup.ShouldContain(": $\"Add broker connection, {ConnectionCountLabel} configured\"");
+        markup.ShouldNotContain("Text=\"Add connection\"");
+        markup.ShouldNotContain("aria-label=\"Add connection\"");
         markup.ShouldContain("connections-title-icon");
+        markup.ShouldContain("class=\"connections-title-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Cable\" Size=\"Size.Small\" />");
         markup.ShouldContain("<strong>Connections</strong>");
         markup.ShouldContain("@ConnectionCountLabel");
         markup.ShouldContain("VisibleConnections");
@@ -11861,11 +14419,18 @@ public sealed class DashboardEventFilterCatalogTests
         markup.ShouldContain("ToggleConnectionAsync(conn)");
         markup.ShouldContain("PrimaryActionIcon(conn)");
         markup.ShouldContain("PrimaryActionClass(conn)");
-        markup.ShouldContain("StatePillClass");
-        markup.ShouldContain("StateDotClass");
+        markup.ShouldContain("ConnectionMarkerClass");
+        markup.ShouldContain("ConnectionMarkerLabel");
+        markup.ShouldContain("ConnectionDotClass");
         markup.ShouldContain("private static string ConnectionRowLabel");
         markup.ShouldContain("aria-label=\"@PrimaryActionLabel(conn)\"");
+        markup.ShouldContain("Text=\"@RemoveLabel(conn)\"");
         markup.ShouldContain("aria-label=\"@RemoveLabel(conn)\"");
+        markup.ShouldNotContain("Text=\"Remove connection\"");
+        markup.ShouldNotContain("StateClass");
+        markup.ShouldNotContain("StateLabel");
+        markup.ShouldNotContain("StateDotClass");
+        markup.ShouldNotContain("StatePillClass");
         markup.ShouldNotContain("MudTreeView");
         markup.ShouldNotContain("MudTreeViewItem");
         markup.ShouldNotContain("StateColor");
@@ -11884,9 +14449,10 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("opacity: 0.62;");
         css.ShouldContain("overflow-wrap: anywhere;");
         css.ShouldContain("white-space: normal;");
-        css.ShouldContain(".connection-state.live");
-        css.ShouldContain(".connection-state.pending");
-        css.ShouldContain(".connection-state.faulted");
+        css.ShouldContain(".connection-marker.live");
+        css.ShouldContain(".connection-marker.pending");
+        css.ShouldContain(".connection-marker.faulted");
+        css.ShouldNotContain(".connection-state");
         css.ShouldContain(".connection-row:hover .connection-actions");
         css.ShouldContain(".connection-row:focus-within");
         css.ShouldContain("inset 2px 0 0 var(--mud-palette-info)");
@@ -11914,27 +14480,65 @@ public sealed class DashboardEventFilterCatalogTests
             "Workspace",
             "SessionPanel.razor.css"));
 
-        markup.ShouldContain("aria-label=\"Recorded sessions panel\"");
+        markup.ShouldContain("aria-label=\"@SessionsPanelLabel\"");
+        markup.ShouldContain("private string SessionsPanelLabel => Live.IsRecording");
+        markup.ShouldContain("$\"Recordings, {SessionCountLabel}, recording {RecordingName}\"");
+        markup.ShouldContain("$\"Recordings, {SessionCountLabel}\"");
+        markup.ShouldNotContain("aria-label=\"Recorded sessions panel\"");
         markup.ShouldContain("session-recording-strip");
         markup.ShouldContain("session-recording-strip\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.FiberManualRecord\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.FiberManualRecord\" Size=\"Size.Small\" />");
+        markup.ShouldContain("Text=\"@StopRecordingLabel\"");
+        markup.ShouldContain("aria-label=\"@StopRecordingLabel\"");
+        markup.ShouldContain("private string StopRecordingLabel => $\"Stop recording {RecordingName}\"");
+        markup.ShouldNotContain("Text=\"Stop recording\"");
+        markup.ShouldNotContain("aria-label=\"Stop recording\"");
         markup.ShouldContain("sessions-title-icon");
+        markup.ShouldContain("class=\"sessions-title-icon\" aria-hidden=\"true\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.History\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.History\" Size=\"Size.Small\" />");
         markup.ShouldContain("<strong>Recordings</strong>");
         markup.ShouldContain("@SessionCountLabel");
         markup.ShouldContain("FilteredSessionCount");
-        markup.ShouldContain("role=\"search\"");
-        markup.ShouldContain("aria-label=\"Search recorded sessions\"");
+        markup.ShouldContain("role=\"search\" aria-label=\"@SessionsToolbarLabel\"");
+        markup.ShouldContain("private string SessionsToolbarLabel => HasSearch");
+        markup.ShouldContain("$\"Recording filters, {FilteredSessionCount} of {AllSessions.Count} shown\"");
+        markup.ShouldContain("aria-label=\"@SessionSearchLabel\"");
+        markup.ShouldContain("private string SessionSearchLabel => AllSessions.Count switch");
+        markup.ShouldContain("$\"Search recorded sessions, {FilteredSessionCount} of {AllSessions.Count} shown\"");
+        markup.ShouldNotContain("role=\"search\" aria-label=\"Session filters\"");
+        markup.ShouldNotContain("aria-label=\"Search recorded sessions\"");
         markup.ShouldContain("Search sessions");
         markup.ShouldContain("session-live-strip");
-        markup.ShouldContain("aria-label=\"Switch to live traffic\"");
+        markup.ShouldContain("<MudIcon Icon=\"@Icons.Material.Filled.Inventory2\" Size=\"Size.Small\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@Icons.Material.Filled.Inventory2\" Size=\"Size.Small\" />");
+        markup.ShouldContain("Text=\"@SwitchToLiveTrafficLabel\"");
+        markup.ShouldContain("aria-label=\"@SwitchToLiveTrafficLabel\"");
+        markup.ShouldContain("private string SwitchToLiveTrafficLabel => Live.SelectedStoredSession is { } session");
+        markup.ShouldContain("$\"Switch from {session.Name} to live traffic\"");
+        markup.ShouldNotContain("Text=\"Switch to live traffic\"");
+        markup.ShouldNotContain("aria-label=\"Switch to live traffic\"");
+        markup.ShouldContain("Class=\"session-live-button\"");
+        markup.ShouldContain("OnClick=\"@Live.ClearStoredSessionSelection\"");
+        markup.ShouldContain("Icon=\"@Icons.Material.Filled.Sensors\"");
+        markup.ShouldNotContain("@onclick=\"@Live.ClearStoredSessionSelection\"");
         markup.ShouldContain("sessions-empty\" role=\"status\" aria-live=\"polite\"");
+        markup.ShouldContain("<MudIcon Icon=\"@EmptyIcon\" Size=\"Size.Medium\" aria-hidden=\"true\" />");
+        markup.ShouldNotContain("<MudIcon Icon=\"@EmptyIcon\" Size=\"Size.Medium\" />");
         markup.ShouldContain("sessions-empty-title");
         markup.ShouldContain("sessions-list");
         markup.ShouldContain("role=\"list\"");
         markup.ShouldContain("session-project-group");
+        markup.ShouldContain("aria-label=\"@SessionProjectGroupLabel(group)\"");
+        markup.ShouldContain("private static string SessionProjectGroupLabel(SessionProjectGroup group)");
+        markup.ShouldContain("$\"{group.Name} project recordings, {ProjectSessionLabel(group.Sessions.Count)}\"");
+        markup.ShouldNotContain("aria-label=\"@($\"{group.Name} sessions\")\"");
         markup.ShouldContain("session-project-head");
         markup.ShouldContain("SessionRowClass(session)");
         markup.ShouldContain("SessionDotClass(session)");
-        markup.ShouldContain("SessionStateClass(session)");
+        markup.ShouldContain("SessionMarkerClass(session)");
+        markup.ShouldNotContain("SessionStateClass(session)");
         markup.ShouldContain("SessionRowLabel(session)");
         markup.ShouldContain("session-row-name-line");
         markup.ShouldContain("DurationLabel(session)");
@@ -11971,8 +14575,12 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("justify-items: center;");
         css.ShouldContain("text-align: center;");
         css.ShouldContain("overflow-wrap: anywhere;");
-        css.ShouldContain(".session-state.selected");
-        css.ShouldContain(".session-state.recording");
+        css.ShouldContain(".session-marker.selected");
+        css.ShouldContain(".session-marker.recording");
+        css.ShouldContain(".session-live-strip ::deep .session-live-button");
+        css.ShouldContain(".session-live-strip ::deep .session-live-button .mud-icon-root");
+        css.ShouldNotContain(".session-live-strip button");
+        css.ShouldNotContain(".session-state");
         css.ShouldContain(".session-search ::deep .mud-input-outlined-border");
         css.ShouldContain("@media (max-width: 760px)");
         css.ShouldNotContain(".session-recording-pulse");
@@ -11980,6 +14588,242 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldNotContain(".session-row-time");
         css.ShouldNotContain("border-radius: 999px;");
         css.ShouldNotContain("box-shadow: 0 0 0");
+    }
+
+    [Fact]
+    public void WorkspaceFocusableCustomElements_ExposeRoles()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var nativeFocusTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "a",
+            "button",
+            "input",
+            "select",
+            "textarea"
+        };
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<[A-Za-z][A-Za-z0-9:.]*\b[^>]*\btabindex\s*=\s*""0""[^>]*>",
+                System.Text.RegularExpressions.RegexOptions.Singleline))
+            {
+                var tag = match.Value;
+                var tagNameMatch = System.Text.RegularExpressions.Regex.Match(tag, @"^<([A-Za-z][A-Za-z0-9:.]*)");
+                if (!tagNameMatch.Success || nativeFocusTags.Contains(tagNameMatch.Groups[1].Value))
+                {
+                    continue;
+                }
+
+                if (System.Text.RegularExpressions.Regex.IsMatch(tag, @"\brole\s*="))
+                {
+                    continue;
+                }
+
+                var line = markup.Take(match.Index).Count(static value => value == '\n') + 1;
+                violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceExpandedElements_ReferenceControlledContent()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<[A-Za-z][A-Za-z0-9:.]*\b[^>]*\baria-expanded\s*=\s*""[^""]*""[^>]*>",
+                System.Text.RegularExpressions.RegexOptions.Singleline))
+            {
+                var tag = match.Value;
+                if (System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-controls\s*="))
+                {
+                    continue;
+                }
+
+                var line = markup.Take(match.Index).Count(static value => value == '\n') + 1;
+                violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceGroups_ExposeAccessibleNames()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<[A-Za-z][A-Za-z0-9:.]*\b[^>]*\brole\s*=\s*""group""[^>]*>",
+                System.Text.RegularExpressions.RegexOptions.Singleline))
+            {
+                var tag = match.Value;
+                if (System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-label\s*=") ||
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-labelledby\s*="))
+                {
+                    continue;
+                }
+
+                var line = markup.Take(match.Index).Count(static value => value == '\n') + 1;
+                violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceTreeItems_ExposeNavigationSemantics()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                markup,
+                @"<[A-Za-z][A-Za-z0-9:.]*\b[^>]*\brole\s*=\s*""treeitem""[^>]*>",
+                System.Text.RegularExpressions.RegexOptions.Singleline))
+            {
+                var tag = match.Value;
+                if ((System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-label\s*=") ||
+                        System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-labelledby\s*=")) &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-level\s*=") &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-selected\s*=") &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\btabindex\s*=") &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"\baria-keyshortcuts\s*=") &&
+                    System.Text.RegularExpressions.Regex.IsMatch(tag, @"@onkeydown\s*="))
+                {
+                    continue;
+                }
+
+                var line = markup.Take(match.Index).Count(static value => value == '\n') + 1;
+                violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceTabs_ExposeKeyboardNavigation()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var lines = File.ReadAllLines(file);
+            for (var index = 0; index < lines.Length; index++)
+            {
+                if (!lines[index].Contains("role=\"tab\"", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var start = index;
+                while (start > 0 && !lines[start].TrimStart().StartsWith("<", StringComparison.Ordinal))
+                {
+                    start--;
+                }
+
+                var end = index;
+                while (end < lines.Length - 1 && !lines[end].TrimEnd().EndsWith(">", StringComparison.Ordinal))
+                {
+                    end++;
+                }
+
+                var tag = string.Join('\n', lines[start..(end + 1)]);
+                if (tag.Contains("aria-controls=", StringComparison.Ordinal) &&
+                    tag.Contains("aria-selected=", StringComparison.Ordinal) &&
+                    tag.Contains("aria-keyshortcuts=\"Enter Space ArrowLeft ArrowRight Home End\"", StringComparison.Ordinal) &&
+                    tag.Contains("@onkeydown=", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                violations.Add($"{Path.GetRelativePath(root, file)}:{start + 1}: {tag.ReplaceLineEndings(" ").Trim()}");
+            }
+        }
+
+        violations.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WorkspaceCommandTitles_UseSpecificLabels()
+    {
+        var root = FindRepositoryRoot();
+        var componentsRoot = Path.Combine(root, "src", "FluxMq.UI", "Components");
+        var genericTitles = new[]
+        {
+            "Add",
+            "Remove",
+            "Reset",
+            "Copy",
+            "Export",
+            "Open",
+            "Close",
+            "Delete",
+            "Run",
+            "Stop",
+            "Save",
+            "Apply",
+            "Cancel",
+            "Edit",
+            "Start",
+            "Clear",
+            "Refresh",
+            "Reload",
+            "Search",
+            "Move up",
+            "Move down",
+            "Edit widget settings",
+            "Simulate widget data",
+            "Duplicate widget",
+            "Delete widget"
+        };
+        var violations = new List<string>();
+
+        foreach (var file in Directory.EnumerateFiles(componentsRoot, "*.razor", SearchOption.AllDirectories))
+        {
+            var markup = File.ReadAllText(file);
+            foreach (var title in genericTitles)
+            {
+                var pattern = $"title=\"{title}\"";
+                var index = markup.IndexOf(pattern, StringComparison.Ordinal);
+                while (index >= 0)
+                {
+                    var line = markup.Take(index).Count(static value => value == '\n') + 1;
+                    violations.Add($"{Path.GetRelativePath(root, file)}:{line}: {pattern}");
+                    index = markup.IndexOf(pattern, index + pattern.Length, StringComparison.Ordinal);
+                }
+            }
+        }
+
+        violations.ShouldBeEmpty();
     }
 
     private static FlowEvent Event(

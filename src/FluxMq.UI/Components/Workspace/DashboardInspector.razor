@@ -10,36 +10,29 @@
     var propertyGroups = PropertyGroups;
 }
 
-<aside class="dashboard-inspector" role="complementary" aria-label="Dashboard inspector">
+<aside class="dashboard-inspector" role="complementary" aria-label="@InspectorRegionLabel(propertyGroups)">
     <header class="@InspectorHeaderClass">
         <div class="dashboard-inspector-icon" aria-hidden="true">
-            <MudIcon Icon="@InspectorIcon" Size="Size.Small" />
+            <MudIcon Icon="@InspectorIcon" Size="Size.Small" aria-hidden="true" />
         </div>
         <div class="dashboard-inspector-heading">
             <span class="dashboard-inspector-title">@InspectorTitle</span>
-            <div class="dashboard-inspector-meta-strip" aria-label="Inspector selection summary">
+            <div class="dashboard-inspector-meta-strip" aria-label="@InspectorMetaSummaryLabel">
                 <span>@InspectorModeLabel</span>
                 <span>@InspectorSubtitle</span>
                 <span>@InspectorGroupCountLabel(propertyGroups.Count)</span>
                 <span>@InspectorPropertyCountLabel(propertyGroups)</span>
             </div>
-            <div class="dashboard-inspector-live-strip dashboard-inspector-status-chip"
-                 role="status"
-                 aria-live="polite"
-                 title="@InspectorStatusLabel">
-                <MudIcon Icon="@InspectorStatusIcon" Size="Size.Small" />
-                <span>@InspectorStatusLabel</span>
-            </div>
         </div>
         @if (Widget is not null)
         {
-            <div class="dashboard-inspector-actions" aria-label="Widget commands">
-                <MudTooltip Text="Reset widget properties to defaults">
+            <div class="dashboard-inspector-actions" aria-label="@WidgetCommandGroupLabel">
+                <MudTooltip Text="@ResetWidgetPropertiesLabel">
                     <button type="button"
                             class="dashboard-inspector-command dashboard-inspector-reset-command"
-                            aria-label="Reset widget properties"
+                            aria-label="@ResetWidgetPropertiesLabel"
                             @onclick="@ResetWidgetPropertiesAsync">
-                        <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" aria-hidden="true" />
                         <span>Reset</span>
                     </button>
                 </MudTooltip>
@@ -61,7 +54,7 @@
             @if (SelectedCells.Count == 0)
             {
                 <span class="dashboard-inspector-empty-icon" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.GridView" />
+                    <MudIcon Icon="@Icons.Material.Filled.GridView" aria-hidden="true" />
                 </span>
                 <span class="dashboard-inspector-empty-title">@InspectorEmptyTitle</span>
                 <small>@InspectorEmptyHint</small>
@@ -142,6 +135,21 @@
         ? Layout is null ? "No dashboard loaded" : $"{Layout.Columns.Count} columns / {Layout.Rows.Count} rows"
         : Widget.Type;
 
+    private string InspectorMetaSummaryLabel => $"{InspectorTitle} selection summary";
+
+    private string WidgetCommandGroupLabel => $"Commands for {InspectorTitle}";
+
+    private string ResetWidgetPropertiesLabel => $"Reset {InspectorTitle} properties to defaults";
+
+    private string InspectorRegionLabel(IReadOnlyList<PropertyGridGroup> groups)
+    {
+        var targetLabel = string.Equals(InspectorTitle, "Dashboard inspector", StringComparison.Ordinal)
+            ? InspectorTitle
+            : $"{InspectorTitle} dashboard inspector";
+
+        return $"{targetLabel}, {InspectorModeLabel}, {InspectorGroupCountLabel(groups.Count)}, {InspectorPropertyCountLabel(groups)}";
+    }
+
     private string InspectorModeLabel => Widget is null
         ? SelectedCells.Count switch
         {
@@ -153,23 +161,11 @@
 
     private string InspectorEmptyTitle => SelectedCells.Count == 0
         ? "Select a cell or widget"
-        : "Cell ready";
+        : "Empty cell";
 
     private string InspectorEmptyHint => SelectedCells.Count == 0
         ? "Select a dashboard cell or widget to edit its properties."
         : "Drop a widget here or choose one from the catalog.";
-
-    private string InspectorStatusIcon => Widget is not null
-        ? Icons.Material.Filled.Bolt
-        : SelectedCells.Count == 0
-            ? Icons.Material.Filled.TouchApp
-            : Icons.Material.Filled.AutoFixHigh;
-
-    private string InspectorStatusLabel => Widget is not null
-        ? "Widget edits apply immediately"
-        : SelectedCells.Count == 0
-            ? "Select a target to edit"
-            : "Cell edits apply immediately";
 
     private static string InspectorGroupCountLabel(int count)
         => count == 1 ? "1 group" : $"{count} groups";

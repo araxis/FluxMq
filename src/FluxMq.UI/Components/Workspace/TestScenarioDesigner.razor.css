@@ -38,9 +38,8 @@
 .test-scenario-report-actions,
 .test-scenario-build-actions,
 .test-run-context,
-.test-run-context-status,
-.test-run-context-reset,
-.test-run-status {
+.test-run-context-marker,
+.test-run-context-reset {
     align-items: center;
     display: flex;
 }
@@ -107,8 +106,7 @@
     overflow: hidden;
 }
 
-.test-scenario-meta-strip span,
-.test-run-status {
+.test-scenario-meta-strip span {
     background: var(--flux-surface-2);
     border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
     border-radius: 5px;
@@ -128,46 +126,6 @@
     overflow: hidden;
     padding: 0 6px;
     text-overflow: ellipsis;
-}
-
-.test-run-status {
-    flex: 0 1 auto;
-    gap: 5px;
-    max-width: 170px;
-    min-width: 0;
-    overflow: hidden;
-    padding: 0 7px;
-}
-
-.test-run-status span {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.test-run-status.passed {
-    background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
-    border-color: color-mix(in srgb, var(--flux-accent) 38%, transparent);
-    color: var(--flux-accent);
-}
-
-.test-run-status.failed {
-    background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-error) 42%, transparent);
-    color: var(--mud-palette-error);
-}
-
-.test-run-status.canceled {
-    background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, transparent);
-    color: var(--mud-palette-warning);
-}
-
-.test-run-status.history,
-.test-run-status.latest {
-    background: color-mix(in srgb, var(--mud-palette-info) 9%, transparent);
-    border-color: color-mix(in srgb, var(--mud-palette-info) 22%, var(--flux-border));
-    color: var(--mud-palette-text-primary);
 }
 
 .test-run-context {
@@ -199,13 +157,13 @@
     border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, var(--flux-border));
 }
 
-.test-run-context-status {
+.test-run-context-marker {
     flex: 0 0 auto;
     gap: 4px;
     min-width: 0;
 }
 
-.test-run-context-status strong {
+.test-run-context-marker strong {
     color: var(--mud-palette-text-primary);
     font-size: 11px;
     font-weight: 850;
@@ -434,7 +392,7 @@
     font-weight: 700;
 }
 
-.test-run-history-status {
+.test-run-history-marker {
     color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
     font-size: 9.5px;
@@ -442,15 +400,15 @@
     line-height: 1;
 }
 
-.test-run-history-status.passed {
+.test-run-history-marker.passed {
     color: var(--flux-accent);
 }
 
-.test-run-history-status.failed {
+.test-run-history-marker.failed {
     color: var(--mud-palette-error);
 }
 
-.test-run-history-status.canceled {
+.test-run-history-marker.canceled {
     color: var(--mud-palette-warning);
 }
 
@@ -655,10 +613,15 @@
     display: grid;
     flex: 1 1 auto;
     gap: 6px;
-    grid-template-columns: repeat(auto-fit, minmax(206px, 1fr));
+    /* Lay the phase lanes in a single row, each keeping a 206px floor and sharing extra width.
+       When they can't all fit (narrow window) the row scrolls horizontally instead of auto-fit
+       silently wrapping a lane into the clipped overflow. */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(206px, 1fr);
     min-height: 0;
     min-width: 0;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .test-phase-lanes.drop-active {
@@ -980,7 +943,7 @@
     color: var(--mud-palette-info);
 }
 
-.test-step-status {
+.test-step-result-marker {
     align-items: center;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
@@ -993,24 +956,24 @@
     white-space: nowrap;
 }
 
-.test-step-status.idle {
+.test-step-result-marker.idle {
     color: var(--mud-palette-text-secondary);
 }
 
-.test-step-status.passed {
+.test-step-result-marker.passed {
     color: var(--flux-accent);
 }
 
-.test-step-status.skipped {
+.test-step-result-marker.skipped {
     color: var(--mud-palette-info);
 }
 
-.test-step-status.failed,
-.test-step-status.timed-out {
+.test-step-result-marker.failed,
+.test-step-result-marker.timed-out {
     color: var(--mud-palette-error);
 }
 
-.test-step-status.canceled {
+.test-step-result-marker.canceled {
     color: var(--mud-palette-warning);
 }
 
@@ -1158,7 +1121,9 @@
     }
 
     .test-phase-lanes {
+        grid-auto-flow: row;
         grid-template-columns: minmax(0, 1fr);
+        overflow-y: auto;
     }
 
     .test-phase-lane {

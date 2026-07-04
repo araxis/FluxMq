@@ -7,7 +7,7 @@
 <div class="metrics-workbench">
     <div class="metrics-commandbar">
         <div class="metrics-heading">
-            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="metrics-heading-icon" />
+            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" Class="metrics-heading-icon" aria-hidden="true" />
             <div>
                 <div class="metrics-title">Metrics</div>
                 <div class="@MetricsMetaClass">@MetricCountText</div>
@@ -16,28 +16,28 @@
     </div>
 
     <div class="metrics-body">
-        <section class="metrics-list-pane" aria-label="Metric resources">
+        <section class="metrics-list-pane" aria-label="@MetricListPaneLabel">
             <div class="metrics-list-toolbar">
                 <label class="metrics-filter-field metrics-search-field">
-                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" aria-hidden="true" />
                     <input value="@_search"
                            placeholder="Search metrics"
-                           aria-label="Search metrics"
+                           aria-label="@MetricSearchLabel"
                            @oninput="@OnSearchInput" />
                     @if (!string.IsNullOrWhiteSpace(_search))
                     {
                         <button type="button"
                                 class="metrics-inline-clear"
-                                title="Clear search"
-                                aria-label="Clear search"
+                                title="@ClearMetricSearchLabel"
+                                aria-label="@ClearMetricSearchLabel"
                                 @onclick="@ClearSearch">
-                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                         </button>
                     }
                 </label>
 
                 <div class="metrics-filter-field metrics-type-field">
-                    <MudIcon Class="metrics-type-filter-icon" Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" />
+                    <MudIcon Class="metrics-type-filter-icon" Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" aria-hidden="true" />
                     <MudSelect T="string"
                                Class="metrics-type-select"
                                PopoverClass="metrics-type-select-popover"
@@ -53,7 +53,7 @@
                                MaxHeight="320"
                                AnchorOrigin="Origin.BottomLeft"
                                TransformOrigin="Origin.TopLeft"
-                               aria-label="Metric type">
+                               aria-label="@MetricTypeFilterLabel">
                         <MudSelectItem T="string" Value="@AllTypes">All types</MudSelectItem>
                         @foreach (var descriptor in SortedDescriptors)
                         {
@@ -64,12 +64,12 @@
 
                 @if (HasActiveFilters)
                 {
-                    <MudTooltip Text="Reset filters">
+                    <MudTooltip Text="@ResetMetricFiltersLabel">
                         <button type="button"
                                 class="metrics-filter-reset"
-                                aria-label="Reset filters"
+                                aria-label="@ResetMetricFiltersLabel"
                                 @onclick="@ResetFilters">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                         </button>
                     </MudTooltip>
                 }
@@ -77,7 +77,7 @@
                 <button type="button"
                         class="metrics-new-button"
                         @onclick="@OpenNewMetricDialogAsync">
-                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                     <span>New metric</span>
                 </button>
             </div>
@@ -92,9 +92,9 @@
             <div class="metrics-list">
                 @if (Rows.Count == 0)
                 {
-                    <div class="metrics-list-empty create-state">
-                        <span class="metrics-empty-icon">
-                            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                    <div class="metrics-list-empty create-empty" role="status" aria-live="polite">
+                        <span class="metrics-empty-icon" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <span class="metrics-empty-copy">
                             <strong>No metrics yet</strong>
@@ -103,16 +103,16 @@
                         <button type="button"
                                 class="metrics-empty-action"
                                 @onclick="@OpenNewMetricDialogAsync">
-                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                             <span>New metric</span>
                         </button>
                     </div>
                 }
                 else if (FilteredRows.Count == 0)
                 {
-                    <div class="metrics-list-empty filter-state">
-                        <span class="metrics-empty-icon muted">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                    <div class="metrics-list-empty filter-empty" role="status" aria-live="polite">
+                        <span class="metrics-empty-icon muted" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <span class="metrics-empty-copy">
                             <strong>No matching metrics</strong>
@@ -121,7 +121,7 @@
                         <button type="button"
                                 class="metrics-empty-action secondary"
                                 @onclick="@ResetFilters">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                             <span>Reset filters</span>
                         </button>
                     </div>
@@ -133,6 +133,7 @@
                         var current = row;
                         <button type="button"
                                 class="@RowClass(current)"
+                                aria-label="@MetricRowLabel(current)"
                                 @key="current.Id"
                                 @onclick="@(() => SelectMetricAsync(current.Id))">
                             <span class="metrics-cell metrics-cell-name" title="@current.Id">
@@ -140,8 +141,8 @@
                                 <small>@current.Id</small>
                             </span>
                             <span class="metrics-cell metrics-cell-type">
-                                <span class="metrics-type-pill" title="@current.TypeName">
-                                    <MudIcon Icon="@TypeIcon(current.TypeId)" Size="Size.Small" />
+                                <span class="metrics-type-summary" title="@current.TypeName">
+                                    <MudIcon Icon="@TypeIcon(current.TypeId)" Size="Size.Small" aria-hidden="true" />
                                     <span>@current.TypeName</span>
                                 </span>
                             </span>
@@ -152,7 +153,7 @@
                             <span class="metrics-cell metrics-cell-latest">
                                 @if (current.Latest is { } latest)
                                 {
-                                    <span class="metrics-latest-pill live">
+                                    <span class="metrics-latest-marker live">
                                         <span class="metrics-live-dot"></span>
                                         <strong>@latest.FormattedValue</strong>
                                         @if (!string.IsNullOrWhiteSpace(latest.Unit))
@@ -163,8 +164,8 @@
                                 }
                                 else
                                 {
-                                    <span class="metrics-latest-pill muted">
-                                        <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+                                    <span class="metrics-latest-marker muted">
+                                        <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" aria-hidden="true" />
                                         <small>No reading</small>
                                     </span>
                                 }
@@ -175,12 +176,12 @@
             </div>
         </section>
 
-        <section class="metrics-editor-pane" aria-label="Metric editor">
+        <section class="metrics-editor-pane" aria-label="@MetricEditorPaneLabel">
             @if (_draft is null || _selectedMetricName is null)
             {
-                <div class="metrics-editor-empty">
-                    <span class="metrics-empty-icon">
-                        <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                <div class="metrics-editor-empty" role="status" aria-live="polite">
+                    <span class="metrics-empty-icon" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
                     </span>
                     <span class="metrics-empty-copy">
                         <strong>@EditorEmptyTitle</strong>
@@ -193,7 +194,7 @@
                 <div class="metrics-editor-header">
                     <div class="metrics-editor-title">
                         <span class="metrics-editor-icon">
-                            <MudIcon Icon="@EditorIcon" Size="Size.Small" />
+                            <MudIcon Icon="@EditorIcon" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <div class="metrics-editor-copy">
                             <div class="metrics-editor-name">@(_draft.DisplayName.Length == 0 ? _draft.Id : _draft.DisplayName)</div>
@@ -205,39 +206,39 @@
                     </div>
 
                     <div class="metrics-editor-actions">
-                        @if (ShowEditorState)
+                        @if (ShowUnsavedIndicator)
                         {
-                            <div class="metrics-editor-state dirty" title="This metric has unsaved changes">
-                                <span class="metrics-state-dot"></span>
+                            <div class="metrics-unsaved-indicator dirty" title="@UnsavedMetricChangesLabel">
+                                <span class="metrics-unsaved-dot"></span>
                                 <span>Unsaved</span>
                             </div>
                         }
                         <div class="metrics-action-strip">
                             @if (_draft.IsDirty)
                             {
-                                <MudTooltip Text="Cancel changes">
+                                <MudTooltip Text="@CancelMetricChangesLabel">
                                     <button type="button"
                                             class="metrics-header-icon-button"
-                                            aria-label="Cancel changes"
+                                            aria-label="@CancelMetricChangesLabel"
                                             @onclick="@CancelEdit">
-                                        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                                     </button>
                                 </MudTooltip>
                             }
-                            <MudTooltip Text="Duplicate metric">
+                            <MudTooltip Text="@DuplicateMetricLabel">
                                 <button type="button"
                                         class="metrics-header-icon-button"
-                                        aria-label="Duplicate metric"
+                                        aria-label="@DuplicateMetricLabel"
                                         @onclick="@DuplicateSelectedMetricAsync">
-                                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-hidden="true" />
                                 </button>
                             </MudTooltip>
-                            <MudTooltip Text="Delete metric">
+                            <MudTooltip Text="@DeleteMetricLabel">
                                 <button type="button"
                                         class="metrics-header-icon-button danger"
-                                        aria-label="Delete metric"
+                                        aria-label="@DeleteMetricLabel"
                                         @onclick="@DeleteSelectedMetricAsync">
-                                    <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
                                 </button>
                             </MudTooltip>
                         </div>
@@ -249,7 +250,7 @@
                                     title="@SaveButtonTitle"
                                     aria-label="@SaveButtonTitle"
                                     @onclick="@SaveMetricAsync">
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" aria-hidden="true" />
                                 <span>Save</span>
                             </button>
                         }
@@ -261,7 +262,7 @@
                         <div class="metrics-editor-main-panel">
                             <div class="metrics-compact-section">
                                 <div class="metrics-section-heading">
-                                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                     <span>Edit metric</span>
                                 </div>
                                 <div class="metrics-form-grid compact">
@@ -276,10 +277,10 @@
                                         @if (CanOpenRename)
                                         {
                                             <button type="button"
-                                                    title="Rename metric"
-                                                    aria-label="Rename metric"
+                                                    title="@RenameMetricLabel"
+                                                    aria-label="@RenameMetricLabel"
                                                     @onclick="@RenameMetricAsync">
-                                                <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                         }
                                     </div>
@@ -289,7 +290,7 @@
                                            title="@DisplayNameValidationMessage">
                                         <span>Display name</span>
                                         <input value="@_draft.DisplayName"
-                                               aria-label="Display name"
+                                               aria-label="@DisplayNameFieldLabel"
                                                aria-invalid="@AriaState(HasValidationMessage(DisplayNameValidationMessage))"
                                                aria-errormessage="@DisplayNameErrorElementId"
                                                @oninput="@OnDraftDisplayNameInput" />
@@ -301,7 +302,7 @@
                                          aria-invalid="@AriaState(HasValidationMessage(MetricTypeValidationMessage))"
                                          aria-errormessage="@MetricTypeErrorElementId">
                                         <span class="metrics-type-picker-icon">
-                                            <MudIcon Icon="@EditorIcon" Size="Size.Small" />
+                                            <MudIcon Icon="@EditorIcon" Size="Size.Small" aria-hidden="true" />
                                         </span>
                                         <div class="metrics-type-picker-copy">
                                             <span>Metric type</span>
@@ -309,16 +310,16 @@
                                             <small>@MetricTypeDetailLine</small>
                                         </div>
                                         <button type="button"
-                                                aria-label="Change metric type"
+                                                aria-label="@ChangeMetricTypeLabel"
                                                 @onclick="@OpenMetricTypeDialogAsync">
-                                            <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                                            <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                             <span>Change</span>
                                         </button>
                                     </div>
                                     <label class="metrics-identity-field">
                                         <span>Description</span>
                                         <input value="@_draft.Description"
-                                               aria-label="Description"
+                                               aria-label="@DescriptionFieldLabel"
                                                placeholder="Optional"
                                                @oninput="@OnDraftDescriptionInput" />
                                     </label>
@@ -327,7 +328,7 @@
 
                             <div class="metrics-compact-section">
                                 <div class="metrics-section-heading">
-                                    <MudIcon Icon="@Icons.Material.Filled.ManageSearch" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.ManageSearch" Size="Size.Small" aria-hidden="true" />
                                     <span>Parameters</span>
                                 </div>
                                 @if (CurrentDescriptor is not { } descriptorForParameters)
@@ -357,23 +358,23 @@
                             </div>
                         </div>
 
-                        <aside class="metrics-editor-side-panel" aria-label="Metric details">
+                        <aside class="metrics-editor-side-panel" aria-label="@MetricDetailsLabel">
                             @{
                                 var hasDraftPreview = TryGetDraftPreview(out var preview);
                             }
                             <div class="metrics-side-card preview-context">
                                 <div class="metrics-section-heading">
-                                    <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" aria-hidden="true" />
                                     <span>Live preview</span>
                                     @if (hasDraftPreview)
                                     {
-                                        <span class="metrics-side-badge live">Live</span>
+                                        <span class="metrics-side-indicator live">Live</span>
                                     }
                                 </div>
                                 @if (hasDraftPreview)
                                 {
                                     <div class="metrics-preview-card live">
-                                        <div class="metrics-preview-status">
+                                        <div class="metrics-preview-marker">
                                             <span class="metrics-live-dot"></span>
                                             <span>Reading</span>
                                         </div>
@@ -389,9 +390,9 @@
                                 }
                                 else
                                 {
-                                    <div class="metrics-preview-card muted" title="Stopped or not emitted.">
-                                        <div class="metrics-preview-empty">
-                                            <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+                                    <div class="metrics-preview-card muted" title="@NoReadingTitle">
+                                        <div class="metrics-preview-empty" role="status" aria-live="polite">
+                                            <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" aria-hidden="true" />
                                             <span>
                                                 <strong>No reading</strong>
                                                 <small>Stopped or not emitted</small>
@@ -403,17 +404,17 @@
 
                             <div class="metrics-side-card references-context">
                                 <div class="metrics-section-heading">
-                                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" aria-hidden="true" />
                                     <span>References</span>
                                     @if (ReferenceSummaries.Count > 0)
                                     {
-                                        <span class="metrics-side-badge">@ReferenceSummaries.Count</span>
+                                        <span class="metrics-side-indicator">@ReferenceSummaries.Count</span>
                                     }
                                 </div>
                                 @if (ReferenceSummaries.Count == 0)
                                 {
-                                    <div class="metrics-reference-empty">
-                                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" />
+                                    <div class="metrics-reference-empty" role="status" aria-live="polite">
+                                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" aria-hidden="true" />
                                         <span>
                                             <strong>No references</strong>
                                             <small>No dashboard bindings</small>
@@ -422,11 +423,11 @@
                                 }
                                 else
                                 {
-                                    <div class="metrics-reference-list" role="list" aria-label="Dashboard bindings for selected metric">
+                                    <div class="metrics-reference-list" role="list" aria-label="@MetricReferenceListLabel">
                                         @foreach (var reference in ReferenceSummaries)
                                         {
                                             <div class="metrics-reference-row" role="listitem" title="@ReferenceTitle(reference)">
-                                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="metrics-reference-icon" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="metrics-reference-icon" aria-hidden="true" />
                                                 <span class="metrics-reference-main">
                                                     <strong>@reference.WidgetName</strong>
                                                     <span>@ReferenceLocationLine(reference)</span>
@@ -460,9 +461,9 @@
                             {
                                 <div class="metrics-side-card danger">
                                     <div class="metrics-section-heading">
-                                        <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" aria-hidden="true" />
                                         <span>Validation</span>
-                                        <span class="metrics-side-badge danger">@validationItems.Count</span>
+                                        <span class="metrics-side-indicator danger">@validationItems.Count</span>
                                     </div>
                                     <div class="metrics-validation-list">
                                         @foreach (var item in validationItems)
@@ -470,7 +471,7 @@
                                             @if (string.IsNullOrWhiteSpace(item.TargetId))
                                             {
                                                 <div class="metrics-validation-line" id="@item.MessageId">
-                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" aria-hidden="true" />
                                                     <span>@item.Message</span>
                                                 </div>
                                             }
@@ -479,8 +480,8 @@
                                                 <a class="metrics-validation-line"
                                                    id="@item.MessageId"
                                                    href="#@item.TargetId"
-                                                   title="Show field">
-                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                                                   title="@ShowMetricFieldLabel(item)">
+                                                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" aria-hidden="true" />
                                                     <span>@item.Message</span>
                                                 </a>
                                             }
@@ -536,14 +537,42 @@
     private string MetricsMetaClass =>
         HasActiveFilters ? "metrics-meta filtered" : "metrics-meta";
 
+    private string MetricListPaneLabel =>
+        HasActiveFilters
+            ? $"Metric resources, {MetricCountText}, {MetricFilterStateLabel}"
+            : $"Metric resources, {MetricCountText}";
+
+    private string MetricSearchLabel =>
+        string.IsNullOrWhiteSpace(_search)
+            ? "Search metrics"
+            : $"Search metrics, current query {_search}";
+
     private MetricDescriptor? SelectedTypeFilter =>
         string.IsNullOrWhiteSpace(_typeFilter) ? null : Catalog.Describe(_typeFilter);
+
+    private string MetricTypeFilterLabel =>
+        SelectedTypeFilter is { } selected
+            ? $"Metric type filter, {selected.DisplayName}"
+            : "Metric type filter, all types";
+
+    private string MetricEditorPaneLabel =>
+        _draft is null
+            ? "Metric editor, no metric selected"
+            : $"Metric editor for {SelectedMetricActionTarget}";
+
+    private string UnsavedMetricChangesLabel => $"Unsaved changes for {SelectedMetricActionTarget}";
+
+    private string DisplayNameFieldLabel => $"Display name for {SelectedMetricActionTarget}";
+
+    private string ChangeMetricTypeLabel => $"Change metric type for {SelectedMetricActionTarget}";
+
+    private string DescriptionFieldLabel => $"Description for {SelectedMetricActionTarget}";
 
     private string FilterEmptyDescription =>
         MetricDesignerState.FilterEmptyDescription(_search, SelectedTypeFilter?.DisplayName);
 
     private string EditorEmptyTitle =>
-        Rows.Count == 0 ? "Ready to edit" : "No metric selected";
+        Rows.Count == 0 ? "No metrics yet" : "No metric selected";
 
     private string EditorEmptyDescription =>
         Rows.Count == 0
@@ -579,6 +608,61 @@
             ? MetricDesignerState.ParameterSummary(descriptor, _draft?.Parameters ?? new Dictionary<string, string>())
             : "Unknown metric type";
 
+    private string MetricDetailsLabel =>
+        _draft is null
+            ? "Metric details"
+            : $"Metric details for {(_draft.DisplayName.Length == 0 ? _draft.Id : _draft.DisplayName)}";
+
+    private string NoReadingTitle => $"No live reading for {SelectedMetricActionTarget}";
+
+    private string MetricReferenceListLabel =>
+        $"Dashboard bindings for {SelectedMetricActionTarget}, {ReferenceSummaries.Count.ToString(CultureInfo.InvariantCulture)} references";
+
+    private string ParameterFieldLabel(MetricParamSpec parameter) =>
+        $"{parameter.DisplayName} for {SelectedMetricActionTarget}";
+
+    private string SelectedMetricActionTarget =>
+        _draft is null
+            ? "selected metric"
+            : string.IsNullOrWhiteSpace(_draft.DisplayName)
+                ? _draft.Id
+                : _draft.DisplayName;
+
+    private string ClearMetricSearchLabel =>
+        string.IsNullOrWhiteSpace(_search)
+            ? "Clear metric search"
+            : $"Clear metric search for {_search}";
+
+    private string ResetMetricFiltersLabel => $"Reset metric filters, {MetricFilterStateLabel}";
+
+    private string CancelMetricChangesLabel => $"Cancel changes for {SelectedMetricActionTarget}";
+
+    private string RenameMetricLabel => $"Rename {SelectedMetricActionTarget}";
+
+    private string DuplicateMetricLabel => $"Duplicate {SelectedMetricActionTarget}";
+
+    private string DeleteMetricLabel => $"Delete {SelectedMetricActionTarget}";
+
+    private string MetricFilterStateLabel
+    {
+        get
+        {
+            var hasSearch = !string.IsNullOrWhiteSpace(_search);
+            var hasType = !string.IsNullOrWhiteSpace(_typeFilter);
+
+            return (hasSearch, hasType) switch
+            {
+                (true, true) => $"search {_search}, type {TypeFilterLabel(_typeFilter)}",
+                (true, false) => $"search {_search}",
+                (false, true) => $"type {TypeFilterLabel(_typeFilter)}",
+                _ => "no active filters"
+            };
+        }
+    }
+
+    private string TypeFilterLabel(string typeId) =>
+        Catalog.Describe(typeId)?.DisplayName ?? typeId;
+
     private string EditorIcon =>
         CurrentDescriptor?.ValueKind == MetricValueKind.Double
             ? Icons.Material.Filled.Speed
@@ -589,7 +673,7 @@
             ? "1 issue needs attention"
             : $"{ValidationErrors.Count} issues need attention";
 
-    private bool ShowEditorState =>
+    private bool ShowUnsavedIndicator =>
         _draft is { IsDirty: true } &&
         ValidationErrors.Count == 0;
 
@@ -1033,7 +1117,7 @@
                 @RenderParameterLabel(parameter)
                 <span class="metrics-param-control select">
                     <select value="@value"
-                            aria-label="@parameter.DisplayName"
+                            aria-label="@ParameterFieldLabel(parameter)"
                             aria-invalid="@AriaState(hasValidationError)"
                             aria-errormessage="@errorElementId"
                             @onchange="@((ChangeEventArgs args) => SetParameterValue(parameter.Key, args.Value?.ToString()))">
@@ -1046,7 +1130,7 @@
                             <option value="@option.Value">@option.Label</option>
                         }
                     </select>
-                    <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" aria-hidden="true" />
                 </span>
             </label>;
         }
@@ -1061,7 +1145,8 @@
                 @RenderParameterLabel(parameter)
                 <div class="metrics-param-toggle"
                      role="radiogroup"
-                     aria-label="@parameter.DisplayName"
+                     aria-orientation="horizontal"
+                     aria-label="@ParameterFieldLabel(parameter)"
                      aria-invalid="@AriaState(hasValidationError)"
                      aria-errormessage="@errorElementId">
                     <button type="button"
@@ -1096,7 +1181,7 @@
                        step="@ParameterStep(parameter)"
                        inputmode="@ParameterInputMode(parameter)"
                        placeholder="@ParameterPlaceholder(parameter)"
-                       aria-label="@parameter.DisplayName"
+                       aria-label="@ParameterFieldLabel(parameter)"
                        aria-invalid="@AriaState(hasValidationError)"
                        aria-errormessage="@errorElementId"
                        @oninput="@((ChangeEventArgs args) => SetParameterValue(parameter.Key, args.Value?.ToString()))" />
@@ -1118,8 +1203,8 @@
                 @if (!string.IsNullOrWhiteSpace(assistiveText))
                 {
                     <MudTooltip Text="@assistiveText">
-                        <span class="metrics-param-help" tabindex="0" aria-label="@assistiveText">
-                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+                        <span class="metrics-param-help" role="img" tabindex="0" aria-label="@assistiveText">
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" aria-hidden="true" />
                         </span>
                     </MudTooltip>
                 }
@@ -1180,6 +1265,21 @@
             ? "metrics-row selected"
             : "metrics-row";
 
+    private static string MetricRowLabel(MetricDesignerRow row)
+    {
+        var referenceCount = row.ReferenceCount.ToString(CultureInfo.InvariantCulture);
+        var referenceLabel = row.ReferenceCount == 1
+            ? "1 reference"
+            : $"{referenceCount} references";
+        var latestLabel = row.Latest is null
+            ? "no latest reading"
+            : string.IsNullOrWhiteSpace(row.Latest.Unit)
+                ? $"latest {row.Latest.FormattedValue}"
+                : $"latest {row.Latest.FormattedValue} {row.Latest.Unit}";
+
+        return $"Select metric {row.DisplayName} ({row.Id}), {row.TypeName}, {referenceLabel}, {latestLabel}";
+    }
+
     private static string ReferenceCountClass(int count)
         => count > 0 ? "metrics-ref-count active" : "metrics-ref-count";
 
@@ -1231,6 +1331,9 @@
             ? reference.DashboardName
             : $"{reference.DashboardName} · {cell}";
     }
+
+    private static string ShowMetricFieldLabel(MetricValidationItem item)
+        => $"Show field for {item.Message}";
 
     private static string ParameterRowClass(MetricParamSpec parameter)
         => parameter.Kind switch

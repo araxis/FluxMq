@@ -5,11 +5,11 @@
     <TitleContent>
         <div class="dashboard-widget-editor-title">
             <span class="dashboard-widget-editor-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Profile.Icon" Size="Size.Small" />
+                <MudIcon Icon="@Profile.Icon" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="dashboard-widget-editor-title-copy">
                 <MudText Typo="Typo.h6">@Profile.Title settings</MudText>
-                <div class="dashboard-widget-editor-meta-strip" aria-label="Widget summary">
+                <div class="dashboard-widget-editor-meta-strip" aria-label="@WidgetSummaryLabel">
                     <span>@Widget.Name</span>
                     <span>@Widget.Type</span>
                     <span>@EditorModeLabel</span>
@@ -34,7 +34,7 @@
                             {
                                 <div class="dashboard-widget-editor-section">
                                     <div class="dashboard-widget-editor-section-head">
-                                        <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" aria-hidden="true" />
                                         <span>Gauge style</span>
                                     </div>
                                     <MudToggleGroup T="string"
@@ -54,7 +54,7 @@
                             {
                                 <div class="dashboard-widget-editor-section">
                                     <div class="dashboard-widget-editor-section-head">
-                                        <MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" aria-hidden="true" />
                                         <span>Chart type</span>
                                     </div>
                                     <MudToggleGroup T="string"
@@ -102,7 +102,7 @@
 
                                 <div class="dashboard-widget-editor-section">
                                     <div class="dashboard-widget-editor-section-head">
-                                        <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                                        <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" aria-hidden="true" />
                                         <span>Metric cards</span>
                                     </div>
                                     <div class="dashboard-widget-editor-metric-options">
@@ -161,8 +161,8 @@
                             @if (_draft.CurrentEventType.Fields.Count == 0)
                             {
                                 <MudItem xs="12">
-                                    <div class="dashboard-widget-editor-empty">
-                                        <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                                    <div class="dashboard-widget-editor-empty" role="status" aria-live="polite">
+                                        <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                                         <span>No filters for this event type</span>
                                     </div>
                                 </MudItem>
@@ -187,7 +187,7 @@
                     @TitleField
                     <div class="dashboard-widget-editor-section">
                         <div class="dashboard-widget-editor-section-head">
-                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" aria-hidden="true" />
                             <span>Topic tree</span>
                         </div>
                         <MudSwitch T="bool"
@@ -207,21 +207,19 @@
     </DialogContent>
     <DialogActions>
         <div class="dashboard-widget-editor-actions">
-            <div class="dashboard-widget-editor-action-status" aria-live="polite">
-                <MudIcon Icon="@ActionStatusIcon" Size="Size.Small" />
-                <span>@ActionStatusLabel</span>
-            </div>
             <MudButton OnClick="@Reset"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.RestartAlt"
                        Disabled="@(!HasChanges)"
-                       Class="dashboard-widget-editor-reset">
+                       Class="dashboard-widget-editor-reset"
+                       aria-label="@ResetWidgetEditLabel">
                 Reset
             </MudButton>
             <span class="dashboard-widget-editor-action-spacer"></span>
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
-                       Class="dashboard-widget-editor-cancel">
+                       Class="dashboard-widget-editor-cancel"
+                       aria-label="@CancelWidgetEditLabel">
                 Cancel
             </MudButton>
             <MudButton Color="Color.Primary"
@@ -230,7 +228,8 @@
                        StartIcon="@Icons.Material.Filled.Check"
                        Disabled="@(!HasChanges)"
                        OnClick="@Submit"
-                       Class="dashboard-widget-editor-apply">
+                       Class="dashboard-widget-editor-apply"
+                       aria-label="@ApplyWidgetEditLabel">
                 Apply
             </MudButton>
         </div>
@@ -273,6 +272,8 @@
 
     private string EditorAriaLabel => $"Edit {Profile.Title} widget {Widget.Name}";
 
+    private string WidgetSummaryLabel => $"{Profile.Title} widget facts for {Widget.Name}";
+
     private string EditorModeLabel => Profile.IsTopicTreeWidget
         ? "Topic data"
         : Profile.IsEventWidget
@@ -289,11 +290,15 @@
 
     private bool HasChanges => !ConfigurationEquals(_draft.BuildConfiguration(), _initialConfiguration);
 
-    private string ActionStatusLabel => HasChanges ? "Unsaved changes" : "No changes";
+    private string ResetWidgetEditLabel => $"Reset edits for {WidgetEditTargetLabel}";
 
-    private string ActionStatusIcon => HasChanges
-        ? Icons.Material.Filled.Settings
-        : Icons.Material.Filled.CheckCircle;
+    private string CancelWidgetEditLabel => $"Cancel editing {WidgetEditTargetLabel}";
+
+    private string ApplyWidgetEditLabel => $"Apply edits for {WidgetEditTargetLabel}";
+
+    private string WidgetEditTargetLabel => string.IsNullOrWhiteSpace(_draft.Title)
+        ? $"{Profile.Title} widget {Widget.Name}"
+        : $"{_draft.Title.Trim()} widget {Widget.Name}";
 
     protected override void OnInitialized()
     {

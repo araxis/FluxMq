@@ -5,11 +5,11 @@
     <TitleContent>
         <div class="dashboard-track-editor-title">
             <span class="dashboard-track-editor-title-icon" aria-hidden="true">
-                <MudIcon Icon="@AxisIcon" Size="MudBlazor.Size.Small" />
+                <MudIcon Icon="@AxisIcon" Size="MudBlazor.Size.Small" aria-hidden="true" />
             </span>
             <div class="dashboard-track-editor-title-copy">
                 <MudText Typo="Typo.h6">@Title</MudText>
-                <div class="dashboard-track-editor-meta" aria-label="Track summary">
+                <div class="dashboard-track-editor-meta" aria-label="@TrackSummaryLabel">
                     <span>@TrackCode</span>
                     <span>@CurrentSummary</span>
                 </div>
@@ -24,7 +24,7 @@
                     <strong>@Size</strong>
                     <small>@FormatPadding(Padding)</small>
                 </div>
-                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="MudBlazor.Size.Small" Color="Color.Secondary" />
+                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="MudBlazor.Size.Small" Color="Color.Secondary" aria-hidden="true" />
                 <div class="dashboard-track-editor-preview-item active">
                     <span>New</span>
                     <strong>@ResultSize</strong>
@@ -34,7 +34,7 @@
 
             <section class="dashboard-track-editor-section" aria-label="Size mode">
                 <div class="dashboard-track-editor-section-head">
-                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="MudBlazor.Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Settings" Size="MudBlazor.Size.Small" aria-hidden="true" />
                     <span>Size mode</span>
                 </div>
                 <div class="dashboard-track-editor-toggle">
@@ -71,7 +71,7 @@
             </div>
 
             <div class="dashboard-track-editor-note">
-                <MudIcon Icon="@Icons.Material.Filled.Info" Size="MudBlazor.Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Info" Size="MudBlazor.Size.Small" aria-hidden="true" />
                 <span>@ModeDescription</span>
             </div>
         </div>
@@ -81,15 +81,19 @@
             <MudButton OnClick="@Reset"
                        Size="MudBlazor.Size.Small"
                        StartIcon="@Icons.Material.Filled.RestartAlt"
-                       Disabled="@(!CanReset)">Reset</MudButton>
+                       Disabled="@(!CanReset)"
+                       aria-label="@ResetTrackEditLabel">Reset</MudButton>
             <span class="dashboard-track-editor-action-spacer"></span>
-            <MudButton OnClick="@Cancel" Size="MudBlazor.Size.Small">Cancel</MudButton>
+            <MudButton OnClick="@Cancel"
+                       Size="MudBlazor.Size.Small"
+                       aria-label="@CancelTrackEditLabel">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="MudBlazor.Size.Small"
                        StartIcon="@Icons.Material.Filled.Done"
                        Disabled="@(!CanSubmit)"
-                       OnClick="@Submit">Apply</MudButton>
+                       OnClick="@Submit"
+                       aria-label="@ApplyTrackEditLabel">Apply</MudButton>
         </div>
     </DialogActions>
 </MudDialog>
@@ -153,6 +157,14 @@
     private string CurrentSummary => $"{Size} / {FormatPadding(Padding)}";
 
     private string EditorAriaLabel => $"{Title} sizing";
+
+    private string TrackSummaryLabel => $"{Title} sizing facts";
+
+    private string ResetTrackEditLabel => $"Reset sizing edits for {Title}";
+
+    private string CancelTrackEditLabel => $"Cancel editing {Title} sizing";
+
+    private string ApplyTrackEditLabel => $"Apply sizing changes to {Title}";
 
     private string ResultSize => BuildTrackSize(_unit, Math.Max(0.001, _value));
 

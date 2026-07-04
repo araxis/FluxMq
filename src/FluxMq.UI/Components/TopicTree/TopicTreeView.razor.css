@@ -31,6 +31,11 @@
     border-color: var(--flux-border-soft);
 }
 
+.topic-node-flat:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--flux-accent) 70%, transparent);
+    outline-offset: 1px;
+}
+
 .topic-node-selected {
     background: color-mix(in srgb, var(--flux-accent) 12%, var(--flux-surface-2));
     border-color: color-mix(in srgb, var(--flux-accent) 42%, var(--flux-border));

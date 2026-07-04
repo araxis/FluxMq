@@ -7,25 +7,33 @@
             disabled="@Disabled"
             aria-haspopup="listbox"
             aria-expanded="@_isOpen"
+            aria-controls="@_listboxId"
             aria-label="@ResolvedAriaLabel"
             @onclick="@ToggleAsync"
             @onkeydown="@OnTriggerKeyDownAsync">
         <span class="property-grid-select-label">@SelectedLabel</span>
         <span class="property-grid-select-arrow" aria-hidden="true">
-            <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" aria-hidden="true" />
         </span>
     </button>
 
     @if (_isOpen && !Disabled)
     {
-        <div class="property-grid-select-menu" role="listbox">
-            @foreach (var option in Options)
+        <div id="@_listboxId"
+             class="property-grid-select-menu"
+             role="listbox"
+             aria-activedescendant="@SelectedOptionId"
+             aria-label="@ResolvedAriaLabel">
+            @for (var index = 0; index < Options.Count; index++)
             {
+                var option = Options[index];
                 <button type="button"
+                        id="@OptionId(index)"
                         class="@OptionClass(option)"
                         disabled="@option.Disabled"
                         role="option"
                         aria-selected="@IsSelected(option)"
+                        @onclick="@(() => SelectOptionAsync(option))"
                         @onmousedown="@(() => SelectOptionAsync(option))">
                     @option.Label
                 </button>
@@ -53,6 +61,7 @@
     [Parameter]
     public bool Disabled { get; set; }
 
+    private readonly string _listboxId = $"property-grid-select-{Guid.NewGuid():N}-listbox";
     private bool _isOpen;
 
     private string RootClass => _isOpen
@@ -67,6 +76,22 @@
         (string.IsNullOrWhiteSpace(Placeholder) ? "Select" : Placeholder);
 
     private PropertyGridSelectOption? SelectedOption => Options.FirstOrDefault(option => IsSelected(option));
+
+    private string? SelectedOptionId
+    {
+        get
+        {
+            for (var index = 0; index < Options.Count; index++)
+            {
+                if (IsSelected(Options[index]))
+                {
+                    return OptionId(index);
+                }
+            }
+
+            return null;
+        }
+    }
 
     private Task ToggleAsync()
     {
@@ -106,6 +131,7 @@
         }
         else if (string.Equals(args.Key, "Enter", StringComparison.Ordinal) ||
                  string.Equals(args.Key, " ", StringComparison.Ordinal) ||
+                 string.Equals(args.Key, "Spacebar", StringComparison.Ordinal) ||
                  string.Equals(args.Key, "ArrowDown", StringComparison.Ordinal))
         {
             _isOpen = true;
@@ -126,6 +152,8 @@
 
     private bool IsSelected(PropertyGridSelectOption option)
         => string.Equals(Value ?? string.Empty, option.Value, StringComparison.Ordinal);
+
+    private string OptionId(int index) => $"{_listboxId}-option-{index}";
 
     private string OptionClass(PropertyGridSelectOption option)
     {

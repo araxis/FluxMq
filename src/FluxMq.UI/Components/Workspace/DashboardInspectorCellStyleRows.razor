@@ -54,10 +54,10 @@
         <div class="property-grid-inline property-grid-action-strip">
             <button type="button"
                     class="property-grid-icon-action"
-                    title="Reset cell style"
-                    aria-label="Reset cell style"
+                    title="@ResetCellStyleLabel"
+                    aria-label="@ResetCellStyleLabel"
                     @onclick="@(() => Reset.InvokeAsync())">
-                <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Size="Size.Small" aria-hidden="true" />
             </button>
         </div>
     </PropertyGridRow>
@@ -77,6 +77,8 @@
 
     [Parameter]
     public EventCallback Reset { get; set; }
+
+    private const string ResetCellStyleLabel = "Reset selected cell style to defaults";
 
     private Task SetValueAsync(string key, string? value)
         => ValueChanged.InvokeAsync(new DashboardInspectorPropertyValueChange(key, value));

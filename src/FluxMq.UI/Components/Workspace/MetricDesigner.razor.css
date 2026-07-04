@@ -190,7 +190,7 @@
 }
 
 .metrics-new-button:hover {
-    background: color-mix(in srgb, var(--flux-accent) 88%, white);
+    background: var(--flux-accent-hover);
 }
 
 .metrics-new-button:focus-visible {
@@ -354,7 +354,7 @@
 .metrics-cell-name small,
 .metrics-cell-latest strong,
 .metrics-cell-latest small,
-.metrics-type-pill span {
+.metrics-type-summary span {
     display: block;
     min-width: 0;
     overflow: hidden;
@@ -390,7 +390,7 @@
     text-align: center;
 }
 
-.metrics-type-pill {
+.metrics-type-summary {
     align-items: center;
     background: transparent;
     border: 0;
@@ -406,14 +406,14 @@
     padding: 0;
 }
 
-.metrics-type-pill ::deep .mud-icon-root {
+.metrics-type-summary ::deep .mud-icon-root {
     color: var(--mud-palette-info);
     font-size: 13px;
     height: 13px;
     width: 13px;
 }
 
-.metrics-latest-pill {
+.metrics-latest-marker {
     align-items: center;
     border: 1px solid var(--flux-border);
     border-radius: 5px;
@@ -425,12 +425,12 @@
     padding: 1px 5px;
 }
 
-.metrics-latest-pill.live {
+.metrics-latest-marker.live {
     background: color-mix(in srgb, var(--mud-palette-success) 8%, var(--flux-surface-2));
     border-color: color-mix(in srgb, var(--mud-palette-success) 24%, var(--flux-border));
 }
 
-.metrics-latest-pill.muted {
+.metrics-latest-marker.muted {
     background: transparent;
     border-color: transparent;
     color: var(--mud-palette-text-secondary);
@@ -438,7 +438,7 @@
     padding-left: 0;
 }
 
-.metrics-latest-pill ::deep .mud-icon-root {
+.metrics-latest-marker ::deep .mud-icon-root {
     font-size: 14px;
     height: 14px;
     width: 14px;
@@ -506,7 +506,7 @@
     width: 100%;
 }
 
-.metrics-list-empty.filter-state {
+.metrics-list-empty.filter-empty {
     background: transparent;
     border-color: color-mix(in srgb, var(--flux-border) 70%, transparent);
 }
@@ -587,7 +587,7 @@
 }
 
 .metrics-empty-action:hover {
-    background: color-mix(in srgb, var(--flux-accent) 88%, white);
+    background: var(--flux-accent-hover);
 }
 
 .metrics-empty-action.secondary:hover {
@@ -606,7 +606,7 @@
     border-color: color-mix(in srgb, var(--flux-border-strong) 58%, transparent);
 }
 
-.flux-theme-light .metrics-list-empty.filter-state {
+.flux-theme-light .metrics-list-empty.filter-empty {
     background: color-mix(in srgb, var(--flux-surface) 46%, transparent);
     border-color: color-mix(in srgb, var(--flux-border-strong) 44%, transparent);
 }
@@ -713,7 +713,7 @@
     min-width: 0;
 }
 
-.metrics-editor-state {
+.metrics-unsaved-indicator {
     align-items: center;
     border: 1px solid var(--flux-border);
     border-radius: 5px;
@@ -727,20 +727,20 @@
     padding: 0 7px;
 }
 
-.metrics-state-dot {
+.metrics-unsaved-dot {
     background: var(--mud-palette-text-disabled);
-    border-radius: 999px;
+    border-radius: 50%;
     height: 6px;
     width: 6px;
 }
 
-.metrics-editor-state.dirty {
+.metrics-unsaved-indicator.dirty {
     background: color-mix(in srgb, var(--mud-palette-warning) 7%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-warning) 28%, var(--flux-border));
     color: var(--mud-palette-text-primary);
 }
 
-.metrics-editor-state.dirty .metrics-state-dot {
+.metrics-unsaved-indicator.dirty .metrics-unsaved-dot {
     background: var(--mud-palette-warning);
 }
 
@@ -807,7 +807,7 @@
 }
 
 .metrics-save-button:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--flux-accent) 88%, white);
+    background: var(--flux-accent-hover);
 }
 
 .metrics-editor-scroll {
@@ -897,7 +897,7 @@
     white-space: nowrap;
 }
 
-.metrics-side-badge {
+.metrics-side-indicator {
     align-items: center;
     background: transparent;
     border: 1px solid color-mix(in srgb, var(--flux-border) 78%, transparent);
@@ -912,12 +912,12 @@
     padding: 0 4px;
 }
 
-.metrics-side-badge.live {
+.metrics-side-indicator.live {
     border-color: color-mix(in srgb, var(--mud-palette-success) 28%, var(--flux-border));
     color: var(--mud-palette-success);
 }
 
-.metrics-side-badge.danger {
+.metrics-side-indicator.danger {
     border-color: color-mix(in srgb, var(--mud-palette-error) 34%, var(--flux-border));
     color: var(--mud-palette-error);
 }
@@ -1401,7 +1401,7 @@
     background: transparent;
 }
 
-.metrics-preview-status {
+.metrics-preview-marker {
     align-items: center;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
@@ -1735,13 +1735,13 @@ a.metrics-validation-line:focus-visible {
         width: auto;
     }
 
-    .metrics-editor-state {
+    .metrics-unsaved-indicator {
         justify-content: center;
         padding: 0;
         width: 26px;
     }
 
-    .metrics-editor-state span:last-child,
+    .metrics-unsaved-indicator span:last-child,
     .metrics-save-button span {
         display: none;
     }
@@ -1862,12 +1862,12 @@ a.metrics-validation-line:focus-visible {
         text-align: right;
     }
 
-    .metrics-type-pill {
+    .metrics-type-summary {
         font-size: 10px;
         min-height: 17px;
     }
 
-    .metrics-type-pill ::deep .mud-icon-root {
+    .metrics-type-summary ::deep .mud-icon-root {
         font-size: 12px;
         height: 12px;
         width: 12px;
@@ -1878,12 +1878,12 @@ a.metrics-validation-line:focus-visible {
         min-width: 21px;
     }
 
-    .metrics-latest-pill {
+    .metrics-latest-marker {
         min-height: 17px;
     }
 
-    .metrics-latest-pill.muted small,
-    .metrics-latest-pill.live small {
+    .metrics-latest-marker.muted small,
+    .metrics-latest-marker.live small {
         display: none;
     }
 

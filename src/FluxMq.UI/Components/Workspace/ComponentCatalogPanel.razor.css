@@ -156,13 +156,13 @@
     max-width: 60px;
 }
 
-.catalog-use-state.ready {
+.catalog-use-availability.available {
     background: color-mix(in srgb, var(--flux-accent) 9%, transparent);
     border-color: color-mix(in srgb, var(--flux-accent) 24%, var(--flux-border));
     color: var(--flux-accent);
 }
 
-.catalog-use-state.inactive {
+.catalog-use-availability.inactive {
     background: color-mix(in srgb, var(--mud-palette-text-secondary) 8%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-text-secondary) 16%, var(--flux-border));
 }

@@ -3,8 +3,8 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <TitleContent>
         <div class="metric-create-title">
-            <span class="metric-create-title-icon">
-                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+            <span class="metric-create-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-create-title-copy">
                 <strong>New metric</strong>
@@ -16,7 +16,7 @@
         <div class="metric-create-dialog" role="form" aria-label="Create metric">
             <div class="metric-create-topbar">
                 <label class="metric-create-search" role="search">
-                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" aria-hidden="true" />
                     <input value="@_search"
                            placeholder="Search metric types"
                            aria-label="Search metric types"
@@ -24,10 +24,10 @@
                     @if (!string.IsNullOrWhiteSpace(_search))
                     {
                         <button type="button"
-                                title="Clear search"
-                                aria-label="Clear search"
+                                title="@ClearMetricTypeSearchLabel"
+                                aria-label="@ClearMetricTypeSearchLabel"
                                 @onclick="@ClearSearch">
-                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                         </button>
                     }
                 </label>
@@ -35,18 +35,20 @@
             </div>
 
             <div class="metric-create-layout">
-                <div class="metric-create-type-list" role="listbox" aria-label="Metric type">
+                <div class="metric-create-type-list" role="listbox" aria-label="Metric type" aria-activedescendant="@SelectedMetricTypeOptionId">
                     @foreach (var descriptor in FilteredDescriptors)
                     {
                         var current = descriptor;
                         <button type="button"
+                                id="@MetricTypeOptionId(current)"
                                 class="@TypeButtonClass(current)"
                                 role="option"
                                 aria-selected="@IsSelected(current)"
+                                aria-label="@MetricTypeOptionLabel(current)"
                                 title="@current.Description"
                                 @onclick="@(() => SelectDescriptor(current))">
                             <span class="metric-create-type-icon">
-                                <MudIcon Icon="@IconFor(current)" Size="Size.Small" />
+                                <MudIcon Icon="@IconFor(current)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <span>
                                 <strong>@current.DisplayName</strong>
@@ -58,8 +60,8 @@
 
                     @if (FilteredDescriptors.Count == 0)
                     {
-                        <div class="metric-create-empty">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                        <div class="metric-create-empty" role="status" aria-live="polite">
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                             <span>No metric types match your search</span>
                         </div>
                     }
@@ -70,7 +72,7 @@
                     {
                         <div class="metric-create-selected">
                             <span class="metric-create-selected-icon">
-                                <MudIcon Icon="@IconFor(selectedDescriptor)" Size="Size.Small" />
+                                <MudIcon Icon="@IconFor(selectedDescriptor)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <div>
                                 <strong>@selectedDescriptor.DisplayName</strong>
@@ -90,7 +92,7 @@
                         </label>
 
                         <div class="metric-create-resource-id">
-                            <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" aria-hidden="true" />
                             <span>@MetricIdPreview</span>
                         </div>
 
@@ -115,8 +117,8 @@
                         }
                         else
                         {
-                            <div class="metric-create-empty-defaults">
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                            <div class="metric-create-empty-defaults" role="status" aria-live="polite">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" aria-hidden="true" />
                                 <span>This type has no parameters.</span>
                             </div>
                         }
@@ -129,13 +131,13 @@
         <div class="metric-create-actions">
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
-                       aria-label="Cancel metric creation">Cancel</MudButton>
+                       aria-label="@CancelMetricCreateLabel">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Add"
                        Disabled="@(!CanCreate)"
-                       aria-label="Create metric"
+                       aria-label="@CreateMetricLabel"
                        OnClick="@Submit">Create metric</MudButton>
         </div>
     </DialogActions>
@@ -168,7 +170,24 @@
     private MetricDescriptor? SelectedDescriptor =>
         SortedDescriptors.FirstOrDefault(descriptor => string.Equals(descriptor.TypeId, _selectedTypeId, StringComparison.Ordinal));
 
+    private string? SelectedMetricTypeOptionId =>
+        SelectedDescriptor is { } descriptor && FilteredDescriptors.Any(IsSelected)
+            ? MetricTypeOptionId(descriptor)
+            : null;
+
     private bool CanCreate => SelectedDescriptor is not null && !string.IsNullOrWhiteSpace(_name);
+
+    private string ClearMetricTypeSearchLabel => string.IsNullOrWhiteSpace(_search)
+        ? "Clear metric type search"
+        : $"Clear metric type search for {_search}";
+
+    private string CancelMetricCreateLabel => $"Cancel metric creation for {MetricCreateTargetLabel}";
+
+    private string CreateMetricLabel => $"Create metric {MetricCreateTargetLabel}";
+
+    private string MetricCreateTargetLabel => string.IsNullOrWhiteSpace(_name)
+        ? SelectedDescriptor?.DisplayName ?? "new metric"
+        : _name.Trim();
 
     private string MetricIdPreview => MetricDesignerState.UniqueMetricId(_name, ExistingMetricIds);
 
@@ -208,6 +227,20 @@
 
     private string TypeButtonClass(MetricDescriptor descriptor)
         => IsSelected(descriptor) ? "metric-create-type selected" : "metric-create-type";
+
+    private static string MetricTypeOptionLabel(MetricDescriptor descriptor)
+        => $"Select metric type {descriptor.DisplayName}, {descriptor.TypeId}, {descriptor.ValueKind}, {ParameterCountText(descriptor)}";
+
+    private static string MetricTypeOptionId(MetricDescriptor descriptor)
+        => $"metric-create-type-{SanitizeIdToken(descriptor.TypeId)}";
+
+    private static string SanitizeIdToken(string value)
+    {
+        var token = new string(value
+            .Select(static character => char.IsLetterOrDigit(character) ? char.ToLowerInvariant(character) : '-')
+            .ToArray()).Trim('-');
+        return string.IsNullOrWhiteSpace(token) ? "metric" : token;
+    }
 
     private static string IconFor(MetricDescriptor descriptor)
         => descriptor.ValueKind == MetricValueKind.Double

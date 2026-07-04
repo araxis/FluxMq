@@ -5,16 +5,16 @@
 @inject DragStateService DragState
 @inject DashboardWidgetRegistry DashboardWidgets
 
-<div class="dashboard-designer" role="region" aria-label="Dashboard designer">
-    <div class="dashboard-toolbar" role="toolbar" aria-label="Dashboard toolbar">
+<div class="dashboard-designer" role="region" aria-label="@DashboardDesignerLabel">
+    <div class="dashboard-toolbar" role="toolbar" aria-label="@DashboardToolbarLabel">
         <div class="dashboard-heading">
             <span class="dashboard-heading-icon-tile" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" />
+                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" Class="dashboard-heading-icon" aria-hidden="true" />
             </span>
             <div class="dashboard-heading-copy">
                 <div class="dashboard-title">@DashboardTitle</div>
-                <div class="dashboard-meta-strip" aria-label="Dashboard summary">
-                    <span>@DashboardStatusLabel</span>
+                <div class="dashboard-meta-strip" aria-label="@DashboardMetaSummaryLabel">
+                    <span>@DashboardSummaryLabel</span>
                     @if (_layout is null)
                     {
                         <span>@DashboardMeta</span>
@@ -31,21 +31,21 @@
 
         @if (_layout is not null)
         {
-            <div class="dashboard-toolbar-actions" aria-label="Dashboard mode and commands">
+            <div class="dashboard-toolbar-actions" aria-label="@DashboardToolbarActionsLabel">
                 <div class="dashboard-mode-shell">
                     <MudToggleGroup T="string" @bind-Value="DashboardMode" Size="Size.Small" Outlined="true" Color="Color.Primary" Class="dashboard-mode-toggle">
                         <MudToggleItem Value="@DashboardModeEdit" UnselectedIcon="@Icons.Material.Filled.Edit" SelectedIcon="@Icons.Material.Filled.Edit">Edit</MudToggleItem>
                         <MudToggleItem Value="@DashboardModeLive" UnselectedIcon="@Icons.Material.Filled.Visibility" SelectedIcon="@Icons.Material.Filled.Visibility">Live</MudToggleItem>
                     </MudToggleGroup>
-                    <span class="@($"dashboard-mode-state {DashboardModeStateClass}")">@DashboardModeLabel</span>
+                    <span class="@($"dashboard-mode-indicator {DashboardModeIndicatorClass}")">@DashboardModeLabel</span>
                 </div>
 
                 @if (IsEditMode)
                 {
-                    <div class="dashboard-command-strip" aria-label="Dashboard edit commands">
-                        <div class="dashboard-tool-group dashboard-tool-group-grid" aria-label="Grid layout commands">
+                    <div class="dashboard-command-strip" aria-label="@DashboardEditCommandsLabel">
+                        <div class="dashboard-tool-group dashboard-tool-group-grid" aria-label="@GridLayoutCommandsLabel">
                             <div class="dashboard-grid-picker dashboard-grid-size-control">
-                                <MudTooltip Text="Set grid layout">
+                                <MudTooltip Text="@GridPickerButtonLabel">
                                     <MudIconButton Icon="@Icons.Material.Filled.GridOn"
                                                    Variant="Variant.Outlined"
                                                    Color="Color.Primary"
@@ -58,7 +58,10 @@
 
                                 @if (_isGridPickerOpen)
                                 {
-                                    <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseGridPicker"></button>
+                                    <button type="button"
+                                            class="dashboard-picker-backdrop"
+                                            aria-label="@CloseGridPickerLabel"
+                                            @onclick="@CloseGridPicker"></button>
                                     <div class="dashboard-grid-picker-popover">
                                         <div class="dashboard-grid-picker-cells">
                                             @foreach (var row in PickerRows)
@@ -69,7 +72,7 @@
                                                     var c = column;
                                                     <button type="button"
                                                             class="@GridPickerCellClass(r, c)"
-                                                            title="@($"Set grid to {c} columns x {r} rows")"
+                                                            title="@GridPickerCellAriaLabel(r, c)"
                                                             aria-label="@GridPickerCellAriaLabel(r, c)"
                                                             aria-pressed="@(r == _previewRows && c == _previewColumns)"
                                                             @onmouseenter="@(() => PreviewGrid(r, c))"
@@ -84,17 +87,17 @@
                             </div>
                         </div>
 
-                        <div class="dashboard-tool-group dashboard-tool-group-selection" aria-label="Selection commands">
-                            <MudTooltip Text="Merge selected cells">
+                        <div class="dashboard-tool-group dashboard-tool-group-selection" aria-label="@SelectionCommandsLabel">
+                            <MudTooltip Text="@MergeSelectedCellsLabel">
                                 <MudIconButton Icon="@Icons.Material.Filled.ViewColumn"
                                                Size="Size.Small"
                                                Disabled="@(!CanMerge)"
                                                Class="dashboard-tool-button"
-                                               aria-label="Merge selected cells"
+                                               aria-label="@MergeSelectedCellsLabel"
                                                OnClick="@MergeSelected" />
                             </MudTooltip>
                             <div class="dashboard-grid-picker dashboard-split-control">
-                                <MudTooltip Text="Split selected cell">
+                                <MudTooltip Text="@SplitPickerButtonLabel">
                                     <MudIconButton Icon="@Icons.Material.Filled.Splitscreen"
                                                    Size="Size.Small"
                                                    Disabled="@(!CanOpenSplitPicker)"
@@ -106,7 +109,10 @@
 
                                 @if (_isSplitPickerOpen)
                                 {
-                                    <button type="button" class="dashboard-picker-backdrop" @onclick="@CloseSplitPicker"></button>
+                                    <button type="button"
+                                            class="dashboard-picker-backdrop"
+                                            aria-label="@CloseSplitPickerLabel"
+                                            @onclick="@CloseSplitPicker"></button>
                                     <div class="dashboard-grid-picker-popover">
                                         <div class="dashboard-grid-picker-cells split-picker-cells">
                                             @foreach (var row in SplitPickerRows)
@@ -117,7 +123,7 @@
                                                     var c = column;
                                                     <button type="button"
                                                             class="@SplitPickerCellClass(r, c)"
-                                                            title="@($"Split selected cell to {c} columns x {r} rows")"
+                                                            title="@SplitPickerCellAriaLabel(r, c)"
                                                             aria-label="@SplitPickerCellAriaLabel(r, c)"
                                                             aria-pressed="@(r == _previewSplitRows && c == _previewSplitColumns)"
                                                             disabled="@IsSplitPickerCellDisabled(r, c)"
@@ -132,7 +138,7 @@
                                 }
                             </div>
                             <span class="dashboard-selection-summary">
-                                <MudIcon Icon="@Icons.Material.Filled.SelectAll" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.SelectAll" Size="Size.Small" aria-hidden="true" />
                                 <span>@SelectionSummary</span>
                             </span>
                         </div>
@@ -152,7 +158,7 @@
         <div class="dashboard-empty">
             <div class="dashboard-empty-panel" role="status" aria-live="polite">
                 <span class="dashboard-empty-icon-tile" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="dashboard-empty-icon" />
+                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="dashboard-empty-icon" aria-hidden="true" />
                 </span>
                 <div class="dashboard-empty-copy">
                     <span>@EmptyDashboardTitle</span>
@@ -175,15 +181,15 @@
             <div class="dashboard-editor-workbench">
                 <div class="@DashboardGridFrameClass"
                      role="group"
-                     aria-label="Dashboard layout editor"
+                     aria-label="@DashboardLayoutEditorLabel"
                      @onpointerenter="HandleDesignerPointerEnter"
                      @onpointermove="HandleDesignerPointerMove"
                      @onpointerleave="HandleDesignerPointerLeave">
                 @if (HasActiveDashboardDrag)
                 {
-                    <div class="dashboard-drop-status" role="status" aria-live="polite">
-                        <MudIcon Icon="@DashboardDragStatusIcon" Size="Size.Small" />
-                        <span>@DashboardDragStatusText</span>
+                    <div class="dashboard-drop-hint" role="status" aria-live="polite">
+                        <MudIcon Icon="@DashboardDragHintIcon" Size="Size.Small" aria-hidden="true" />
+                        <span>@DashboardDragHintText</span>
                     </div>
                 }
                 <div class="dashboard-grid-stage">
@@ -198,7 +204,7 @@
                                 aria-label="@TrackHandleLabel(ColumnAxis, c, _layout.Columns[c], padding)"
                                 @onclick="() => OpenTrackEditorAsync(ColumnAxis, c)">
                             <span class="dashboard-track-icon" aria-hidden="true">
-                                <MudIcon Icon="@TrackHandleIcon(ColumnAxis)" Size="Size.Small" />
+                                <MudIcon Icon="@TrackHandleIcon(ColumnAxis)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <span class="dashboard-track-main">
                                 <span class="dashboard-track-name">@TrackShortLabel(ColumnAxis, c)</span>
@@ -222,7 +228,7 @@
                                 aria-label="@TrackHandleLabel(RowAxis, r, _layout.Rows[r], padding)"
                                 @onclick="() => OpenTrackEditorAsync(RowAxis, r)">
                             <span class="dashboard-track-icon" aria-hidden="true">
-                                <MudIcon Icon="@TrackHandleIcon(RowAxis)" Size="Size.Small" />
+                                <MudIcon Icon="@TrackHandleIcon(RowAxis)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <span class="dashboard-track-main">
                                 <span class="dashboard-track-name">@TrackShortLabel(RowAxis, r)</span>
@@ -235,12 +241,12 @@
                         </button>
                     }
                 </div>
-                <div class="dashboard-grid" style="@GridStyle" role="grid" aria-label="Dashboard layout grid">
+                <div class="dashboard-grid" style="@GridStyle" role="grid" aria-label="@DashboardLayoutGridLabel" aria-multiselectable="true">
                     @if (!HasDashboardWidgets)
                     {
                         <div class="dashboard-grid-empty-note @(HasActiveDashboardDrag ? "dragging" : null)" role="status" aria-live="polite">
                             <span class="dashboard-grid-empty-icon" aria-hidden="true">
-                                <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <div>
                                 <span>@EmptyGridTitle</span>
@@ -258,6 +264,7 @@
                                  aria-label="@CellAriaLabel(currentCell)"
                                  title="@CellAriaLabel(currentCell)"
                                  tabindex="0"
+                                 aria-keyshortcuts="Enter Space"
                                  @onpointerenter="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointermove="@((PointerEventArgs args) => TrackDropCell(currentCell, args))"
                                  @onpointerleave="@((PointerEventArgs args) => ClearDropCell(currentCell, args))"
@@ -275,9 +282,10 @@
                                     if (widget is not null)
                                     {
                                         var previewSample = PreviewSample(widget.Name);
+                                        var currentWidgetLabel = WidgetLabel(currentCell.Widget);
                                         <div class="dashboard-cell-widget-preview"
                                              draggable="true"
-                                             title="Drag to move widget; use toolbar to edit"
+                                             title="@WidgetMoveLabel(currentWidgetLabel)"
                                              @ondragstart="@(() => BeginWidgetMove(currentCell.Widget, currentCell.Name))"
                                              @ondragend="@EndWidgetMove">
                                             <DashboardWidgetView Project="@Project"
@@ -290,24 +298,24 @@
                                              @onclick:stopPropagation="true">
                                             <button type="button"
                                                     class="dashboard-cell-widget-action edit"
-                                                    title="Edit widget settings"
-                                                    aria-label="@($"Edit {WidgetLabel(currentCell.Widget)} settings")"
+                                                    title="@WidgetEditLabel(currentWidgetLabel)"
+                                                    aria-label="@WidgetEditLabel(currentWidgetLabel)"
                                                     @onclick="@(() => OpenWidgetEditorAsync(currentCell.Widget))">
-                                                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action simulate"
-                                                    title="Simulate widget data"
-                                                    aria-label="Simulate widget data"
+                                                    title="@WidgetSimulateLabel(currentWidgetLabel)"
+                                                    aria-label="@WidgetSimulateLabel(currentWidgetLabel)"
                                                     @onclick="@(() => SimulateWidgetPreview(currentCell.Widget))">
-                                                <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                             <button type="button"
                                                     class="dashboard-cell-widget-action danger"
-                                                    title="Delete widget"
-                                                    aria-label="Delete widget"
+                                                    title="@WidgetDeleteLabel(currentWidgetLabel)"
+                                                    aria-label="@WidgetDeleteLabel(currentWidgetLabel)"
                                                     @onclick="@(() => RemoveWidget(currentCell.Widget))">
-                                                <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" aria-hidden="true" />
                                             </button>
                                         </div>
                                     }
@@ -337,21 +345,21 @@
         }
         else
         {
-            <div class="dashboard-live-frame" role="group" aria-label="Live dashboard preview">
+            <div class="dashboard-live-frame" role="group" aria-label="@LivePreviewFrameLabel">
                 <div class="dashboard-live-head">
                     <div class="dashboard-live-title">
                         <span class="dashboard-live-icon" aria-hidden="true">
-                            <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <div>
                             <span>Live preview</span>
                             <small>@LivePreviewSubtitle</small>
                         </div>
                     </div>
-                    <div class="dashboard-live-summary" aria-label="Live preview summary">
+                    <div class="dashboard-live-summary" aria-label="@LivePreviewSummaryLabel">
                         <span>@GridSizeLabel</span>
                         <span>@WidgetCountLabel</span>
-                        <span class="@LivePreviewStateClass">@LivePreviewStateLabel</span>
+                        <span class="@LivePreviewContentClass">@LivePreviewContentLabel</span>
                     </div>
                     <MudButton Variant="Variant.Outlined"
                                Size="Size.Small"
@@ -366,7 +374,7 @@
                     {
                         <div class="dashboard-live-empty-note" role="status" aria-live="polite">
                             <span class="dashboard-live-empty-icon" aria-hidden="true">
-                                <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <div>
                                 <span>No widgets in live preview</span>
@@ -374,7 +382,7 @@
                             </div>
                         </div>
                     }
-                    <div class="dashboard-live-grid" style="@GridStyle" role="grid" aria-label="Live dashboard grid">
+                    <div class="dashboard-live-grid" style="@GridStyle" role="grid" aria-label="@LiveDashboardGridLabel">
                         @foreach (var cell in VisibleCells)
                         {
                             var currentCell = cell;
@@ -393,7 +401,7 @@
                                     else
                                     {
                                         <div class="dashboard-live-widget">
-                                            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" />
+                                            <MudIcon Icon="@Icons.Material.Filled.Widgets" Size="Size.Small" aria-hidden="true" />
                                             <span>@currentCell.Widget</span>
                                         </div>
                                     }
@@ -522,25 +530,51 @@
         ? "Dashboards"
         : Project.ActiveDashboardName;
 
+    private string DashboardDesignerLabel => string.IsNullOrWhiteSpace(Project.ActiveDashboardName)
+        ? "Dashboard designer with no active dashboard"
+        : $"{DashboardTitle} dashboard designer";
+
+    private string DashboardToolbarLabel => $"{DashboardTitle} dashboard toolbar";
+
     private string DashboardMeta => _layout is null
         ? Project.DashboardNames.Count == 0 ? "No dashboards yet" : DashboardCountLabel(Project.DashboardNames.Count)
         : $"{_layout.Columns.Count} x {_layout.Rows.Count} grid / {_layout.Cells.Count} cells / {_layout.WidgetCount} widgets";
 
-    private string DashboardStatusLabel => _layout is null
+    private string DashboardSummaryLabel => _layout is null
         ? Project.DashboardNames.Count == 0 ? "No dashboards" : "Select dashboard"
         : DashboardModeLabel;
 
+    private string DashboardMetaSummaryLabel => $"{DashboardTitle} dashboard facts";
+
+    private string DashboardToolbarActionsLabel => $"{DashboardTitle} mode and layout commands";
+
+    private string DashboardEditCommandsLabel => $"{DashboardTitle} edit layout commands";
+
+    private string GridLayoutCommandsLabel => $"{DashboardTitle} grid layout commands";
+
+    private string SelectionCommandsLabel => $"{DashboardTitle} cell selection commands";
+
     private string DashboardModeLabel => IsEditMode ? "Editing" : "Live preview";
 
-    private string DashboardModeStateClass => IsEditMode ? "edit" : "live";
+    private string DashboardModeIndicatorClass => IsEditMode ? "edit" : "live";
 
     private string LivePreviewSubtitle => HasDashboardWidgets
         ? "Read-only runtime view without layout controls."
         : "Read-only view waiting for widgets.";
 
-    private string LivePreviewStateLabel => HasDashboardWidgets ? "Read-only" : "Empty";
+    private string LivePreviewContentLabel => HasDashboardWidgets ? "Read-only" : "Empty";
 
-    private string LivePreviewStateClass => HasDashboardWidgets ? "ready" : "empty";
+    private string LivePreviewContentClass => HasDashboardWidgets ? "active" : "empty";
+
+    private string LivePreviewFrameLabel => $"{DashboardTitle} live dashboard preview";
+
+    private string LivePreviewSummaryLabel => $"{DashboardTitle} live preview facts";
+
+    private string DashboardLayoutEditorLabel => $"{DashboardTitle} dashboard layout editor";
+
+    private string DashboardLayoutGridLabel => $"{DashboardTitle} editable dashboard layout grid";
+
+    private string LiveDashboardGridLabel => $"{DashboardTitle} live dashboard grid";
 
     private string GridSizeLabel => _layout is null
         ? "No grid"
@@ -587,6 +621,13 @@
         _ => $"{SelectedCells.Count} cells"
     };
 
+    private string MergeSelectedCellsLabel => SelectedCells.Count switch
+    {
+        0 => $"Merge cells in {DashboardTitle}",
+        1 => $"Merge {CellTitle(SelectedCells[0])}",
+        _ => $"Merge {SelectedCells.Count.ToString(CultureInfo.InvariantCulture)} selected cells in {DashboardTitle}"
+    };
+
     private string GridPickerSummary => _layout is null
         ? "Grid"
         : $"{_layout.Columns.Count} x {_layout.Rows.Count}";
@@ -594,6 +635,8 @@
     private string GridPickerButtonLabel => _layout is null
         ? "Set dashboard grid layout"
         : $"Set dashboard grid layout, currently {_layout.Columns.Count} columns by {_layout.Rows.Count} rows";
+
+    private string CloseGridPickerLabel => $"Close {DashboardTitle} grid layout picker";
 
     private string GridPickerLabel => $"{_previewColumns} columns x {_previewRows} rows";
 
@@ -604,6 +647,10 @@
     private string SplitPickerButtonLabel => SelectedCells.Count == 1
         ? $"Split {CellTitle(SelectedCells[0])}"
         : "Split selected cell";
+
+    private string CloseSplitPickerLabel => SelectedCells.Count == 1
+        ? $"Close split picker for {CellTitle(SelectedCells[0])}"
+        : $"Close {DashboardTitle} split picker";
 
     private string SplitPickerLabel => $"{_previewSplitColumns} columns x {_previewSplitRows} rows";
 
@@ -1153,20 +1200,26 @@
             IsDashboardMoveDrag ? "moving-widget" : null
         }.Where(static value => !string.IsNullOrWhiteSpace(value)));
 
-    private string DashboardDragStatusIcon
+    private string DashboardDragHintIcon
         => IsDashboardMoveDrag ? Icons.Material.Filled.OpenWith : Icons.Material.Filled.Add;
 
-    private string DashboardDragStatusText
+    private string DashboardDragHintText
         => IsDashboardMoveDrag
-            ? DropTargetStatus(MoveTargetCellName, "Move widget")
-            : DropTargetStatus(_hoveredDropCellName, "Place widget");
+            ? DropTargetHint(MoveTargetCellName, $"Move {WidgetLabel(_movingWidgetName)}")
+            : DropTargetHint(_hoveredDropCellName, $"Place {DashboardComponentDragLabel}");
+
+    private string DashboardComponentDragLabel
+        => DragState.ActiveComponentDrag is { TargetKind: WorkspaceArtifactKind.Dashboard } activeDrag &&
+           !string.IsNullOrWhiteSpace(activeDrag.DisplayName)
+            ? activeDrag.DisplayName
+            : "widget";
 
     private string? MoveTargetCellName
         => string.Equals(_hoveredWidgetMoveCellName, _movingWidgetSourceCellName, StringComparison.Ordinal)
             ? null
             : _hoveredWidgetMoveCellName;
 
-    private string DropTargetStatus(string? cellName, string fallback)
+    private string DropTargetHint(string? cellName, string fallback)
     {
         var cell = VisibleCells.FirstOrDefault(cell => string.Equals(cell.Name, cellName, StringComparison.Ordinal));
         return cell is null ? fallback : $"{fallback}: {CellTitle(cell)}";
@@ -1184,7 +1237,7 @@
             hasWidget ? "has-widget" : null,
             cell.IsMerged ? "merged" : null,
             _selectedCellIds.Contains(cell.Name) ? "selected" : null,
-            IsDashboardComponentDrag ? "drop-ready" : null,
+            IsDashboardComponentDrag ? "drop-target" : null,
             IsDashboardMoveDrag && !isMoveSource ? "move-target" : null,
             IsDashboardComponentDrag && string.Equals(_hoveredDropCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null,
             IsDashboardMoveDrag && string.Equals(_hoveredWidgetMoveCellName, cell.Name, StringComparison.Ordinal) ? "dropping" : null,
@@ -1244,17 +1297,20 @@
             : "dashboard-cell-content";
 
     private static RenderFragment RenderEmptyCellContent(DashboardCellSnapshot cell) => @<text>
-        <div class="dashboard-cell-placeholder" title="@($"{CellTitle(cell)} {CellSpan(cell)}")">
+        <div class="dashboard-cell-placeholder" title="@CellPlaceholderTitle(cell)">
             <span class="dashboard-cell-name">@CellTitle(cell)</span>
             @if (cell.IsMerged)
             {
                 <span class="dashboard-cell-span">@CellSpan(cell)</span>
             }
             <span class="dashboard-cell-drop-mark" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
             </span>
         </div>
     </text>;
+
+    private static string CellPlaceholderTitle(DashboardCellSnapshot cell)
+        => $"{CellTitle(cell)} {CellSpan(cell)}";
 
     private DashboardWidgetSnapshot? FindWidget(string? widgetName)
         => !string.IsNullOrWhiteSpace(widgetName) &&
@@ -1305,6 +1361,18 @@
                DashboardWidgets.Find(widget.Type)?.DisplayName ??
                widget.Name;
     }
+
+    private static string WidgetMoveLabel(string widgetLabel)
+        => $"Drag {widgetLabel} to move; use toolbar to edit";
+
+    private static string WidgetEditLabel(string widgetLabel)
+        => $"Edit {widgetLabel} settings";
+
+    private static string WidgetSimulateLabel(string widgetLabel)
+        => $"Simulate {widgetLabel} data";
+
+    private static string WidgetDeleteLabel(string widgetLabel)
+        => $"Delete {widgetLabel}";
 
     private static string CssTemplate(IReadOnlyList<string> sizes, string axis)
         => string.Join(" ", sizes.Select(size => ToCssTrack(size, axis)));

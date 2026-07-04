@@ -5,7 +5,7 @@
 <MudDialog Options="@EditorDialogOptions">
     <TitleContent>
         <div class="scenario-step-editor-title">
-            <MudIcon Icon="@StepDescriptor.Icon" Size="Size.Small" />
+            <MudIcon Icon="@StepDescriptor.Icon" Size="Size.Small" aria-hidden="true" />
             <div class="scenario-step-editor-title-copy">
                 <MudText Typo="Typo.h6">@DialogTitle</MudText>
                 <MudText Typo="Typo.caption" Color="Color.Secondary">@Step.Type</MudText>
@@ -290,17 +290,22 @@
     </DialogContent>
     <DialogActions>
         <div class="scenario-step-editor-actions">
-            <div class="@ValidationStateClass" role="status" aria-live="polite">
-                <MudIcon Icon="@ValidationStateIcon" Size="Size.Small" />
-                <span>@ValidationStateText</span>
-            </div>
+            @if (HasValidationIssues)
+            {
+                <div class="scenario-step-editor-validation invalid" role="status" aria-live="polite">
+                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" aria-hidden="true" />
+                    <span>@ValidationSummaryText</span>
+                </div>
+            }
             <div class="scenario-step-editor-action-buttons">
                 <MudButton OnClick="@Cancel"
                            Variant="Variant.Text"
-                           aria-label="Cancel step edit">Cancel</MudButton>
+                           Size="Size.Small"
+                           aria-label="@CancelStepEditLabel">Cancel</MudButton>
                 <MudButton Color="Color.Primary"
                            Variant="Variant.Filled"
-                           aria-label="Apply step edit"
+                           Size="Size.Small"
+                           aria-label="@ApplyStepEditLabel"
                            Disabled="@HasValidationIssues"
                            OnClick="@Submit">Apply</MudButton>
             </div>
@@ -365,6 +370,14 @@
 
     private string DialogTitle => $"{StepDescriptor.DisplayName} step";
 
+    private string CancelStepEditLabel => $"Cancel editing {StepEditTargetLabel}";
+
+    private string ApplyStepEditLabel => $"Apply edits to {StepEditTargetLabel}";
+
+    private string StepEditTargetLabel => string.IsNullOrWhiteSpace(Step.Name)
+        ? DialogTitle
+        : Step.Name.Trim();
+
     private DashboardEventTypeDescriptor CurrentEventType => EventFilters.Find(_eventType);
 
     private int PayloadLines => Math.Max(1, _payloadField.Lines);
@@ -381,17 +394,9 @@
 
     private bool HasValidationIssues => ValidationMessages.Count > 0;
 
-    private string ValidationStateText => ValidationMessages is { Count: > 0 } messages
+    private string ValidationSummaryText => ValidationMessages is { Count: > 0 } messages
         ? $"{messages.Count} {(messages.Count == 1 ? "issue" : "issues")} - {messages[0]}"
-        : "Ready to apply";
-
-    private string ValidationStateClass => HasValidationIssues
-        ? "scenario-step-editor-state invalid"
-        : "scenario-step-editor-state ready";
-
-    private string ValidationStateIcon => HasValidationIssues
-        ? Icons.Material.Filled.ErrorOutline
-        : Icons.Material.Filled.CheckCircle;
+        : string.Empty;
 
     protected override void OnInitialized()
     {

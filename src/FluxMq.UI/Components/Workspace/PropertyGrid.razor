@@ -4,7 +4,7 @@
 
 <div class="@GridClass"
      role="treegrid"
-     aria-label="Dashboard property editor"
+     aria-label="@GridAriaLabel"
      style="@GridStyle"
      @onpointermove="@ResizeNameColumn"
      @onpointerup="@StopNameColumnResize"
@@ -13,12 +13,13 @@
     <button type="button"
             class="property-grid-column-resizer"
             role="separator"
-            title="Resize property name column"
-            aria-label="Resize property name column"
+            title="@NameColumnResizeLabel"
+            aria-label="@NameColumnResizeLabel"
             aria-orientation="vertical"
             aria-valuemin="@MinNameColumnWidth"
             aria-valuemax="@MaxNameColumnWidth"
             aria-valuenow="@NameColumnWidthValue"
+            aria-keyshortcuts="ArrowLeft ArrowRight Home End Enter"
             tabindex="0"
             @onclick:stopPropagation="true"
             @ondblclick="@ResetNameColumnWidth"
@@ -37,11 +38,12 @@
             <button type="button"
                     class="property-grid-group-header"
                     aria-expanded="@(!collapsed)"
+                    aria-controls="@GroupBodyId(group)"
                     aria-label="@GroupHeaderAriaLabel(group, collapsed)"
                     title="@group.Title"
                     @onclick="@(() => ToggleGroupAsync(group.Id))">
                 <span class="property-grid-group-toggle">
-                    <MudIcon Icon="@ToggleIcon(collapsed)" Size="Size.Small" />
+                    <MudIcon Icon="@ToggleIcon(collapsed)" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <span class="property-grid-group-title">@group.Title</span>
                 <span class="property-grid-group-count"
@@ -52,7 +54,7 @@
             </button>
             @if (!collapsed)
             {
-                <div class="property-grid-group-body">
+                <div id="@GroupBodyId(group)" class="property-grid-group-body">
                     @group.Content
                 </div>
             }
@@ -90,6 +92,12 @@
 
     private string NameColumnWidthValue
         => _nameColumnWidth.ToString("0", CultureInfo.InvariantCulture);
+
+    private string GridAriaLabel
+        => $"Dashboard property editor, {Groups.Count.ToString(CultureInfo.InvariantCulture)} groups";
+
+    private string NameColumnResizeLabel
+        => $"Resize property name column, {NameColumnWidthValue} pixels";
 
     protected override void OnParametersSet()
     {
@@ -155,6 +163,20 @@
 
     private static string GroupHeaderAriaLabel(PropertyGridGroup group, bool collapsed)
         => $"{(collapsed ? "Expand" : "Collapse")} {GroupAriaLabel(group, collapsed)}";
+
+    private static string GroupBodyId(PropertyGridGroup group)
+        => $"property-grid-group-{SanitizeIdToken(group.Id)}-body";
+
+    private static string SanitizeIdToken(string value)
+    {
+        var builder = new System.Text.StringBuilder(value.Length);
+        foreach (var current in value)
+        {
+            builder.Append(char.IsLetterOrDigit(current) || current is '-' or '_' ? current : '-');
+        }
+
+        return builder.Length == 0 ? "group" : builder.ToString();
+    }
 
     private void StartNameColumnResize(PointerEventArgs args)
     {

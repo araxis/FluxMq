@@ -3,8 +3,8 @@
 <div class="dashboard-top-topic-panel">
     @if (Snapshot.TopicCounts.Count == 0)
     {
-        <div class="dashboard-topic-empty">
-            <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" />
+        <div class="dashboard-topic-empty" role="status" aria-live="polite">
+            <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Size="Size.Small" aria-hidden="true" />
             <span>No topic traffic yet</span>
         </div>
     }

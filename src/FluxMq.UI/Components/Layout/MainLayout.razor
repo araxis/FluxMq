@@ -30,68 +30,72 @@
             </nav>
 
             <div class="flux-toolbar">
-                <MudTooltip Text="New project">
+                <MudTooltip Text="@NewProjectActionLabel">
                     <MudIconButton Icon="@Icons.Material.Filled.NoteAdd"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="@NewProjectActionLabel"
                                    Disabled="@_busy"
                                    OnClick="@NewProject" />
                 </MudTooltip>
-                <MudTooltip Text="Open file">
+                <MudTooltip Text="@OpenProjectActionLabel">
                     <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="@OpenProjectActionLabel"
                                    Disabled="@_busy"
                                    OnClick="@OpenAsync" />
                 </MudTooltip>
-                <MudTooltip Text="Save">
+                <MudTooltip Text="@SaveProjectActionLabel">
                     <MudIconButton Icon="@Icons.Material.Filled.Save"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="@SaveProjectActionLabel"
                                    Disabled="@(_busy || Projects.ActiveProject is null)"
                                    OnClick="@SaveAsync" />
                 </MudTooltip>
-                <MudTooltip Text="Save as">
+                <MudTooltip Text="@SaveProjectAsActionLabel">
                     <MudIconButton Icon="@Icons.Material.Filled.SaveAs"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="@SaveProjectAsActionLabel"
                                    Disabled="@(_busy || Projects.ActiveProject is null)"
                                    OnClick="@SaveAsAsync" />
                 </MudTooltip>
 
                 <span class="flux-toolbar-divider"></span>
 
-                <MudTooltip Text="Validate app">
+                <MudTooltip Text="@ValidateProjectActionLabel">
                     <MudButton Size="Size.Small"
                                Variant="Variant.Text"
                                Color="Color.Info"
                                StartIcon="@Icons.Material.Filled.FactCheck"
                                Class="flux-command-button"
-                               aria-label="Validate app"
+                               aria-label="@ValidateProjectActionLabel"
                                Disabled="@(!CanValidateActiveProject)"
                                OnClick="@ValidateActiveAsync">
                         <span class="flux-command-text">Validate</span>
                     </MudButton>
                 </MudTooltip>
-                <MudTooltip Text="Run app">
+                <MudTooltip Text="@RunProjectActionLabel">
                     <MudButton Size="Size.Small"
                                Variant="Variant.Text"
                                Color="Color.Success"
                                StartIcon="@Icons.Material.Filled.PlayArrow"
                                Class="flux-command-button"
-                               aria-label="Run app"
+                               aria-label="@RunProjectActionLabel"
                                Disabled="@(!CanRunActiveProject)"
                                OnClick="@RunActiveAsync">
                         <span class="flux-command-text">Run</span>
                     </MudButton>
                 </MudTooltip>
-                <MudTooltip Text="Stop app">
+                <MudTooltip Text="@StopProjectActionLabel">
                     <MudButton Size="Size.Small"
                                Variant="Variant.Text"
                                Color="Color.Error"
                                StartIcon="@StopButtonIcon"
                                Class="flux-command-button"
-                               aria-label="Stop app"
+                               aria-label="@StopProjectActionLabel"
                                Disabled="@(!CanStopActiveProject)"
                                OnClick="@StopActiveAsync">
                         @if (_stopping)
@@ -99,7 +103,8 @@
                             <span class="flux-command-loading">
                                 <MudIcon Icon="@Icons.Material.Filled.Sync"
                                          Size="Size.Small"
-                                         Class="flux-command-spin-icon" />
+                                         Class="flux-command-spin-icon"
+                                         aria-hidden="true" />
                                 <span class="flux-command-text">Stop</span>
                             </span>
                         }
@@ -110,17 +115,21 @@
                     </MudButton>
                 </MudTooltip>
 
-                <MudTooltip Text="@ActiveProjectStateTooltip">
-                    <div class="@FlowStateClass">
-                        <span class="flux-flow-dot"></span>
-                        <span>@ActiveProjectStateLabel</span>
+                <MudTooltip Text="@AppRuntimeTooltip">
+                    <div class="@AppRuntimeMarkerClass"
+                         role="status"
+                         aria-live="polite"
+                         aria-label="@AppRuntimeSummaryLabel">
+                        <span class="flux-app-runtime-dot" aria-hidden="true"></span>
+                        <span>@AppRuntimeSummaryLabel</span>
                     </div>
                 </MudTooltip>
 
                 <span class="flux-toolbar-divider"></span>
 
-                <div class="@RunStateClass">
-                    <span class="flux-run-dot"></span>
+                <div class="@LiveConnectionMarkerClass"
+                     aria-label="@LiveConnectionSummaryLabel">
+                    <span class="flux-live-connection-dot" aria-hidden="true"></span>
                     <span>@Live.State</span>
                 </div>
 
@@ -128,14 +137,16 @@
                     <MudIconButton Icon="@_themeIcon"
                                    Size="Size.Small"
                                    Class="flux-icon-button"
+                                   aria-label="@_themeLabel"
                                    OnClick="@CycleTheme" />
                 </MudTooltip>
                 @if (CanUseLiveTools)
                 {
-                    <MudTooltip Text="@(_rightOpen ? "Hide MQTT publisher" : "Show MQTT publisher")">
+                    <MudTooltip Text="@PublisherPanelToggleLabel">
                         <MudIconButton Icon="@(_rightOpen ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ChevronLeft)"
                                        Size="Size.Small"
                                        Class="flux-icon-button"
+                                       aria-label="@PublisherPanelToggleLabel"
                                        OnClick="@(() => _rightOpen = !_rightOpen)" />
                     </MudTooltip>
                 }
@@ -156,22 +167,25 @@
 
     @if (HasActiveProject)
     {
-        <footer class="flux-statusbar">
-            <div class="flux-status-group">
-                <span class="@StatusDotClass"></span>
+        <footer class="flux-bottom-bar">
+            <div class="flux-bottom-group"
+                 role="status"
+                 aria-live="polite"
+                 aria-label="@LiveConnectionSummaryLabel">
+                <span class="@LiveConnectionDotClass" aria-hidden="true"></span>
                 <span>@Live.State</span>
                 @if (Live.Connections.Count > 0)
                 {
-                    <span class="flux-status-muted">@Live.Connections.Count connections</span>
+                    <span class="flux-bottom-muted">@Live.Connections.Count connections</span>
                 }
             </div>
-            <div class="flux-status-path">
+            <div class="flux-bottom-path">
                 @if (Projects.ActiveProject is { } active)
                 {
                     @(string.IsNullOrEmpty(active.CurrentFilePath) ? "Untitled project" : active.CurrentFilePath)
                 }
             </div>
-            <div class="flux-status-group right">
+            <div class="flux-bottom-group right">
                 <span>@Live.RecentMessages.Count messages</span>
             </div>
         </footer>
@@ -181,7 +195,7 @@
     @if (DragState.ActiveComponentDrag is { DidDrag: true } activeDrag)
     {
         <div class="@DragPreviewClass" style="@DragPreviewStyle">
-            <MudIcon Icon="@DragPreviewIcon(activeDrag.TargetKind)" Size="Size.Small" />
+            <MudIcon Icon="@DragPreviewIcon(activeDrag.TargetKind)" Size="Size.Small" aria-hidden="true" />
             <span>@activeDrag.DisplayName</span>
         </div>
     }
@@ -269,6 +283,47 @@
 
     private bool HasActiveProject => Projects.ActiveProject is not null;
 
+    private string ActiveProjectActionTarget
+    {
+        get
+        {
+            var name = Projects.ActiveProject?.Name;
+            return string.IsNullOrWhiteSpace(name) ? "active app" : name;
+        }
+    }
+
+    private string NewProjectActionLabel => "Create new project";
+
+    private string OpenProjectActionLabel => "Open project file";
+
+    private string SaveProjectActionLabel => Projects.ActiveProject is null
+        ? "Save project"
+        : string.IsNullOrWhiteSpace(Projects.ActiveProject.CurrentFilePath)
+            ? $"Save {ActiveProjectActionTarget} as project file"
+            : $"Save {ActiveProjectActionTarget}";
+
+    private string SaveProjectAsActionLabel => Projects.ActiveProject is null
+        ? "Save project as"
+        : $"Save {ActiveProjectActionTarget} as project file";
+
+    private string ValidateProjectActionLabel => Projects.ActiveProject is null
+        ? "Validate app"
+        : $"Validate {ActiveProjectActionTarget}";
+
+    private string RunProjectActionLabel => Projects.ActiveProject is null
+        ? "Run app"
+        : $"Run {ActiveProjectActionTarget}";
+
+    private string StopProjectActionLabel => Projects.ActiveProject is null
+        ? "Stop app"
+        : _stopping
+            ? $"Stopping {ActiveProjectActionTarget}"
+            : $"Stop {ActiveProjectActionTarget}";
+
+    private string PublisherPanelToggleLabel => _rightOpen
+        ? $"Hide MQTT publisher for {ActiveProjectActionTarget}"
+        : $"Show MQTT publisher for {ActiveProjectActionTarget}";
+
     private string ShellClass =>
         $"flux-shell {(ThemeService.IsDarkMode ? "flux-theme-dark" : "flux-theme-light")}{(!HasActiveProject ? " no-active-project" : "")}{(!IsRightPanelVisible ? " right-collapsed" : "")}{(DragState.ActiveComponentDrag?.DidDrag == true ? " flux-component-drag-active" : "")}";
 
@@ -297,24 +352,24 @@
             _ => Icons.Material.Filled.Extension
         };
 
-    private string RunStateClass => Live.State switch
+    private string LiveConnectionMarkerClass => Live.State switch
     {
-        MqttClientState.Connected => "flux-runstate live",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-runstate pending",
-        MqttClientState.Faulted => "flux-runstate faulted",
-        _ => "flux-runstate"
+        MqttClientState.Connected => "flux-live-connection-marker live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-live-connection-marker pending",
+        MqttClientState.Faulted => "flux-live-connection-marker faulted",
+        _ => "flux-live-connection-marker"
     };
 
-    private string FlowStateClass => Projects.ActiveProject?.State switch
+    private string AppRuntimeMarkerClass => Projects.ActiveProject?.State switch
     {
-        RuntimeWorkspaceState.Valid => "flux-flowstate valid",
-        RuntimeWorkspaceState.Running => "flux-flowstate running",
-        RuntimeWorkspaceState.Faulted => "flux-flowstate faulted",
-        RuntimeWorkspaceState.Stopped => "flux-flowstate stopped",
-        _ => "flux-flowstate"
+        RuntimeWorkspaceState.Valid => "flux-app-runtime-marker valid",
+        RuntimeWorkspaceState.Running => "flux-app-runtime-marker running",
+        RuntimeWorkspaceState.Faulted => "flux-app-runtime-marker faulted",
+        RuntimeWorkspaceState.Stopped => "flux-app-runtime-marker stopped",
+        _ => "flux-app-runtime-marker"
     };
 
-    private string ActiveProjectStateLabel => Projects.ActiveProject is null
+    private string AppRuntimeSummaryLabel => Projects.ActiveProject is null
         ? "No app"
         : Projects.ActiveProject.State switch
         {
@@ -325,7 +380,7 @@
             _ => "App idle"
         };
 
-    private string ActiveProjectStateTooltip
+    private string AppRuntimeTooltip
     {
         get
         {
@@ -336,7 +391,7 @@
             var warnings = project.Diagnostics.Count(d => string.Equals(d.Severity, "Warning", StringComparison.Ordinal));
             return errors > 0 || warnings > 0
                 ? $"{project.State}: {errors} errors, {warnings} warnings"
-                : $"App runtime state: {project.State}";
+                : $"App runtime: {project.State}";
         }
     }
 
@@ -345,13 +400,15 @@
     private bool CanRunActiveProject => !_busy && Projects.ActiveProject is not null && !ActiveProjectIsRunning;
     private bool CanStopActiveProject => !_busy && ActiveProjectIsRunning;
 
-    private string StatusDotClass => Live.State switch
+    private string LiveConnectionDotClass => Live.State switch
     {
-        MqttClientState.Connected => "flux-status-dot live",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-status-dot pending",
-        MqttClientState.Faulted => "flux-status-dot faulted",
-        _ => "flux-status-dot"
+        MqttClientState.Connected => "flux-live-dot live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "flux-live-dot pending",
+        MqttClientState.Faulted => "flux-live-dot faulted",
+        _ => "flux-live-dot"
     };
+
+    private string LiveConnectionSummaryLabel => $"MQTT {Live.State}";
 
     private Task NewProject() => RunBusyAsync(async () =>
     {
@@ -434,8 +491,8 @@
     {
         if (Projects.ActiveProject is { } project)
         {
-            var brokersReady = await Live.EnsureConnectionsAsync(project.GetConnectionResources());
-            if (!brokersReady)
+            var connectionsAvailable = await Live.EnsureConnectionsAsync(project.GetConnectionResources());
+            if (!connectionsAvailable)
             {
                 return;
             }

@@ -5,29 +5,29 @@
         <div class="scenario-report-title">
             <div class="scenario-report-title-main">
                 <span class="scenario-report-title-icon" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <div class="scenario-report-title-copy">
                     <MudText Typo="Typo.h6" Class="scenario-report-heading">@Title</MudText>
-                    <div class="scenario-report-meta-strip" aria-label="Scenario report summary">
+                    <div class="scenario-report-meta-strip" aria-label="@ReportMetaSummaryLabel">
                         @if (!string.IsNullOrWhiteSpace(RunScopeText))
                         {
                             <span class="@ReportMetaClass(RunScopeColor)">
-                                <MudIcon Icon="@RunScopeIcon" Size="Size.Small" />
+                                <MudIcon Icon="@RunScopeIcon" Size="Size.Small" aria-hidden="true" />
                                 <span>@RunScopeText</span>
                             </span>
                         }
                         @if (!string.IsNullOrWhiteSpace(RunStatusText))
                         {
                             <span class="@ReportMetaClass(RunStatusColor)">
-                                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                                 <span>@RunStatusText</span>
                             </span>
                         }
                         @if (!string.IsNullOrWhiteSpace(RunStepSummaryText))
                         {
                             <span>
-                                <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" aria-hidden="true" />
                                 <span>@RunStepSummaryText</span>
                             </span>
                         }
@@ -35,12 +35,8 @@
                 </div>
             </div>
 
-            <div class="scenario-report-toolbar" aria-label="Scenario report actions">
-                <span class="@ExportStateClass" title="@ExportStateTooltip" role="status" aria-live="polite">
-                    <MudIcon Icon="@ExportStateIcon" Size="Size.Small" />
-                    <span>@ExportStateText</span>
-                </span>
-                <div class="scenario-report-action-group compact" aria-label="Scenario report export actions">
+            <div class="scenario-report-toolbar" aria-label="@ReportToolbarLabel">
+                <div class="scenario-report-action-group compact" aria-label="@ReportExportActionsLabel">
                     <div class="scenario-report-action-cluster">
                         <span class="scenario-report-action-label">Summary</span>
                         <MudTooltip Text="@CopySummaryTooltip">
@@ -49,7 +45,7 @@
                                            Class="scenario-report-action"
                                            Disabled="@(!HasSummaryReport)"
                                            OnClick="@CopySummaryAsync"
-                                           aria-label="Copy summary report" />
+                                           aria-label="@CopySummaryAriaLabel" />
                         </MudTooltip>
                         <MudTooltip Text="@SaveSummaryTooltip">
                             <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
@@ -57,7 +53,7 @@
                                            Class="scenario-report-action"
                                            Disabled="@(!HasSummaryReport)"
                                            OnClick="@SaveSummary"
-                                           aria-label="Save summary report" />
+                                           aria-label="@SaveSummaryAriaLabel" />
                         </MudTooltip>
                     </div>
                     <div class="scenario-report-action-cluster">
@@ -68,7 +64,7 @@
                                            Class="scenario-report-action"
                                            Disabled="@(!HasJsonReport)"
                                            OnClick="@CopyJsonAsync"
-                                           aria-label="Copy JSON report" />
+                                           aria-label="@CopyJsonAriaLabel" />
                         </MudTooltip>
                         <MudTooltip Text="@SaveJsonTooltip">
                             <MudIconButton Icon="@Icons.Material.Filled.FileDownload"
@@ -76,7 +72,7 @@
                                            Class="scenario-report-action"
                                            Disabled="@(!HasJsonReport)"
                                            OnClick="@SaveJson"
-                                           aria-label="Save JSON report" />
+                                           aria-label="@SaveJsonAriaLabel" />
                         </MudTooltip>
                     </div>
                 </div>
@@ -85,11 +81,11 @@
     </TitleContent>
     <DialogContent>
         <div class="scenario-report-content">
-            <div class="scenario-report-summary-grid" aria-label="Run details">
+            <div class="scenario-report-summary-grid" aria-label="@RunDetailsLabel">
                 @if (!string.IsNullOrWhiteSpace(RunIdText))
                 {
                     <div class="scenario-report-metric">
-                        <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" aria-hidden="true" />
                         <span>Run</span>
                         <strong>@RunIdText</strong>
                     </div>
@@ -97,7 +93,7 @@
                 @if (!string.IsNullOrWhiteSpace(RunFinishedAtText))
                 {
                     <div class="scenario-report-metric">
-                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" aria-hidden="true" />
                         <span>Finished</span>
                         <strong>@RunFinishedAtText</strong>
                     </div>
@@ -105,13 +101,13 @@
                 @if (!string.IsNullOrWhiteSpace(RunDurationText))
                 {
                     <div class="scenario-report-metric">
-                        <MudIcon Icon="@Icons.Material.Filled.Timer" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.Timer" Size="Size.Small" aria-hidden="true" />
                         <span>Duration</span>
                         <strong>@RunDurationText</strong>
                     </div>
                 }
                 <div class="@IssueMetricClass">
-                    <MudIcon Icon="@IssueIcon" Size="Size.Small" />
+                    <MudIcon Icon="@IssueIcon" Size="Size.Small" aria-hidden="true" />
                     <span>Issue</span>
                     <strong>@IssueText</strong>
                 </div>
@@ -122,12 +118,12 @@
                     <div class="scenario-report-viewer" aria-label="Text report">
                         @if (HasSummaryReport)
                         {
-                            <pre>@TextReport</pre>
+                            <pre aria-label="Text scenario report">@TextReport</pre>
                         }
                         else
                         {
-                            <div class="scenario-report-empty" role="status">
-                                <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Medium" />
+                            <div class="scenario-report-empty" role="status" aria-live="polite">
+                                <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Medium" aria-hidden="true" />
                                 <strong>No summary report</strong>
                                 <span>This run did not include a text summary.</span>
                             </div>
@@ -138,12 +134,12 @@
                     <div class="scenario-report-viewer" aria-label="JSON report">
                         @if (HasJsonReport)
                         {
-                            <pre>@JsonReport</pre>
+                            <pre aria-label="Scenario report JSON">@JsonReport</pre>
                         }
                         else
                         {
-                            <div class="scenario-report-empty" role="status">
-                                <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Medium" />
+                            <div class="scenario-report-empty" role="status" aria-live="polite">
+                                <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Medium" aria-hidden="true" />
                                 <strong>No JSON report</strong>
                                 <span>This run did not include a JSON payload.</span>
                             </div>
@@ -159,7 +155,7 @@
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        Class="scenario-report-close"
-                       aria-label="Close scenario report"
+                       aria-label="@CloseReportLabel"
                        OnClick="@Close">Close</MudButton>
         </div>
     </DialogActions>
@@ -200,31 +196,27 @@
 
     private bool HasJsonReport => !string.IsNullOrWhiteSpace(JsonReport);
 
-    private int AvailableReportFormatCount
-        => (HasSummaryReport ? 1 : 0) + (HasJsonReport ? 1 : 0);
+    private string ReportMetaSummaryLabel => $"{Title} run summary facts";
 
-    private string ExportStateClass
-        => AvailableReportFormatCount == 0
-            ? "scenario-report-export-state empty"
-            : "scenario-report-export-state ready";
+    private string ReportToolbarLabel => $"{Title} report actions";
 
-    private string ExportStateIcon
-        => AvailableReportFormatCount == 0
-            ? Icons.Material.Filled.ErrorOutline
-            : Icons.Material.Filled.IosShare;
+    private string ReportExportActionsLabel => $"{Title} export actions";
 
-    private string ExportStateText
-        => AvailableReportFormatCount switch
-        {
-            2 => "2 formats ready",
-            1 => "1 format ready",
-            _ => "No export content"
-        };
+    private string CopySummaryAriaLabel => $"Copy summary for {Title}";
 
-    private string ExportStateTooltip
-        => AvailableReportFormatCount == 0
-            ? "No report content is available to copy or save."
-            : "Copy or save the available report formats.";
+    private string SaveSummaryAriaLabel => $"Save summary for {Title}";
+
+    private string CopyJsonAriaLabel => $"Copy JSON for {Title}";
+
+    private string SaveJsonAriaLabel => $"Save JSON for {Title}";
+
+    private string RunDetailsLabel => $"{Title} run details";
+
+    private string CloseReportLabel => $"Close {ReportTitleTargetLabel}";
+
+    private string ReportTitleTargetLabel => string.IsNullOrWhiteSpace(Title)
+        ? "scenario report"
+        : Title.Trim();
 
     private string CopySummaryTooltip
         => HasSummaryReport ? "Copy summary report" : "Summary report unavailable";

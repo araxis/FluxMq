@@ -3,8 +3,8 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
     <TitleContent>
         <div class="metric-rename-title">
-            <span class="metric-rename-title-icon">
-                <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" />
+            <span class="metric-rename-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-rename-title-copy">
                 <strong>Rename metric</strong>
@@ -34,14 +34,14 @@
             @if (!string.IsNullOrWhiteSpace(ValidationMessage))
             {
                 <div class="metric-rename-validation" role="alert">
-                    <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" aria-hidden="true" />
                     <span>@ValidationMessage</span>
                 </div>
             }
             else
             {
                 <div class="metric-rename-note">
-                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" aria-hidden="true" />
                     <span>Dashboard bindings will be updated to the new id.</span>
                 </div>
             }
@@ -51,13 +51,13 @@
         <div class="metric-rename-actions">
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
-                       aria-label="Cancel metric rename">Cancel</MudButton>
+                       aria-label="@CancelMetricRenameLabel">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.DriveFileRenameOutline"
                        Disabled="@(!CanRename)"
-                       aria-label="Rename metric"
+                       aria-label="@RenameMetricLabel"
                        OnClick="@Submit">Rename</MudButton>
         </div>
     </DialogActions>
@@ -82,6 +82,18 @@
     private bool HasValidation => !string.IsNullOrWhiteSpace(ValidationMessage);
 
     private string MetricIdInputClass => HasValidation ? "invalid" : string.Empty;
+
+    private string CancelMetricRenameLabel => $"Cancel rename for {CurrentMetricTargetLabel}";
+
+    private string RenameMetricLabel => $"Rename {CurrentMetricTargetLabel} to {MetricRenameTargetLabel}";
+
+    private string CurrentMetricTargetLabel => string.IsNullOrWhiteSpace(CurrentMetricId)
+        ? "metric"
+        : CurrentMetricId.Trim();
+
+    private string MetricRenameTargetLabel => string.IsNullOrWhiteSpace(NormalizedMetricId)
+        ? "new metric id"
+        : NormalizedMetricId;
 
     private string? ValidationMessage
     {

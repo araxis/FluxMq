@@ -24,8 +24,8 @@
 .test-runner-title-block,
 .test-runner-actions,
 .test-runner-section-title,
-.test-runner-status-item,
-.test-runner-status-state,
+.test-runner-preflight-item,
+.test-runner-run-marker,
 .test-runner-report-actions,
 .test-runner-result-strip,
 .test-runner-phase-title,
@@ -117,7 +117,7 @@
     overflow: hidden;
 }
 
-.test-runner-status-state {
+.test-runner-run-marker {
     color: var(--mud-palette-text-secondary);
     flex: 0 1 auto;
     font-size: 10.5px;
@@ -130,29 +130,29 @@
     white-space: nowrap;
 }
 
-.test-runner-status-state span {
+.test-runner-run-marker span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.test-runner-status-state.passed {
+.test-runner-run-marker.passed {
     color: var(--mud-palette-success);
 }
 
-.test-runner-status-state.failed {
+.test-runner-run-marker.failed {
     color: var(--mud-palette-error);
 }
 
-.test-runner-status-state.canceled {
+.test-runner-run-marker.canceled {
     color: var(--mud-palette-warning);
 }
 
-.test-runner-status-state.history {
+.test-runner-run-marker.history {
     color: var(--mud-palette-info);
 }
 
-.test-runner-status-state.latest {
+.test-runner-run-marker.latest {
     color: var(--mud-palette-text-primary);
 }
 
@@ -328,7 +328,7 @@
     font-weight: 700;
 }
 
-.test-run-history-status {
+.test-run-history-marker {
     color: var(--mud-palette-text-secondary);
     flex: 0 0 auto;
     font-size: 9.5px;
@@ -336,15 +336,15 @@
     line-height: 1;
 }
 
-.test-run-history-status.passed {
+.test-run-history-marker.passed {
     color: var(--flux-accent);
 }
 
-.test-run-history-status.failed {
+.test-run-history-marker.failed {
     color: var(--mud-palette-error);
 }
 
-.test-run-history-status.canceled {
+.test-run-history-marker.canceled {
     color: var(--mud-palette-warning);
 }
 
@@ -394,14 +394,14 @@
     padding: 6px;
 }
 
-.test-runner-status-strip {
+.test-runner-preflight-strip {
     display: grid;
     gap: 6px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     min-width: 0;
 }
 
-.test-runner-status-item {
+.test-runner-preflight-item {
     background: var(--flux-surface);
     border: 1px solid var(--flux-border-soft);
     border-radius: 5px;
@@ -411,21 +411,21 @@
     padding: 5px 7px;
 }
 
-.test-runner-status-item.passed {
+.test-runner-preflight-item.passed {
     color: var(--mud-palette-success);
 }
 
-.test-runner-status-item.warning {
+.test-runner-preflight-item.warning {
     color: var(--mud-palette-warning);
 }
 
-.test-runner-status-item span {
+.test-runner-preflight-item span {
     color: var(--mud-palette-text-secondary);
     font-size: 11px;
     font-weight: 750;
 }
 
-.test-runner-status-item strong {
+.test-runner-preflight-item strong {
     color: var(--mud-palette-text-primary);
     font-size: 12px;
     font-weight: 750;
@@ -462,7 +462,7 @@
     background: color-mix(in srgb, var(--mud-palette-info) 5%, var(--flux-surface));
 }
 
-.test-runner-result-strip.empty.ready {
+.test-runner-result-strip.empty.runnable {
     background: color-mix(in srgb, var(--mud-palette-info) 4%, var(--flux-surface));
     border-color: color-mix(in srgb, var(--mud-palette-info) 28%, var(--flux-border));
 }
@@ -492,7 +492,7 @@
     color: var(--mud-palette-warning);
 }
 
-.test-runner-result-strip.empty.ready .test-runner-result-icon {
+.test-runner-result-strip.empty.runnable .test-runner-result-icon {
     color: var(--mud-palette-info);
 }
 
@@ -695,24 +695,24 @@
     border-bottom: 0;
 }
 
-.test-runner-step-state {
+.test-runner-step-marker {
     align-items: center;
     color: var(--flux-text-subtle);
     display: inline-flex;
     justify-content: center;
 }
 
-.test-runner-timeline-step.passed .test-runner-step-state {
+.test-runner-timeline-step.passed .test-runner-step-marker {
     color: var(--mud-palette-success);
 }
 
-.test-runner-timeline-step.failed .test-runner-step-state,
-.test-runner-timeline-step.timedout .test-runner-step-state,
-.test-runner-timeline-step.timed-out .test-runner-step-state {
+.test-runner-timeline-step.failed .test-runner-step-marker,
+.test-runner-timeline-step.timedout .test-runner-step-marker,
+.test-runner-timeline-step.timed-out .test-runner-step-marker {
     color: var(--mud-palette-error);
 }
 
-.test-runner-timeline-step.skipped .test-runner-step-state {
+.test-runner-timeline-step.skipped .test-runner-step-marker {
     color: var(--mud-palette-info);
 }
 
@@ -1101,7 +1101,7 @@
         overflow: auto;
     }
 
-    .test-runner-status-strip,
+    .test-runner-preflight-strip,
     .test-runner-activity-grid {
         grid-template-columns: minmax(0, 1fr);
     }

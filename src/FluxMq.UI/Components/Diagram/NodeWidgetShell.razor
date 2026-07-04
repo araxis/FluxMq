@@ -4,7 +4,7 @@
         Editor   = the edit content shown inside a MudDialog (optional).
                    When absent the dialog still lets the user rename the node.
 
-    Common chrome (selection state, expand/collapse, activity badge, ports) lives
+    Common chrome (selection state, expand/collapse, activity state, ports) lives
     here so widgets stay focused on their content.
 *@
 @using FluxMq.UI.Components.Workspace.Dialogs
@@ -16,11 +16,12 @@
     <div class="flow-node-header">
         <MudIconButton Size="Size.Small"
                        Icon="@(Node.IsCollapsed ? Icons.Material.Filled.ChevronRight : Icons.Material.Filled.ExpandMore)"
+                       aria-label="@NodeToggleLabel"
                        OnClick="@(() => Node.Toggle())"
                        Class="flow-node-action flow-node-toggle" />
         @if (ShowHeaderIcon)
         {
-            <MudIcon Icon="@HeaderIcon" Color="@CategoryColor" Size="Size.Small" Class="flow-node-type-icon" />
+            <MudIcon Icon="@HeaderIcon" Color="@CategoryColor" Size="Size.Small" Class="flow-node-type-icon" aria-hidden="true" />
         }
         <div class="flow-node-title">
             <MudText Typo="Typo.subtitle2" Class="flow-node-name">@Node.NodeName</MudText>
@@ -32,6 +33,7 @@
         <MudTooltip Text="Settings">
             <MudIconButton Size="Size.Small"
                            Icon="@Icons.Material.Filled.Settings"
+                           aria-label="Edit node"
                            OnClick="@OpenEditDialogAsync"
                            Class="flow-node-action flow-node-edit" />
         </MudTooltip>
@@ -41,14 +43,16 @@
                 <MudIcon Icon="@DiagnosticIcon(diagnostic)"
                          Color="@DiagnosticColor(diagnostic)"
                          Size="Size.Small"
+                         role="img"
+                         aria-label="@DiagnosticAccessibilityLabel(diagnostic)"
                          Class="flow-node-diagnostic-icon" />
             </MudTooltip>
         }
-        @if (HeaderBadge is not null)
+        @if (HeaderState is not null)
         {
-            @HeaderBadge
+            @HeaderState
         }
-        else if (ShowCategoryChip)
+        else if (ShowCategoryToken)
         {
             <span class="flow-node-category-token">@Node.Category</span>
         }
@@ -136,8 +140,8 @@
     [Parameter] public Color CategoryColor { get; set; } = Color.Default;
     [Parameter] public bool ShowHeaderIcon { get; set; } = true;
     [Parameter] public bool ShowDisplayName { get; set; } = true;
-    [Parameter] public bool ShowCategoryChip { get; set; } = true;
-    [Parameter] public RenderFragment? HeaderBadge { get; set; }
+    [Parameter] public bool ShowCategoryToken { get; set; } = true;
+    [Parameter] public RenderFragment? HeaderState { get; set; }
     [Parameter] public string? EditDialogContentClass { get; set; }
 
     /// <summary>Called before the dialog closes with Save, so the widget can flush its draft state.</summary>
@@ -162,6 +166,8 @@
         : null;
 
     private string DiagnosticTooltip => string.Join(Environment.NewLine, Node.Diagnostics.Select(FormatDiagnostic));
+
+    private string NodeToggleLabel => Node.IsCollapsed ? "Expand node" : "Collapse node";
 
     private static string PortClass(bool isInput, FlowPortModel port)
         => isInput ? "port-input" : "port-output";
@@ -206,6 +212,9 @@
         => string.IsNullOrWhiteSpace(diagnostic.PortName)
             ? $"{diagnostic.Code}: {diagnostic.Message}"
             : $"{diagnostic.Code} ({diagnostic.PortName}): {diagnostic.Message}";
+
+    private static string DiagnosticAccessibilityLabel(WorkspaceDiagnostic diagnostic)
+        => $"{diagnostic.Severity} diagnostic: {FormatDiagnostic(diagnostic)}";
 
     protected override void OnInitialized()
     {
@@ -257,7 +266,6 @@
             [nameof(NodeEditDialog.NodeDisplayName)] = Node.DisplayName,
             [nameof(NodeEditDialog.NodeId)] = Node.NodeName,
             [nameof(NodeEditDialog.WorkflowName)] = Flow?.ActiveWorkflowName ?? string.Empty,
-            [nameof(NodeEditDialog.CategoryColor)] = CategoryColor,
             [nameof(NodeEditDialog.EditorContent)] = Editor,
             [nameof(NodeEditDialog.ContentClass)] = EditDialogContentClass,
             [nameof(NodeEditDialog.EditorValidationError)] = EditorValidationError,

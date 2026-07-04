@@ -12,8 +12,8 @@
     @if (showHeader)
     {
         <div class="dashboard-metric-value-titlebar">
-            <div class="dashboard-widget-icon">
-                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(Context.Widget)" Size="Size.Small" />
+            <div class="dashboard-widget-icon" aria-hidden="true">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(Context.Widget)" Size="Size.Small" aria-hidden="true" />
             </div>
             <div class="dashboard-metric-value-title-block">
                 @if (ShowTitle)

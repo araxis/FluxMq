@@ -10,7 +10,7 @@
                  EditDialogMaxWidth="MaxWidth.Medium"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false"
+                 ShowCategoryToken="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
@@ -41,7 +41,7 @@
                     <span class="metric-source-parameter-label node-ui-fact-label">Parameters</span>
                     @foreach (var parameter in ParameterPreview)
                     {
-                        <span class="metric-source-token node-ui-token" title="@($"{parameter.Key}: {parameter.Value}")">@parameter.Key</span>
+                        <span class="metric-source-token node-ui-token" title="@ParameterPreviewTitle(parameter)">@parameter.Key</span>
                     }
                     @if (ParameterPreviewOverflow > 0)
                     {
@@ -72,7 +72,7 @@
                 }
                 else
                 {
-                    <div class="metric-source-empty" role="status">
+                    <div class="metric-source-empty" role="status" aria-live="polite">
                         Add a metric in the Metrics tab, then select it here.
                     </div>
                 }
@@ -308,6 +308,9 @@
 
     private static string ParameterHelpTitle(MetricParamSpec parameter)
         => parameter.HelpText?.Trim() ?? string.Empty;
+
+    private string ParameterPreviewTitle(KeyValuePair<string, string> parameter)
+        => $"{parameter.Key}: {parameter.Value} in {Node.NodeName}";
 
     private void SetParameterValue(string parameterKey, string? value)
     {

@@ -1016,6 +1016,17 @@
     width: 0;
 }
 
+/* Gauge widgets wrap their body in this layout; it must be a flex column so the
+   radial gauge shell (flex: 1 1 auto) fills the widget cell instead of collapsing. */
+.dashboard-single-gauge-layout {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
 .dashboard-gauge-meter-panel {
     background: color-mix(in srgb, var(--flux-surface-2) 70%, transparent);
     border: 1px solid color-mix(in srgb, var(--widget-accent) 16%, var(--flux-border));
@@ -1556,7 +1567,9 @@
 }
 
 .dashboard-topic-activity-cell {
-    background: color-mix(in srgb, var(--topic-activity-accent-color) 10%, var(--flux-surface-2));
+    /* --topic-heat (0%..100%, set per cell from relative traffic) drives accent intensity
+       so busier topics read hotter; low-traffic cells keep the ~10% baseline tint. */
+    background: color-mix(in srgb, var(--topic-activity-accent-color) calc(10% + var(--topic-heat, 0%) * 0.34), var(--flux-surface-2));
     border: 1px solid color-mix(in srgb, var(--topic-activity-accent-color) 22%, var(--flux-border));
     border-radius: 7px;
     display: flex;

@@ -6,7 +6,7 @@
                  EditDialogMaxWidth="MaxWidth.Medium"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false">
+                 ShowCategoryToken="false">
     <Body>
         <div class="default-node-summary">
             <div class="default-node-description" title="@SummaryCaption">@SummaryCaption</div>
@@ -65,7 +65,7 @@
                 }
                 else
                 {
-                    <div class="default-node-empty" role="status">No declared ports.</div>
+                    <div class="default-node-empty" role="status" aria-live="polite">No declared ports.</div>
                 }
             </div>
         </div>

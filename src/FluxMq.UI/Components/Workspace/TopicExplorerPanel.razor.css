@@ -127,14 +127,17 @@ h3 {
     white-space: nowrap;
 }
 
-.topic-session-note button {
-    background: transparent;
-    border: 0;
+.topic-session-note ::deep .topic-session-live-button {
     color: var(--flux-accent);
-    cursor: pointer;
     flex: 0 0 auto;
-    font-weight: 650;
+    height: 24px;
+    min-height: 24px;
     padding: 0;
+    width: 24px;
+}
+
+.topic-session-note ::deep .topic-session-live-button .mud-icon-root {
+    font-size: 16px;
 }
 
 .topic-explorer-toolbar {
@@ -280,7 +283,7 @@ h3 {
     white-space: nowrap;
 }
 
-.topic-broker-state,
+.topic-broker-connection,
 .topic-broker-count {
     border-radius: 4px;
     color: var(--flux-text-muted);
@@ -291,21 +294,21 @@ h3 {
     white-space: nowrap;
 }
 
-.topic-broker-state {
+.topic-broker-connection {
     background: var(--flux-surface-2);
 }
 
-.topic-broker-row.live .topic-broker-state {
+.topic-broker-row.live .topic-broker-connection {
     background: color-mix(in srgb, var(--flux-accent) 14%, transparent);
     color: var(--flux-accent);
 }
 
-.topic-broker-row.pending .topic-broker-state {
+.topic-broker-row.pending .topic-broker-connection {
     background: color-mix(in srgb, var(--mud-palette-warning) 14%, transparent);
     color: var(--mud-palette-warning);
 }
 
-.topic-broker-row.faulted .topic-broker-state {
+.topic-broker-row.faulted .topic-broker-connection {
     background: color-mix(in srgb, var(--mud-palette-error) 14%, transparent);
     color: var(--mud-palette-error);
 }
@@ -349,7 +352,7 @@ h3 {
     padding: 8px 0 4px 12px;
 }
 
-.topic-last-state {
+.topic-latest-message {
     background: var(--flux-surface);
     border-bottom: 1px solid var(--flux-border);
     display: flex;
@@ -1045,7 +1048,7 @@ h3 {
 
 .topic-monitor-dot {
     background: var(--flux-text-subtle);
-    border-radius: 999px;
+    border-radius: 50%;
     height: 7px;
     width: 7px;
 }
@@ -1078,14 +1081,14 @@ h3 {
 
 .topic-monitor-endpoint,
 .topic-monitor-subscription,
-.topic-monitor-state {
+.topic-monitor-connection {
     color: var(--flux-text-muted);
     font-family: Consolas, "Courier New", monospace;
     font-size: 10.5px;
 }
 
 .topic-monitor-subscription,
-.topic-monitor-state {
+.topic-monitor-connection {
     background: var(--flux-surface-2);
     border-radius: 4px;
     line-height: 1;
@@ -1093,17 +1096,17 @@ h3 {
     white-space: nowrap;
 }
 
-.topic-monitor-row.live .topic-monitor-state {
+.topic-monitor-row.live .topic-monitor-connection {
     background: color-mix(in srgb, var(--flux-accent) 14%, transparent);
     color: var(--flux-accent);
 }
 
-.topic-monitor-row.pending .topic-monitor-state {
+.topic-monitor-row.pending .topic-monitor-connection {
     background: color-mix(in srgb, var(--mud-palette-warning) 14%, transparent);
     color: var(--mud-palette-warning);
 }
 
-.topic-monitor-row.faulted .topic-monitor-state {
+.topic-monitor-row.faulted .topic-monitor-connection {
     background: color-mix(in srgb, var(--mud-palette-error) 14%, transparent);
     color: var(--mud-palette-error);
 }
@@ -1524,7 +1527,7 @@ h3 {
     color: var(--flux-text-subtle);
 }
 
-.topic-empty-state {
+.topic-empty-panel {
     align-content: center;
     align-items: center;
     color: var(--mud-palette-text-secondary);
@@ -1539,7 +1542,7 @@ h3 {
     text-align: center;
 }
 
-.topic-empty-state strong {
+.topic-empty-panel strong {
     color: var(--mud-palette-text-primary);
     font-size: 13px;
     font-weight: 750;
@@ -1547,7 +1550,7 @@ h3 {
     min-width: 0;
 }
 
-.topic-empty-state span {
+.topic-empty-panel span {
     color: var(--flux-text-muted);
     font-size: 12px;
     line-height: 1.35;
@@ -1556,7 +1559,7 @@ h3 {
     overflow-wrap: anywhere;
 }
 
-.topic-empty-state ::deep .mud-icon-root {
+.topic-empty-panel ::deep .mud-icon-root {
     color: var(--flux-text-subtle);
 }
 
@@ -1572,7 +1575,7 @@ h3 {
         gap: 8px;
     }
 
-    .topic-last-state {
+    .topic-latest-message {
         flex-basis: clamp(260px, 44%, 392px);
     }
 
@@ -1597,7 +1600,7 @@ h3 {
         grid-template-columns: 8px minmax(92px, 0.4fr) minmax(0, 1fr) auto;
     }
 
-    .topic-monitor-state {
+    .topic-monitor-connection {
         display: none;
     }
 
@@ -1618,7 +1621,7 @@ h3 {
         border-right: 0;
     }
 
-    .topic-last-state {
+    .topic-latest-message {
         flex-basis: clamp(252px, 40vh, 360px);
     }
 

@@ -2,20 +2,20 @@
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 
-<div class="sessions-panel" aria-label="Recorded sessions panel">
+<div class="sessions-panel" aria-label="@SessionsPanelLabel">
     @if (Live.IsRecording)
     {
         <div class="session-recording-strip" role="status" aria-live="polite">
-            <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" aria-hidden="true" />
             <div class="session-recording-copy">
                 <strong>@RecordingName</strong>
                 <span>@RecordedMessageLabel</span>
             </div>
-            <MudTooltip Text="Stop recording">
+            <MudTooltip Text="@StopRecordingLabel">
                 <MudIconButton Size="Size.Small"
                                Icon="@Icons.Material.Filled.StopCircle"
                                Class="session-stop-button"
-                               aria-label="Stop recording"
+                               aria-label="@StopRecordingLabel"
                                OnClick="@Live.StopRecording" />
             </MudTooltip>
         </div>
@@ -24,7 +24,7 @@
     <div class="sessions-head">
         <div class="sessions-title">
             <span class="sessions-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="sessions-title-copy">
                 <strong>Recordings</strong>
@@ -45,17 +45,19 @@
     @if (Live.SelectedStoredSession is not null)
     {
         <div class="session-live-strip">
-            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Small" aria-hidden="true" />
             <span>@Live.SelectedStoredSession.Name</span>
-            <button type="button"
-                    aria-label="Switch to live traffic"
-                    @onclick="@Live.ClearStoredSessionSelection">
-                Live
-            </button>
+            <MudTooltip Text="@SwitchToLiveTrafficLabel">
+                <MudIconButton Size="Size.Small"
+                               Icon="@Icons.Material.Filled.Sensors"
+                               Class="session-live-button"
+                               aria-label="@SwitchToLiveTrafficLabel"
+                               OnClick="@Live.ClearStoredSessionSelection" />
+            </MudTooltip>
         </div>
     }
 
-    <div class="sessions-toolbar" role="search" aria-label="Session filters">
+    <div class="sessions-toolbar" role="search" aria-label="@SessionsToolbarLabel">
         <MudTextField T="string"
                       Value="@_search"
                       ValueChanged="@OnSearchChanged"
@@ -67,7 +69,7 @@
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       AdornmentColor="Color.Secondary"
-                      aria-label="Search recorded sessions"
+                      aria-label="@SessionSearchLabel"
                       Class="session-search" />
     </div>
 
@@ -78,7 +80,7 @@
     @if (projectGroups.Count == 0)
     {
         <div class="sessions-empty" role="status" aria-live="polite">
-            <MudIcon Icon="@EmptyIcon" Size="Size.Medium" />
+            <MudIcon Icon="@EmptyIcon" Size="Size.Medium" aria-hidden="true" />
             <strong class="sessions-empty-title">@EmptyTitle</strong>
             <span class="sessions-empty-copy">@EmptyText</span>
             @if (HasSearch)
@@ -98,7 +100,7 @@
         <div class="sessions-list" role="list">
             @foreach (var group in projectGroups)
             {
-                <section class="session-project-group" aria-label="@($"{group.Name} sessions")" @key="group.Name">
+                <section class="session-project-group" aria-label="@SessionProjectGroupLabel(group)" @key="group.Name">
                     <div class="session-project-head">
                         <span>@group.Name</span>
                         <strong>@ProjectSessionLabel(group.Sessions.Count)</strong>
@@ -116,7 +118,7 @@
                                 <span class="session-row-main">
                                     <span class="session-row-name-line">
                                         <span class="session-row-name">@session.Name</span>
-                                        <span class="@SessionStateClass(session)">@SessionStateLabel(session)</span>
+                                        <span class="@SessionMarkerClass(session)">@SessionMarkerLabel(session)</span>
                                     </span>
                                     <span class="session-row-meta">
                                         <span>@ProfileLabel(session)</span>
@@ -150,6 +152,10 @@
         _ => $"{AllSessions.Count} recordings"
     };
 
+    private string SessionsPanelLabel => Live.IsRecording
+        ? $"Recordings, {SessionCountLabel}, recording {RecordingName}"
+        : $"Recordings, {SessionCountLabel}";
+
     private string RecordingName => string.IsNullOrWhiteSpace(Live.ActiveRecordingSession?.Name)
         ? "Recording"
         : Live.ActiveRecordingSession.Name;
@@ -159,6 +165,24 @@
         : $"{Live.RecordedMessageCount} messages captured";
 
     private string RecordButtonLabel => Live.IsRecording ? "Recording in progress" : "Start recording";
+
+    private string StopRecordingLabel => $"Stop recording {RecordingName}";
+
+    private string SwitchToLiveTrafficLabel => Live.SelectedStoredSession is { } session
+        ? $"Switch from {session.Name} to live traffic"
+        : "Switch to live traffic";
+
+    private string SessionsToolbarLabel => HasSearch
+        ? $"Recording filters, {FilteredSessionCount} of {AllSessions.Count} shown"
+        : $"Recording filters, {SessionCountLabel.ToLowerInvariant()}";
+
+    private string SessionSearchLabel => AllSessions.Count switch
+    {
+        0 => "Search recorded sessions, no recordings",
+        _ when HasSearch => $"Search recorded sessions, {FilteredSessionCount} of {AllSessions.Count} shown",
+        1 => "Search 1 recorded session",
+        var count => $"Search {count} recorded sessions"
+    };
 
     private string EmptyIcon => HasSearch
         ? Icons.Material.Filled.SearchOff
@@ -230,16 +254,16 @@
 
     private string SessionRowClass(StoredSession session)
     {
-        var state = SessionStateKey(session);
+        var marker = SessionMarkerKey(session);
         var selected = IsSelected(session) ? " selected" : string.Empty;
-        return $"session-row {state}{selected}";
+        return $"session-row {marker}{selected}";
     }
 
-    private string SessionDotClass(StoredSession session) => $"session-dot {SessionStateKey(session)}";
+    private string SessionDotClass(StoredSession session) => $"session-dot {SessionMarkerKey(session)}";
 
-    private string SessionStateClass(StoredSession session) => $"session-state {SessionStateKey(session)}";
+    private string SessionMarkerClass(StoredSession session) => $"session-marker {SessionMarkerKey(session)}";
 
-    private string SessionStateKey(StoredSession session)
+    private string SessionMarkerKey(StoredSession session)
     {
         if (IsRecordingSession(session))
         {
@@ -249,7 +273,7 @@
         return IsSelected(session) ? "selected" : "stored";
     }
 
-    private string SessionStateLabel(StoredSession session)
+    private string SessionMarkerLabel(StoredSession session)
     {
         if (IsRecordingSession(session))
         {
@@ -260,7 +284,7 @@
     }
 
     private string SessionRowLabel(StoredSession session)
-        => $"Load {SessionStateLabel(session).ToLowerInvariant()} session {session.Name} from {ProjectName(session)}, {ProfileLabel(session)}, {DurationLabel(session)}, started {StartedLabel(session)}";
+        => $"Load {SessionMarkerLabel(session).ToLowerInvariant()} session {session.Name} from {ProjectName(session)}, {ProfileLabel(session)}, {DurationLabel(session)}, started {StartedLabel(session)}";
 
     private bool IsSelected(StoredSession session)
         => Live.SelectedStoredSession?.Id == session.Id;
@@ -273,6 +297,9 @@
 
     private static string ProjectSessionLabel(int count)
         => count == 1 ? "1 session" : $"{count} sessions";
+
+    private static string SessionProjectGroupLabel(SessionProjectGroup group)
+        => $"{group.Name} project recordings, {ProjectSessionLabel(group.Sessions.Count)}";
 
     private static string ProfileLabel(StoredSession session)
         => string.IsNullOrWhiteSpace(session.ProfileName) ? "Workspace profile" : session.ProfileName;

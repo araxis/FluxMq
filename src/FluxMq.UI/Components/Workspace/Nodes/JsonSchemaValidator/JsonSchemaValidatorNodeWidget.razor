@@ -12,7 +12,7 @@
                  EditDialogContentClass="json-schema-validator-dialog"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false"
+                 ShowCategoryToken="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
@@ -29,13 +29,13 @@
                 </div>
             </div>
 
-            <div class="json-schema-validator-contracts node-ui-token-group">
-                <div class="json-schema-validator-contract node-ui-token-row" aria-label="Validator input fields">
-                    <span class="json-schema-validator-contract-label node-ui-fact-label">Input</span>
+            <div class="json-schema-validator-fields node-ui-token-group">
+                <div class="json-schema-validator-field-row node-ui-token-row" aria-label="Validator input fields">
+                    <span class="json-schema-validator-field-label node-ui-fact-label">Input</span>
                     <span class="json-schema-validator-token node-ui-token">MqttEnvelope</span>
                 </div>
-                <div class="json-schema-validator-contract node-ui-token-row" aria-label="Validator output fields">
-                    <span class="json-schema-validator-contract-label node-ui-fact-label">Outputs</span>
+                <div class="json-schema-validator-field-row node-ui-token-row" aria-label="Validator output fields">
+                    <span class="json-schema-validator-field-label node-ui-fact-label">Outputs</span>
                     <span class="json-schema-validator-token node-ui-token">result</span>
                     <span class="json-schema-validator-token node-ui-token">valid</span>
                     <span class="json-schema-validator-token node-ui-token">invalid</span>

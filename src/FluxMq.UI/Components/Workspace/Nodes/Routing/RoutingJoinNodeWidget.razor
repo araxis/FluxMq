@@ -11,7 +11,7 @@
                  EditDialogMaxWidth="MaxWidth.Large"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false"
+                 ShowCategoryToken="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
@@ -37,7 +37,7 @@
             </div>
 
             <div class="routing-join-rules" aria-label="Routing join rules">
-                <span class="routing-join-contract-label node-ui-fact-label">Join</span>
+                <span class="routing-join-summary-label node-ui-fact-label">Join</span>
                 <span class="routing-join-token node-ui-token" title="@JoinExpressionCaption">@JoinExpressionCaption</span>
                 <span class="routing-join-token node-ui-token">@PendingCaption</span>
                 <span class="routing-join-token node-ui-token">@CaseCaption</span>

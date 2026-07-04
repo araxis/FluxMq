@@ -112,7 +112,7 @@
 }
 
 .flow-canvas-meta-strip span,
-.flow-state {
+.flow-runtime-marker {
     align-items: center;
     background: color-mix(in srgb, var(--flux-surface-2) 82%, transparent);
     border: 1px solid var(--flux-border);
@@ -139,7 +139,7 @@
     padding: 3px 6px;
 }
 
-.flow-state {
+.flow-runtime-marker {
     flex: 0 1 auto;
     max-width: 132px;
     min-width: 0;
@@ -175,39 +175,39 @@
     overflow-wrap: anywhere;
 }
 
-.flow-state-dot {
+.flow-runtime-marker-dot {
     background: var(--mud-palette-text-disabled);
     border-radius: 50%;
     height: 7px;
     width: 7px;
 }
 
-.flow-state.valid,
-.flow-state.running {
+.flow-runtime-marker.valid,
+.flow-runtime-marker.running {
     border-color: color-mix(in srgb, var(--mud-palette-success) 46%, transparent);
     color: var(--mud-palette-success);
 }
 
-.flow-state.valid .flow-state-dot,
-.flow-state.running .flow-state-dot {
+.flow-runtime-marker.valid .flow-runtime-marker-dot,
+.flow-runtime-marker.running .flow-runtime-marker-dot {
     background: var(--mud-palette-success);
 }
 
-.flow-state.faulted {
+.flow-runtime-marker.faulted {
     border-color: color-mix(in srgb, var(--mud-palette-error) 50%, transparent);
     color: var(--mud-palette-error);
 }
 
-.flow-state.faulted .flow-state-dot {
+.flow-runtime-marker.faulted .flow-runtime-marker-dot {
     background: var(--mud-palette-error);
 }
 
-.flow-state.stopped {
+.flow-runtime-marker.stopped {
     border-color: color-mix(in srgb, var(--mud-palette-warning) 42%, transparent);
     color: var(--mud-palette-warning);
 }
 
-.flow-state.stopped .flow-state-dot {
+.flow-runtime-marker.stopped .flow-runtime-marker-dot {
     background: var(--mud-palette-warning);
 }
 
@@ -682,8 +682,7 @@
 
 .flow-designer-root ::deep .flow-node :is(
     .node-ui-fact-label,
-    [class$="-meta-item"] span,
-    [class$="-contract-label"]) {
+    [class$="-meta-item"] span) {
     color: var(--flux-text-muted);
     font-size: 0.52rem;
     font-weight: 750;
@@ -713,8 +712,7 @@
 }
 
 .flow-designer-root ::deep .flow-node :is(
-    .node-ui-token-group,
-    [class$="-contracts"]) {
+    .node-ui-token-group) {
     border-top: 1px solid color-mix(in srgb, var(--flux-border-soft) 62%, transparent);
     display: grid;
     gap: 5px;
@@ -723,8 +721,7 @@
 }
 
 .flow-designer-root ::deep .flow-node :is(
-    .node-ui-token-row,
-    [class$="-contract"]) {
+    .node-ui-token-row) {
     align-items: center;
     display: flex;
     flex-wrap: wrap;

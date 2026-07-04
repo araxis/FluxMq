@@ -8,14 +8,14 @@
     <div class="catalog-head">
         <div class="catalog-title">
             <span class="catalog-title-icon" aria-hidden="true">
-                <MudIcon Icon="@CatalogIcon" Size="Size.Small" />
+                <MudIcon Icon="@CatalogIcon" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="catalog-title-copy">
                 <span class="catalog-title-label">@CatalogTitle</span>
-                <span class="catalog-meta-strip" aria-label="Catalog state">
+                <span class="catalog-meta-strip" aria-label="@CatalogMetaLabel">
                     <span>@CatalogModeLabel</span>
-                    <span class="@CatalogUseStateClass">@CatalogUseStateLabel</span>
-                    <span>@CatalogSearchStateLabel</span>
+                    <span class="@CatalogUseAvailabilityClass">@CatalogUseAvailabilityLabel</span>
+                    <span>@CatalogFilterScopeLabel</span>
                 </span>
             </span>
             <span class="catalog-count" title="@CatalogCountTitle">@CatalogCountLabel</span>
@@ -39,7 +39,7 @@
         @if (SearchResult.VisibleCount == 0)
         {
             <div class="catalog-empty" role="status" aria-live="polite">
-                <MudIcon Icon="@EmptyIcon" Size="Size.Small" />
+                <MudIcon Icon="@EmptyIcon" Size="Size.Small" aria-hidden="true" />
                 <span>@EmptyLabel</span>
                 <small>@EmptyHintLabel</small>
             </div>
@@ -73,17 +73,19 @@
 
     private RenderFragment<CatalogEntry> RenderCatalogItem => item =>
         @<div class="@CatalogItemClass(item)"
-              role="listitem"
+              role="button"
               tabindex="@(!CanUseItem ? "-1" : "0")"
-              title="@CatalogItemTitle"
+              title="@CatalogItemTitle(item)"
               aria-label="@CatalogItemAriaLabel(item)"
+              aria-disabled="@CatalogItemDisabled"
               aria-grabbed="@CatalogItemGrabbed(item)"
+              aria-keyshortcuts="Enter Space"
               @onpointerdown="@((PointerEventArgs args) => BeginItemDrag(args, item))"
               @onclick="@(() => AddItem(item))"
               @onkeydown="@((KeyboardEventArgs args) => AddItemFromKeyboard(args, item))"
               @key="item.Type">
             <span class="@IconTileClass(item.Category)" aria-hidden="true">
-                <MudIcon Icon="@item.Icon" Size="Size.Small" />
+                <MudIcon Icon="@item.Icon" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="catalog-item-main">
                 <span class="catalog-item-name">@item.DisplayName</span>
@@ -93,7 +95,7 @@
                 }
                 @if (ShouldShowRequirements(item))
                 {
-                    <span class="catalog-item-meta" aria-label="Widget data requirements">
+                    <span class="catalog-item-meta" aria-label="@CatalogRequirementMetaLabel(item)">
                         @foreach (var requirement in item.DataRequirements.Take(3))
                         {
                             <span class="catalog-item-meta-value">@RequirementLabel(requirement)</span>
@@ -102,7 +104,7 @@
                 }
                 @if (ShouldShowStepMetadata(item))
                 {
-                    <span class="catalog-item-meta catalog-step-meta" aria-label="Test step metadata">
+                    <span class="catalog-item-meta catalog-step-meta" aria-label="@CatalogStepMetaLabel(item)">
                         <span class="@StepPhaseMetaClass(item)">@StepPhaseLabel(item)</span>
                         <span class="catalog-item-meta-value">@StepKindLabel(item)</span>
                         <span class="catalog-item-meta-value muted">@StepParameterLabel(item)</span>
@@ -111,10 +113,10 @@
             </span>
             <span class="catalog-item-affordance" aria-hidden="true">
                 <span class="catalog-drag-grip">
-                    <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.DragIndicator" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <span class="catalog-add-button">
-                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                 </span>
             </span>
         </div>;
@@ -163,6 +165,9 @@
     private string CatalogPanelLabel
         => $"{CatalogTitle} catalog";
 
+    private string CatalogMetaLabel
+        => $"{CatalogTitle} summary, {CatalogModeLabel}, {CatalogUseAvailabilityLabel.ToLowerInvariant()}, {CatalogFilterScopeLabel.ToLowerInvariant()} results";
+
     private string CatalogListLabel
         => $"{CatalogTitle} results";
 
@@ -173,13 +178,13 @@
         _ => "Pipeline"
     };
 
-    private string CatalogUseStateLabel
-        => CanUseItem ? "Ready" : "Inactive tab";
+    private string CatalogUseAvailabilityLabel
+        => CanUseItem ? "Available" : "Inactive tab";
 
-    private string CatalogUseStateClass
-        => CanUseItem ? "catalog-use-state ready" : "catalog-use-state inactive";
+    private string CatalogUseAvailabilityClass
+        => CanUseItem ? "catalog-use-availability available" : "catalog-use-availability inactive";
 
-    private string CatalogSearchStateLabel
+    private string CatalogFilterScopeLabel
         => SearchResult.HasSearch ? "Filtered" : "All";
 
     private string EmptyLabel => HasSearch
@@ -232,13 +237,16 @@
             _ => "No component definitions are available."
         };
 
-    private string CatalogItemTitle => ArtifactKind switch
-    {
-        WorkspaceArtifactKind.Pipeline when CanUseItem => "Drag to add component",
-        WorkspaceArtifactKind.Dashboard when CanUseItem => "Click to place in the selected cell, or drag to choose a cell",
-        WorkspaceArtifactKind.Test when CanUseItem => "Add test step",
-        _ => "Unavailable in this tab"
-    };
+    private string CatalogItemTitle(CatalogEntry item)
+        => CanUseItem
+            ? ArtifactKind switch
+            {
+                WorkspaceArtifactKind.Pipeline => $"Add {item.DisplayName} to pipeline",
+                WorkspaceArtifactKind.Dashboard => $"Click to place {item.DisplayName} in the selected cell, or drag to choose a cell",
+                WorkspaceArtifactKind.Test => $"Add {item.DisplayName} to scenario",
+                _ => $"{item.DisplayName} unavailable in this tab"
+            }
+            : $"{item.DisplayName} unavailable in this tab";
 
     private string CatalogItemClass(CatalogEntry item)
     {
@@ -266,6 +274,9 @@
             }
             : $"{item.DisplayName}. Unavailable in this tab.";
 
+    private string CatalogItemDisabled
+        => CanUseItem ? "false" : "true";
+
     private string CatalogItemGrabbed(CatalogEntry item)
         => IsDraggingItem(item) ? "true" : "false";
 
@@ -285,6 +296,12 @@
 
     private bool ShouldShowStepMetadata(CatalogEntry item)
         => ArtifactKind == WorkspaceArtifactKind.Test;
+
+    private static string CatalogRequirementMetaLabel(CatalogEntry item)
+        => $"{item.DisplayName} data requirements";
+
+    private static string CatalogStepMetaLabel(CatalogEntry item)
+        => $"{item.DisplayName} metadata";
 
     private static string StepPhaseLabel(CatalogEntry item)
         => string.IsNullOrWhiteSpace(item.StepPhase) ? "phase" : item.StepPhase;
@@ -360,7 +377,7 @@
             return;
         }
 
-        if (args.Key is "Enter" or " ")
+        if (args.Key is "Enter" or " " or "Spacebar")
         {
             if (ArtifactKind == WorkspaceArtifactKind.Pipeline)
             {

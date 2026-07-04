@@ -8,7 +8,7 @@
                  EditDialogMaxWidth="MaxWidth.Medium"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false"
+                 ShowCategoryToken="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
@@ -30,7 +30,7 @@
             </div>
 
             <div class="routing-fork-ports" aria-label="Routing fork outputs">
-                <span class="routing-fork-contract-label node-ui-fact-label">Output ports</span>
+                <span class="routing-fork-summary-label node-ui-fact-label">Output ports</span>
                 @foreach (var output in OutputPreview)
                 {
                     <span class="routing-fork-token node-ui-token" title="@output">@output</span>
@@ -48,11 +48,11 @@
                 <div class="routing-fork-port-composer" aria-label="Routing fork output ports">
                     <div class="routing-fork-port-header">
                         <span>Output port</span>
-                        <MudTooltip Text="Add output port">
+                        <MudTooltip Text="@AddOutputPortLabel">
                             <MudIconButton Icon="@Icons.Material.Filled.Add"
                                            Size="Size.Small"
                                            Class="routing-fork-add-port"
-                                           aria-label="Add output port"
+                                           aria-label="@AddOutputPortLabel"
                                            OnClick="@AddOutput" />
                         </MudTooltip>
                     </div>
@@ -65,18 +65,18 @@
                                 <MudTextField T="string"
                                               Value="@output.Name"
                                               ValueChanged="@(value => SetOutputNameAsync(output, value))"
-                                              aria-label="@($"Output port {index + 1}")"
+                                              aria-label="@OutputPortFieldLabel(output, index)"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Immediate="true"
                                               Class="routing-fork-output-name-field"
                                               Placeholder="Audit" />
-                                <MudTooltip Text="@(_outputDrafts.Count > 1 ? "Remove output port" : "Keep at least one output")">
+                                <MudTooltip Text="@RemoveOutputPortLabel(output)">
                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                    Size="Size.Small"
                                                    Disabled="@(_outputDrafts.Count <= 1)"
                                                    Class="routing-fork-remove-port"
-                                                   aria-label="@($"Remove output port {output.Name}")"
+                                                   aria-label="@RemoveOutputPortLabel(output)"
                                                    OnClick="@(() => RemoveOutput(output))" />
                                 </MudTooltip>
                             </div>
@@ -137,6 +137,29 @@
         RoutingForkNodeModel.DefaultBoundedCapacity).ToString(System.Globalization.CultureInfo.InvariantCulture);
     private IReadOnlyList<string> OutputPreview => NormalizedOutputs.Take(4).ToArray();
     private int OutputPreviewOverflow => Math.Max(0, NormalizedOutputs.Count - 4);
+
+    private string AddOutputPortLabel => $"Add output port to {Node.NodeName}";
+
+    private string OutputPortFieldLabel(PortDraft output, int index)
+    {
+        var target = string.IsNullOrWhiteSpace(output.Name)
+            ? $"output port {index + 1}"
+            : output.Name.Trim();
+
+        return $"Edit output port {target} for {Node.NodeName}";
+    }
+
+    private string RemoveOutputPortLabel(PortDraft output)
+    {
+        if (_outputDrafts.Count <= 1)
+        {
+            return $"Keep at least one output port on {Node.NodeName}";
+        }
+
+        var name = output.Name?.Trim();
+        var target = string.IsNullOrWhiteSpace(name) ? "output port" : name;
+        return $"Remove {target} from {Node.NodeName}";
+    }
 
     protected override void OnParametersSet()
     {

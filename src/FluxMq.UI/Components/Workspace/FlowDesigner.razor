@@ -7,21 +7,22 @@
 @inject LiveMqttWorkspaceService Live
 @inject FlowComponentCatalog Catalog
 @inject DragStateService DragState
+@inject AppThemeService ThemeService
 
 <div class="flow-designer-root"
      role="region"
-     aria-label="Flow designer canvas"
+     aria-label="@FlowDesignerRegionLabel"
      @onpointerenter="HandleDesignerPointerEnter"
      @onpointermove="HandleDesignerPointerMove"
      @onpointerleave="HandleDesignerPointerLeave">
     <div class="flow-canvas-header">
         <div class="flow-canvas-title">
             <span class="flow-canvas-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="flow-canvas-title-copy">
                 <h2>@WorkflowTitle</h2>
-                <div class="flow-canvas-meta-strip" aria-label="Pipeline canvas summary">
+                <div class="flow-canvas-meta-strip" aria-label="@PipelineCanvasSummaryLabel">
                     <span>@WorkflowSubtitle</span>
                     <span>@WorkflowModeLabel</span>
                     @if (_selectedWorkflowLink is not null)
@@ -31,15 +32,15 @@
                 </div>
             </div>
         </div>
-        <div class="flow-canvas-actions" aria-label="Pipeline canvas status and commands">
+        <div class="flow-canvas-actions" aria-label="@PipelineCanvasActionsLabel">
             @if (ShowRuntimeState)
             {
-                <span class="flow-state @RuntimeStateClass">
-                    <span class="flow-state-dot" aria-hidden="true"></span>
-                    @RuntimeStateLabel
+                <span class="flow-runtime-marker @RuntimeMarkerClass">
+                    <span class="flow-runtime-marker-dot" aria-hidden="true"></span>
+                    @RuntimeMarkerLabel
                 </span>
             }
-            <div class="flow-canvas-metrics" aria-label="Pipeline canvas metrics">
+            <div class="flow-canvas-metrics" aria-label="@PipelineCanvasMetricsLabel">
                 <span class="flow-canvas-stat">
                     <span>Nodes</span>
                     <strong>@PipelineNodeCount</strong>
@@ -77,18 +78,18 @@
                     }
                 }
             </div>
-            <div class="flow-canvas-command-group" aria-label="Pipeline canvas commands">
+            <div class="flow-canvas-command-group" aria-label="@PipelineCanvasCommandLabel">
                 <MudTooltip Text="Zoom to fit">
                     <MudIconButton Icon="@Icons.Material.Filled.CenterFocusStrong"
                                    Size="Size.Small"
                                    Class="flow-canvas-icon-button"
                                    OnClick="@ZoomToFit"
-                                   aria-label="Zoom to fit" />
+                                   aria-label="@ZoomToFitLabel" />
                 </MudTooltip>
             </div>
         </div>
     </div>
-    <div class="flow-canvas" role="group" aria-label="Pipeline diagram canvas">
+    <div class="flow-canvas" role="group" aria-label="@PipelineDiagramCanvasLabel">
         <CascadingValue Value="_diagram">
             <DiagramCanvas>
                 <Widgets>
@@ -96,9 +97,9 @@
                     <NavigatorWidget Width="180"
                                      Height="120"
                                      UseNodeShape="false"
-                                     NodeColor="#2DD4BF"
-                                     GroupColor="#1C222D"
-                                     ViewStrokeColor="#38BDF8"
+                                     NodeColor="@NavigatorNodeColor"
+                                     GroupColor="@NavigatorGroupColor"
+                                     ViewStrokeColor="@NavigatorViewStrokeColor"
                                      Class="flow-navigator" />
                 </Widgets>
             </DiagramCanvas>
@@ -108,7 +109,7 @@
     {
         <div class="flow-canvas-empty" role="status" aria-live="polite">
             <span class="flow-canvas-empty-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Large" />
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Large" aria-hidden="true" />
             </span>
             <strong>No pipeline nodes</strong>
             <span class="flow-canvas-empty-message">@EmptyCanvasText</span>
@@ -118,7 +119,7 @@
     @if (DragState.ActiveComponentDrag is { IsOverDesigner: true, TargetKind: WorkspaceArtifactKind.Pipeline })
     {
         <div class="flow-canvas-drop-highlight" aria-hidden="true">
-            <MudIcon Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.AddCircle" Size="Size.Small" aria-hidden="true" />
             <span>Drop component</span>
         </div>
     }
@@ -138,19 +139,19 @@
                           Margin="Margin.Dense"
                           Immediate="true"
                           Class="flow-link-condition-input" />
-            <MudTooltip Text="Apply condition">
+            <MudTooltip Text="@ApplyLinkConditionLabel">
                 <MudIconButton Icon="@Icons.Material.Filled.Check"
                                Size="Size.Small"
                                Color="Color.Primary"
                                Class="flow-link-condition-action apply"
-                               aria-label="Apply link condition"
+                               aria-label="@ApplyLinkConditionLabel"
                                OnClick="@ApplySelectedLinkCondition" />
             </MudTooltip>
-            <MudTooltip Text="Clear condition">
+            <MudTooltip Text="@ClearLinkConditionLabel">
                 <MudIconButton Icon="@Icons.Material.Filled.Clear"
                                Size="Size.Small"
                                Class="flow-link-condition-action"
-                               aria-label="Clear link condition"
+                               aria-label="@ClearLinkConditionLabel"
                                OnClick="@ClearSelectedLinkCondition" />
             </MudTooltip>
         </div>
@@ -205,11 +206,46 @@
 
     private string WorkflowTitle => Flow.ActiveWorkflowName ?? "Pipeline";
 
+    // NavigatorWidget renders literal SVG fill/stroke colors, so it cannot reference CSS
+    // theme tokens directly. Pick per-theme values matching the active palette; dark keeps
+    // the original colors, light no longer shows the dark near-black group fill.
+    private string NavigatorNodeColor => ThemeService.IsDarkMode ? "#2DD4BF" : "#0F766E";
+    private string NavigatorGroupColor => ThemeService.IsDarkMode ? "#1C222D" : "#DDE3EA";
+    private string NavigatorViewStrokeColor => ThemeService.IsDarkMode ? "#38BDF8" : "#2563EB";
+
+    private string FlowDesignerRegionLabel => Flow.ActiveWorkflowName is null
+        ? "Flow designer canvas, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} flow designer canvas";
+
+    private string PipelineCanvasSummaryLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline canvas summary, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} pipeline summary";
+
+    private string PipelineDiagramCanvasLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline diagram canvas, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} pipeline diagram canvas";
+
+    private string PipelineCanvasActionsLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline canvas runtime and commands, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} runtime and canvas commands";
+
+    private string PipelineCanvasMetricsLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline canvas metrics, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} pipeline canvas metrics";
+
+    private string PipelineCanvasCommandLabel => Flow.ActiveWorkflowName is null
+        ? "Pipeline canvas commands, no active pipeline"
+        : $"{Flow.ActiveWorkflowName} canvas commands";
+
+    private string ZoomToFitLabel => Flow.ActiveWorkflowName is null
+        ? "Zoom pipeline canvas to fit"
+        : $"Zoom {Flow.ActiveWorkflowName} pipeline canvas to fit";
+
     private string WorkflowSubtitle => Flow.HasUnsavedChanges
         ? "Unsaved changes"
         : Flow.ActiveWorkflowName is null
             ? "No active pipeline"
-            : "Ready";
+            : "Pipeline loaded";
 
     private string WorkflowModeLabel => Flow.ActiveWorkflowName is null ? "No pipeline" : "Editable";
 
@@ -269,7 +305,7 @@
 
     private bool ShowRuntimeState => Flow.State != RuntimeWorkspaceState.Faulted || ErrorCount == 0;
 
-    private string RuntimeStateLabel => Flow.State switch
+    private string RuntimeMarkerLabel => Flow.State switch
     {
         RuntimeWorkspaceState.Valid => "Valid",
         RuntimeWorkspaceState.Running => "Running",
@@ -278,7 +314,7 @@
         _ => "Idle"
     };
 
-    private string RuntimeStateClass => Flow.State switch
+    private string RuntimeMarkerClass => Flow.State switch
     {
         RuntimeWorkspaceState.Valid => "valid",
         RuntimeWorkspaceState.Running => "running",
@@ -290,6 +326,14 @@
     private string SelectedLinkLabel => _selectedWorkflowLink is { } link
         ? $"{link.SourceNodeName}.{link.SourcePortName} -> {link.TargetNodeName}.{link.TargetPortName}"
         : string.Empty;
+
+    private string ApplyLinkConditionLabel => _selectedWorkflowLink is null
+        ? "Apply link condition"
+        : $"Apply condition to {SelectedLinkLabel}";
+
+    private string ClearLinkConditionLabel => _selectedWorkflowLink is null
+        ? "Clear link condition"
+        : $"Clear condition from {SelectedLinkLabel}";
 
     private string DiagnosticLogsAriaLabel => $"{DiagnosticLogsTitle} for {WorkflowTitle}";
 

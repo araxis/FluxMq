@@ -2,7 +2,7 @@
     <TitleContent>
         <div class="start-recording-title">
             <span class="start-recording-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="start-recording-title-copy">
                 <strong>Start recording</strong>
@@ -39,7 +39,7 @@
             </section>
 
             <div class="start-recording-summary">
-                <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Small" aria-hidden="true" />
                 <span>@ProjectSummaryText</span>
             </div>
         </div>
@@ -49,14 +49,14 @@
             <MudButton Variant="Variant.Text"
                        Size="Size.Small"
                        Class="start-recording-cancel"
-                       aria-label="Cancel recording"
+                       aria-label="@CancelRecordingLabel"
                        OnClick="@Cancel">Cancel</MudButton>
             <MudButton Color="Color.Error"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        Class="start-recording-submit"
                        StartIcon="@Icons.Material.Filled.FiberManualRecord"
-                       aria-label="Start recording"
+                       aria-label="@StartRecordingLabel"
                        OnClick="@Submit">Start recording</MudButton>
         </div>
     </DialogActions>
@@ -71,6 +71,16 @@
     private string _session = $"Session {DateTimeOffset.Now:yyyy-MM-dd HH-mm}";
 
     private string DefaultSessionName => $"Session {DateTimeOffset.Now:yyyy-MM-dd HH-mm}";
+
+    private string StartRecordingLabel => $"Start recording {RecordingTargetLabel}";
+
+    private string CancelRecordingLabel => $"Cancel recording {RecordingTargetLabel}";
+
+    private string RecordingTargetLabel => $"{RecordingSessionName} in {RecordingProjectName}";
+
+    private string RecordingProjectName => string.IsNullOrWhiteSpace(_project) ? "Default" : _project.Trim();
+
+    private string RecordingSessionName => string.IsNullOrWhiteSpace(_session) ? DefaultSessionName : _session.Trim();
 
     private string ProjectSummaryText => ExistingProjects.Count == 0
         ? "No saved projects yet. The recording will use Default unless you type a project name."

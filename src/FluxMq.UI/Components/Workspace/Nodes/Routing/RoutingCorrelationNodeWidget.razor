@@ -11,7 +11,7 @@
                  EditDialogMaxWidth="MaxWidth.Large"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false"
+                 ShowCategoryToken="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
@@ -37,7 +37,7 @@
             </div>
 
             <div class="routing-correlation-rules" aria-label="Routing correlation rules">
-                <span class="routing-correlation-contract-label node-ui-fact-label">Correlation</span>
+                <span class="routing-correlation-summary-label node-ui-fact-label">Correlation</span>
                 <span class="routing-correlation-token node-ui-token" title="@KeyExpressionCaption">key @KeyExpressionCaption</span>
                 <span class="routing-correlation-token node-ui-token" title="@SideExpressionCaption">side @SideExpressionCaption</span>
                 <span class="routing-correlation-token node-ui-token">@CaseCaption</span>

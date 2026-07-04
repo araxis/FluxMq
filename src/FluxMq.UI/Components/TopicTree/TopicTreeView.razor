@@ -3,7 +3,7 @@
 
 <div class="topic-tree-view @(Compact ? "compact" : null)">
 
-    <div class="topic-tree-nodes">
+    <div class="topic-tree-nodes" role="tree" aria-label="@TopicTreeLabel">
         @if (string.IsNullOrWhiteSpace(Filter))
         {
             var roots = Roots.OrderBy(n => n.Name).ToList();
@@ -28,7 +28,7 @@
             @if (results.Count == 0)
             {
                 <div class="topic-tree-empty">
-                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Small" aria-hidden="true" />
                     <strong>No matching topics</strong>
                     <span>Clear or change the search text.</span>
                 </div>
@@ -39,9 +39,16 @@
                 {
                     <div class="topic-node-flat @(node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
                          title="@node.FullPath"
+                         role="treeitem"
+                         tabindex="0"
+                         aria-label="@node.FullPath"
+                         aria-level="@TopicNodeLevel(node)"
+                         aria-selected="@TopicNodeSelected(node)"
+                         aria-keyshortcuts="Enter Space"
+                         @onkeydown="@((KeyboardEventArgs args) => SelectTopicFromKeyboardAsync(args, node.FullPath))"
                          @onclick="@(() => TopicSelected.InvokeAsync(node.FullPath))">
-                        <span class="topic-node-flat-icon">
-                            <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" />
+                        <span class="topic-node-flat-icon" aria-hidden="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <MudText Typo="Typo.body2" Class="topic-path">@node.FullPath</MudText>
                         <span class="topic-node-count">@node.MessageCount</span>
@@ -75,6 +82,20 @@
     private IReadOnlyCollection<TopicNode> Roots => ActiveTopicIndex.Roots.Values.ToArray();
     private IEnumerable<TopicNode> SearchResults => ActiveTopicIndex.Search(Filter);
     private ITopicIndex ActiveTopicIndex => _localTopicIndex ?? TopicIndex;
+    private string TopicTreeLabel
+    {
+        get
+        {
+            var topicCount = CountTopics(Roots);
+            var messageCount = Roots.Sum(static root => root.MessageCount);
+            var topicText = topicCount == 1 ? "1 topic" : $"{topicCount} topics";
+            var messageText = messageCount == 1 ? "1 message" : $"{messageCount} messages";
+
+            return string.IsNullOrWhiteSpace(Filter)
+                ? $"Topic tree with {topicText} and {messageText}"
+                : $"Filtered topic tree for {Filter.Trim()}, {topicText} and {messageText}";
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -107,6 +128,18 @@
     }
 
     private void OnIndexChanged(object? sender, EventArgs e) => _pendingUpdate = true;
+    private static int TopicNodeLevel(TopicNode node) => node.Depth + 1;
+    private static int CountTopics(IEnumerable<TopicNode> nodes)
+        => nodes.Sum(static node => 1 + CountTopics(node.Children.Values));
+
+    private string TopicNodeSelected(TopicNode node)
+        => string.Equals(node.FullPath, SelectedTopic, StringComparison.Ordinal) ? "true" : "false";
+
+    private static bool IsActivationKey(KeyboardEventArgs args)
+        => args.Key is "Enter" or " " or "Spacebar";
+
+    private Task SelectTopicFromKeyboardAsync(KeyboardEventArgs args, string? topic)
+        => IsActivationKey(args) ? TopicSelected.InvokeAsync(topic) : Task.CompletedTask;
 
     public void Dispose()
     {

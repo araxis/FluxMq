@@ -2,22 +2,22 @@
 @inject LiveMqttWorkspaceService Live
 @inject IDialogService DialogService
 
-<div class="connections-panel" aria-label="Connections panel">
+<div class="connections-panel" aria-label="@ConnectionsPanelLabel">
     <div class="connections-head">
         <div class="connections-title">
             <span class="connections-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="connections-title-copy">
                 <strong>Connections</strong>
                 <span>@ConnectionCountLabel</span>
             </div>
         </div>
-        <MudTooltip Text="Add connection">
+        <MudTooltip Text="@AddConnectionLabel">
             <MudIconButton Size="Size.Small"
                            Icon="@Icons.Material.Filled.Add"
                            Class="connection-add-button"
-                           aria-label="Add connection"
+                           aria-label="@AddConnectionLabel"
                            OnClick="@AddConnectionAsync" />
         </MudTooltip>
     </div>
@@ -25,7 +25,7 @@
     @if (VisibleConnections.Count == 0)
     {
         <div class="connections-empty" role="status" aria-live="polite">
-            <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" aria-hidden="true" />
             <div>
                 <div class="connections-empty-title">No connections</div>
                 <div class="connections-empty-copy">Add a broker connection to start live traffic.</div>
@@ -41,13 +41,13 @@
                      role="listitem"
                      aria-label="@ConnectionRowLabel(conn)"
                      @key="conn.Id">
-                    <span class="@StateDotClass(conn.State)" aria-hidden="true"></span>
+                    <span class="@ConnectionDotClass(conn.State)" aria-hidden="true"></span>
 
                     <div class="connection-main">
                         <div class="connection-name-line">
                             <span class="connection-name">@ConnectionDisplayName(conn)</span>
-                            <span class="@StatePillClass(conn.State)" title="@StateLabel(conn.State)">
-                                @StateLabel(conn.State)
+                            <span class="@ConnectionMarkerClass(conn.State)" title="@ConnectionMarkerLabel(conn.State)">
+                                @ConnectionMarkerLabel(conn.State)
                             </span>
                         </div>
                         <div class="connection-endpoint">@ConnectionEndpoint(conn)</div>
@@ -72,7 +72,7 @@
                                            aria-label="@PrimaryActionLabel(conn)"
                                            OnClick="@(() => ToggleConnectionAsync(conn))" />
                         </MudTooltip>
-                        <MudTooltip Text="Remove connection">
+                        <MudTooltip Text="@RemoveLabel(conn)">
                             <MudIconButton Size="Size.Small"
                                            Icon="@Icons.Material.Filled.DeleteOutline"
                                            Class="connection-remove-button"
@@ -96,6 +96,12 @@
     private string ConnectionCountLabel => VisibleConnections.Count == 1
         ? "1 connection"
         : $"{VisibleConnections.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)} connections";
+
+    private string ConnectionsPanelLabel => $"Connections, {ConnectionCountLabel}";
+
+    private string AddConnectionLabel => VisibleConnections.Count == 0
+        ? "Add first broker connection"
+        : $"Add broker connection, {ConnectionCountLabel} configured";
 
     private async Task AddConnectionAsync()
     {
@@ -132,14 +138,14 @@
         => $"{connection.Profile.Host}:{connection.Profile.Port.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
 
     private static string ConnectionRowLabel(ManagedConnection connection)
-        => $"{ConnectionDisplayName(connection)}, {ConnectionEndpoint(connection)}, {StateLabel(connection.State)}";
+        => $"{ConnectionDisplayName(connection)}, {ConnectionEndpoint(connection)}, {ConnectionMarkerLabel(connection.State)}";
 
     private static string SubscriptionLabel(ManagedConnection connection)
         => string.IsNullOrWhiteSpace(connection.Subscription)
             ? "Sub #"
             : $"Sub {connection.Subscription}";
 
-    private static string StateLabel(MqttClientState state) => state switch
+    private static string ConnectionMarkerLabel(MqttClientState state) => state switch
     {
         MqttClientState.Connected => "Connected",
         MqttClientState.Connecting => "Connecting",
@@ -148,15 +154,15 @@
         _ => "Disconnected"
     };
 
-    private static string StatePillClass(MqttClientState state) => state switch
+    private static string ConnectionMarkerClass(MqttClientState state) => state switch
     {
-        MqttClientState.Connected => "connection-state live",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-state pending",
-        MqttClientState.Faulted => "connection-state faulted",
-        _ => "connection-state"
+        MqttClientState.Connected => "connection-marker live",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-marker pending",
+        MqttClientState.Faulted => "connection-marker faulted",
+        _ => "connection-marker"
     };
 
-    private static string StateDotClass(MqttClientState state) => state switch
+    private static string ConnectionDotClass(MqttClientState state) => state switch
     {
         MqttClientState.Connected => "connection-dot live",
         MqttClientState.Connecting or MqttClientState.Reconnecting => "connection-dot pending",

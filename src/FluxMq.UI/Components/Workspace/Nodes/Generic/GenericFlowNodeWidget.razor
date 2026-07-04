@@ -7,7 +7,7 @@
                  CategoryColor="@CategoryColor"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false">
+                 ShowCategoryToken="false">
     <Body>
         <div class="generic-node-summary node-ui-summary">
             <div class="generic-node-description node-ui-preview" title="@SummaryCaption">@SummaryCaption</div>
@@ -91,7 +91,7 @@
                 }
                 else
                 {
-                    <div class="generic-node-editor-empty" role="status">No declared ports.</div>
+                    <div class="generic-node-editor-empty" role="status" aria-live="polite">No declared ports.</div>
                 }
             </div>
         </div>

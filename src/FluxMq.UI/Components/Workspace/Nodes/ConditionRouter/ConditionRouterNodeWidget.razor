@@ -11,7 +11,7 @@
                  EditDialogMaxWidth="MaxWidth.Large"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false"
+                 ShowCategoryToken="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
@@ -41,7 +41,7 @@
                 <span class="condition-router-section-label">Variables</span>
                 @foreach (var variable in SummaryVariables)
                 {
-                    <span class="condition-router-token node-ui-token" title="@($"{variable.Name}: {variable.Type}")">@variable.Name</span>
+                    <span class="condition-router-token node-ui-token" title="@SummaryVariableTitle(variable)">@variable.Name</span>
                 }
                 @if (VariableOverflow > 0)
                 {
@@ -92,7 +92,7 @@
                         <span class="condition-router-variable-list">
                             @foreach (var variable in Variables)
                             {
-                                <span class="condition-router-variable-token node-ui-token" title="@($"{variable.Type}: {variable.Example}")">
+                                <span class="condition-router-variable-token node-ui-token" title="@VariableReferenceTitle(variable)">
                                     <code>@variable.Name</code>
                                     <small>@variable.Type</small>
                                 </span>
@@ -320,6 +320,12 @@
         => string.Equals(inputType, "NumberMetricReading", StringComparison.Ordinal)
             ? "Number metric"
             : "MQTT message";
+
+    private string SummaryVariableTitle(ConditionVariable variable)
+        => $"{variable.Name}: {variable.Type} in {Node.NodeName}";
+
+    private string VariableReferenceTitle(ConditionVariable variable)
+        => $"{variable.Name} {variable.Type} example {variable.Example} in {Node.NodeName}";
 
     private static bool IsNonCriticalEditorException(Exception exception)
         => exception is JSException or JSDisconnectedException or InvalidOperationException or ObjectDisposedException;

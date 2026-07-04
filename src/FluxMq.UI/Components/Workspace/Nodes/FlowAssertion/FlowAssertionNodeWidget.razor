@@ -11,7 +11,7 @@
                  EditDialogMaxWidth="MaxWidth.Large"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false"
+                 ShowCategoryToken="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
@@ -32,9 +32,9 @@
                 </div>
             </div>
 
-            <div class="flow-assertion-contracts node-ui-token-group">
-                <div class="flow-assertion-contract node-ui-token-row" aria-label="Assertion output fields">
-                    <span class="flow-assertion-contract-label node-ui-fact-label">Outputs</span>
+            <div class="flow-assertion-output-fields node-ui-token-group">
+                <div class="flow-assertion-output-row node-ui-token-row" aria-label="Assertion output fields">
+                    <span class="flow-assertion-output-label node-ui-fact-label">Outputs</span>
                     <span class="flow-assertion-token node-ui-token">result</span>
                     <span class="flow-assertion-token pass node-ui-token">passed</span>
                     <span class="flow-assertion-token fail node-ui-token">failed</span>

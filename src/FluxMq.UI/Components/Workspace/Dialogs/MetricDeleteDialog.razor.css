@@ -54,7 +54,7 @@
     line-height: 1.1;
 }
 
-.metric-delete-status {
+.metric-delete-tone {
     align-items: center;
     background: color-mix(in srgb, var(--mud-palette-error) 7%, var(--flux-surface-2));
     border: 1px solid color-mix(in srgb, var(--mud-palette-error) 24%, var(--flux-border-soft));
@@ -277,7 +277,7 @@
         grid-template-columns: 26px minmax(0, 1fr);
     }
 
-    .metric-delete-status {
+    .metric-delete-tone {
         grid-column: 2;
         justify-self: start;
     }

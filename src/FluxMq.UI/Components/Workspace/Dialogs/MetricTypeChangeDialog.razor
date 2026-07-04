@@ -3,8 +3,8 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <TitleContent>
         <div class="metric-type-change-title">
-            <span class="metric-type-change-title-icon">
-                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+            <span class="metric-type-change-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-type-change-title-copy">
                 <strong>Change metric type</strong>
@@ -16,7 +16,7 @@
         <div class="metric-type-change-dialog" role="form" aria-label="Change metric type">
             <div class="metric-type-change-topbar">
                 <label class="metric-type-change-search" role="search">
-                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" aria-hidden="true" />
                     <input value="@_search"
                            placeholder="Search metric types"
                            aria-label="Search metric types"
@@ -24,10 +24,10 @@
                     @if (!string.IsNullOrWhiteSpace(_search))
                     {
                         <button type="button"
-                                title="Clear search"
-                                aria-label="Clear search"
+                                title="@ClearMetricTypeSearchLabel"
+                                aria-label="@ClearMetricTypeSearchLabel"
                                 @onclick="@ClearSearch">
-                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-hidden="true" />
                         </button>
                     }
                 </label>
@@ -35,18 +35,20 @@
             </div>
 
             <div class="metric-type-change-layout">
-                <div class="metric-type-change-list" role="listbox" aria-label="Metric type">
+                <div class="metric-type-change-list" role="listbox" aria-label="Metric type" aria-activedescendant="@SelectedMetricTypeOptionId">
                     @foreach (var descriptor in FilteredDescriptors)
                     {
                         var current = descriptor;
                         <button type="button"
+                                id="@MetricTypeOptionId(current)"
                                 class="@TypeButtonClass(current)"
                                 role="option"
                                 aria-selected="@IsSelected(current)"
+                                aria-label="@MetricTypeOptionLabel(current)"
                                 title="@current.Description"
                                 @onclick="@(() => SelectDescriptor(current))">
                             <span class="metric-type-change-option-icon">
-                                <MudIcon Icon="@IconFor(current)" Size="Size.Small" />
+                                <MudIcon Icon="@IconFor(current)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <span>
                                 <strong>@current.DisplayName</strong>
@@ -65,8 +67,8 @@
 
                     @if (FilteredDescriptors.Count == 0)
                     {
-                        <div class="metric-type-change-empty">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" />
+                        <div class="metric-type-change-empty" role="status" aria-live="polite">
+                            <MudIcon Icon="@Icons.Material.Filled.FilterAltOff" Size="Size.Small" aria-hidden="true" />
                             <span>No metric types match your search</span>
                         </div>
                     }
@@ -77,7 +79,7 @@
                     {
                         <div class="metric-type-change-selected">
                             <span class="metric-type-change-selected-icon">
-                                <MudIcon Icon="@IconFor(selectedDescriptor)" Size="Size.Small" />
+                                <MudIcon Icon="@IconFor(selectedDescriptor)" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <div>
                                 <strong>@selectedDescriptor.DisplayName</strong>
@@ -106,14 +108,14 @@
                         }
                         else
                         {
-                            <div class="metric-type-change-empty-defaults">
-                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                            <div class="metric-type-change-empty-defaults" role="status" aria-live="polite">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" aria-hidden="true" />
                                 <span>This type has no parameters.</span>
                             </div>
                         }
 
                         <div class="@ResetNoteClass">
-                            <MudIcon Icon="@ResetNoteIcon" Size="Size.Small" />
+                            <MudIcon Icon="@ResetNoteIcon" Size="Size.Small" aria-hidden="true" />
                             <span>@ResetNoteText</span>
                         </div>
                     }
@@ -125,13 +127,13 @@
         <div class="metric-type-change-actions">
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
-                       aria-label="Cancel metric type change">Cancel</MudButton>
+                       aria-label="@CancelMetricTypeChangeLabel">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Settings"
                        Disabled="@(!CanChange)"
-                       aria-label="@SubmitText"
+                       aria-label="@SubmitTypeChangeLabel"
                        OnClick="@Submit">@SubmitText</MudButton>
         </div>
     </DialogActions>
@@ -165,6 +167,11 @@
     private MetricDescriptor? SelectedDescriptor =>
         SortedDescriptors.FirstOrDefault(descriptor => string.Equals(descriptor.TypeId, _selectedTypeId, StringComparison.Ordinal));
 
+    private string? SelectedMetricTypeOptionId =>
+        SelectedDescriptor is { } descriptor && FilteredDescriptors.Any(IsSelected)
+            ? MetricTypeOptionId(descriptor)
+            : null;
+
     private IReadOnlyList<KeyValuePair<string, string>> DefaultParameterPreview =>
         SelectedDescriptor is { } descriptor
             ? [.. MetricDesignerState.DefaultParameters(descriptor)]
@@ -173,6 +180,20 @@
     private bool CanChange =>
         SelectedDescriptor is { } selected &&
         !string.Equals(selected.TypeId, CurrentTypeId, StringComparison.Ordinal);
+
+    private string ClearMetricTypeSearchLabel => string.IsNullOrWhiteSpace(_search)
+        ? "Clear metric type search"
+        : $"Clear metric type search for {_search}";
+
+    private string CancelMetricTypeChangeLabel => $"Cancel type change from {CurrentTypeTargetLabel}";
+
+    private string SubmitTypeChangeLabel => CanChange && SelectedDescriptor is { } descriptor
+        ? $"Change metric type from {CurrentTypeTargetLabel} to {descriptor.DisplayName}"
+        : $"Current metric type {CurrentTypeTargetLabel}";
+
+    private string CurrentTypeTargetLabel => string.IsNullOrWhiteSpace(CurrentTypeId)
+        ? "current type"
+        : CurrentTypeId.Trim();
 
     private string SubmitText => CanChange ? "Change type" : "Current type";
 
@@ -220,6 +241,23 @@
             (false, true) => "metric-type-change-option current",
             _ => "metric-type-change-option"
         };
+    }
+
+    private string MetricTypeOptionLabel(MetricDescriptor descriptor)
+    {
+        var currentText = IsCurrent(descriptor) ? ", current type" : string.Empty;
+        return $"Select metric type {descriptor.DisplayName}, {descriptor.TypeId}, {descriptor.ValueKind}, {ParameterCountText(descriptor)}{currentText}";
+    }
+
+    private static string MetricTypeOptionId(MetricDescriptor descriptor)
+        => $"metric-type-change-option-{SanitizeIdToken(descriptor.TypeId)}";
+
+    private static string SanitizeIdToken(string value)
+    {
+        var token = new string(value
+            .Select(static character => char.IsLetterOrDigit(character) ? char.ToLowerInvariant(character) : '-')
+            .ToArray()).Trim('-');
+        return string.IsNullOrWhiteSpace(token) ? "metric" : token;
     }
 
     private static string IconFor(MetricDescriptor descriptor)

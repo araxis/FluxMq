@@ -11,7 +11,7 @@
                  EditDialogMaxWidth="MaxWidth.Large"
                  ShowHeaderIcon="false"
                  ShowDisplayName="true"
-                 ShowCategoryChip="false"
+                 ShowCategoryToken="false"
                  OnSave="@SaveAsync"
                  OnCancel="@LoadDraft"
                  EditorValidationError="@ValidateEditor">
@@ -74,11 +74,11 @@
                     <section class="message-filter-scope-editor" aria-label="Topic pattern filters">
                         <div class="message-filter-section-bar">
                             <span>Topic scope</span>
-                            <MudTooltip Text="Add pattern">
+                            <MudTooltip Text="@AddPatternLabel">
                                 <MudIconButton Size="Size.Small"
                                                Icon="@Icons.Material.Filled.Add"
                                                Color="Color.Secondary"
-                                               aria-label="Add topic pattern"
+                                               aria-label="@AddPatternLabel"
                                                Class="message-filter-add"
                                                OnClick="@AddPattern" />
                             </MudTooltip>
@@ -90,17 +90,17 @@
                                 var index = i;
                                 <div class="message-filter-pattern-row">
                                     <MudTextField T="string"
-                                                  aria-label="@($"Topic pattern {index + 1}")"
+                                                  aria-label="@TopicPatternFieldLabel(index)"
                                                   Value="@_draftPatterns[index]"
                                                   ValueChanged="@(value => SetPattern(index, value))"
                                                   Placeholder="sensors/#"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="message-filter-pattern-field" />
-                                    <MudTooltip Text="Remove pattern">
+                                    <MudTooltip Text="@RemovePatternLabel(index)">
                                         <MudIconButton Size="Size.Small"
                                                        Icon="@Icons.Material.Filled.Close"
-                                                       aria-label="@($"Remove topic pattern {index + 1}")"
+                                                       aria-label="@RemovePatternLabel(index)"
                                                        Class="message-filter-remove"
                                                        OnClick="@(() => RemovePattern(index))" />
                                     </MudTooltip>
@@ -109,7 +109,7 @@
 
                             @if (_draftPatterns.Count == 0)
                             {
-                                <div class="message-filter-empty" role="status">No topic patterns</div>
+                                <div class="message-filter-empty" role="status" aria-live="polite">No topic patterns</div>
                             }
                         </div>
                     </section>
@@ -150,6 +150,7 @@
     private string PatternCountCaption => $"{PatternCount} {PatternLabel(PatternCount)}";
     private string ConditionCaption => HasExpression ? "Expression" : "None";
     private string ExpressionCaption => Model.Expression.Trim();
+    private string AddPatternLabel => $"Add topic pattern to {Node.NodeName}";
     private IReadOnlyList<string> SummaryPatterns
         => Model.Patterns.Where(static pattern => !string.IsNullOrWhiteSpace(pattern)).Take(MaxSummaryPatterns).ToArray();
     private int PatternOverflow
@@ -234,6 +235,16 @@
         await RefreshDialogAsync();
     }
 
+    private string TopicPatternFieldLabel(int index)
+    {
+        var pattern = index >= 0 && index < _draftPatterns.Count ? _draftPatterns[index] : string.Empty;
+        var target = string.IsNullOrWhiteSpace(pattern)
+            ? $"topic pattern {index + 1}"
+            : pattern.Trim();
+
+        return $"Edit {target} for {Node.NodeName}";
+    }
+
     private async Task RemovePattern(int index)
     {
         if (index >= 0 && index < _draftPatterns.Count)
@@ -241,6 +252,16 @@
             _draftPatterns.RemoveAt(index);
             await RefreshDialogAsync();
         }
+    }
+
+    private string RemovePatternLabel(int index)
+    {
+        var pattern = index >= 0 && index < _draftPatterns.Count ? _draftPatterns[index] : string.Empty;
+        var target = string.IsNullOrWhiteSpace(pattern)
+            ? $"topic pattern {index + 1}"
+            : pattern.Trim();
+
+        return $"Remove {target} from {Node.NodeName}";
     }
 
     private async Task SetPattern(int index, string? value)

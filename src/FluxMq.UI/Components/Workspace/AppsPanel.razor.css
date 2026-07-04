@@ -226,7 +226,7 @@
     line-height: 1.15;
 }
 
-.app-tile-states {
+.app-tile-markers {
     align-items: flex-end;
     display: flex;
     flex-direction: column;
@@ -235,7 +235,7 @@
     min-width: 0;
 }
 
-.app-state {
+.app-marker {
     align-items: center;
     border-radius: 4px;
     display: inline-flex;
@@ -251,12 +251,12 @@
     white-space: nowrap;
 }
 
-.app-state.active {
+.app-marker.active {
     background: color-mix(in srgb, var(--flux-accent) 12%, transparent);
     color: var(--flux-accent);
 }
 
-.app-state.unsaved {
+.app-marker.unsaved {
     background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
     color: var(--mud-palette-warning);
 }
@@ -302,7 +302,7 @@
         grid-template-columns: 22px minmax(0, 1fr);
     }
 
-    .app-tile-states {
+    .app-tile-markers {
         display: none;
     }
 }

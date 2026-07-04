@@ -10,29 +10,25 @@
 @inject ISnackbar Snackbar
 
 <div class="@DesignerClass"
-     aria-label="Test scenario designer"
+     aria-label="@TestScenarioDesignerLabel"
      @onpointerenter="HandleDesignerPointerEnter"
      @onpointermove="HandleDesignerPointerMove"
      @onpointerleave="HandleDesignerPointerLeave">
     @if (Scenario is null)
     {
-        <div class="test-scenario-empty" aria-label="Test scenario setup state">
+        <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="@TestScenarioSetupStateLabel">
             <div class="test-scenario-empty-panel">
                 <span class="test-scenario-empty-icon" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <div class="test-scenario-empty-copy">
                     <span>@NoTestEmptyTitle</span>
                     <small>@NoTestEmptyText</small>
                 </div>
-                <div class="test-scenario-empty-cues" aria-label="Scenario designer setup">
+                <div class="test-scenario-empty-cues" aria-label="@ScenarioDesignerSetupLabel">
                     <span>
-                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                         @NoTestSelectionHint
-                    </span>
-                    <span>
-                        <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
-                        Designer ready
                     </span>
                 </div>
                 <MudButton Variant="Variant.Filled"
@@ -48,11 +44,11 @@
         <div class="test-scenario-header">
             <div class="test-scenario-heading">
                 <span class="test-scenario-heading-icon" aria-hidden="true">
-                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                 </span>
                 <div class="test-scenario-title-copy">
                     <div class="test-scenario-title">@Scenario.Name</div>
-                    <div class="test-scenario-meta-strip" aria-label="Scenario designer summary">
+                    <div class="test-scenario-meta-strip" aria-label="@ScenarioDesignerMetaLabel">
                         <span>@StepCountText</span>
                         <span>@PhaseCountText</span>
                         <span>@RunModeText</span>
@@ -66,18 +62,19 @@
                 {
                     <MudTooltip Text="@ActiveRunTooltip">
                         <div class="@RunContextClass(result)" aria-label="@RunContextAriaLabel(result)">
-                            <span class="test-run-context-status">
-                                <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" />
+                            <span class="test-run-context-marker">
+                                <MudIcon Icon="@RunStatusIcon(result.Status)" Size="Size.Small" aria-hidden="true" />
                                 <strong>@result.Status</strong>
                             </span>
-                            <span class="test-run-context-meta">@ActiveRunChipText</span>
+                            <span class="test-run-context-meta">@ActiveRunMarkerText</span>
                             @if (IsViewingHistoricalRun)
                             {
                                 <button type="button"
                                         class="test-run-context-reset"
-                                        title="Show latest run"
+                                        aria-label="@ShowLatestRunLabel"
+                                        title="@ShowLatestRunLabel"
                                         @onclick="@ShowLatestRun">
-                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" aria-hidden="true" />
                                 </button>
                             }
                         </div>
@@ -115,15 +112,15 @@
                              AnchorOrigin="Origin.BottomLeft"
                              TransformOrigin="Origin.TopLeft">
                         <ChildContent>
-                            <div class="test-run-history-panel" aria-label="Recent scenario runs">
+                            <div class="test-run-history-panel" aria-label="@RunHistoryPanelLabel">
                                 <div class="test-run-history-head">
                                     <span>Recent runs</span>
                                     <strong>@RecentRunCountText</strong>
                                 </div>
                                 @if (RecentRuns.Count == 0)
                                 {
-                                    <div class="test-run-history-empty" role="status">
-                                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" />
+                                    <div class="test-run-history-empty" role="status" aria-live="polite">
+                                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" aria-hidden="true" />
                                         <span>
                                             <strong>No run history</strong>
                                             <small>Run this scenario once to compare future edits.</small>
@@ -136,9 +133,9 @@
                                     {
                                         <MudMenuItem Class="test-run-history-reset"
                                                      OnClick="@ShowLatestRun"
-                                                     aria-label="Show latest scenario run">
+                                                     aria-label="@ShowLatestRunLabel">
                                             <div class="test-run-history-reset-row">
-                                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" aria-hidden="true" />
                                                 <span>
                                                     <strong>Show latest run</strong>
                                                     <small>Return to the current result</small>
@@ -154,11 +151,11 @@
                                                      aria-label="@RunHistoryAriaLabel(historyRun)"
                                                      @key="historyRun">
                                             <div class="test-run-history-row">
-                                                <MudIcon Icon="@RunHistoryIcon(historyRun)" Size="Size.Small" />
+                                                <MudIcon Icon="@RunHistoryIcon(historyRun)" Size="Size.Small" aria-hidden="true" />
                                                 <div class="test-run-history-main">
                                                     <span class="test-run-history-primary">
                                                         <strong>@RunHistoryPrefix(historyRun)</strong>
-                                                        <span class="@RunHistoryStatusClass(historyRun)">@historyRun.Status</span>
+                                                        <span class="@RunHistoryMarkerClass(historyRun)">@historyRun.Status</span>
                                                     </span>
                                                     <span class="test-run-history-secondary">
                                                         <span>@RunHistoryTimeLabel(historyRun)</span>
@@ -178,7 +175,7 @@
                         </ChildContent>
                     </MudMenu>
                 </div>
-                <div class="test-scenario-build-actions" aria-label="Scenario build actions">
+                <div class="test-scenario-build-actions" aria-label="@ScenarioBuildActionsLabel">
                     <MudMenu Dense="true"
                              Icon="@Icons.Material.Filled.Add"
                              Size="Size.Small"
@@ -208,46 +205,46 @@
         </div>
 
         <div class="test-scenario-workspace">
-            <div class="test-scenario-builder-strip" aria-label="Scenario build summary">
+            <div class="test-scenario-builder-strip" aria-label="@ScenarioBuilderFactsLabel">
                 <div class="@BuilderMetricClass(Scenario.StepCount > 0)">
-                    <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.FormatListNumbered" Size="Size.Small" aria-hidden="true" />
                     <span>Steps</span>
                     <strong>@StepCountText</strong>
                 </div>
                 <div class="@BuilderMetricClass(Scenario.Phases.Any(phase => phase.Steps.Count > 0))">
-                    <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" aria-hidden="true" />
                     <span>Active phases</span>
                     <strong>@ActivePhaseCountText</strong>
                 </div>
                 <div class="@BuilderMetricClass(!Project.IsScenarioRunning)">
-                    <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" aria-hidden="true" />
                     <span>Runner</span>
-                    <strong>@RunnerStateText</strong>
+                    <strong>@RunnerSummaryText</strong>
                 </div>
             </div>
 
             @if (Scenario.Steps.Count == 0)
             {
-                <div class="test-scenario-empty" aria-label="Empty scenario">
+                <div class="test-scenario-empty" role="status" aria-live="polite" aria-label="@EmptyScenarioLabel">
                     <div class="test-scenario-empty-panel compact">
                         <span class="test-scenario-empty-icon timeline" aria-hidden="true">
-                            <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                            <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" aria-hidden="true" />
                         </span>
                         <div class="test-scenario-empty-copy">
                             <span>@NoStepsEmptyTitle</span>
                             <small>@NoStepsEmptyText</small>
                         </div>
-                        <div class="test-scenario-empty-cues" aria-label="Scenario starter cues">
+                        <div class="test-scenario-empty-cues" aria-label="@ScenarioStarterCuesLabel">
                             <span>
-                                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
                                 @ScenarioStepTypeCountText
                             </span>
                             <span>
-                                <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.ViewTimeline" Size="Size.Small" aria-hidden="true" />
                                 @PhaseCountText
                             </span>
                             <span>
-                                <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" aria-hidden="true" />
                                 Build first
                             </span>
                         </div>
@@ -262,7 +259,7 @@
                         <section class="@PhaseLaneClass(phase)" @key="phase.Name">
                             <div class="test-phase-header">
                                 <span class="test-phase-icon" aria-hidden="true">
-                                    <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" />
+                                    <MudIcon Icon="@PhaseIcon(phase.Kind)" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <div class="test-phase-copy">
                                     <span>@phase.Title</span>
@@ -285,6 +282,7 @@
                                     var stepResult = FindStepResult(step);
                                     var visibleConfiguration = VisibleConfiguration(step).ToArray();
                                     <section class="@StepCardClass(step, stepResult)"
+                                             role="group"
                                              aria-label="@StepCardLabel(step, stepResult)"
                                              tabindex="0"
                                              @key="step.Name">
@@ -299,15 +297,15 @@
                                                     <span class="@StepTypeClass(step)">@StepTypeLabel(step)</span>
                                                     @if (stepResult is not null)
                                                     {
-                                                        <span class="@StepStatusClass(stepResult.Status)">
-                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
+                                                        <span class="@StepResultMarkerClass(stepResult.Status)">
+                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" aria-hidden="true" />
                                                             <span>@stepResult.Status</span>
                                                         </span>
                                                     }
                                                     else
                                                     {
-                                                        <span class="test-step-status idle">
-                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" />
+                                                        <span class="test-step-result-marker idle">
+                                                            <MudIcon Icon="@StepStatusIcon(stepResult)" Size="Size.Small" aria-hidden="true" />
                                                             <span>Not run</span>
                                                         </span>
                                                     }
@@ -315,29 +313,33 @@
                                                 <span class="test-step-actions">
                                                     <button type="button"
                                                             class="test-step-action"
-                                                            title="Move earlier"
+                                                            aria-label="@MoveStepEarlierLabel(step)"
+                                                            title="@MoveStepEarlierLabel(step)"
                                                             disabled="@(index == 0)"
                                                             @onclick="@(() => MoveStep(step.Name, -1))">
-                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
+                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                     <button type="button"
                                                             class="test-step-action"
-                                                            title="Move later"
+                                                            aria-label="@MoveStepLaterLabel(step)"
+                                                            title="@MoveStepLaterLabel(step)"
                                                             disabled="@(index >= phase.Steps.Count - 1)"
                                                             @onclick="@(() => MoveStep(step.Name, 1))">
-                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" />
+                                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                     <button type="button"
                                                             class="test-step-action"
-                                                            title="Edit step"
+                                                            aria-label="@EditStepLabel(step)"
+                                                            title="@EditStepLabel(step)"
                                                             @onclick="@(() => OpenStepEditorAsync(step))">
-                                                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                                                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                     <button type="button"
                                                             class="test-step-action danger"
-                                                            title="Delete step"
+                                                            aria-label="@DeleteStepLabel(step)"
+                                                            title="@DeleteStepLabel(step)"
                                                             @onclick="@(() => RemoveStep(step.Name))">
-                                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
+                                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" aria-hidden="true" />
                                                     </button>
                                                 </span>
                                             </div>
@@ -349,7 +351,7 @@
                                             {
                                                 <div class="test-step-result-strip" aria-label="@StepResultMetaLabel(stepResult)">
                                                     <span class="@StepResultScopeClass">
-                                                        <MudIcon Icon="@ActiveRunChipIcon" Size="Size.Small" />
+                                                        <MudIcon Icon="@ActiveRunMarkerIcon" Size="Size.Small" aria-hidden="true" />
                                                         <span>@StepResultScopeLabel</span>
                                                     </span>
                                                     <span>@StepResultClockLabel(stepResult)</span>
@@ -360,7 +362,7 @@
                                             @if (stepResult?.MatchedEvent is { } matched)
                                             {
                                                 <div class="test-step-event">
-                                                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" />
+                                                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Small" aria-hidden="true" />
                                                     <span>@BuildEventSummary(matched)</span>
                                                 </div>
                                             }
@@ -441,13 +443,53 @@
     private string RecentRunCountText
         => FormatRecentRunCount(RecentRuns.Count);
 
+    private string TestScenarioDesignerLabel
+        => Scenario is { } scenario
+            ? $"{scenario.Name} test scenario designer"
+            : "Test scenario designer with no active scenario";
+
+    private string TestScenarioSetupStateLabel
+        => Project.TestNames.Count == 0
+            ? "Test scenario designer setup with no tests"
+            : $"Test scenario designer setup with {FormatTestCount(Project.TestNames.Count)}";
+
+    private string ScenarioDesignerSetupLabel
+        => Project.TestNames.Count == 0
+            ? "Scenario designer setup with no tests"
+            : $"Scenario designer setup with {FormatTestCount(Project.TestNames.Count)}";
+
+    private string EmptyScenarioLabel
+        => Scenario is { } scenario
+            ? $"{scenario.Name} has no steps"
+            : "Empty scenario with no active scenario";
+
+    private string ScenarioStarterCuesLabel
+        => Scenario is { } scenario
+            ? $"Starter cues for {scenario.Name}"
+            : "Scenario starter cues with no active scenario";
+
+    private string ScenarioDesignerMetaLabel
+        => Scenario is { } scenario
+            ? $"Scenario designer facts for {scenario.Name}"
+            : "Scenario designer facts with no active scenario";
+
+    private string ScenarioBuildActionsLabel
+        => Scenario is { } scenario
+            ? $"Scenario build actions for {scenario.Name}"
+            : "Scenario build actions with no active scenario";
+
+    private string ScenarioBuilderFactsLabel
+        => Scenario is { } scenario
+            ? $"Scenario builder facts for {scenario.Name}"
+            : "Scenario builder facts with no active scenario";
+
     private string ActivePhaseCountText
         => Scenario is { } scenario
             ? FormatActivePhaseCount(scenario.Phases.Count(phase => phase.Steps.Count > 0))
             : "0 active";
 
-    private string RunnerStateText
-        => Project.IsScenarioRunning ? "Running" : "Ready";
+    private string RunnerSummaryText
+        => Project.IsScenarioRunning ? "Running" : "Idle";
 
     private IReadOnlyList<ScenarioRunResult> RecentRuns
         => Scenario is null
@@ -474,6 +516,16 @@
 
     private string ReportActionsLabel => $"Scenario report actions for {ActiveRunScopeText} run";
 
+    private string RunHistoryPanelLabel
+        => Scenario is { } scenario
+            ? $"Recent runs for {scenario.Name}"
+            : "Recent runs with no active scenario";
+
+    private string ShowLatestRunLabel
+        => Scenario is { } scenario
+            ? $"Show latest run for {scenario.Name}"
+            : "Show latest scenario run";
+
     private string ReportActionsClass
         => Project.LastScenarioRunResult is null
             ? "test-scenario-report-actions disabled"
@@ -481,15 +533,15 @@
                 ? "test-scenario-report-actions history"
                 : "test-scenario-report-actions latest";
 
-    private string ActiveRunChipText
+    private string ActiveRunMarkerText
         => Project.LastScenarioRunResult is { } result
             ? $"{(IsViewingHistoricalRun ? "History" : "Latest")} {FormatRunTime(result)}"
             : "No run";
 
-    private string ActiveRunChipIcon
+    private string ActiveRunMarkerIcon
         => IsViewingHistoricalRun ? Icons.Material.Filled.History : Icons.Material.Filled.Schedule;
 
-    private Color ActiveRunChipColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
+    private Color ActiveRunMarkerColor => IsViewingHistoricalRun ? Color.Info : Color.Default;
 
     private string StepResultScopeClass
         => IsViewingHistoricalRun ? "test-step-result-run history" : "test-step-result-run latest";
@@ -625,14 +677,26 @@
         return $"{step.Name}, {StepTypeLabel(step)}, {status}";
     }
 
+    private static string MoveStepEarlierLabel(ScenarioStepSnapshot step)
+        => $"Move {step.Name} earlier";
+
+    private static string MoveStepLaterLabel(ScenarioStepSnapshot step)
+        => $"Move {step.Name} later";
+
+    private static string EditStepLabel(ScenarioStepSnapshot step)
+        => $"Edit {step.Name}";
+
+    private static string DeleteStepLabel(ScenarioStepSnapshot step)
+        => $"Delete {step.Name}";
+
     private string StepResultMetaLabel(ScenarioStepResult result)
         => $"{StepResultScopeLabel}, finished {StepResultClockLabel(result)}, duration {StepResultDurationLabel(result)}, {StepResultEventLabel(result)}";
 
     private string StepTypeClass(ScenarioStepSnapshot step)
         => ScenarioStepDisplay.StepTypeClass(step, ScenarioSteps);
 
-    private static string StepStatusClass(ScenarioStepRunStatus status)
-        => ScenarioStepDisplay.StepStatusClass(status);
+    private static string StepResultMarkerClass(ScenarioStepRunStatus status)
+        => ScenarioStepDisplay.StepResultMarkerClass(status);
 
     private static string StepStatusIcon(ScenarioStepResult? result)
         => result?.Status switch
@@ -708,8 +772,8 @@
         return string.Join(' ', classes);
     }
 
-    private static string RunHistoryStatusClass(ScenarioRunResult result)
-        => $"test-run-history-status {result.Status.ToString().ToLowerInvariant()}";
+    private static string RunHistoryMarkerClass(ScenarioRunResult result)
+        => $"test-run-history-marker {result.Status.ToString().ToLowerInvariant()}";
 
     private static string RunHistoryTimeLabel(ScenarioRunResult result)
         => result.FinishedAt.ToLocalTime().ToString("HH:mm:ss", CultureInfo.CurrentCulture);
@@ -826,8 +890,8 @@
 
     private async Task RunScenarioAsync()
     {
-        var ready = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());
-        if (!ready)
+        var connectionsAvailable = await Live.EnsureConnectionsAsync(Project.GetConnectionResources());
+        if (!connectionsAvailable)
         {
             return;
         }
@@ -853,9 +917,9 @@
             {
                 [nameof(ScenarioRunReportDialog.Title)] = $"Scenario report: {result.Name}",
                 [nameof(ScenarioRunReportDialog.RunScopeText)] = IsViewingHistoricalRun ? "Historical run" : "Latest run",
-                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunChipIcon,
-                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunChipColor,
-                [nameof(ScenarioRunReportDialog.RunIdText)] = FormatRunIdChip(report.RunId),
+                [nameof(ScenarioRunReportDialog.RunScopeIcon)] = ActiveRunMarkerIcon,
+                [nameof(ScenarioRunReportDialog.RunScopeColor)] = ActiveRunMarkerColor,
+                [nameof(ScenarioRunReportDialog.RunIdText)] = FormatRunIdText(report.RunId),
                 [nameof(ScenarioRunReportDialog.RunStatusText)] = result.Status.ToString(),
                 [nameof(ScenarioRunReportDialog.RunStatusColor)] = RunStatusColor(result.Status),
                 [nameof(ScenarioRunReportDialog.RunStepSummaryText)] = FormatReportStepCount(report.StepSummary),
@@ -1001,7 +1065,7 @@
         return string.IsNullOrWhiteSpace(safe) ? "scenario" : safe;
     }
 
-    private static string FormatRunIdChip(string runId)
+    private static string FormatRunIdText(string runId)
         => runId.Length <= 36 ? $"Run {runId}" : $"Run {runId[..33]}...";
 
     private void ShowLatestRun()

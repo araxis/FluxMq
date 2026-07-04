@@ -1,11 +1,11 @@
 @implements IDisposable
 @inject ProjectManagerService Projects
 
-<div class="apps-panel" aria-label="Open apps panel">
+<div class="apps-panel" aria-label="@AppsPanelLabel">
     <div class="apps-panel-head">
         <div class="apps-panel-title">
             <span class="apps-panel-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Folder" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="apps-panel-title-copy">
                 <strong>Open Apps</strong>
@@ -17,7 +17,7 @@
     @if (Projects.Projects.Count == 0)
     {
         <div class="apps-empty" role="status" aria-live="polite">
-            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" aria-hidden="true" />
             <div>
                 <div class="apps-empty-title">No apps open</div>
                 <div class="apps-empty-copy">Use New or Open from the toolbar.</div>
@@ -37,31 +37,34 @@
                          role="button"
                          tabindex="0"
                          aria-label="@AppTileLabel(a, isActive)"
+                         aria-current="@AppTileCurrent(isActive)"
+                         aria-keyshortcuts="Enter Space"
                          title="@AppTileLabel(a, isActive)"
                          @onclick="@(() => Projects.SetActive(a))"
                          @onkeydown="@((KeyboardEventArgs args) => SelectAppFromKeyboard(args, a))">
                         <span class="app-tile-icon" aria-hidden="true">
                             <MudIcon Icon="@(isActive ? Icons.Material.Filled.FolderOpen : Icons.Material.Filled.Article)"
-                                     Size="Size.Small" />
+                                     Size="Size.Small"
+                                     aria-hidden="true" />
                         </span>
                         <span class="app-tile-copy">
                             <span class="app-tile-name">@a.Name</span>
                             <span class="app-tile-path">@FileLabel(a)</span>
                             <span class="app-tile-meta">@BuildAppMeta(a)</span>
                         </span>
-                        <span class="app-tile-states">
+                        <span class="app-tile-markers">
                             @if (isActive)
                             {
-                                <span class="app-state active">@CurrentArtifactLabel(a)</span>
+                                <span class="app-marker active">@CurrentArtifactLabel(a)</span>
                             }
                             @if (a.HasUnsavedChanges)
                             {
-                                <span class="app-state unsaved">Unsaved</span>
+                                <span class="app-marker unsaved">Unsaved</span>
                             }
                         </span>
                     </div>
                     <span class="app-tile-close" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                        <MudTooltip Text="Close app">
+                        <MudTooltip Text="@CloseLabel(a)">
                             <MudIconButton Size="Size.Small"
                                            Icon="@Icons.Material.Filled.Close"
                                            Class="app-close-button"
@@ -82,6 +85,8 @@
         ? "1 app"
         : $"{Projects.Projects.Count.ToString(System.Globalization.CultureInfo.InvariantCulture)} apps";
 
+    private string AppsPanelLabel => $"Open apps, {ProjectCountLabel}";
+
     private Task CloseAsync(FlowWorkspaceService app) => Projects.CloseProjectAsync(app).AsTask();
 
     private void SelectAppFromKeyboard(KeyboardEventArgs args, FlowWorkspaceService app)
@@ -97,6 +102,9 @@
 
     private static string AppTileClass(bool isActive)
         => isActive ? "app-tile active" : "app-tile";
+
+    private static string? AppTileCurrent(bool isActive)
+        => isActive ? "true" : null;
 
     private static string FileLabel(FlowWorkspaceService app)
         => string.IsNullOrWhiteSpace(app.CurrentFilePath)

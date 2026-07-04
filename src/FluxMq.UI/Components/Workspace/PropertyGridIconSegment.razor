@@ -11,7 +11,7 @@
                 aria-pressed="@IsSelected(option)"
                 disabled="@option.Disabled"
                 @onclick="@(() => SelectOptionAsync(option))">
-            <MudIcon Icon="@option.Icon" Size="Size.Small" />
+            <MudIcon Icon="@option.Icon" Size="Size.Small" aria-hidden="true" />
             <span class="property-grid-icon-segment-label">@option.Label</span>
         </button>
     }

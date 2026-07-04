@@ -12,8 +12,8 @@
     @if (ShowHeader(widget))
     {
         <div class="dashboard-area-chart-header">
-            <div class="dashboard-widget-icon">
-                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(widget)" Size="Size.Small" />
+            <div class="dashboard-widget-icon" aria-hidden="true">
+                <MudIcon Icon="@DashboardWidgetFormatting.WidgetIcon(widget)" Size="Size.Small" aria-hidden="true" />
             </div>
             <div class="dashboard-widget-title-block">
                 <span class="dashboard-widget-title">@Header(widget)</span>
@@ -63,7 +63,7 @@
         }
         else
         {
-            <div class="dashboard-widget-empty">@EmptyText(widget)</div>
+            <div class="dashboard-widget-empty" role="status" aria-live="polite">@EmptyText(widget)</div>
         }
     </div>
 </div>

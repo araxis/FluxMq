@@ -4,39 +4,39 @@
 @inject IJSRuntime JsRuntime
 
 <div class="app-json-view">
-    <div class="app-json-toolbar" aria-label="Application JSON toolbar">
+    <div class="app-json-toolbar" aria-label="@AppJsonToolbarLabel">
         <div class="app-json-title">
-            <span class="app-json-title-icon">
-                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" />
+            <span class="app-json-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="app-json-title-copy">
                 <strong>App JSON</strong>
                 <span>@FileLabel</span>
             </div>
         </div>
-        <div class="app-json-meta" aria-label="JSON summary">
+        <div class="app-json-meta" aria-label="@AppJsonMetaLabel">
             <span>@JsonLineCount lines</span>
             <span>@JsonSizeLabel</span>
         </div>
         @if (Project.HasUnsavedChanges)
         {
-            <span class="app-json-state unsaved" role="status" aria-live="polite">Unsaved</span>
+            <span class="app-json-unsaved-indicator" role="status" aria-live="polite">Unsaved</span>
         }
-        <MudTooltip Text="Copy JSON">
+        <MudTooltip Text="@CopyAppJsonLabel">
             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
                            Size="Size.Small"
-                           aria-label="Copy JSON"
+                           aria-label="@CopyAppJsonLabel"
                            Class="app-json-copy-button"
                            Disabled="@string.IsNullOrWhiteSpace(_fullJson)"
                            OnClick="@CopyAsync" />
         </MudTooltip>
     </div>
 
-    <div class="app-json-editor-shell" aria-label="Application definition JSON">
+    <div class="app-json-editor-shell" aria-label="@AppJsonEditorLabel">
         @if (string.IsNullOrWhiteSpace(_fullJson))
         {
             <div class="app-json-empty" role="status" aria-live="polite">
-                <MudIcon Icon="@Icons.Material.Filled.CodeOff" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.CodeOff" Size="Size.Small" aria-hidden="true" />
                 <strong>No JSON available</strong>
                 <span>Update the app definition to generate the full JSON view.</span>
             </div>
@@ -60,6 +60,16 @@
 
     private const string EditorId = "app-json-viewer";
 
+    private string AppJsonToolbarLabel => Project.HasUnsavedChanges
+        ? $"Application JSON toolbar for {Project.Name}, unsaved changes"
+        : $"Application JSON toolbar for {Project.Name}";
+
+    private string AppJsonMetaLabel => $"Application JSON summary for {Project.Name}: {JsonLineCountLabel}, {JsonSizeLabel}";
+
+    private string CopyAppJsonLabel => $"Copy application JSON for {Project.Name}";
+
+    private string AppJsonEditorLabel => $"Application definition JSON for {Project.Name}";
+
     private string FileLabel => string.IsNullOrWhiteSpace(Project.CurrentFilePath)
         ? "In memory - not saved"
         : Project.CurrentFilePath;
@@ -67,6 +77,8 @@
     private int JsonLineCount => string.IsNullOrEmpty(_fullJson)
         ? 0
         : _fullJson.Count(static character => character == '\n') + 1;
+
+    private string JsonLineCountLabel => JsonLineCount == 1 ? "1 line" : $"{JsonLineCount} lines";
 
     private string JsonSizeLabel
     {

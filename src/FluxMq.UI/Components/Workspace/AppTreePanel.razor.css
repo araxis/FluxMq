@@ -467,7 +467,7 @@
     white-space: nowrap;
 }
 
-.test-run-state {
+.test-run-marker {
     align-items: center;
     color: var(--mud-palette-text-secondary);
     display: inline-flex;
@@ -483,20 +483,20 @@
     white-space: nowrap;
 }
 
-.test-run-state span {
+.test-run-marker span {
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.test-run-state.passed {
+.test-run-marker.passed {
     color: var(--flux-accent);
 }
 
-.test-run-state.failed {
+.test-run-marker.failed {
     color: var(--mud-palette-error);
 }
 
-.test-run-state.canceled {
+.test-run-marker.canceled {
     color: var(--mud-palette-warning);
 }
 

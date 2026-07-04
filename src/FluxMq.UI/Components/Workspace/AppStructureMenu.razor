@@ -7,8 +7,8 @@
 <div class="app-structure">
     @if (Projects.ActiveProject is not { } active)
     {
-        <span class="app-structure-empty">
-            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" />
+        <span class="app-structure-empty" role="status" aria-live="polite">
+            <MudIcon Icon="@Icons.Material.Filled.FolderOff" Size="Size.Small" aria-hidden="true" />
             <span>No app open</span>
         </span>
     }
@@ -17,13 +17,14 @@
         var conns = GetConnections(active);
 
         <span class="app-structure-app" title="@BuildAppMeta(active)">
-            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" aria-hidden="true" />
             <span class="app-structure-name">@active.Name</span>
         </span>
 
-        <div class="app-structure-actions" role="navigation" aria-label="App structure navigation">
+        <div class="app-structure-actions" role="navigation" aria-label="@StructureNavigationLabel(active)">
             <MudMenu Dense="true"
                      Label="@StructureMenuLabel("Brokers", conns.Count)"
+                     AriaLabel="@StructureMenuAriaLabel(active, "Brokers", conns.Count, "broker connection")"
                      StartIcon="@Icons.Material.Filled.Hub"
                      EndIcon="@Icons.Material.Filled.ExpandMore"
                      Size="Size.Small"
@@ -37,7 +38,7 @@
                 @if (conns.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.Hub, "No connections", "Add a broker profile to connect.")
+                        @MenuEmptyRow(Icons.Material.Filled.Hub, "No connections", "Add a broker profile to connect.")
                     </MudMenuItem>
                 }
                 else
@@ -51,15 +52,15 @@
                                      title="@BrokerItemTitle(c)">
                             <div class="@BrokerRowClass(c)">
                                 <span class="app-menu-broker-icon-frame" aria-hidden="true">
-                                    <MudIcon Icon="@BrokerActionIcon(c)" Size="Size.Small" />
+                                    <MudIcon Icon="@BrokerActionIcon(c)" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <span class="app-menu-broker-copy">
                                     <span>@c.ResourceName</span>
                                     <small>@BrokerEndpointLabel(c)</small>
                                 </span>
-                                <span class="@BrokerStateClass(c)"
+                                <span class="@BrokerConnectionClass(c)"
                                       aria-label="@BrokerActionLabel(c)">
-                                    <span>@BrokerStateText(c)</span>
+                                    <span>@BrokerConnectionText(c)</span>
                                 </span>
                             </div>
                         </MudMenuItem>
@@ -68,7 +69,9 @@
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddConnectionAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "broker connection")"
+                             aria-label="@AddCommandLabel(active, "broker connection")">
                     @MenuCommandRow("Add connection", "Broker profile")
                 </MudMenuItem>
             </ChildContent>
@@ -76,6 +79,7 @@
 
         <MudMenu Dense="true"
                  Label="@StructureMenuLabel("Pipelines", active.WorkflowNames.Count)"
+                 AriaLabel="@StructureMenuAriaLabel(active, "Pipelines", active.WorkflowNames.Count, "pipeline")"
                  StartIcon="@Icons.Material.Filled.Timeline"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
@@ -89,7 +93,7 @@
                 @if (active.WorkflowNames.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.Timeline, "No pipelines", "Create a flow to process traffic.")
+                        @MenuEmptyRow(Icons.Material.Filled.Timeline, "No pipelines", "Create a flow to process traffic.")
                     </MudMenuItem>
                 }
                 else
@@ -99,17 +103,18 @@
                         var w = workflow;
                         <MudMenuItem OnClick="@(() => SelectPipeline(active, w))"
                                      Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Pipeline, w)"
+                                     aria-current="@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Pipeline, w)"
                                      title="@w">
                             <div class="app-menu-artifact-row app-menu-compact-artifact-row">
                                 <span class="app-menu-artifact-icon-frame pipeline" aria-hidden="true">
-                                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <span class="app-menu-artifact-copy">
                                     <span class="app-menu-artifact-name">@w</span>
                                     <span class="app-menu-artifact-meta">Pipeline</span>
                                 </span>
                                 <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                                    <MudTooltip Text="Delete pipeline">
+                                    <MudTooltip Text="@DeleteLabel("pipeline", w)">
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
                                                        Size="Size.Small"
                                                        Class="app-menu-delete-button"
@@ -124,7 +129,9 @@
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddPipelineAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "pipeline")"
+                             aria-label="@AddCommandLabel(active, "pipeline")">
                     @MenuCommandRow("Add pipeline", "Processing flow")
                 </MudMenuItem>
             </ChildContent>
@@ -132,6 +139,7 @@
 
         <MudMenu Dense="true"
                  Label="@StructureMenuLabel("Dashboards", active.DashboardNames.Count)"
+                 AriaLabel="@StructureMenuAriaLabel(active, "Dashboards", active.DashboardNames.Count, "dashboard")"
                  StartIcon="@Icons.Material.Filled.Dashboard"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
@@ -145,7 +153,7 @@
                 @if (active.DashboardNames.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.Dashboard, "No dashboards", "Create a view for live metrics.")
+                        @MenuEmptyRow(Icons.Material.Filled.Dashboard, "No dashboards", "Create a view for live metrics.")
                     </MudMenuItem>
                 }
                 else
@@ -155,17 +163,18 @@
                         var d = dashboard;
                         <MudMenuItem OnClick="@(() => SelectDashboard(active, d))"
                                      Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Dashboard, d)"
+                                     aria-current="@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Dashboard, d)"
                                      title="@d">
                             <div class="app-menu-artifact-row app-menu-compact-artifact-row">
                                 <span class="app-menu-artifact-icon-frame dashboard" aria-hidden="true">
-                                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <span class="app-menu-artifact-copy">
                                     <span class="app-menu-artifact-name">@d</span>
                                     <span class="app-menu-artifact-meta">Dashboard</span>
                                 </span>
                                 <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                                    <MudTooltip Text="Delete dashboard">
+                                    <MudTooltip Text="@DeleteLabel("dashboard", d)">
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
                                                        Size="Size.Small"
                                                        Class="app-menu-delete-button"
@@ -180,7 +189,9 @@
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddDashboardAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "dashboard")"
+                             aria-label="@AddCommandLabel(active, "dashboard")">
                     @MenuCommandRow("Add dashboard", "Metric view")
                 </MudMenuItem>
             </ChildContent>
@@ -188,6 +199,7 @@
 
         <MudMenu Dense="true"
                  Label="@StructureMenuLabel("Metrics", active.MetricNames.Count)"
+                 AriaLabel="@StructureMenuAriaLabel(active, "Metrics", active.MetricNames.Count, "metric")"
                  StartIcon="@Icons.Material.Filled.QueryStats"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
@@ -201,30 +213,34 @@
                 @if (active.MetricNames.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.QueryStats, "No metrics", "Add a metric to power dashboards.")
+                        @MenuEmptyRow(Icons.Material.Filled.QueryStats, "No metrics", "Add a metric to power dashboards.")
                     </MudMenuItem>
                 }
                 else
                 {
                     <MudMenuItem OnClick="@(() => SelectMetrics(active))"
                                  Class="@ArtifactMenuItemClass(active, WorkspaceArtifactKind.Metrics, "Metrics")"
-                                 title="Open metric designer">
+                                 aria-current="@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Metrics, "Metrics")"
+                                 title="@MetricDesignerItemLabel(active)"
+                                 aria-label="@MetricDesignerItemLabel(active)">
                         <div class="app-menu-artifact-row app-menu-compact-artifact-row app-menu-metrics-row">
                             <span class="app-menu-artifact-icon-frame metrics" aria-hidden="true">
-                                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Small" aria-hidden="true" />
                             </span>
                             <span class="app-menu-artifact-copy">
                                 <span class="app-menu-artifact-name">Metric designer</span>
                                 <span class="app-menu-artifact-meta">@CountLabel(active.MetricNames.Count, "metric")</span>
                             </span>
-                            <span class="app-menu-artifact-state">Open</span>
+                            <span class="app-menu-artifact-action">Open</span>
                         </div>
                     </MudMenuItem>
                 }
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddMetricAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "metric")"
+                             aria-label="@AddCommandLabel(active, "metric")">
                     @MenuCommandRow("Add metric", "Dashboard signal")
                 </MudMenuItem>
             </ChildContent>
@@ -232,6 +248,7 @@
 
         <MudMenu Dense="true"
                  Label="@StructureMenuLabel("Tests", active.TestNames.Count)"
+                 AriaLabel="@StructureMenuAriaLabel(active, "Tests", active.TestNames.Count, "test")"
                  StartIcon="@Icons.Material.Filled.FactCheck"
                  EndIcon="@Icons.Material.Filled.ExpandMore"
                  Size="Size.Small"
@@ -245,7 +262,7 @@
                 @if (active.TestNames.Count == 0)
                 {
                     <MudMenuItem Disabled="true" Class="app-menu-empty">
-                        @MenuStateRow(Icons.Material.Filled.FactCheck, "No tests", "Create a scenario to validate flows.")
+                        @MenuEmptyRow(Icons.Material.Filled.FactCheck, "No tests", "Create a scenario to validate flows.")
                     </MudMenuItem>
                 }
                 else
@@ -256,25 +273,26 @@
                         var latestTestRun = LatestTestRun(active, t);
                         <MudMenuItem OnClick="@(() => SelectTest(active, t))"
                                      Class="@TestArtifactItemClass(active, t, latestTestRun)"
+                                     aria-current="@ArtifactMenuItemCurrent(active, WorkspaceArtifactKind.Test, t)"
                                      title="@TestArtifactTitle(t, latestTestRun)">
                             <div class="@TestRunMenuRowClass(latestTestRun)">
                                 <span class="app-menu-test-icon-frame" aria-hidden="true">
-                                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" aria-hidden="true" />
                                 </span>
                                 <span class="app-menu-artifact-copy">
                                     <span class="app-menu-artifact-name">@t</span>
                                     <span class="app-menu-artifact-meta">@TestRunMenuMeta(latestTestRun)</span>
                                 </span>
                                 <span class="@TestRunMenuSummaryClass(latestTestRun)"
-                                      aria-label="@TestRunMenuStateLabel(latestTestRun)">
-                                    <span class="@TestRunMenuStateClass(latestTestRun)">
-                                        <MudIcon Icon="@TestRunMenuIcon(latestTestRun)" Size="Size.Small" />
+                                      aria-label="@TestRunMenuSummaryLabel(latestTestRun)">
+                                    <span class="@TestRunMenuMarkerClass(latestTestRun)">
+                                        <MudIcon Icon="@TestRunMenuIcon(latestTestRun)" Size="Size.Small" aria-hidden="true" />
                                         <span>@TestRunMenuText(latestTestRun)</span>
                                     </span>
                                     <span class="app-menu-test-summary-meta">@TestRunMenuDetailText(latestTestRun)</span>
                                 </span>
                                 <span class="app-menu-inline-action" @onclick:stopPropagation="true" @onmousedown:stopPropagation="true">
-                                    <MudTooltip Text="Delete test">
+                                    <MudTooltip Text="@DeleteLabel("test", t)">
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
                                                        Size="Size.Small"
                                                        Class="app-menu-delete-button"
@@ -289,7 +307,9 @@
 
                 <MudDivider Class="app-menu-divider" />
                 <MudMenuItem OnClick="@(() => AddTestAsync(active))"
-                             Class="app-menu-child app-menu-command-item app-menu-add">
+                             Class="app-menu-child app-menu-command-item app-menu-add"
+                             title="@AddCommandLabel(active, "test")"
+                             aria-label="@AddCommandLabel(active, "test")">
                     @MenuCommandRow("Add test", "Scenario check")
                 </MudMenuItem>
             </ChildContent>
@@ -302,26 +322,26 @@
 @code {
     private readonly HashSet<FlowWorkspaceService> _subscribed = [];
 
-    private static RenderFragment MenuStateRow(string icon, string title, string hint) => @<div class="app-menu-state-row">
-        <span class="app-menu-state-icon" aria-hidden="true">
-            <MudIcon Icon="@icon" Size="Size.Small" />
+    private static RenderFragment MenuEmptyRow(string icon, string title, string hint) => @<div class="app-menu-empty-row" role="status" aria-live="polite">
+        <span class="app-menu-empty-icon" aria-hidden="true">
+            <MudIcon Icon="@icon" Size="Size.Small" aria-hidden="true" />
         </span>
-        <span class="app-menu-state-copy">
+        <span class="app-menu-empty-copy">
             <span>@title</span>
             <small>@hint</small>
         </span>
-        <span class="app-menu-state-text">Empty</span>
+        <span class="app-menu-empty-text">Empty</span>
     </div>;
 
     private static RenderFragment MenuCommandRow(string title, string hint) => @<div class="app-menu-command-row">
         <span class="app-menu-command-icon" aria-hidden="true">
-            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" aria-hidden="true" />
         </span>
         <span class="app-menu-command-copy">
             <span>@title</span>
             <small>@hint</small>
         </span>
-        <MudIcon Icon="@Icons.Material.Filled.ChevronRight"
+        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" aria-hidden="true"
                  Size="Size.Small"
                  Class="app-menu-command-cue" />
     </div>;
@@ -347,6 +367,12 @@
     private static string StructureMenuLabel(string label, int count)
         => $"{label} {count.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
 
+    private static string StructureNavigationLabel(FlowWorkspaceService app)
+        => $"{app.Name} structure navigation, {BuildAppMeta(app)}";
+
+    private static string StructureMenuAriaLabel(FlowWorkspaceService app, string sectionLabel, int count, string singular)
+        => $"{app.Name} {sectionLabel.ToLowerInvariant()} menu, {CountLabel(count, singular)}";
+
     private static string BuildAppMeta(FlowWorkspaceService app)
     {
         var parts = new[]
@@ -363,8 +389,14 @@
     private static string CountLabel(int count, string singular)
         => count == 1 ? $"1 {singular}" : $"{count} {singular}s";
 
+    private static string AddCommandLabel(FlowWorkspaceService app, string artifactLabel)
+        => $"Add {artifactLabel} to {app.Name}";
+
     private static string DeleteLabel(string artifactKind, string name)
         => $"Delete {artifactKind} {name}";
+
+    private static string MetricDesignerItemLabel(FlowWorkspaceService app)
+        => $"Open {app.Name} metric designer, {CountLabel(app.MetricNames.Count, "metric")}";
 
     private static ScenarioRunResult? LatestTestRun(FlowWorkspaceService app, string testName)
         => app.ScenarioRunHistory.FirstOrDefault(result =>
@@ -388,10 +420,10 @@
 
     private static string TestRunMenuMeta(ScenarioRunResult? latestRun)
         => latestRun is null
-            ? "Ready for first run"
+            ? "No run yet"
             : $"Latest {latestRun.FinishedAt.ToLocalTime():HH:mm:ss}";
 
-    private static string TestRunMenuStateLabel(ScenarioRunResult? latestRun)
+    private static string TestRunMenuSummaryLabel(ScenarioRunResult? latestRun)
         => latestRun is null
             ? "No scenario run history"
             : $"Latest run {latestRun.Status}, {TestRunMenuDetailText(latestRun)}";
@@ -430,13 +462,13 @@
             _ => "app-menu-test-summary idle"
         };
 
-    private static string TestRunMenuStateClass(ScenarioRunResult? latestRun)
+    private static string TestRunMenuMarkerClass(ScenarioRunResult? latestRun)
         => latestRun?.Status switch
         {
-            ScenarioRunStatus.Passed => "app-menu-test-state passed",
-            ScenarioRunStatus.Failed => "app-menu-test-state failed",
-            ScenarioRunStatus.Canceled => "app-menu-test-state canceled",
-            _ => "app-menu-test-state idle"
+            ScenarioRunStatus.Passed => "app-menu-test-marker passed",
+            ScenarioRunStatus.Failed => "app-menu-test-marker failed",
+            ScenarioRunStatus.Canceled => "app-menu-test-marker canceled",
+            _ => "app-menu-test-marker idle"
         };
 
     private static string TestRunMenuIcon(ScenarioRunResult? latestRun)
@@ -478,7 +510,7 @@
     private static string BrokerItemTitle(ManagedConnection connection)
         => $"{BrokerActionLabel(connection)} at {BrokerEndpointLabel(connection)}";
 
-    private static string BrokerStateText(ManagedConnection connection) => connection.State switch
+    private static string BrokerConnectionText(ManagedConnection connection) => connection.State switch
     {
         MqttClientState.Connected => "Live",
         MqttClientState.Connecting or MqttClientState.Reconnecting => "Pending",
@@ -494,12 +526,12 @@
         _ => "app-menu-broker-row idle"
     };
 
-    private static string BrokerStateClass(ManagedConnection connection) => connection.State switch
+    private static string BrokerConnectionClass(ManagedConnection connection) => connection.State switch
     {
-        MqttClientState.Connected => "app-menu-broker-state live",
-        MqttClientState.Faulted => "app-menu-broker-state faulted",
-        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-broker-state pending",
-        _ => "app-menu-broker-state idle"
+        MqttClientState.Connected => "app-menu-broker-connection live",
+        MqttClientState.Faulted => "app-menu-broker-connection faulted",
+        MqttClientState.Connecting or MqttClientState.Reconnecting => "app-menu-broker-connection pending",
+        _ => "app-menu-broker-connection idle"
     };
 
     private static string BrokerItemClass(ManagedConnection connection) => connection.State switch
@@ -512,15 +544,21 @@
 
     private string ArtifactItemClass(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
     {
-        var active = app == Projects.ActiveProject &&
-                     app.ActiveArtifactKind == kind &&
-                     string.Equals(app.ActiveArtifactName, name, StringComparison.Ordinal);
+        var active = IsArtifactActive(app, kind, name);
 
         return active ? "app-menu-child active-artifact" : "app-menu-child";
     }
 
     private string ArtifactMenuItemClass(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
         => $"{ArtifactItemClass(app, kind, name)} app-menu-artifact-item";
+
+    private string? ArtifactMenuItemCurrent(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
+        => IsArtifactActive(app, kind, name) ? "true" : null;
+
+    private bool IsArtifactActive(FlowWorkspaceService app, WorkspaceArtifactKind kind, string name)
+        => app == Projects.ActiveProject &&
+           app.ActiveArtifactKind == kind &&
+           string.Equals(app.ActiveArtifactName, name, StringComparison.Ordinal);
 
     private async Task ToggleBrokerAsync(ManagedConnection connection)
     {

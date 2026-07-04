@@ -4565,5 +4565,2060 @@ Harden the alpha desktop workspace by exercising it against Mosquitto, then add 
   - Save readiness must come from validation state, not status labels like `Ready to save`.
   - Dialog footers should sit in a consistent padded full-width footer panel.
   - Header should be node name plus component subtitle, without decorative header icon/category chip noise.
+- State Reducer Summary Copy result:
+  - Replaced the remaining State Reducer view-summary `Contract` label and contract-named token group with neutral data-type wording.
+  - Kept the same compact operational facts, expression preview, code editor workspace, sidecar controls, validation, saved configuration shape, node id, ports, and runtime behavior.
+  - Updated the focused guard to require `State reducer data types` and reject the old State Reducer contract summary hooks.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~StateReducerNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Validation Node Summary Hook result:
+  - Renamed the Flow Assertion compact output summary hooks from contract wording to neutral output-field wording while keeping the same visible labels, tokens, expression preview, editor layout, validation, node id, ports, saved configuration, and runtime behavior.
+  - Renamed the JSON Schema Validator compact input/output summary hooks from contract wording to neutral field wording while preserving schema source/id controls, inline/file editor behavior, validation, node id, ports, saved configuration, and runtime behavior.
+  - Updated the focused guards to require the neutral output/field hooks and reject the old validation-node contract summary hooks.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowAssertionNodeWidget|FullyQualifiedName~JsonSchemaValidatorNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Dynamic Mapper Summary Copy result:
+  - Renamed Dynamic Mapper compact summary hooks from contract wording to neutral field wording while keeping input-variable and output-field facts unchanged.
+  - Changed the editor label from `Result contract` to `Result mode`; the existing `OutputContract` model/API names, saved `outputContract` value, schema controls, preview workbench, validation, node id, ports, and runtime behavior are unchanged.
+  - Updated the focused guard to require the neutral mapper field hooks and reject the old mapper contract hooks.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DynamicMapperNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+- Routing Summary Hook result:
+  - Renamed compact summary label hooks from contract wording to neutral summary-label wording for Routing Switch, Correlation, Join, Fork, and Merge widgets.
+  - Kept all visible routing facts, route/port chips, expression previews, editor layouts, validation, saved configuration, node ids, ports, and runtime behavior unchanged.
+  - Updated the focused routing guards to require the neutral summary hooks and reject the old routing contract-label hooks.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingSwitchNodeWidget|FullyQualifiedName~RoutingFanNodeWidgets|FullyQualifiedName~RoutingCorrelationAndJoinNodeWidgets" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
 - Next implementation order:
-  1. Continue the next small designer-polish backlog item from remaining high-use workspace noise.
+  1. Continue the next small designer-polish backlog item from remaining high-use workspace noise, starting with remaining compact node-summary naming noise where a focused guard already exists.
+
+- Flow Designer Canvas Chrome verification result:
+  - Confirmed the existing Flow Designer canvas header uses `Pipeline loaded` for the loaded-pipeline subtitle while preserving `Unsaved changes` and `No active pipeline`.
+  - Confirmed the focused guard requires the neutral loaded subtitle path and rejects the generic `Ready` canvas chrome.
+  - Workflow JSON, saved app schema, node ids, ports, diagram behavior, runtime behavior, services, logs, diagnostics, metrics, navigator, and link-condition editing are unchanged.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+
+- Metric Designer parameter toggle accessibility result:
+  - Added explicit horizontal orientation semantics to the custom Default/On/Off metric-parameter radio group.
+  - Preserved existing radio option roles, `aria-checked` selection state, validation, metric resource data, dashboard bindings, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused Metric Designer guard to require the radio-group orientation and existing option semantics.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+
+- App Structure active item accessibility result:
+  - Added `aria-current` to active pipeline, dashboard, metric-designer, and test menu items in the compact app-structure menu.
+  - Reused the existing active-artifact logic through a small `ArtifactMenuItemCurrent` helper and shared `IsArtifactActive` helper.
+  - Preserved active classes, MudMenuItem selection behavior, delete actions, broker controls, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+
+- Topic Tree placeholder accessibility result:
+  - Added `aria-hidden="true"` to the static leaf chevron placeholder in `TopicTreeNode`.
+  - Preserved row-click isolation for the placeholder, expandable branch chevron buttons, topic selection, keyboard activation, compact mode, message counts, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused Topic Tree guard to require the hidden static placeholder.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+
+- Topic Tree decorative marker accessibility result:
+  - Added `aria-hidden="true"` to the recursive topic-tree branch guide and filtered-result topic icon wrapper.
+  - Preserved row labels, treeitem semantics, selection, keyboard activation, branch expansion, compact mode, message counts, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused Topic Tree guard to require hidden decorative markers in recursive and filtered topic rows.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Topic Explorer decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the decorative Topics title icon wrapper and broker row icon wrapper in `TopicExplorerPanel`.
+  - Preserved broker selection button labels, broker monitor actions, topic tree selection, publish controls, payload views, history filtering/export, stats, saved app schema, monitor behavior, MQTT behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Topics guard to require the hidden decorative icon wrappers.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Live Publisher decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the decorative MQTT publisher title icon wrapper in `LiveInspectorPanel`.
+  - Preserved the visible title, active app label, connection marker, publish form controls, retain toggle, diagnostics panel, manual publish recording, MQTT behavior, saved app schema, services, schemas, ids, ports, and contracts.
+  - Updated the focused Live Inspector guard to require the hidden decorative publisher icon wrapper.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~LiveInspectorPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - The first parallel build attempt hit the known transient XAML compiler file lock; the serial rerun passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App JSON decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the decorative App JSON title icon wrapper in `AppJsonPanel`.
+  - Preserved the visible title, file label, JSON summary, unsaved indicator, copy action, Monaco viewer configuration/sync, app JSON generation, saved app schema, services, schemas, ids, ports, and contracts.
+  - Updated the focused App JSON guard to require the hidden decorative title icon wrapper.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel_UsesFlatCompactCodeViewerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Workspace tab decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the seven decorative project tab icons in `WorkspacePage`.
+  - Preserved visible tab labels, button semantics, keyboard activation, active `aria-current` markers, delete/close actions, artifact routing, JSON view toggling, diagnostics-to-logs navigation, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused WorkspacePage guard to require all project tab icons to use the hidden decorative treatment.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only tab-icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Metric dialog decorative icon accessibility result:
+  - Added `aria-hidden="true"` to the title icon wrappers in MetricCreateDialog, MetricRenameDialog, MetricDuplicateDialog, MetricTypeChangeDialog, MetricConfirmDialog, and MetricDeleteDialog.
+  - Preserved visible title/subtitle copy, metric type search/counts, validation rows, tone chips, destructive warnings, binding/reference details, button labels, dialog results, metric model behavior, dashboard binding behavior, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused metric creation and metric action dialog guards to require hidden decorative title icons.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only title-icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App Tree decorative icon accessibility result:
+  - Added `aria-hidden="true"` to decorative empty, app row, pipeline, metric, dashboard, empty-test, and section header icons in `AppTreePanel`.
+  - Preserved visible labels, row/button semantics, active `aria-current` markers, section `aria-expanded` and `aria-controls`, connection state markers, test run summaries, action buttons, artifact routing, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused App Tree guard to require the hidden decorative icon treatment for the updated icon surfaces.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only app-tree icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Dashboard widget decorative icon accessibility result:
+  - Added `aria-hidden="true"` to dashboard widget header icon wrappers in the shared widget view plus line, area, bar, donut, latest-event, event-table, metric-value, topic-activity, and topic-tree widget render surfaces.
+  - Preserved visible widget titles/subtitles, dashboard widget layout/styling, live/edit rendering, metric/event/topic data display, saved dashboard schema, runtime behavior, services, ids, ports, and contracts.
+  - Added the focused `DashboardWidgets_HideDecorativeHeaderIcons` guard to scan all widget files with `dashboard-widget-icon` and reject unhidden decorative wrappers.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgets_HideDecorativeHeaderIcons" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only dashboard widget icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Metric Designer decorative icon accessibility result:
+  - Added hidden decorative semantics to the Metric Designer heading icon, create/filter/editor empty-state icons, and dashboard-reference row icons.
+  - Preserved visible labels, empty-state copy/actions, dashboard binding rows, reference open actions, metric list filtering, metric editing, validation, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused `MetricDesigner_UsesNeutralMetricMarkerHooks` guard to require hidden decorative icon treatment and reject the old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only Metric Designer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Dashboard Designer decorative icon accessibility result:
+  - Added hidden decorative semantics to the selection summary icon, edit-mode drag hint icon, and live fallback widget marker in `DashboardDesigner`.
+  - Preserved visible text/status copy, toolbar commands, grid editing, drag/drop hints, live preview fallback rows, saved dashboard schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated focused Dashboard Designer guards to require the hidden decorative treatment and reject the old unhidden selection/drag snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar|FullyQualifiedName~DashboardDesigner_UsesFlatLivePreviewChrome|FullyQualifiedName~DashboardDesigner_EditGridUsesFlatEditingStateAffordances" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only Dashboard Designer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Connection Panel decorative icon accessibility result:
+  - Added hidden decorative semantics to the Connections title cable icon and empty-state cable icon in `ConnectionPanel`.
+  - Preserved visible title/count copy, add/connect/disconnect/remove actions, row labels, live connection filtering, state markers, errors, connection behavior, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused `ConnectionPanel_UsesFlatCompactConnectionRows` guard to require hidden decorative cable icon treatment and reject the old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ConnectionPanel_UsesFlatCompactConnectionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only Connection Panel icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Session Panel decorative icon accessibility result:
+  - Added hidden decorative semantics to the recording strip icon, Recordings title icon, selected-session strip icon, and empty-state icon in `SessionPanel`.
+  - Preserved visible recording/session copy, search, live switching, session grouping, row selection, markers, recording actions, session behavior, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused `SessionPanel_UsesFlatGroupedSessionRows` guard to require hidden decorative icon treatment and reject the old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~SessionPanel_UsesFlatGroupedSessionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only Session Panel icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Payload Inspector decorative icon accessibility result:
+  - Added hidden decorative semantics to the payload format marker and payload view tab icons in `PayloadInspectorPanel`.
+  - Preserved visible title/topic/meta copy, tab labels, tab/panel ids, active view switching, formatted/raw/hex/meta payload views, payload inspection behavior, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused `PayloadInspectorPanel_UsesFlatCompactInspectorChrome` guard to require hidden decorative icon treatment and reject the old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~PayloadInspectorPanel_UsesFlatCompactInspectorChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only Payload Inspector icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Shared EmptyView decorative icon accessibility result:
+  - Added hidden decorative semantics to the shared `EmptyView` fallback inbox icon.
+  - Preserved custom content rendering, fallback message text, Topic Tree empty-state usage, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Added the focused `EmptyView_HidesDecorativeInboxIcon` guard to require hidden decorative icon treatment and reject the old unhidden snippet.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~EmptyView_HidesDecorativeInboxIcon" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only EmptyView icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App shell command accessibility result:
+  - Added explicit accessible labels to the icon-only topbar project commands, theme command, and MQTT publisher panel toggle in `MainLayout`.
+  - Hid the decorative stopping-spinner and drag-preview icons from assistive output.
+  - Preserved project creation/open/save/save-as handlers, theme cycling, live publisher panel visibility, drag preview behavior, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused `MainLayout_RemovesSessionOnlyLeftRail` guard to require the shell command labels and hidden decorative icon treatment.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MainLayout_RemovesSessionOnlyLeftRail" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only MainLayout accessibility scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App shell marker accessibility result:
+  - Added hidden decorative semantics to the topbar app runtime dot, topbar live connection dot, and bottom-bar live dot in `MainLayout`.
+  - Preserved adjacent visible app/runtime/live labels, tooltips, state classes, footer facts, saved app schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused `MainLayout_RemovesSessionOnlyLeftRail` guard to require hidden marker dots and reject the old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MainLayout_RemovesSessionOnlyLeftRail" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only MainLayout marker scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Setup dialog decorative icon accessibility result:
+  - Added hidden decorative semantics to title, section, and summary `MudIcon` instances in Add Connection, New App, New Pipeline, Save As, Start Recording, and Topic Explorer Setup dialogs.
+  - Preserved dialog validation, Enter handling, file/certificate pickers, default naming, dialog results, saved app schema, runtime behavior, MQTT behavior, services, ids, ports, and contracts.
+  - Updated the focused setup dialog guards to require the hidden decorative icon treatment and reject old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NewAppDialog|FullyQualifiedName~AddConnectionDialog|FullyQualifiedName~NewPipelineDialog|FullyQualifiedName~SaveAsDialog|FullyQualifiedName~StartRecordingDialog|FullyQualifiedName~TopicExplorerSetupDialog" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only setup-dialog icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Dashboard editor dialog decorative icon accessibility result:
+  - Added hidden decorative semantics to title, section, preview, empty-state, and note `MudIcon` instances in `DashboardWidgetEditorDialog` and `DashboardTrackEditorDialog`.
+  - Preserved visible labels, widget settings, filter fields, topic-tree settings, track sizing preview, reset/apply behavior, dashboard schema, runtime behavior, services, ids, ports, and contracts.
+  - Updated the focused dashboard dialog guards to require the hidden decorative icon treatment and reject old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardTrackEditorDialog|FullyQualifiedName~DashboardWidgetEditorDialog" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only dashboard-dialog icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Scenario dialog decorative icon accessibility result:
+  - Added hidden decorative semantics to title, validation, report-summary, metric, issue, and empty-state `MudIcon` instances in `ScenarioStepEditorDialog` and `ScenarioRunReportDialog`.
+  - Preserved visible titles, subtitles, validation copy, report metadata, copy/export actions, close behavior, scenario definitions, report content, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused scenario dialog guards to require hidden decorative icon treatment and reject old unhidden snippets.
+  - Verification passed:
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepEditorDialog|FullyQualifiedName~ScenarioRunReportDialog" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+  - Source-only scenario-dialog icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Test Studio shell decorative icon accessibility result:
+  - Added hidden decorative semantics to the Test Studio title and mode-tab `MudIcon` instances.
+  - Preserved visible title/subtitle, test/run summary text, tablist semantics, designer/runner switching, scenario designer and runner composition, project state, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Test Studio guard to require hidden decorative icon treatment and reject old exposed snippets.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Test Studio icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning Test Runner and Test Scenario Designer chrome for remaining decorative icon/accessibility gaps without broadening runtime or schema scope.
+- Test Runner decorative icon accessibility result:
+  - Added hidden decorative semantics to direct status, history, preflight, result, first-run, timeline, activity, event, and log `MudIcon` markers in `TestRunnerConsole`.
+  - Preserved visible labels, row-level aria labels, report actions, history menu behavior, scenario run behavior, runtime/log streams, project state, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Test Runner guard to reject exposed direct `MudIcon` lines in runner markup.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Test Runner icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning Test Scenario Designer chrome for remaining decorative icon/accessibility gaps without broadening runtime or schema scope.
+- Test Scenario Designer decorative icon accessibility result:
+  - Added hidden decorative semantics to direct empty, heading, run-context, history, builder, starter, phase, step-result, action, scope, and event `MudIcon` markers in `TestScenarioDesigner`.
+  - Added explicit labels to the custom latest-run reset and step move/edit/delete icon buttons.
+  - Preserved visible labels, row/card aria labels, scenario build/run actions, step ordering/edit/delete behavior, report actions, run history, project state, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Test Scenario Designer guard to reject exposed direct `MudIcon` lines and require explicit labels for custom icon buttons.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Test Scenario Designer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Dashboard Inspector/property-grid decorative icon accessibility result:
+  - Added hidden decorative semantics to direct inspector, group-toggle, help, select-arrow, color-picker, segmented-option, metric/open, reset, duplicate/delete, visual-metric, add-card, and empty-state `MudIcon` markers in `DashboardInspector` and the shared property-grid controls.
+  - Preserved visible labels, button labels, property group ownership, select/listbox ownership, color popover ownership, metric card ordering, widget actions, dashboard editing behavior, saved dashboard schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Dashboard Inspector guard to scan the inspector/property-grid markups and reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Inspector/property-grid icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Flow Designer decorative icon accessibility result:
+  - Added hidden decorative semantics to direct canvas-title, empty-canvas, and drop-highlight `MudIcon` markers in `FlowDesigner`.
+  - Preserved visible labels, the neutral `Pipeline loaded` subtitle path, unsaved/no-pipeline states, runtime marker, metrics, diagnostics action, diagram canvas, navigator, link-condition editor, drag/drop behavior, workflow JSON, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Flow Designer guard to reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App Structure menu decorative icon accessibility result:
+  - Added hidden decorative semantics to direct empty/app, broker, artifact, test-result, empty-row, command-add, and command-cue `MudIcon` markers in `AppStructureMenu`.
+  - Preserved visible labels, broker state text, active `aria-current` markers, delete labels/actions, add commands, test run summaries, app selection/routing, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused App Structure menu guard to reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App Structure menu icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Metric Designer decorative icon accessibility result:
+  - Added hidden decorative semantics to direct filter, command, empty-state, list-row, editor-header, section, preview, reference, validation, select-cue, and parameter-help `MudIcon` markers in `MetricDesigner`.
+  - Preserved visible labels, button labels, tooltips, metric filtering, metric creation/editing, type changes, preview/readout facts, reference summaries, validation links, dashboard bindings, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Metric Designer guard to reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Metric Designer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Topic Explorer decorative icon accessibility result:
+  - Added hidden decorative semantics to direct title, stored-session, empty-state, broker, no-traffic, payload-view, publish, history-empty, and selected-message empty `MudIcon` markers in `TopicExplorerPanel`.
+  - Preserved visible labels, button labels, tooltips, broker tree, latest payload controls, publish composer, publish reuse actions, history filters/export, payload diff, stats, monitor resolution, publish behavior, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Topic Explorer guard to reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel|FullyQualifiedName~TopicExplorerMonitorResolver|FullyQualifiedName~LiveMqttWorkspaceService" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Topic Explorer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Dashboard Designer decorative icon accessibility result:
+  - Added hidden decorative semantics to direct heading, empty-state, track-handle, grid-empty, widget-action, live-preview, live-empty, and drop-marker `MudIcon` markers in `DashboardDesigner`.
+  - Preserved visible labels, button labels, track editing, widget edit/simulate/delete actions, drag/drop affordances, live preview, grid sizing, dashboard schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused Dashboard Designer guard to reject exposed direct `MudIcon` lines.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Designer icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App Tree decorative icon accessibility result:
+  - Added hidden decorative semantics to direct test artifact and test-run marker `MudIcon` instances in `AppTreePanel`; existing hidden app, pipeline, metric, dashboard, empty, section, and add-row icons remain covered.
+  - Preserved visible labels, row aria labels, selection/routing, keyboard activation, section toggles, test creation/deletion, test run summaries, project state, saved app schema, runtime behavior, services, ids, ports, schemas, and contracts.
+  - Updated the focused App Tree guard to reject exposed direct `MudIcon` tags across multi-line attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App Tree icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Metric dialog direct icon accessibility result:
+  - Added hidden decorative semantics to all direct `MudIcon` glyphs in Metric create, rename, duplicate, type-change, confirm, and delete dialogs, extending the earlier title-icon wrapper treatment to search, clear, type, empty, id, validation, note, warning, reference, and reset markers.
+  - Preserved visible labels, button labels, metric type search/counts, validation rows, destructive warnings, tone markers, binding/reference details, dialog results, metric model behavior, dashboard binding behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused metric creation and metric action dialog guards to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Metric dialog icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Component Catalog decorative icon accessibility result:
+  - Added hidden decorative semantics to direct catalog title, empty-state, item tile, drag-grip, and add-affordance `MudIcon` glyphs in `ComponentCatalogPanel`.
+  - Preserved visible catalog titles, meta strip, count, search, empty labels, item aria labels, drag/click/keyboard add behavior, dashboard widget requirement rows, test step metadata, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Component Catalog guard to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ComponentCatalogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Component Catalog icon scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Workspace Log decorative icon accessibility result:
+  - Added hidden decorative semantics to direct title, fixed-scope, empty-state, and row severity `MudIcon` glyphs in `WorkspaceLogPanel`.
+  - Preserved visible title/subtitle copy, scope/level/search filters, copy/export/reset/clear actions, visible-row export scope, row aria labels, log details/context, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Workspace Log guard to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Workspace Log icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- App JSON direct icon accessibility result:
+  - Added hidden decorative semantics to direct title and empty-state `MudIcon` glyphs in `AppJsonPanel`.
+  - Preserved visible title/file copy, JSON summary, unsaved indicator, copy action, Monaco viewer setup/sync, app JSON generation, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused App JSON guard to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App JSON icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for remaining decorative icon/accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Apps and Live Publisher panel direct icon accessibility result:
+  - Added hidden decorative semantics to direct title, empty-state, app-row, publish-button, and diagnostic `MudIcon` glyphs in `AppsPanel` and `LiveInspectorPanel`.
+  - Preserved visible app rows, row labels, active/unsaved markers, close app actions, MQTT publisher form controls, retain toggle, diagnostics copy, manual publish recording, MQTT behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Apps and Live Inspector guards to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppsPanel|FullyQualifiedName~LiveInspectorPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Apps and Live Inspector icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning dashboard widget surfaces and remaining node chrome for decorative icon/accessibility gaps without broadening runtime or schema scope.
+- Dashboard display direct icon accessibility result:
+  - Added hidden decorative semantics to direct refresh, widget header, metric tile, empty topic, and visualization `MudIcon` glyphs across `DashboardQueryPreviewFrame`, `DashboardWidgetView`, and dashboard widget components.
+  - Preserved visible preview action text, widget titles/subtitles, metric values, chart/table/topic rendering, dashboard data/query behavior, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused dashboard query preview and dashboard widget guards to reject exposed direct `MudIcon` tags across complete tags and all dashboard widget Razor files.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardQueryPreviewFrame|FullyQualifiedName~DashboardWidgets" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only dashboard display icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning remaining node chrome for decorative icon/accessibility gaps without broadening runtime or schema scope.
+- Dynamic Mapper node direct icon accessibility result:
+  - Added hidden decorative semantics to the direct input JSON error `MudIcon` glyph in `DynamicMapperNodeWidget`.
+  - Preserved alert text, editor workspaces, sample reload, schema controls, preview behavior, saved node configuration, workflow JSON, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Dynamic Mapper guard to reject exposed direct `MudIcon` tags across complete tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DynamicMapperNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dynamic Mapper icon scan and workspace-wide direct `MudIcon` scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: audit the workspace for the next concrete accessibility or stale-selector polish gap now that direct exposed `MudIcon` glyphs are cleared.
+- MudIconButton command label accessibility result:
+  - Added explicit accessible labels to the Dynamic Mapper schema-file picker and sample reload icon commands, plus the Topic Explorer clear-topic-selection icon command.
+  - Preserved existing tooltips, click handlers, schema selection, sample reload, topic selection clearing, workflow JSON, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Topic Explorer and Dynamic Mapper guards to require accessible labels on complete `MudIconButton` command tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel|FullyQualifiedName~DynamicMapperNodeWidget" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Workspace-wide `MudIconButton` label scan passed; the initial parallel focused-test attempt hit the known XAML intermediate-file lock, then both guards passed on serial rerun.
+  - Flow Designer canvas chrome was rechecked as already accepted: `FlowDesigner` still uses `Pipeline loaded`, and the focused guard still rejects generic readiness canvas chrome.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue scanning high-use workspace chrome for custom-control accessibility gaps or stale selectors without broadening runtime or schema scope.
+- Shared node shell accessibility result:
+  - Added explicit accessible labels to the shared diagram node collapse/expand and edit icon commands in `NodeWidgetShell`.
+  - Hid the decorative node-type header glyph from assistive output and gave the diagnostic glyph a meaningful accessible diagnostic label instead of treating it as decorative.
+  - Preserved node selection/collapse behavior, edit dialog opening, diagnostic tooltip text, node title/display/category chrome, ports, link routing, workflow JSON, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused shared node shell guard to require labeled icon commands and accessible direct node-shell icons.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NodeWidgetShell_UsesCompactNodeChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only `NodeWidgetShell` icon command/direct-icon scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the direct-icon audit for remaining high-use workspace surfaces such as project tab commands and topic tree rows without broadening runtime or schema scope.
+- Workspace tab and topic tree direct icon accessibility result:
+  - Hid decorative delete/close glyphs inside already labeled workspace project-tab buttons and app close command.
+  - Hid decorative topic-tree chevron, empty-search, and filtered-topic glyphs while preserving the surrounding chevron button labels, treeitem labels, selection, keyboard activation, topic filtering, project tab routing, delete/close actions, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated focused WorkspacePage and TopicTree guards to reject direct `MudIcon` tags without an explicit hidden or labeled accessibility treatment.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage|FullyQualifiedName~TopicTreeNode" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Full `src\FluxMq.UI` direct `MudIcon` accessibility scan and `MudIconButton` label scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: audit remaining custom role/button surfaces for accessible keyboard semantics and stale selectors now that direct icon scans pass across UI Razor files.
+- Topic Tree static placeholder accessibility result:
+  - Removed the no-op click handler from the non-interactive static topic chevron placeholder while keeping it hidden from assistive output and propagation-isolated inside the tree row.
+  - Preserved branch chevron button behavior, treeitem selection, keyboard activation, compact branch-line chrome, topic filtering, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused TopicTree guard to reject the stale `IgnoreChevronClick` placeholder handler.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Strict custom-button source scan passed after the placeholder cleanup.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue stale-selector and custom-control audit across high-use workspace chrome without broadening runtime or schema scope.
+- Metric Designer row accessibility result:
+  - Added explicit row-level accessible labels to Metric Designer metric row buttons so dense table-like rows announce the metric display name, id, type, reference count, and latest reading state.
+  - Preserved row selection, metric filtering, metric editing, latest-value display, reference counts, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Metric Designer guard to require the row label helper and row `aria-label` binding.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Metric row label scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace control surfaces for concise accessible names and stale selectors without broadening runtime or schema scope.
+- Workspace Log filter accessibility result:
+  - Added explicit accessible labels to the scope and level segmented filter buttons so short visible options such as `All` announce their filter context.
+  - Preserved scope/level filtering, search, visible-row copy/export, reset/clear actions, row rendering, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Workspace Log guard to require the filter label helpers and bindings.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Workspace Log filter label scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace control surfaces for concise accessible names and stale selectors without broadening runtime or schema scope.
+- Publish retain control accessibility result:
+  - Added explicit accessible labels to the Live Publisher and Topics publish retain toggles so their pressed state is announced with publish context instead of the short visible `Retain` text alone.
+  - Preserved retain toggling, QoS controls, publish submit behavior, app-broker targeting, manual publish recording, MQTT behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Live Inspector and Topic Explorer guards to require the retain toggle accessible label while keeping existing pressed-state assertions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~LiveInspectorPanel|FullyQualifiedName~TopicExplorerPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only publish retain label scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for concise accessible names and stale selectors without broadening runtime or schema scope.
+- Component Catalog keyboard accessibility result:
+  - Expanded catalog item keyboard activation to accept the legacy `Spacebar` key value in addition to `Enter` and the literal space key, matching the advertised `aria-keyshortcuts="Enter Space"` and the custom role-button behavior used elsewhere.
+  - Preserved catalog item click/drag behavior, dashboard/test/pipeline add behavior, availability gating, labels, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Component Catalog guard to require the complete activation-key expression.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ComponentCatalogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - The first focused build attempt timed out under local process contention; the longer serial rerun passed cleanly.
+  - Source-only Component Catalog keyboard scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- App Tree empty-test keyboard accessibility result:
+  - Routed the empty test-scenario row keyboard activation through App Tree's shared `IsActivationKey` helper so `Spacebar`, `Enter`, and the literal space key all work consistently across custom role-buttons.
+  - Preserved empty test-row click behavior, test creation dialog behavior, section expansion, app/project routing, labels, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused App Tree guard to require the shared activation helper in the empty-test keyboard path.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App Tree keyboard scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- App Tree keyboard shortcut hint result:
+  - Added `aria-keyshortcuts="Enter Space"` to App Tree custom role-buttons that already support keyboard activation: app rows, pipeline rows, metric designer row, dashboard rows, empty test row, test rows, and section headers.
+  - Preserved selection, section toggling, test creation, click handling, routing, labels, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused App Tree guard to require seven App Tree keyboard shortcut hints.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App Tree keyboard shortcut scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Workspace tab keyboard shortcut hint result:
+  - Added `aria-keyshortcuts="Enter Space"` to Workspace project-tab role-buttons that already support keyboard activation: pipeline, metrics, dashboard, test, topics, logs, and App JSON tabs.
+  - Preserved tab selection, artifact routing, diagnostics-to-logs routing, JSON view toggling, close/delete actions, visible labels, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused WorkspacePage guard to require seven project-tab keyboard shortcut hints.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Workspace tab keyboard shortcut scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Apps panel keyboard shortcut hint result:
+  - Added `aria-keyshortcuts="Enter Space"` to the Apps panel app-tile role-button that already supports keyboard activation.
+  - Preserved app selection, close actions, active/current markers, visible labels, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Apps panel guard to require the app-tile keyboard shortcut hint.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppsPanel_UsesFlatCompactOpenAppRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Apps panel keyboard shortcut scan passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Dashboard edit-grid keyboard shortcut hint result:
+  - Added `aria-keyshortcuts="Enter Space"` to the focusable Dashboard Designer edit-grid cells that already support Enter/Space selection.
+  - Preserved cell selection, drag/drop targeting, widget placement/edit controls, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Dashboard Designer edit-grid guard to require the cell keyboard shortcut hint.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_EditGridUsesFlatEditingStateAffordances" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard edit-grid keyboard shortcut scan passed.
+  - The initial parallel guard run hit the known platform XAML intermediate-file lock while the build was running; the longer serial rerun passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Topic tree keyboard shortcut hint result:
+  - Added `aria-keyshortcuts="Enter Space"` to selectable Topic Tree treeitems in both hierarchical and filtered-result render paths.
+  - Preserved topic selection, branch expansion, filtering, topic counts, latest activity display, MQTT topic data, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Topic Tree guard to require the treeitem keyboard shortcut hints for both paths.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Topic Tree keyboard shortcut scan passed.
+  - The initial parallel guard run hit the known platform XAML intermediate-file lock while the build was running; the serial guard rerun passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Property grid select keyboard compatibility result:
+  - Added legacy `Spacebar` key handling to the custom `PropertyGridSelect` dropdown trigger, matching the app's other custom keyboard controls.
+  - Preserved existing Enter, literal-space, ArrowDown, Escape, option selection, dashboard inspector bindings, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Dashboard Inspector property-grid guard to require the Spacebar branch.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only PropertyGridSelect keyboard scan passed.
+  - The initial parallel guard run hit the known platform XAML intermediate-file lock while the build was running; the serial guard rerun with the correct focused filter passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Property grid select option activation result:
+  - Added click activation to custom `PropertyGridSelect` listbox option buttons while preserving the existing mousedown selection path used for mouse/focus-loss behavior.
+  - Preserved trigger keyboard handling, disabled/selected option state, dashboard inspector bindings, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Dashboard Inspector property-grid guard to require both option click and mousedown selection hooks.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Property grid resize keyboard hint result:
+  - Added an explicit keyboard shortcut hint to the focusable `PropertyGrid` name-column resize separator for ArrowLeft, ArrowRight, Home, End, and Enter.
+  - Preserved existing pointer resize, double-click reset, keyboard resize/reset behavior, property group collapse/expand behavior, dashboard inspector bindings, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Dashboard Inspector property-grid guard to require the resize separator keyboard shortcut hint.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Payload Inspector tab keyboard hint result:
+  - Added explicit Enter/Space keyboard shortcut hints to the shared `PayloadInspectorPanel` payload view tabs.
+  - Preserved native button activation, active payload view switching, tab/panel ownership, formatted/raw/hex/meta rendering, payload inspection behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Payload Inspector guard to require all four payload view tab shortcut hints.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~PayloadInspectorPanel_UsesFlatCompactInspectorChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use payload and workspace tab controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Topic Explorer payload tab keyboard hint result:
+  - Added explicit Enter/Space keyboard shortcut hints to the Topics latest and selected-history payload view tab loops.
+  - Preserved native button activation, latest/selected payload view switching, tab/panel ownership, copy actions, payload diff view, history grid, publish composer, MQTT behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Topic Explorer guard to require both payload view tab shortcut hint loop sites.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace tab controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Test Studio mode tab keyboard hint result:
+  - Added explicit Enter/Space keyboard shortcut hints to Test Studio's Design and Run mode tabs.
+  - Preserved native button activation, mode switching, tab/panel ownership, scenario designer/runner composition, project state, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Test Studio guard to require both mode tab shortcut hints.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace tab controls for keyboard semantics, concise accessible names, and stale selectors without broadening runtime or schema scope.
+- Metric type option label result:
+  - Added concise row-level accessible labels to the Metric Create and Metric Type Change metric type option lists.
+  - Preserved native button activation, descriptor selection, search, result counts, metric id generation, default parameter previews, type-change reset warnings, validation, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the focused Metric Create and Metric Action dialog guards to require the option-label helpers and bindings.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace controls for concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Dashboard widget empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to shared `dashboard-widget-empty` placeholders across chart, table, topic activity, latest event, and unknown widget views.
+  - Preserved widget rendering, empty text configuration, sample/live snapshot data, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Added a focused dashboard widget guard to require status semantics for every shared dashboard widget empty placeholder.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgets_ExposeEmptyStatesAsStatusMessages" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Metric Designer empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to Metric Designer list, filter, editor, preview, and reference empty/no-data placeholders.
+  - Preserved metric filtering, metric creation/editing, type changes, latest-value preview, reference summaries, dashboard bindings, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Metric Designer guard to require status semantics on all five empty/no-data containers.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- WorkspacePage empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the WorkspacePage no-app and no-artifacts empty shells.
+  - Preserved project opening/creation, app tab routing, artifact selection, JSON view routing, diagnostics-to-logs routing, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspacePage guard to require both empty shells to expose status semantics.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Shared EmptyView accessibility result:
+  - Added `role="status"` and polite live semantics to the reusable `EmptyView` wrapper used by Topic Tree empty output.
+  - Preserved custom empty content projection, default message fallback, decorative inbox icon hiding, topic tree filtering/selection, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused `EmptyView` guard to require the shared status wrapper.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~EmptyView_HidesDecorativeInboxIcon" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Topic Explorer empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the Topic Explorer tree-empty panel and recent-publishes empty placeholder.
+  - Preserved topic monitor resolution, broker/topic selection, latest/history payload controls, publish composer behavior, recent publish reuse, history filters/export, payload diff, stats, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Topic Explorer guard to require the empty-state status wrappers.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use dashboard/workspace empty states, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Flow Designer canvas chrome verification result:
+  - Confirmed the compact Flow Designer header already uses `Pipeline loaded` for the loaded clean-pipeline subtitle while preserving the `Unsaved changes` and `No active pipeline` paths.
+  - Confirmed the focused guard requires the neutral loaded subtitle and continues to reject the older generic canvas subtitle pattern.
+  - Preserved title, meta strip, editable/no-pipeline mode, optional link selection, runtime marker, node/link/resource metrics, diagnostics action, canvas, navigator, link-condition editor, workflow JSON, saved app schema, runtime behavior, services, diagnostics, ids, ports, schemas, and contracts.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Workspace status message live semantics result:
+  - Added explicit `aria-live="polite"` to the remaining component status messages that already used `role="status"` without a live-region attribute.
+  - Covered fallback node port placeholders, message filter patterns, generated/session/metric source empty prompts, MQTT metrics waiting state, test runner/designer history and stream empty states, and scenario report empty panes.
+  - Preserved all runtime behavior, saved app/workflow/schema data, node ids, ports, services, logs, reports, test execution, metric behavior, MQTT behavior, and component contracts.
+  - Added a source-wide UI guard that scans Razor component tags with `role="status"` and requires explicit polite live semantics, including split-attribute tags.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceStatusMessages_UseExplicitPoliteLiveSemantics" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only component status scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining concise accessible names, keyboard semantics, stale selectors, and visible noise without broadening runtime or schema scope.
+- App Structure menu empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the no-app App Structure header placeholder and compact menu empty rows.
+  - Preserved app structure navigation, artifact rows, menu commands, inline artifact actions, project/app selection, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App Structure menu guard to require both status-backed empty-state surfaces.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only empty-state scan, neutral added-text scan, and `git diff --check` passed.
+  - The first parallel focused test attempt collided with the concurrent build on a shared intermediate DLL; the serial rerun passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Test Studio empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the Test Runner no-test state and the Test Scenario Designer no-test and no-steps states.
+  - Preserved scenario selection, scenario editing, run controls, report actions, run history, phase and step rendering, saved scenario data, runtime events/logs, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Runner and Test Scenario Designer guards to require the status-backed empty-state wrappers.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome|FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Live Publisher empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the Live Publisher no-client placeholder.
+  - Preserved app-level broker targeting, connection sync, topic/payload/QoS/retain inputs, publish submission, manual publish recording, diagnostics display, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Live Inspector guard to require the status-backed no-client placeholder.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~LiveInspectorPanel_UsesAppLevelMqttPublisherPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Metric dialog empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to Metric Create and Metric Type Change no-result/no-parameter placeholders, plus the Metric Delete no-reference placeholder.
+  - Preserved metric descriptor selection, search, id/name validation, parameter previews, type-change reset warning, delete warning, dashboard reference rendering, metric model behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Metric Create and Metric Action dialog guards to require the status-backed empty-state wrappers.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Dashboard Widget Editor empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the Dashboard Widget Editor no-filter placeholder.
+  - Preserved widget type/profile rendering, event type/status controls, filter rendering, reset/apply/cancel behavior, dirty-state button logic, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Widget Editor guard to require the status-backed empty filter placeholder.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetEditorDialog_UsesFlatCompactEditorChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Dashboard Topic Bars empty-state accessibility result:
+  - Added `role="status"` and polite live semantics to the Dashboard Topic Bars no-traffic placeholder.
+  - Preserved topic count rendering, topic bar formatting, sample/live snapshot behavior, dashboard widget layout, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused dashboard widget empty-state guard to require the status-backed topic bars placeholder.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgets_ExposeEmptyStatesAsStatusMessages" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for remaining empty-state semantics, concise accessible names, keyboard semantics, and stale selectors without broadening runtime or schema scope.
+- Workspace preformatted content label result:
+  - Added accessible labels to the Dashboard latest-event payload preview and Scenario Run Report text/JSON preformatted report blocks.
+  - Preserved dashboard widget rendering, scenario report copy/export behavior, report data, saved app/schema data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Updated the Scenario Run Report guard to require accepted empty-state live regions instead of rejecting all `aria-live` usage.
+  - Added a source-wide UI guard that scans Razor `<pre>` blocks and requires either `aria-label` or `aria-labelledby`.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunReportDialog_UsesFlatCompactReviewChrome|FullyQualifiedName~DashboardWidgets_HideDecorativeHeaderIcons|FullyQualifiedName~WorkspacePreformattedBlocks_ExposeAccessibleNames" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only preformatted block label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for keyboard semantics, concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Workspace listbox option relationship result:
+  - Added option ids and `aria-activedescendant` wiring to custom listboxes in `PropertyGridSelect`, `MetricCreateDialog`, and `MetricTypeChangeDialog`.
+  - Preserved property-grid selection behavior, metric type selection, filtering, validation, dialog results, metric defaults, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused property-grid and metric-dialog guards to require the active-option relationships.
+  - Added a source-wide UI guard that scans custom `role="listbox"` and `role="option"` tags for active-descendant and option-id relationships.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls|FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome|FullyQualifiedName~WorkspaceListboxes_ExposeActiveOptionRelationships" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only listbox relationship scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for keyboard semantics, concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Workspace project-tab label accessibility result:
+  - Added explicit accessible labels to the custom project-tab role buttons for pipeline, metrics, dashboard, test, topics, logs, and App JSON navigation.
+  - Preserved project-tab routing, active `aria-current` state, keyboard activation, delete buttons, diagnostics-to-logs routing, App JSON view toggling, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspacePage guard to require the seven tab labels.
+  - Added a source-wide UI guard that scans custom `role="button"` tags and requires either `aria-label` or `aria-labelledby`.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs|FullyQualifiedName~WorkspaceRoleButtons_UseExplicitAccessibleNames" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only role-button label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for keyboard semantics, concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Workspace focusable element role semantics result:
+  - Added explicit roles to the remaining custom `tabindex="0"` focus targets: Metric Designer parameter help now uses a labeled `role="img"` affordance, and Test Scenario Designer step cards now use labeled `role="group"` semantics.
+  - Preserved metric parameter rendering, tooltips, scenario step layout, run result display, editing commands, saved app/schema data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the Metric Designer and Test Scenario Designer guards to require the accepted roles.
+  - Added a source-wide UI guard that scans Razor component tags with `tabindex="0"` and requires custom focusable elements to expose an explicit role.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks|FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome|FullyQualifiedName~WorkspaceFocusableCustomElements_ExposeRoles" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only focusable-role scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Topic tree ARIA relationship result:
+  - Connected each topic branch chevron's expanded state to its child group with `aria-controls`, and gave the recursive child topic group a concise accessible label.
+  - Added deterministic child-group ids derived from the topic path without changing topic selection, expansion behavior, message counts, tree indexing, monitor behavior, storage, services, schemas, ids, ports, or contracts.
+  - Extended the focused TopicTree guard to require the controlled child group and label.
+  - Added source-wide UI guards for `aria-expanded` controls and named custom `role="group"` containers.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome|FullyQualifiedName~WorkspaceExpandedElements_ReferenceControlledContent|FullyQualifiedName~WorkspaceGroups_ExposeAccessibleNames" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only expanded-control and group-name scans, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Topic tree item navigation semantics result:
+  - Mirrored expanded/collapsed state onto expandable recursive topic treeitems while keeping leaf and filtered flat topic rows unchanged.
+  - Preserved topic selection, chevron toggling, branch child groups, message counts, tree indexing, monitor behavior, storage, services, schemas, ids, ports, and contracts.
+  - Extended the focused TopicTree guard to require treeitem expansion semantics.
+  - Added a source-wide UI guard that scans custom `role="treeitem"` tags for accessible name, level, selected state, focusability, keyboard shortcut, and key handling.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome|FullyQualifiedName~WorkspaceTreeItems_ExposeNavigationSemantics" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only treeitem navigation scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for concise accessible names, stale selectors, and visible noise without broadening runtime or schema scope.
+- Workspace tab keyboard navigation result:
+  - Added ArrowLeft, ArrowRight, Home, and End keyboard handling to custom tab controls in `PayloadInspectorPanel`, `TopicExplorerPanel`, and `TestStudio`.
+  - Updated the advertised tab keyboard shortcuts to match the implemented Enter, Space, ArrowLeft, ArrowRight, Home, and End behavior.
+  - Preserved native button activation, payload view switching, selected-history diff view behavior, Test Studio mode switching, tab/panel ownership, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Payload Inspector, Topic Explorer, and Test Studio guards to require the tab key handlers.
+  - Added a source-wide UI guard that scans custom `role="tab"` controls for selected state, controlled panels, complete keyboard shortcut hints, and key handling.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome|FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome|FullyQualifiedName~PayloadInspectorPanel_UsesFlatCompactInspectorChrome|FullyQualifiedName~WorkspaceTabs_ExposeKeyboardNavigation" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Neutral added-text scan and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard command-title specificity result:
+  - Replaced the Dashboard visual metric card remove command's generic `Remove` tooltip with the row-specific `Remove {metric}` title that already backs the accessible label.
+  - Preserved metric-card ordering, remove behavior, add-card behavior, dashboard inspector bindings, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector guard to require the specific remove title.
+  - Added a source-wide UI guard that rejects generic one-word command titles such as `Remove`, `Copy`, `Export`, and `Delete` in Razor components.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls|FullyQualifiedName~WorkspaceCommandTitles_UseSpecificLabels" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Neutral added-text scan and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard directional command-title specificity result:
+  - Replaced the Dashboard visual metric card move command tooltips from generic `Move up` and `Move down` to row-specific `Move {metric} up` and `Move {metric} down` titles that match the accessible labels.
+  - Preserved metric-card ordering, move/remove/add behavior, dashboard inspector bindings, dashboard schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector guard to require the specific move titles.
+  - Extended the source-wide command-title guard to reject generic directional command titles such as `Move up` and `Move down` in Razor components.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls|FullyQualifiedName~WorkspaceCommandTitles_UseSpecificLabels" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Neutral added-text scan and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: implement the Flow Designer canvas chrome polish request without broadening runtime or schema scope.
+- Workspace shell status semantics result:
+  - Added polite status semantics to the app runtime marker and the persistent bottom MQTT connection readout, and added a concise label to the duplicate top MQTT marker without making it a second live region.
+  - Preserved topbar commands, theme/right-panel controls, app validation/run/stop behavior, live MQTT state, bottom bar layout, drag preview, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MainLayout guard to require the shell status labels and to reject duplicate live-region semantics on the top MQTT marker.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MainLayout_RemovesSessionOnlyLeftRail|FullyQualifiedName~WorkspaceStatusMessages_UseExplicitPoliteLiveSemantics" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Direct status-live scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard widget command-label specificity result:
+  - Replaced generic dashboard widget action labels with widget-specific command labels in the edit-grid cell toolbar and inspector layout actions.
+  - Preserved widget edit, simulate, duplicate, delete, drag/drop, cell selection, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard catalog handoff and Dashboard Inspector layout guards to require widget-specific titles/aria labels.
+  - Extended the source-wide command-title guard to reject stale widget command copy such as `Edit widget settings`, `Simulate widget data`, `Duplicate widget`, and `Delete widget`.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardCatalogHandoff_UsesDirectWidgetEditAndPlacementCues|FullyQualifiedName~DashboardInspector_UsesFocusedLayoutAndStyleRowComponents|FullyQualifiedName~WorkspaceCommandTitles_UseSpecificLabels" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Direct stale-widget-command scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard widget drag-hint specificity result:
+  - Replaced the dashboard edit-grid widget preview drag title with widget-specific copy: `Drag {widget} to move; use toolbar to edit`.
+  - Replaced the active move overlay fallback with `Move {widget}` while preserving the existing target-cell suffix behavior.
+  - Preserved widget drag/drop, edit/simulate/delete commands, cell selection, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard catalog handoff guard to require the widget-specific drag title and move fallback while rejecting the old generic copy.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardCatalogHandoff_UsesDirectWidgetEditAndPlacementCues" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale drag-copy scans, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard widget placement-hint specificity result:
+  - Replaced the dashboard add-drag overlay fallback from generic `Place widget` to `Place {dragged widget}` using the active catalog drag display name.
+  - Preserved the existing target-cell suffix, catalog drag metadata, widget placement/drop behavior, cell selection, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard catalog handoff guard to require the display-name-backed placement hint and reject the old generic fallback.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardCatalogHandoff_UsesDirectWidgetEditAndPlacementCues" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale placement-copy scans, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Component Catalog item-title specificity result:
+  - Replaced the shared catalog item title with item-specific title text for pipeline, dashboard, and test catalog rows.
+  - Preserved catalog search/grouping, click-to-add, keyboard add, drag metadata, dashboard widget placement, test step add behavior, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard catalog handoff guard to require `CatalogItemTitle(item)` and reject the old shared dashboard title path.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardCatalogHandoff_UsesDirectWidgetEditAndPlacementCues" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale catalog-title scans, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Component Catalog metadata-label specificity result:
+  - Replaced generic catalog metadata group labels with item-specific labels: `{widget} data requirements` and `{step} metadata`.
+  - Preserved catalog search/grouping, requirement chips, step metadata chips, click-to-add, keyboard add, drag metadata, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Component Catalog guards to require `CatalogRequirementMetaLabel(item)` and `CatalogStepMetaLabel(item)` while rejecting the old generic labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ComponentCatalogPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale metadata-label scans, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer canvas chrome re-verification result:
+  - Confirmed the current `FlowDesigner` source already uses neutral `Pipeline loaded` copy for the loaded clean-pipeline subtitle while preserving `Unsaved changes` and `No active pipeline`.
+  - Confirmed the focused guard already requires the neutral loaded subtitle path and rejects generic readiness canvas chrome.
+  - Preserved the compact header, meta strip, editable/no-pipeline mode, link selection state, runtime marker, node/link/resource metrics, diagnostics action, canvas, navigator, link-condition editor, workflow JSON, saved app schema, runtime behavior, services, diagnostics, ids, ports, schemas, and contracts.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer subtitle scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App JSON meta-label specificity result:
+  - Replaced the App JSON toolbar metadata group label with `Application JSON line and size summary` so the accessible name matches the visible line count and size facts.
+  - Preserved the visible title, file label, line/size facts, unsaved indicator, copy action, read-only code viewer, generated JSON source, saved app schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App JSON guard to require the line/size-specific label while rejecting the old vague summary label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel_UsesFlatCompactCodeViewerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App JSON label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Inspector header-label specificity result:
+  - Replaced generic inspector metadata and widget command accessible names with title-backed labels for the selected inspector target.
+  - Replaced the widget reset tooltip and accessible name with `Reset {target} properties to defaults` while keeping the visible `Reset` command unchanged.
+  - Preserved property groups, widget reset behavior, cell/widget selection editing, metric binding rows, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector guard to require the new label helpers and reject the old generic header/reset labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Inspector label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Designer toolbar-label specificity result:
+  - Replaced generic dashboard toolbar group accessible names with active-dashboard-backed labels for dashboard facts, mode/layout commands, edit commands, grid commands, cell selection commands, and live preview facts.
+  - Preserved visible toolbar text, edit/live mode switching, grid picker, split picker, selection summary, live preview, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Designer toolbar and live-preview guards to require the new label helpers and reject the old generic group labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar|FullyQualifiedName~DashboardDesigner_UsesFlatLivePreviewChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Designer label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace Logs header-label specificity result:
+  - Replaced generic Logs header group labels with `Workspace log commands` and `Workspace log total and problem count`.
+  - Preserved scope/level/search filters, visible-row copy/export, reset/clear behavior, log rendering, forced-scope handling, export JSON, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Workspace Logs guard to require the workspace-specific labels and reject the old generic labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Workspace Logs label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Scenario Run Report dialog-label specificity result:
+  - Replaced generic scenario report summary/action/detail accessible names with title-backed labels for run facts, report actions, export actions, and run details.
+  - Replaced static copy/save report button accessible names with `for {Title}` labels while preserving existing availability tooltips and copy/save behavior.
+  - Preserved report title, visible metadata chips, text/JSON tabs, copy/save actions, close action, snackbar messages, dialog results, report content, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Scenario Run Report guard to require the new label helpers and reject the old static group/button labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunReportDialog_UsesFlatCompactReviewChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Scenario Run Report label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Studio label specificity result:
+  - Replaced generic Test Studio, runner, and scenario-designer group accessible names with scenario/count/run-specific labels for workspace counts, runner facts, report actions, designer facts, build actions, and builder facts.
+  - Preserved visible copy, mode switching, scenario selection, run/report actions, builder controls, history selection, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Studio, Test Runner Console, and Test Scenario Designer guards to require the new label helpers and reject the old generic setup/summary/action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome|FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome|FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Test Studio stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard dialog label specificity result:
+  - Replaced generic `Widget summary` and `Track summary` accessible names in the dashboard widget and track editor dialogs with widget/track-specific fact labels.
+  - Preserved visible dialog copy, widget settings tabs, track sizing controls, reset/apply/cancel behavior, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused dashboard widget and track dialog guards to require the new label helpers and reject the old static summary labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetEditorDialog_UsesFlatCompactEditorChrome|FullyQualifiedName~DashboardTrackEditorDialog_UsesCompactFlatSizingWorkflow" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only dashboard dialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Metric Designer side-panel label specificity result:
+  - Replaced the static Metric Designer side-panel accessible name with a selected-metric-backed label for the preview/reference detail area.
+  - Preserved visible metric editor copy, list filtering, selection, parameter editing, preview/reference rendering, validation, saved metric data, dashboard bindings, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Metric Designer guard to require the label helper and reject the old static `aria-label="Metric details"` markup.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Metric Designer stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace side-panel label specificity result:
+  - Replaced static side-panel accessible names in Open Apps, Connections, and Recordings with count/state-backed labels.
+  - Preserved visible panel copy, app selection and close behavior, connection add/connect/disconnect/remove behavior, recording start/stop/session selection behavior, filters, services, saved app data, runtime behavior, schemas, ids, ports, and contracts.
+  - Extended the focused Apps, Connections, and Sessions guards to require the new label helpers and reject the old static panel labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppsPanel|FullyQualifiedName~ConnectionPanel|FullyQualifiedName~SessionPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only side-panel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer header label specificity result:
+  - Replaced static Flow Designer canvas header group labels with active-pipeline-aware labels for summary, runtime/metrics/actions, and zoom commands.
+  - Preserved visible title/subtitle/mode/selection copy, runtime marker, node/link/resource/diagnostic metrics, diagnostics action, zoom command, canvas, navigator, link-condition editor, workflow JSON, saved app data, runtime behavior, services, diagnostics, schemas, ids, ports, and contracts.
+  - Extended the focused Flow Designer guard to require the label helpers and reject the old static header group labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App JSON toolbar label specificity result:
+  - Replaced the static App JSON toolbar accessible name with a project/state-backed label.
+  - Preserved visible title, file label, line/size facts, unsaved indicator, copy action, read-only code editor, generated JSON source, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App JSON guard to require the toolbar label helper and reject the old static toolbar label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel_UsesFlatCompactCodeViewerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only App JSON stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Designer root toolbar label specificity result:
+  - Replaced the static Dashboard Designer root toolbar accessible name with a dashboard-backed label.
+  - Preserved visible toolbar copy, dashboard selection state, edit/live mode switching, grid/split pickers, selection summary, drag/drop, live preview, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Designer toolbar guard to require the root toolbar label helper and reject the old static toolbar label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Designer stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Studio toolbar label specificity result:
+  - Replaced the static Test Studio toolbar and mode switch accessible names with active-scenario-backed labels.
+  - Preserved visible title/subtitle/counts, mode switching, tab keyboard behavior, designer/runner routing, scenario editing, run/report behavior, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Studio workspace guard to require the label helpers and reject the old static toolbar/mode labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - The first parallel focused test attempt hit the known shared intermediate-file lock while the build was running, then the serial guard rerun passed.
+  - Source-only Test Studio stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer canvas label specificity result:
+  - Replaced the static Flow Designer root region and diagram canvas accessible names with active-pipeline-backed labels.
+  - Preserved visible title/subtitle/mode/selection copy, runtime marker, node/link/resource/diagnostic metrics, diagnostics action, zoom command, canvas rendering, navigator, link-condition editor, workflow JSON, saved app data, runtime behavior, services, diagnostics, schemas, ids, ports, and contracts.
+  - Extended the focused Flow Designer canvas guard to require the label helpers and reject the old static canvas labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace Logs filter-label specificity result:
+  - Replaced generic `Scope filter` and `Level filter` accessible names with workspace-log-specific filter group labels.
+  - Preserved scope/level/search filtering, visible-row copy/export, reset/clear behavior, forced-scope handling, log rendering, export JSON, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Workspace Logs guard to require the workspace-specific filter labels and reject the old generic labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Workspace Logs stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard live-preview frame label specificity result:
+  - Replaced the static Dashboard Designer live-preview frame accessible name with an active-dashboard-backed label.
+  - Preserved live/edit mode switching, live summary facts, empty live preview state, widget rendering, grid rendering, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Designer live-preview guard to require the frame label helper and reject the old static live-preview label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatLivePreviewChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Designer live-preview stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard grid label specificity result:
+  - Replaced static Dashboard Designer edit and live grid accessible names with active-dashboard-backed labels.
+  - Preserved edit/live mode switching, grid roles, multi-select state, cell labels, track controls, widget rendering, dashboard layout/schema, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Designer toolbar/live-preview guards to require the grid label helpers and reject the old static grid labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar|FullyQualifiedName~DashboardDesigner_UsesFlatLivePreviewChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Dashboard Designer grid-label stale scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer metrics label specificity result:
+  - Replaced the static Flow Designer canvas metrics accessible name with an active-pipeline-aware label.
+  - Preserved visible title/subtitle/mode/selection copy, runtime marker, node/link/resource/diagnostic metrics, diagnostics action, zoom command, canvas, navigator, link-condition editor, workflow JSON, saved app data, runtime behavior, services, diagnostics, schemas, ids, ports, and contracts.
+  - Extended the focused Flow Designer canvas guard to require the metrics label helper and reject the old static metrics label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer metrics-label stale scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer link-condition command label specificity result:
+  - Replaced static Flow Designer link-condition apply/clear command accessible names with selected-link-specific labels.
+  - Preserved link selection, condition expression editing, apply/clear behavior, visible tooltips, workflow JSON, saved app data, runtime behavior, services, diagnostics, schemas, ids, ports, and contracts.
+  - Extended the focused Flow Designer canvas guard to require the command label helpers and reject the old static link-condition command labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer link-condition stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer zoom command label specificity result:
+  - Replaced the static Flow Designer zoom-to-fit button accessible name with an active-pipeline-aware label.
+  - Preserved visible tooltip copy, zoom-to-fit behavior, diagram state, canvas rendering, navigator, workflow JSON, saved app data, runtime behavior, services, diagnostics, schemas, ids, ports, and contracts.
+  - Extended the focused Flow Designer canvas guard to require the zoom label helper and reject the old static zoom command label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only Flow Designer zoom-label stale scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Topic tree scope label specificity result:
+  - Replaced the shared TopicTreeView static tree accessible name with a scope/count-aware label derived from the active topic index and local filter.
+  - Preserved topic tree rendering, grouping, search results, keyboard selection, expansion behavior, message data, dashboard topic tree configuration, explorer monitor behavior, storage, runtime behavior, schemas, ids, ports, and contracts.
+  - Extended the focused topic tree guard to require the label helper and reject the old static tree label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicTreeNode_UsesCompactBranchLineChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - The first parallel focused-test attempt hit the known shared intermediate XAML file lock while the build was running, then the serial guard rerun passed.
+  - Source-only TopicTreeView stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Designer root label specificity result:
+  - Replaced the static Dashboard Designer root region accessible name with an active-dashboard-aware label.
+  - Preserved toolbar copy, mode switching, grid/split controls, edit/live grids, drag/drop handling, inspector routing, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused dashboard toolbar guard to require the root label helper and reject the old static region label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Studio root label specificity result:
+  - Replaced the static Test Studio root accessible name with an active-scenario-aware label.
+  - Preserved toolbar copy, scenario count facts, mode switching, tab keyboard behavior, designer/runner routing, scenario editing, run/report behavior, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Studio workspace guard to require the root label helper and reject the old static workspace label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestStudio_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TestStudio stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Runner Console root label specificity result:
+  - Replaced the static Test Runner Console root accessible name with an active-scenario-aware label.
+  - Preserved runner empty state, scenario facts, preflight checks, run execution, report actions, history selection, timeline/activity rendering, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Runner Console guard to require the root label helper and reject the old static console label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TestRunnerConsole stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Scenario Designer label specificity result:
+  - Replaced the static Test Scenario Designer root accessible name with an active-scenario-aware label.
+  - Replaced generic step action labels and titles with step-specific move, edit, and delete labels.
+  - Preserved designer empty states, scenario facts, phase lanes, step ordering/edit/delete behavior, run/report actions, history selection, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Scenario Designer guard to require the label helpers and reject the old static root and generic step action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TestScenarioDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Scenario run history label specificity result:
+  - Replaced generic recent-run panel labels in Test Scenario Designer and Test Runner Console with active-scenario-aware labels.
+  - Replaced generic show-latest-run command labels/titles with active-scenario-aware labels while preserving visible command copy.
+  - Preserved run history selection, latest-run reset behavior, report actions, designer/runner layout, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Scenario Designer and Test Runner Console guards to require the label helpers and reject the old generic run-history labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome|FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only scenario run-history stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Runner Console section label specificity result:
+  - Replaced static setup, preflight, first-run facts, timeline, and activity accessible labels with scenario/count-aware labels.
+  - Preserved empty state, preflight checks, first-run summary, timeline rendering, runtime/log activity rendering, run execution, report actions, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Runner Console guard to require the section label helpers and reject the old static section labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TestRunnerConsole section-label stale scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Scenario Designer empty-state label specificity result:
+  - Replaced static setup-state, setup-cue, empty-scenario, and starter-cue accessible labels with test-count and active-scenario-aware labels.
+  - Preserved designer empty states, new-test action, starter cues, phase/step facts, scenario editing, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Scenario Designer guard to require the empty-state label helpers and reject the old static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestScenarioDesigner_UsesFlatCompactScenarioChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TestScenarioDesigner empty-state stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Test Runner Console empty-state label specificity result:
+  - Replaced the static Test Runner empty status accessible label with a test-count-aware setup-state label.
+  - Preserved runner empty state, new-test action, setup cues, scenario selection flow, run execution, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Test Runner Console guard to require the setup-state label helper and reject the old static empty label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TestRunnerConsole empty-state stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App Tree root label specificity result:
+  - Replaced the static App Tree root accessible label with an open-app-count and active-app-aware label.
+  - Preserved app selection, close app, section collapse/expand, add connection/pipeline/metric/dashboard/test actions, artifact selection, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App Tree guard to require the label helper and reject the old static root tree label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTree stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace Logs list-label specificity result:
+  - Replaced the static Workspace Logs filter toolbar and log-list accessible labels with scope/count-aware labels.
+  - Preserved scope/level/search filtering, forced-scope handling, visible-row copy/export, reset/clear behavior, log rendering, export JSON, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Workspace Logs guard to require the label helpers and reject the old static filter/list labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only WorkspaceLogPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App JSON detail-label specificity result:
+  - Replaced static App JSON meta, copy action, and editor-shell accessible labels with active-app-aware labels.
+  - Preserved visible App JSON copy, read-only code editor, full-definition JSON source, copy behavior, unsaved state, Monaco sync, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App JSON guard to require the label helpers and reject the old static meta/action/editor labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel_UsesFlatCompactCodeViewerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppJsonPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Topics section-label specificity result:
+  - Replaced static Topics tree, detail, latest-message, and history section accessible labels with source/scope/count-aware labels.
+  - Preserved broker monitoring, topic tree rendering, selection, latest payload views, stats, publish composer, history filters/export, selected detail, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Topics guard to require the label helpers and reject the old static top-level section labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TopicExplorerPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Topics payload/detail label specificity result:
+  - Replaced static latest/selected payload controls, payload-copy actions, latest metadata, stats, history filters, and selected-message detail accessible labels with selection-aware labels.
+  - Preserved broker monitoring, topic tree rendering, latest/selected payload views, copy behavior, stats, history filtering/export, selected detail rendering, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Topics guard to require the label helpers and reject the old static payload/detail labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TopicExplorerPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Topics action/publish label specificity result:
+  - Replaced static stored-session switch, clear-selection, monitor-list, publish panel, broker, QoS, retain, assist, recent-publish, and clear-recent accessible labels with session/selection/count-aware labels.
+  - Preserved broker monitoring, stored-session switching, topic selection clearing, publish broker selection, QoS/retain controls, publish assist, recent publish load/clear behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Topics guard to require the label helpers and reject the old static action/publish labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TopicExplorerPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Topics history-control label specificity result:
+  - Replaced static history QoS, retain, reset, and export accessible labels with selected-scope-aware labels.
+  - Preserved history filtering, visible-row export, selected detail routing, history summary/counts, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Topics guard to require the history-control label helpers and reject the old static history-control labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TopicExplorerPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace Logs action-label specificity result:
+  - Replaced static Workspace Logs command-group, stats, copy, export, reset, and clear accessible labels/tooltips with count/scope-aware labels.
+  - Preserved scope/level/search filtering, forced-scope handling, visible-row copy/export, reset/clear behavior, log rendering, export JSON, saved app schema, runtime logging behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Workspace Logs guard to require the action-label helpers and reject the old static action labels/tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only WorkspaceLogPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Sessions panel label specificity result:
+  - Replaced static Sessions filter/search, stop-recording, and switch-to-live accessible labels/tooltips with recording/session/count-aware labels.
+  - Preserved stored-session selection, live-traffic switching, recording start/stop behavior, search filtering, grouped session rows, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Sessions guard to require the label helpers and reject the old static session labels/tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~SessionPanel_UsesFlatGroupedSessionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only SessionPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Inspector root-label specificity result:
+  - Replaced the static Dashboard Inspector complementary-region accessible label with a selected-target/property-count-aware label.
+  - Preserved widget/cell selection, property grouping, reset behavior, metric bindings, dashboard layout data, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector guard to require the region-label helper and reject the old static root label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardInspector stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Connections add-action label specificity result:
+  - Replaced the static Connections add-action tooltip and accessible label with a broker-count-aware label.
+  - Preserved add-connection dialog launch, broker filtering, connection rows, connect/disconnect/remove actions, managed connection data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Connections panel guard to require the add-action label helper and reject the old static add label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ConnectionPanel_UsesFlatCompactConnectionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - The first parallel focused-test attempt hit the known shared intermediate XAML file lock while the build was running; the serial guard rerun passed.
+  - Source-only ConnectionPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Connections remove-action label specificity result:
+  - Replaced the static Connections remove-action tooltip with the existing connection-specific remove label.
+  - Preserved remove behavior, add-connection dialog launch, broker filtering, connection rows, connect/disconnect actions, managed connection data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Connections panel guard to require the row-specific remove tooltip and reject the old static remove tooltip.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ConnectionPanel_UsesFlatCompactConnectionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only ConnectionPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Apps panel close-action label specificity result:
+  - Replaced the static Open Apps close-action tooltip with the existing app-specific close label.
+  - Preserved app selection, keyboard activation, close behavior, active/unsaved markers, open-app metadata, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Apps panel guard to require the app-specific close tooltip and reject the old static close tooltip.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppsPanel_UsesFlatCompactOpenAppRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppsPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App Tree row-action label specificity result:
+  - Replaced static App Tree close, connect, disconnect, remove-connection, and delete-test tooltips with target-specific labels.
+  - Preserved app selection, section expansion, add actions, connection connect/disconnect/remove behavior, test delete confirmation, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App Tree guard to require target-specific row-action tooltips and reject the old static row-action tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTreePanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App Structure row-action label specificity result:
+  - Replaced static App Structure delete pipeline, delete dashboard, and delete test tooltips with target-specific delete labels.
+  - Preserved artifact selection, current-state markers, broker action labels, delete behavior, app structure navigation, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused App Structure guard to require target-specific delete tooltips and reject the old static delete tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppStructureMenu stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Main layout shell-action label specificity result:
+  - Replaced static top-bar new/open/save/validate/run/stop tooltips and accessible labels with helper-backed command labels that include active app context where available.
+  - Preserved visible toolbar text, new/open/save/save-as behavior, validation/run/stop behavior, runtime markers, live connection markers, right-panel toggle behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MainLayout guard to require the shell-action label helpers and reject the old static command label attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MainLayout_RemovesSessionOnlyLeftRail" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only MainLayout stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Workspace page tab-label specificity result:
+  - Replaced static app-level workspace tab labels for metrics, topics, logs, and app JSON with active-app-specific labels, and replaced static artifact delete hover titles with target-specific delete labels.
+  - Preserved tab routing, keyboard activation, active-state tracking, artifact delete behavior, JSON view toggling, diagnostics-to-logs routing, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspacePage guard to require the tab/delete label helpers and reject the old static tab labels and delete titles.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only WorkspacePage stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App JSON copy-tooltip label specificity result:
+  - Replaced the static App JSON copy tooltip with the existing active-app-specific copy label.
+  - Preserved copy behavior, snackbar feedback, read-only code editor wiring, generated JSON source, unsaved indicator, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppJsonPanel guard to require the copy tooltip helper and reject the old static copy tooltip.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppJsonPanel_UsesFlatCompactCodeViewerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppJsonPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer link-condition tooltip label specificity result:
+  - Replaced static Flow Designer apply-condition and clear-condition tooltips with the existing selected-link-specific link-condition labels.
+  - Preserved link selection, condition expression editing, apply/clear behavior, workflow JSON, diagram behavior, diagnostics, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused FlowDesigner guard to require selected-link tooltip helpers and reject the old static link-condition tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only FlowDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Topics tooltip label specificity result:
+  - Replaced static Topic Explorer clear-selection, latest-payload copy, recent-publish clear, history-filter reset, and selected-payload copy tooltips with the existing scope-aware labels.
+  - Preserved broker monitoring, stored-session switching, topic selection clearing, payload view copying, recent publish clearing, history filtering/export, selected detail rendering, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused TopicExplorerPanel guard to require helper-backed tooltips and reject the old static Topic Explorer tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only TopicExplorerPanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Metric Designer command label specificity result:
+  - Replaced static Metric Designer clear-search, reset-filter, cancel-changes, duplicate, and delete command labels/tooltips with search/filter/selected-metric-aware labels.
+  - Preserved metric search and type filtering, reset behavior, edit cancel, duplicate/delete dialogs, save validation, metric data, dashboard bindings, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricDesigner guard to require helper-backed command labels and reject the old static command attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only MetricDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Designer picker close-label specificity result:
+  - Replaced static Dashboard Designer grid-layout and split-picker close backdrop labels with dashboard/selected-cell-aware labels.
+  - Preserved grid picker toggling, split picker toggling, backdrop close behavior, grid resize, split behavior, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner toolbar guard to require helper-backed picker close labels and reject the old static backdrop labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Dashboard Inspector metric/style command label specificity result:
+  - Replaced static Dashboard Inspector open-metric, add-metric-card, and reset-cell-style command labels with selected-metric/card/style-aware labels.
+  - Preserved metric selection, app metric opening, metric card add/move/remove behavior, cell style reset behavior, property grid bindings, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended focused DashboardInspector guards to require helper-backed command labels and reject the old static command attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls|FullyQualifiedName~DashboardInspector_UsesFocusedLayoutAndStyleRowComponents|FullyQualifiedName~DashboardInspector_UsesFocusedMetricDataRowComponents|FullyQualifiedName~DashboardInspector_UsesFocusedVisualMetricRowComponent" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardInspector stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App Tree metric-designer row label specificity result:
+  - Replaced the static App Tree metric-designer row label with an app/state/metric-count-aware label and title.
+  - Preserved app selection, metric designer selection, keyboard activation, section expansion, artifact rows, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppTreePanel guard to require the helper-backed metric designer row label and reject the old static label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTreePanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Metric dialog search-clear label specificity result:
+  - Replaced static Metric Create and Metric Type Change clear-search labels with search-query-aware metric type search labels.
+  - Preserved metric type search, filtered counts, type selection, create/type-change validation, default parameter preview, reset warnings, dialog results, saved metric data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended focused metric dialog guards to require helper-backed clear-search labels and reject the old static clear-search attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only metric dialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Add Connection dialog action-label specificity result:
+  - Replaced static Add Connection cancel/add action labels with broker-target-aware labels using the pending name, host, and port fields.
+  - Preserved host/port/keep-alive validation, broker/client/TLS/certificate controls, file picker behavior, Enter handling, dialog result projection, MQTT connection behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AddConnectionDialog guard to require helper-backed action labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AddConnectionDialog_UsesFlatCompactSetupChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AddConnectionDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Start Recording dialog action-label specificity result:
+  - Replaced static Start Recording cancel/start action labels with session/project-aware labels using the pending recording target fields.
+  - Preserved project autocomplete, session naming, default project/session normalization, Enter handling, dialog result projection, recording behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused StartRecordingDialog guard to require helper-backed action labels and reject the old static button labels while preserving the dialog form label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~StartRecordingDialog_UsesFlatCompactRecordingChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only StartRecordingDialog stale button-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Node Edit dialog action-label specificity result:
+  - Replaced static Node Edit dialog cancel/save action labels with node-display-name-aware labels using existing dialog parameters.
+  - Preserved node editor rendering, node ID validation, editor validation, save/cancel behavior, dialog result projection, workflow JSON, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused NodeEditDialog guard to require helper-backed action labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NodeEditDialog_UsesCompactEditorShell" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only NodeEditDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- New App dialog action-label specificity result:
+  - Replaced static New App dialog cancel/create action labels with app-and-first-pipeline-aware labels using the pending form fields.
+  - Preserved app, pipeline, broker, host, port, security, Enter handling, validation, dialog result projection, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused NewAppDialog guard to require helper-backed action labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~NewAppDialog_UsesFlatCompactSetupChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only NewAppDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Metric action dialog label specificity result:
+  - Replaced static metric dialog cancel/confirm action labels in create, rename, duplicate, delete, type-change, and confirmation dialogs with helper-backed labels derived from existing metric, type, title, and form state.
+  - Preserved metric creation, rename, duplicate, delete, type-change, confirmation behavior, validation, default parameter preview, destructive tone/status surfaces, dialog result projection, dashboard binding behavior, saved metric data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended focused MetricCreateDialog and MetricActionDialogs guards to require helper-backed action labels and reject the old static button attributes while preserving valid form labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricCreateDialog_UsesFlatCompactCreationChrome|FullyQualifiedName~MetricActionDialogs_UseFlatCompactModalChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only metric dialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Scenario step editor action-label specificity result:
+  - Replaced static Scenario Step Editor cancel/apply action labels with current-step-aware labels using the existing step name and dialog title.
+  - Preserved scenario step field rendering, descriptor-specific editors, MQTT/event/generic configuration generation, validation, save/cancel behavior, dialog result projection, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused ScenarioStepEditorDialog guard to require helper-backed action labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioStepEditorDialog_UsesFlatCompactEditorChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only ScenarioStepEditorDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Scenario report close-label specificity result:
+  - Replaced the static Scenario Run Report close action label with a title-aware close label using the existing report title.
+  - Preserved report summary/JSON rendering, copy/save actions, snackbar feedback, dialog close behavior, report action results, saved scenario data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused ScenarioRunReportDialog guard to require the helper-backed close label and reject the old static close label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ScenarioRunReportDialog_UsesFlatCompactReviewChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only ScenarioRunReportDialog stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App Tree empty-test action-label specificity result:
+  - Replaced the static App Tree empty test-scenario row label with an app-and-test-count-aware label using existing app state.
+  - Preserved app tree rendering, empty test row activation, keyboard activation, new-test dialog launch, test creation, section expansion, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppTreePanel guard to require the helper-backed empty-test action label and reject the old static label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTreePanel stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Message Filter pattern action-label specificity result:
+  - Replaced static Message Filter add/remove topic-pattern tooltips and action labels with node-and-row-aware labels using existing node name and draft pattern state.
+  - Preserved condition code editor, topic pattern editing, add/remove behavior, validation, refresh behavior, saved configuration, workflow JSON, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MessageFilterNodeWidget guard to require helper-backed add/remove pattern labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MessageFilterNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only MessageFilterNodeWidget stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing node row controls and high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- MQTT trigger subscription action-label specificity result:
+  - Replaced static MQTT trigger add/remove subscription tooltips and action labels with node-and-row-aware labels using existing node name and draft subscription state.
+  - Preserved broker/output buffer controls, subscription editing, add/remove behavior, validation, refresh behavior, saved configuration, workflow JSON, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MqttTriggerNodeWidget guard to require helper-backed add/remove subscription labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttTriggerNodeWidget_UsesCompactSummaryAndStructuredEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only MqttTriggerNodeWidget stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing node row controls and high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Generated source message action-label specificity result:
+  - Replaced static Generated Source add/remove message tooltips and action labels with node-and-row-aware labels using existing node name and draft message topic state.
+  - Preserved message rows, topic/payload/QoS/retain/received editing, output buffer controls, add/remove behavior, validation, refresh behavior, saved configuration, workflow JSON, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused GeneratedSourceNodeWidget guard to require helper-backed add/remove message labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~GeneratedSourceNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only GeneratedSourceNodeWidget stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing node row controls and high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Routing switch route action-label specificity result:
+  - Replaced static Routing Switch add/remove route tooltips and action labels with node-and-route-aware labels using existing node name, draft match key, and draft output port state.
+  - Preserved expression code editor, input type, input buffer, emit-envelope, variable reference, route row editing, add/remove behavior, validation, refresh/layout behavior, saved configuration, workflow JSON, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused RoutingSwitchNodeWidget guard to require helper-backed add/remove route labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingSwitchNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only RoutingSwitchNodeWidget stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing routing fan row controls and high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Routing fan port action-label specificity result:
+  - Replaced static Routing Fork and Routing Merge add/remove port tooltips and action labels with node-and-port-aware labels using existing node name and draft port state.
+  - Preserved fork/merge port row editing, input type, input buffer, add/remove behavior, disabled single-port protection, validation, saved configuration, workflow JSON, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused RoutingFanNodeWidgets guard to require helper-backed add/remove port labels and reject the old static action labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingFanNodeWidgets_UseCompactSummaryAndFlatEditors" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only RoutingForkNodeWidget/RoutingMergeNodeWidget stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Metric Designer rename action-label specificity result:
+  - Replaced the static Metric Designer inline rename command title and accessible label with a selected-metric-aware label using existing draft metric state.
+  - Preserved metric selection, rename dialog launch, metric id/display/type editing, validation, save/duplicate/delete behavior, saved metric data, dashboard bindings, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricDesigner guard to require the helper-backed rename label and reject the old static title/aria-label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only MetricDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- App Structure metric-designer row label specificity result:
+  - Replaced the static App Structure metric-designer row title with an app-and-metric-count-aware title and accessible label using existing active app state.
+  - Preserved app structure menu routing, metric designer selection, metric counts, add metric command, artifact highlighting, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppStructureMenu guard to require the helper-backed metric designer row label and reject the old static title/aria-label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppStructureMenu stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue auditing high-use workspace chrome for stale selectors, concise accessible names, keyboard semantics, and remaining visible noise without broadening runtime or schema scope.
+- Flow Designer canvas chrome readiness-copy result:
+  - Confirmed the Flow Designer loaded subtitle uses the neutral `Pipeline loaded` copy while preserving `Unsaved changes` and `No active pipeline` states.
+  - Preserved the compact canvas header, editable/no-pipeline mode, selected-link state, runtime marker, node/link/resource metrics, diagnostics action, canvas, navigator, link-condition editor, workflow JSON, diagram behavior, runtime behavior, services, diagnostics, schemas, ids, ports, and contracts.
+  - Strengthened the focused FlowDesigner guard to require the source-level `Pipeline loaded` fallback and reject the old source-level `Ready` fallback.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~FlowDesigner_UsesFlatCompactCanvasChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - FlowDesigner readiness-copy scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard Designer merge action-label specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard Designer merge action-label specificity result:
+  - Replaced the static Dashboard Designer merge-selected-cells tooltip and accessible label with a selection-and-dashboard-aware helper label.
+  - Preserved dashboard mode switching, grid layout picker, split picker, selection summary, merge behavior, selected-cell behavior, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner guard to require the helper-backed merge label and reject the old static merge control label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard Designer layout-editor region label specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard Designer layout-editor region label specificity result:
+  - Replaced the static Dashboard Designer layout-editor group accessible label with an active-dashboard-aware helper label.
+  - Preserved edit-mode workbench layout, grid frame classes, pointer/drop handlers, editable grid label, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner guard to require the helper-backed layout-editor label and reject the old static region label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard Designer grid/split command tooltip specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard Designer grid/split command tooltip specificity result:
+  - Replaced static Dashboard Designer grid-layout and split-cell command tooltips with the existing state-aware command labels.
+  - Preserved grid picker toggling, split picker toggling, command button labels, grid/split picker cells, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner guard to require helper-backed grid/split tooltip text and reject the old static tooltip attributes.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-tooltip scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard Designer picker-cell title specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard Designer picker-cell title specificity result:
+  - Replaced inline Dashboard Designer grid and split picker cell hover titles with the same helper-backed labels used by their accessible names.
+  - Preserved grid preview/pick behavior, split preview/pick behavior, disabled split-cell rules, picker cell classes, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner guard to require helper-backed picker cell titles and reject the old inline title strings.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFlatCompactDashboardToolbar" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale-title scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard widget cell action tooltip specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard widget cell action tooltip specificity result:
+  - Replaced inline Dashboard widget preview/edit/simulate/delete title and accessible-label strings with helper-backed labels based on the existing widget label.
+  - Preserved widget drag/move behavior, edit dialog launch, preview simulation, delete behavior, widget rendering, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner onboarding/placement guard to require helper-backed widget action labels and reject the old inline widget action strings.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_UsesFirstWidgetEmptyGridOnboarding" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale widget-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard widget placeholder title specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard widget placeholder title specificity result:
+  - Replaced the inline Dashboard empty-cell placeholder hover title with a helper-backed title derived from the existing cell title and span helpers.
+  - Preserved empty-cell rendering, merged-cell span display, drop marker chrome, selection behavior, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardDesigner empty-cell label guard to require the helper-backed placeholder title and reject the old inline title expression.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardDesigner_EmptyCellLabelsStayBoundedWhenGridShrinks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardDesigner stale placeholder-title scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: Dashboard widget editor dialog action-label specificity, then continue high-use workspace chrome audits without broadening runtime or schema scope.
+- Dashboard widget editor dialog action-label specificity result:
+  - Added widget-aware accessible labels for the Dashboard widget editor reset, cancel, and apply actions while keeping the compact visible action text unchanged.
+  - Preserved widget draft editing, reset/cancel/apply behavior, dirty-state disabling, filter and metric controls, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardWidgetEditorDialog guard to require helper-backed action labels and reject static reset/cancel/apply accessible labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardWidgetEditorDialog_UsesFlatCompactEditorChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - A first parallel verification attempt hit the known shared intermediate UI compile file lock; the serial rerun passed.
+  - Source-only DashboardWidgetEditorDialog stale action-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: close the current one-hour pass by selecting only one remaining high-signal workspace chrome item, likely Dashboard track editor action-label specificity, or stop with a handoff if time is tight.
+- Dashboard track editor action-label specificity result:
+  - Added row/column-aware accessible labels for the Dashboard track editor reset, cancel, and apply actions while keeping compact visible action text unchanged.
+  - Preserved track size parsing, unit selection, padding editing, reset/cancel/apply behavior, validation, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardTrackEditorDialog guard to require helper-backed action labels and reject static reset/cancel/apply accessible labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardTrackEditorDialog_UsesCompactFlatSizingWorkflow" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardTrackEditorDialog stale action-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: stop the current timed pass with a clean handoff, or resume later by auditing remaining high-use workspace chrome for stale static labels and keyboard semantics without broadening runtime or schema scope.
+- Dashboard query preview refresh-label specificity result:
+  - Replaced the literal Dashboard query preview refresh title with a helper-backed title and accessible label.
+  - Preserved widget preview rendering, sample refresh callback behavior, source display, result slot rendering, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardQueryPreviewFrame guard to require the helper-backed refresh label and reject the old literal refresh title.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardQueryPreviewFrame_UsesNeutralPreviewSourceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardQueryPreviewFrame stale refresh-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit with one focused surface at a time; likely candidates are remaining App Tree inline action expressions or Dashboard Inspector visual metric row action labels.
+- Dashboard Inspector visual metric row action-label specificity result:
+  - Replaced inline visual-metric move up, move down, remove, and action-group label expressions with helper-backed labels.
+  - Preserved metric card ordering, add/remove behavior, primary metric selection, card column editing, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector visual metric row guards to require helper-backed action labels and reject the old inline expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls|FullyQualifiedName~DashboardInspector_UsesFocusedVisualMetricRowComponent" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardInspectorVisualMetricRows stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit with one focused surface at a time; likely candidates are remaining App Tree inline action expressions or Dashboard Inspector layout row action labels.
+- Dashboard Inspector layout row action-label specificity result:
+  - Replaced inline duplicate/delete widget action label expressions with helper-backed labels in the layout rows component.
+  - Preserved duplicate/delete callbacks, layout selection facts, widget display facts, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused Dashboard Inspector layout/style row guard to require helper-backed action labels and reject the old inline expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesFocusedLayoutAndStyleRowComponents" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only DashboardInspectorLayoutRows stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit with one focused surface at a time; likely candidate is remaining App Tree inline action expressions.
+- App Tree app and connection action-label specificity result:
+  - Replaced inline close-app, connect, disconnect, and remove-connection action label expressions with helper-backed labels in AppTreePanel.
+  - Preserved app selection, app close behavior, broker connection connect/disconnect/remove behavior, section expansion, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppTreePanel guard to require helper-backed app/connection action labels and reject the old inline expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTreePanel app/connection stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue App Tree static-label cleanup with pipeline/dashboard/test row open/delete labels, one focused surface at a time.
+- App Tree artifact open-label specificity result:
+  - Replaced inline pipeline and dashboard open label expressions with helper-backed labels in AppTreePanel.
+  - Preserved pipeline/dashboard selection, keyboard activation, active markers, section expansion, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppTreePanel guards to require helper-backed artifact open labels and reject the old inline expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only AppTreePanel artifact stale inline-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue App Tree static-label cleanup with test row delete labels, then stop or resume the broader high-use workspace static-label audit one focused surface at a time.
+- Workspace artifact tab label specificity result:
+  - Replaced inline App Tree test delete labels and WorkspacePage pipeline/dashboard/test open and close-app label expressions with helper-backed labels.
+  - Preserved App Tree test removal, WorkspacePage artifact tab selection, keyboard activation, delete artifact behavior, close-app behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the AppTreePanel and WorkspacePage guards to require helper-backed labels and reject the old inline expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppTreePanel_UsesCompactTestManagementRows|FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale inline-label scan for the touched label expressions, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidate is remaining WorkspacePage tab title specificity or other visible workspace chrome labels.
+- Workspace artifact tab title specificity result:
+  - Replaced inline WorkspacePage pipeline, dashboard, and test tab title expressions with helper-backed titles.
+  - Preserved WorkspacePage artifact tab selection, keyboard activation, delete artifact behavior, close-app behavior, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspacePage guard to require helper-backed tab titles and reject the old inline title expressions.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale inline-label/title scan for the touched expressions, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are remaining WorkspacePage static menu/action labels or other visible workspace chrome labels.
+- Workspace add-artifact menu label specificity result:
+  - Added a helper-backed accessible label to the icon-only WorkspacePage add-artifact menu.
+  - Preserved menu item text, add pipeline/metric/dashboard/test callbacks, artifact tab selection, keyboard activation, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspacePage guard to require the helper-backed menu label and reject a literal add-artifact label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspacePage_RoutesPipelineDiagnosticsToFilteredLogs" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale literal menu-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are AppStructureMenu icon-only menu labels or other visible workspace chrome labels.
+- AppStructureMenu menu label specificity result:
+  - Added helper-backed contextual accessible labels to the five top-level AppStructureMenu menus.
+  - Preserved visible menu labels, broker toggle behavior, add/select/delete artifact commands, active markers, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppStructureMenu guard to require all five helper-backed menu labels and reject literal section labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale literal menu-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are AppStructureMenu navigation label and command row text specificity or other visible workspace chrome labels.
+- AppStructureMenu navigation label specificity result:
+  - Replaced the static app-structure navigation accessible label with a helper-backed contextual label based on the active app and existing structure metadata.
+  - Preserved visible menu labels, top-level menu behavior, broker toggle behavior, add/select/delete artifact commands, active markers, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppStructureMenu guard to require the helper-backed navigation label and reject the stale literal navigation label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale navigation-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: keep the remaining timed pass narrow; either stop with a clean handoff or audit AppStructureMenu command row text specificity as one final focused surface.
+- AppStructureMenu add command label specificity result:
+  - Added helper-backed contextual titles and accessible labels to the five AppStructureMenu add-command rows.
+  - Preserved visible command text, command hints, add connection/pipeline/dashboard/metric/test callbacks, menu layout, active markers, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused AppStructureMenu guard to require the helper-backed add-command labels and reject stale literal add labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~AppStructureMenu_UsesCompactInlineArtifactActions" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale add-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: stop the timed pass with a clean handoff, or resume later with another focused workspace chrome/static-label audit only after choosing the next surface from current memory.
+- ComponentCatalogPanel meta label specificity result:
+  - Replaced the static catalog meta-strip accessible label with a helper-backed label that reflects catalog title, mode, availability, and local filter state.
+  - Preserved visible catalog title/meta text, search behavior, add/drag item behavior, item grouping, empty state, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused ComponentCatalogPanel guard to require the helper-backed meta label and reject the stale static label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ComponentCatalogPanel_UsesFlatCompactCatalogChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale catalog-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are small literal labels in LiveInspectorPanel or WorkspaceLogPanel filter groups, after confirming existing guard coverage.
+- WorkspaceLogPanel filter group label specificity result:
+  - Replaced the static scope and level filter group accessible labels with helper-backed labels that include current option counts.
+  - Preserved visible filter labels, scope/level/search behavior, copy/export/reset/clear actions, visible-row export scope, saved app data, runtime behavior, log collection semantics, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspaceLogPanel guard to require the helper-backed filter group labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale log-filter-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidate is LiveInspectorPanel publish controls, after confirming existing guard coverage.
+- LiveInspectorPanel publish control label specificity result:
+  - Replaced the static publish QoS and retained-message accessible labels with helper-backed labels that include current QoS/retain state.
+  - Preserved visible publish controls, broker selection, topic/payload editing, QoS selection, retained toggle behavior, publish/connect behavior, manual publish recording, diagnostics display, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused LiveInspectorPanel guard to require helper-backed publish labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~LiveInspectorPanel_UsesAppLevelMqttPublisherPanel" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale publish-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are remaining literal labels in workspace panels with focused guards, chosen from current search evidence.
+- WorkspaceLogPanel fixed-scope/search label specificity result:
+  - Replaced the remaining static fixed-scope and log-search accessible labels with helper-backed labels based on effective scope.
+  - Preserved visible log filter labels, search placeholder, scope/level/search behavior, copy/export/reset/clear actions, visible-row export scope, saved app data, runtime behavior, log collection semantics, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspaceLogPanel guard to require helper-backed fixed-scope/search labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale log fixed/search label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace static-label audit one focused surface at a time; likely candidates are MetricDesigner or PropertyGrid literals, after confirming existing guard coverage and keeping edits UI-only.
+- PropertyGrid label specificity result:
+  - Replaced the static dashboard property editor and property-name column resize accessible labels with helper-backed labels that include current group count and column width.
+  - Preserved property grid layout, group collapse/expand behavior, column resizing and keyboard shortcuts, dashboard inspector rows, saved dashboard data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardInspector/PropertyGrid guard to require helper-backed grid/resizer labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale PropertyGrid label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: end the current timed goal window with a clean handoff, then resume later with one focused high-use workspace static-label audit at a time; likely candidate is MetricDesigner literals after confirming focused guard coverage and keeping edits UI-only.
+- MetricDesigner pane/filter label specificity result:
+  - Replaced static MetricDesigner list pane, search field, type filter, and editor pane accessible labels with helper-backed labels that include metric counts, filter state, and selected metric context.
+  - Preserved metric list filtering, type selection, row selection, metric editing, validation, dashboard reference navigation, saved metric resources, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricDesigner guard to require helper-backed pane/filter/editor labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale MetricDesigner label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: end the current timed goal window with a clean handoff; later resume with one focused high-use workspace static-label audit at a time after inspecting current state.
+- MetricDesigner editor/detail label specificity result:
+  - Replaced static MetricDesigner editor field/action/detail labels and titles with helper-backed labels for unsaved changes, display name, metric type change, description, no-reading preview, dashboard bindings, and validation field links.
+  - Preserved metric list filtering, type selection, row selection, metric editing, validation, dashboard reference navigation, saved metric resources, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricDesigner guard to require helper-backed editor/detail labels and reject stale static labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale MetricDesigner editor/detail label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: end the current timed goal window with a clean handoff; later resume only after choosing the next high-use workspace polish target from current search evidence.
+- MetricDesigner parameter label specificity result:
+  - Replaced raw parameter display-name accessible labels in MetricDesigner select, toggle, and text/number inputs with a helper-backed label that includes selected metric context.
+  - Preserved parameter rendering, validation, defaults, select/toggle/text binding, saved metric resources, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricDesigner guard to require the parameter label helper and reject raw `@parameter.DisplayName` labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricDesigner_UsesNeutralMetricMarkerHooks" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only raw-parameter-label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: choose the next high-use workspace polish target from current search evidence; likely candidates are contextual WorkspaceLog row labels or remaining app-level action labels with focused guards.
+- WorkspaceLogPanel row label specificity result:
+  - Replaced the inline workspace log row accessible label and severity icon title with helper-backed labels that include severity, time, date, scope/artifact, and source/code context.
+  - Preserved log filtering, visible-row copy/export, reset/clear actions, row rendering, log collection semantics, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused WorkspaceLogPanel guard to require helper-backed row/severity labels and reject the stale inline row label/title.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~WorkspaceLogPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale workspace-log row label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the high-use workspace polish audit from current search evidence, likely remaining app-level action labels or workspace panel row titles with focused guards.
+- MainLayout publisher toggle label specificity result:
+  - Replaced the inline MQTT publisher panel toggle tooltip and accessible label with a helper-backed label that includes the active app target.
+  - Preserved right panel open/close behavior, live tools policy, publisher panel rendering, project commands, runtime markers, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MainLayout guard to require the helper-backed publisher toggle label and reject the stale inline ternary.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MainLayout_RemovesSessionOnlyLeftRail" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale publisher-toggle label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue from current search evidence with one remaining high-use app-level action or panel-row label at a time.
+- TopicExplorerPanel broker action label specificity result:
+  - Replaced inline broker selection and broker-monitor settings accessible labels with helper-backed labels that include broker name, connection state, and topic count context.
+  - Preserved broker/topic selection, monitor editor launch, topic tree filtering, publish/history/stats controls, saved app data, monitor semantics, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused TopicExplorerPanel guard to require helper-backed broker action labels and reject stale inline labels/tooltips.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TopicExplorerPanel_UsesFlatCompactWorkspaceChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale topic broker label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue from current search evidence with one remaining high-use workspace inline label at a time, likely session project group or dashboard visual metric position labels with focused guards.
+- SessionPanel project group label specificity result:
+  - Replaced the inline session project-group accessible label with a helper-backed label that includes the project name and grouped session count.
+  - Preserved recording controls, search/filter behavior, grouped session rendering, session selection, live-traffic switching, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused SessionPanel guard to require the helper-backed project-group label and reject the stale inline label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~SessionPanel_UsesFlatGroupedSessionRows" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale session project-group label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target for the one-hour goal window: stop with a clean handoff unless a new focused surface is explicitly selected; remaining search evidence includes dashboard visual metric position and test runner result labels.
+- TestRunnerConsole run result label specificity result:
+  - Replaced the inline scenario run-result accessible label with a helper-backed label that includes selected-run scope, status, and finish time.
+  - Preserved scenario run state display, latest/history selection, report actions, run history, runtime event/log streams, saved app data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused TestRunnerConsole guard to require the helper-backed run-result label and reject the stale inline label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~TestRunnerConsole_UsesFlatCompactRunnerChrome" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale run-result label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target for the one-hour goal window: stop with a clean handoff unless a new focused surface is explicitly selected; remaining search evidence includes dashboard visual metric position labels.
+- DashboardInspector visual metric position label specificity result:
+  - Replaced the inline visual metric card-position accessible label with a helper-backed label that includes the metric label and position.
+  - Preserved metric card ordering, add/remove/move controls, primary metric selection, card column editing, dashboard layout data, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused DashboardInspector visual metric rows guard to require the helper-backed position label and reject the stale inline label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~DashboardInspector_UsesDensePropertyGridAndIconMetricControls" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale visual metric position label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target for the one-hour goal window: stop with a clean handoff; resume later only after a fresh current-state scan selects another focused high-use UI surface.
+- MessageFilterNodeWidget topic pattern label specificity result:
+  - Replaced the inline topic-pattern field accessible label with a helper-backed label that includes the current pattern or row number plus the node name.
+  - Preserved pattern binding, add/remove pattern actions, condition editor layout, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MessageFilterNodeWidget guard to require the helper-backed topic-pattern field label and reject the stale inline label.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MessageFilterNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale topic-pattern label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the node-editor static-label cleanup from the current scan one focused widget at a time; likely next candidates are Routing Switch route labels or Routing Fork/Merge port labels with existing focused guards.
+- RoutingSwitchNodeWidget route field label specificity result:
+  - Replaced inline route match-key and output-port accessible labels with helper-backed labels that include current route values or row context plus the node name.
+  - Preserved route binding, add/remove route actions, expression editor layout, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused RoutingSwitchNodeWidget guard to require helper-backed route field labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingSwitchNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale route field label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the node-editor static-label cleanup from the current scan one focused widget at a time; likely next candidates are Routing Fork/Merge port labels with existing focused guards.
+- RoutingFanNodeWidgets port label specificity result:
+  - Replaced inline fork output-port and merge input-port accessible labels with helper-backed labels that include current draft port names or row context plus the node name.
+  - Preserved fork/merge port binding, add/remove port actions, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused RoutingFanNodeWidgets guard to require helper-backed port field labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~RoutingFanNodeWidgets_UseCompactSummaryAndFlatEditors" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale fan port label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the node-editor static-label cleanup from the current scan one focused widget at a time; likely next candidate is GeneratedSourceNodeWidget row labels with an existing focused guard.
+- GeneratedSourceNodeWidget generated message label specificity result:
+  - Replaced inline generated-message topic, payload, QoS, retained, and received-at accessible labels with helper-backed labels that include row/topic context plus the node name.
+  - Preserved generated message binding, add/remove message actions, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused GeneratedSourceNodeWidget guard to require helper-backed generated-message field labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~GeneratedSourceNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale generated-message label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: stop the timed pass with a clean handoff; if explicitly continuing, choose the next node-editor static-label cleanup from a fresh current-state scan, likely MqttTriggerNodeWidget subscription labels or MqttMetricsNodeWidget display/readout labels.
+- MqttTriggerNodeWidget subscription label specificity result:
+  - Replaced inline subscription topic-filter, QoS, retained-delivery, and retain-flag accessible labels with helper-backed labels that include row/topic context plus the node name.
+  - Preserved subscription binding, add/remove subscription actions, broker option sync, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MqttTriggerNodeWidget guard to require helper-backed subscription field labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttTriggerNodeWidget_UsesCompactSummaryAndStructuredEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale subscription label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the node-editor static-label cleanup from a fresh current-state scan; likely remaining candidates include MqttMetricsNodeWidget display/readout labels or compact token titles in expression-heavy node summaries.
+- MqttMetricsNodeWidget readout label specificity result:
+  - Replaced inline runtime readout and visible-readout option accessible labels with helper-backed labels that include readout value/selection state plus the node name.
+  - Preserved runtime metric display, top topic rendering, last-topic state, readout selection behavior, disabled final-readout protection, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MqttMetricsNodeWidget guard to require helper-backed readout labels and reject stale inline labels.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MqttMetricsNodeWidget_UsesScopedDisplayAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale MQTT metrics label scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue the static-label cleanup from a fresh current-state scan; likely candidates are compact token titles in ConditionRouterNodeWidget, RoutingSwitchNodeWidget, or MetricSourceNodeWidget summaries.
+- ConditionRouterNodeWidget token title specificity result:
+  - Replaced inline summary variable and editor variable-reference hover titles with helper-backed titles that include variable context plus the node name.
+  - Preserved condition expression editor layout, input-type switching, variable display, validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused ConditionRouterNodeWidget guard to require helper-backed token titles and reject stale inline titles.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~ConditionRouterNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale condition-router title scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: continue static-title cleanup from a fresh current-state scan; likely candidates are RoutingSwitchNodeWidget route token titles or MetricSourceNodeWidget parameter token titles.
+- MetricSourceNodeWidget parameter title specificity result:
+  - Replaced the inline parameter-preview hover title with a helper-backed title that includes parameter key/value context plus the node name.
+  - Preserved metric selection, parameter preview, parameter editor rendering, start behavior, output buffer validation, saved node configuration, runtime behavior, services, schemas, ids, ports, and contracts.
+  - Extended the focused MetricSourceNodeWidget guard to require the helper-backed parameter preview title and reject the stale inline title.
+  - Verification passed:
+    - `dotnet build src\FluxMq.UI\FluxMq.UI.csproj --no-restore /m:1 /nodeReuse:false -p:UseSharedCompilation=false -v:minimal`
+    - `dotnet test tests\FluxMq.UI.Tests\FluxMq.UI.Tests.csproj --no-restore --filter "FullyQualifiedName~MetricSourceNodeWidget_UsesCompactSummaryAndFlatEditor" --verbosity minimal /nodeReuse:false -p:UseSharedCompilation=false`
+  - Source-only stale metric-source title scan, neutral added-text scan, and `git diff --check` passed.
+  - Desktop manual check was not run because native desktop automation was not reauthorized for this slice.
+  - Next target: stop with a clean handoff; if explicitly resuming, continue static-title cleanup from a fresh scan, likely RoutingSwitchNodeWidget route token titles or MetricDesigner reference-count title.

@@ -60,32 +60,6 @@
     min-width: 0;
 }
 
-.scenario-report-export-state {
-    align-items: center;
-    background: var(--flux-surface-2);
-    border: 1px solid color-mix(in srgb, var(--flux-border) 72%, transparent);
-    border-radius: 5px;
-    color: var(--mud-palette-text-secondary);
-    display: inline-flex;
-    flex: 0 0 auto;
-    font-size: 10.5px;
-    font-weight: 750;
-    gap: 4px;
-    height: 24px;
-    padding: 0 6px;
-    white-space: nowrap;
-}
-
-.scenario-report-export-state.ready {
-    border-color: color-mix(in srgb, var(--flux-accent) 32%, var(--flux-border));
-    color: var(--flux-accent);
-}
-
-.scenario-report-export-state.empty {
-    border-color: color-mix(in srgb, var(--mud-palette-error) 36%, var(--flux-border));
-    color: var(--mud-palette-error);
-}
-
 .scenario-report-meta-strip {
     align-items: center;
     display: flex;

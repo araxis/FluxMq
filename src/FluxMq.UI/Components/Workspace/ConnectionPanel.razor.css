@@ -262,7 +262,7 @@
     white-space: normal;
 }
 
-.connection-state {
+.connection-marker {
     align-items: center;
     background: color-mix(in srgb, var(--mud-palette-text-secondary) 10%, transparent);
     border-radius: 4px;
@@ -276,17 +276,17 @@
     padding: 0 5px;
 }
 
-.connection-state.live {
+.connection-marker.live {
     background: color-mix(in srgb, var(--mud-palette-success) 12%, transparent);
     color: var(--mud-palette-success);
 }
 
-.connection-state.pending {
+.connection-marker.pending {
     background: color-mix(in srgb, var(--mud-palette-warning) 12%, transparent);
     color: var(--mud-palette-warning);
 }
 
-.connection-state.faulted {
+.connection-marker.faulted {
     background: color-mix(in srgb, var(--mud-palette-error) 12%, transparent);
     color: var(--mud-palette-error);
 }

@@ -1,19 +1,19 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true })">
     <TitleContent>
         <div class="metric-confirm-title">
-            <span class="metric-confirm-title-icon @ToneClass">
-                <MudIcon Icon="@TitleIcon" Size="Size.Small" />
+            <span class="metric-confirm-title-icon @ToneClass" aria-hidden="true">
+                <MudIcon Icon="@TitleIcon" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-confirm-title-copy">
                 <strong>@Title</strong>
                 <small>@ToneDescription</small>
             </span>
-            <span class="metric-confirm-status @ToneClass" role="status" aria-live="polite">@ToneText</span>
+            <span class="metric-confirm-tone @ToneClass" role="status" aria-live="polite">@ToneText</span>
         </div>
     </TitleContent>
     <DialogContent>
         <div class="@DialogClass" role="alert">
-            <MudIcon Icon="@BodyIcon" Size="Size.Small" />
+            <MudIcon Icon="@BodyIcon" Size="Size.Small" aria-hidden="true" />
             <div>
                 <strong>@Message</strong>
                 @if (!string.IsNullOrWhiteSpace(Detail))
@@ -27,12 +27,12 @@
         <div class="metric-confirm-actions">
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
-                       aria-label="Cancel confirmation">Cancel</MudButton>
+                       aria-label="@CancelConfirmationLabel">Cancel</MudButton>
             <MudButton Color="@ActionColor"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@ActionIcon"
-                       aria-label="@ConfirmText"
+                       aria-label="@ConfirmActionLabel"
                        OnClick="@Confirm">@ConfirmText</MudButton>
         </div>
     </DialogActions>
@@ -78,6 +78,14 @@
     private string DialogClass => IsDanger
         ? "metric-confirm-dialog danger"
         : "metric-confirm-dialog warning";
+
+    private string CancelConfirmationLabel => $"Cancel {ConfirmationTargetLabel}";
+
+    private string ConfirmActionLabel => $"{ConfirmText} for {ConfirmationTargetLabel}";
+
+    private string ConfirmationTargetLabel => string.IsNullOrWhiteSpace(Title)
+        ? "confirmation"
+        : Title.Trim();
 
     private void Cancel() => MudDialog.Cancel();
 

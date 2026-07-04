@@ -4,20 +4,40 @@
 
     <div class="topic-node-row @(Node.FullPath == SelectedTopic ? "topic-node-selected" : null)"
          title="@Node.FullPath"
+         role="treeitem"
+         tabindex="0"
+         aria-label="@Node.FullPath"
+         aria-level="@TopicNodeLevel()"
+         aria-selected="@TopicNodeSelected()"
+         aria-expanded="@TopicNodeExpanded()"
+         aria-controls="@TopicNodeControls()"
+         aria-keyshortcuts="Enter Space"
+         @onkeydown="SelectFromKeyboardAsync"
          @onclick="Select">
-        <span class="topic-node-branch"></span>
+        <span class="topic-node-branch" aria-hidden="true"></span>
 
-        <span class="topic-node-chevron" @onclick="Toggle" @onclick:stopPropagation>
-            @if (Node.HasChildren)
-            {
+        @if (Node.HasChildren)
+        {
+            <button type="button"
+                    class="topic-node-chevron"
+                    aria-label="@TopicNodeChevronLabel()"
+                    aria-expanded="@(_expanded ? "true" : "false")"
+                    aria-controls="@TopicNodeChildrenId()"
+                    @onclick="Toggle"
+                    @onclick:stopPropagation>
                 <MudIcon Icon="@(_expanded ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ChevronRight)"
-                         Size="Size.Small" />
-            }
-            else
-            {
+                         Size="Size.Small"
+                         aria-hidden="true" />
+            </button>
+        }
+        else
+        {
+            <span class="topic-node-chevron topic-node-chevron-static"
+                  aria-hidden="true"
+                  @onclick:stopPropagation>
                 <span class="topic-node-chevron-placeholder"></span>
-            }
-        </span>
+            </span>
+        }
 
         <MudText Typo="Typo.body2" Class="topic-node-name">@Node.Name</MudText>
 
@@ -34,13 +54,18 @@
 
     @if (_expanded && Node.HasChildren)
     {
-        @foreach (var child in Node.Children.Values.OrderBy(n => n.Name))
-        {
-            <TopicTreeNode Node="child"
-                           SelectedTopic="@SelectedTopic"
-                           TopicSelected="@TopicSelected"
-                           Compact="@Compact" />
-        }
+        <div id="@TopicNodeChildrenId()"
+             class="topic-node-children"
+             role="group"
+             aria-label="@TopicNodeChildrenLabel()">
+            @foreach (var child in Node.Children.Values.OrderBy(n => n.Name))
+            {
+                <TopicTreeNode Node="child"
+                               SelectedTopic="@SelectedTopic"
+                               TopicSelected="@TopicSelected"
+                               Compact="@Compact" />
+            }
+        </div>
     }
 
 </div>
@@ -65,6 +90,49 @@
         _initialized = true;
     }
 
+    private string TopicNodeChevronLabel()
+        => _expanded ? "Collapse topic branch" : "Expand topic branch";
+
+    private string TopicNodeChildrenId()
+        => $"topic-node-children-{ToElementIdPart(Node.FullPath)}";
+
+    private string TopicNodeChildrenLabel()
+        => $"Child topics for {Node.FullPath}";
+
+    private static string ToElementIdPart(string value)
+    {
+        const uint offsetBasis = 2166136261;
+        const uint prime = 16777619;
+        var hash = offsetBasis;
+        foreach (var character in value)
+        {
+            hash ^= character;
+            hash *= prime;
+        }
+
+        return hash.ToString("x8", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private int TopicNodeLevel()
+        => Node.Depth + 1;
+
+    private string TopicNodeSelected()
+        => string.Equals(Node.FullPath, SelectedTopic, StringComparison.Ordinal) ? "true" : "false";
+
+    private string? TopicNodeExpanded()
+        => Node.HasChildren ? (_expanded ? "true" : "false") : null;
+
+    // The treeitem row mirrors the chevron's aria-controls so the expandable row points at the
+    // child group it toggles; present only when there are children (matching aria-expanded).
+    private string? TopicNodeControls()
+        => Node.HasChildren ? TopicNodeChildrenId() : null;
+
     private void Toggle() => _expanded = !_expanded;
+    private static bool IsActivationKey(KeyboardEventArgs args)
+        => args.Key is "Enter" or " " or "Spacebar";
+
+    private Task SelectFromKeyboardAsync(KeyboardEventArgs args)
+        => IsActivationKey(args) ? Select() : Task.CompletedTask;
+
     private Task Select() => TopicSelected.InvokeAsync(Node.FullPath);
 }

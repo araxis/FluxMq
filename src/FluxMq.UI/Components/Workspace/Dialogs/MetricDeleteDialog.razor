@@ -1,20 +1,20 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <TitleContent>
         <div class="metric-delete-title">
-            <span class="metric-delete-title-icon">
-                <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" />
+            <span class="metric-delete-title-icon" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" aria-hidden="true" />
             </span>
             <span class="metric-delete-title-copy">
                 <strong>Delete metric</strong>
                 <small>Remove the metric resource</small>
             </span>
-            <span class="metric-delete-status" role="status" aria-live="polite">@DeleteStatusText</span>
+            <span class="metric-delete-tone" role="status" aria-live="polite">@DeleteToneText</span>
         </div>
     </TitleContent>
     <DialogContent>
         <div class="metric-delete-dialog">
             <div class="metric-delete-warning" role="alert">
-                <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Size="Size.Small" aria-hidden="true" />
                 <div>
                     <strong>Delete @MetricId?</strong>
                     <span>This removes the metric resource from the app. Dashboard bindings that use it will no longer resolve.</span>
@@ -34,8 +34,8 @@
 
                 @if (References.Count == 0)
                 {
-                    <div class="metric-delete-empty">
-                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" />
+                    <div class="metric-delete-empty" role="status" aria-live="polite">
+                        <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Small" aria-hidden="true" />
                         <span>Not used by any dashboard binding.</span>
                     </div>
                 }
@@ -45,7 +45,7 @@
                         @foreach (var reference in References)
                         {
                             <div class="metric-delete-reference-row" title="@ReferenceTitle(reference)">
-                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" />
+                                <MudIcon Icon="@Icons.Material.Filled.Dashboard" Size="Size.Small" aria-hidden="true" />
                                 <span class="metric-delete-reference-main">
                                     <strong>@reference.WidgetName</strong>
                                     <span>@ReferenceLocationLine(reference)</span>
@@ -69,12 +69,12 @@
         <div class="metric-delete-actions">
             <MudButton OnClick="@Cancel"
                        Size="Size.Small"
-                       aria-label="Cancel metric delete">Cancel</MudButton>
+                       aria-label="@CancelMetricDeleteLabel">Cancel</MudButton>
             <MudButton Color="Color.Error"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.DeleteOutline"
-                       aria-label="Delete metric"
+                       aria-label="@DeleteMetricLabel"
                        OnClick="@Confirm">Delete metric</MudButton>
         </div>
     </DialogActions>
@@ -90,8 +90,16 @@
     private string ReferenceCountText =>
         References.Count == 1 ? "1 binding" : $"{References.Count} bindings";
 
-    private string DeleteStatusText =>
+    private string DeleteToneText =>
         References.Count == 0 ? "No bindings" : ReferenceCountText;
+
+    private string CancelMetricDeleteLabel => $"Cancel delete for {MetricDeleteTargetLabel}";
+
+    private string DeleteMetricLabel => $"Delete {MetricDeleteTargetLabel}";
+
+    private string MetricDeleteTargetLabel => string.IsNullOrWhiteSpace(MetricId)
+        ? "metric"
+        : MetricId.Trim();
 
     private static string ReferenceCellLabel(MetricReferenceSummary reference)
         => !string.IsNullOrWhiteSpace(reference.CellLabel)

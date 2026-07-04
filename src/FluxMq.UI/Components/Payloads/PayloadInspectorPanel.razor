@@ -3,8 +3,8 @@
 <section class="payload-inspector" aria-label="@Title">
     <div class="payload-inspector-header">
         <div class="payload-inspector-title">
-            <span class="payload-format-badge @FormatClass">
-                <MudIcon Icon="@FormatIcon" Size="Size.Small" />
+            <span class="payload-format-marker @FormatMarkerClass" aria-hidden="true">
+                <MudIcon Icon="@FormatIcon" Size="Size.Small" aria-hidden="true" />
             </span>
             <div class="payload-title-copy">
                 <strong>@Title</strong>
@@ -23,58 +23,90 @@
 
     <div class="payload-view-switch" role="tablist" aria-label="Payload views">
         <button type="button"
+                id="@PayloadViewTabId(FormattedView)"
                 role="tab"
                 aria-selected="@IsActiveView(FormattedView)"
+                aria-controls="@PayloadViewPanelId"
+                aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                 class="@ViewButtonClass(FormattedView)"
                 title="Formatted"
+                @onkeydown="@OnFormattedViewTabKeyDown"
                 @onclick="@(() => _activeView = FormattedView)">
-            <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.DataObject" Size="Size.Small" aria-hidden="true" />
             <span>Formatted</span>
         </button>
         <button type="button"
+                id="@PayloadViewTabId(RawView)"
                 role="tab"
                 aria-selected="@IsActiveView(RawView)"
+                aria-controls="@PayloadViewPanelId"
+                aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                 class="@ViewButtonClass(RawView)"
                 title="Raw"
+                @onkeydown="@OnRawViewTabKeyDown"
                 @onclick="@(() => _activeView = RawView)">
-            <MudIcon Icon="@Icons.Material.Filled.Subject" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Subject" Size="Size.Small" aria-hidden="true" />
             <span>Raw</span>
         </button>
         <button type="button"
+                id="@PayloadViewTabId(HexView)"
                 role="tab"
                 aria-selected="@IsActiveView(HexView)"
+                aria-controls="@PayloadViewPanelId"
+                aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                 class="@ViewButtonClass(HexView)"
                 title="Hex"
+                @onkeydown="@OnHexViewTabKeyDown"
                 @onclick="@(() => _activeView = HexView)">
-            <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Tag" Size="Size.Small" aria-hidden="true" />
             <span>Hex</span>
         </button>
         <button type="button"
+                id="@PayloadViewTabId(MetaView)"
                 role="tab"
                 aria-selected="@IsActiveView(MetaView)"
+                aria-controls="@PayloadViewPanelId"
+                aria-keyshortcuts="Enter Space ArrowLeft ArrowRight Home End"
                 class="@ViewButtonClass(MetaView)"
                 title="Metadata"
+                @onkeydown="@OnMetaViewTabKeyDown"
                 @onclick="@(() => _activeView = MetaView)">
-            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />
+            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" aria-hidden="true" />
             <span>Meta</span>
         </button>
     </div>
 
     @if (_activeView == FormattedView)
     {
-        <pre class="payload-inspector-body">@DisplayFormatted()</pre>
+        <pre id="@PayloadViewPanelId"
+             class="payload-inspector-body"
+             role="tabpanel"
+             aria-labelledby="@PayloadViewTabId(_activeView)"
+             tabindex="0">@DisplayFormatted()</pre>
     }
     else if (_activeView == RawView)
     {
-        <pre class="payload-inspector-body">@DisplayRaw()</pre>
+        <pre id="@PayloadViewPanelId"
+             class="payload-inspector-body"
+             role="tabpanel"
+             aria-labelledby="@PayloadViewTabId(_activeView)"
+             tabindex="0">@DisplayRaw()</pre>
     }
     else if (_activeView == HexView)
     {
-        <pre class="payload-inspector-body">@_inspection.HexDump</pre>
+        <pre id="@PayloadViewPanelId"
+             class="payload-inspector-body"
+             role="tabpanel"
+             aria-labelledby="@PayloadViewTabId(_activeView)"
+             tabindex="0">@_inspection.HexDump</pre>
     }
     else
     {
-        <div class="payload-inspector-meta-list">
+        <div id="@PayloadViewPanelId"
+             class="payload-inspector-meta-list"
+             role="tabpanel"
+             aria-labelledby="@PayloadViewTabId(_activeView)"
+             tabindex="0">
             <div>
                 <span>Type</span>
                 <strong>@_inspection.DisplayTypeLabel</strong>
@@ -96,6 +128,9 @@
     private const string RawView = "raw";
     private const string HexView = "hex";
     private const string MetaView = "meta";
+    private static readonly string[] PayloadViewOrder = [FormattedView, RawView, HexView, MetaView];
+
+    private readonly string _payloadViewIdPrefix = $"payload-inspector-{Guid.NewGuid():N}";
 
     [Parameter] public string Title { get; set; } = "Payload Inspector";
     [Parameter] public string? Topic { get; set; }
@@ -109,7 +144,7 @@
         ? "No topic"
         : Topic;
 
-    private string FormatClass => _inspection.Format switch
+    private string FormatMarkerClass => _inspection.Format switch
     {
         PayloadFormat.Json or PayloadFormat.Array => "json",
         PayloadFormat.Number or PayloadFormat.Boolean => "scalar",
@@ -141,7 +176,50 @@
 
     private bool IsActiveView(string view) => string.Equals(_activeView, view, StringComparison.Ordinal);
 
+    private string PayloadViewPanelId => $"{_payloadViewIdPrefix}-panel";
+
+    private string PayloadViewTabId(string view) => $"{_payloadViewIdPrefix}-{view}-tab";
+
     private string ViewButtonClass(string view) => IsActiveView(view)
         ? "payload-view-button active"
         : "payload-view-button";
+
+    private void OnFormattedViewTabKeyDown(KeyboardEventArgs args)
+        => SelectPayloadViewFromKeyboard(args, FormattedView);
+
+    private void OnRawViewTabKeyDown(KeyboardEventArgs args)
+        => SelectPayloadViewFromKeyboard(args, RawView);
+
+    private void OnHexViewTabKeyDown(KeyboardEventArgs args)
+        => SelectPayloadViewFromKeyboard(args, HexView);
+
+    private void OnMetaViewTabKeyDown(KeyboardEventArgs args)
+        => SelectPayloadViewFromKeyboard(args, MetaView);
+
+    private void SelectPayloadViewFromKeyboard(KeyboardEventArgs args, string currentView)
+    {
+        if (ResolvePayloadView(PayloadViewOrder, currentView, args.Key) is { } view)
+        {
+            _activeView = view;
+        }
+    }
+
+    private static string? ResolvePayloadView(string[] views, string currentView, string key)
+    {
+        var index = Array.IndexOf(views, currentView);
+        if (index < 0)
+        {
+            index = 0;
+        }
+
+        return key switch
+        {
+            "ArrowLeft" => views[(index + views.Length - 1) % views.Length],
+            "ArrowRight" => views[(index + 1) % views.Length],
+            "Home" => views[0],
+            "End" => views[^1],
+            "Enter" or " " or "Spacebar" => currentView,
+            _ => null
+        };
+    }
 }

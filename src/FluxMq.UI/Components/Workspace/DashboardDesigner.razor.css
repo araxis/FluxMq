@@ -114,7 +114,7 @@
     padding: 1px 6px 1px 1px;
 }
 
-.dashboard-mode-state {
+.dashboard-mode-indicator {
     align-items: center;
     border-radius: 5px;
     color: var(--mud-palette-text-secondary);
@@ -127,12 +127,12 @@
     white-space: nowrap;
 }
 
-.dashboard-mode-state.edit {
+.dashboard-mode-indicator.edit {
     background: color-mix(in srgb, var(--flux-accent) 10%, transparent);
     color: var(--flux-accent);
 }
 
-.dashboard-mode-state.live {
+.dashboard-mode-indicator.live {
     background: color-mix(in srgb, var(--mud-palette-success) 10%, transparent);
     color: var(--mud-palette-success);
 }
@@ -398,7 +398,7 @@
     outline-color: color-mix(in srgb, var(--mud-palette-info) 34%, transparent);
 }
 
-.dashboard-drop-status {
+.dashboard-drop-hint {
     align-items: center;
     background: color-mix(in srgb, var(--flux-surface-2) 92%, var(--flux-canvas));
     border: 1px solid color-mix(in srgb, var(--flux-accent) 42%, var(--flux-border));
@@ -421,13 +421,13 @@
     z-index: 8;
 }
 
-.dashboard-drop-status ::deep .mud-icon-root {
+.dashboard-drop-hint ::deep .mud-icon-root {
     color: var(--flux-accent);
     flex: 0 0 auto;
     font-size: 17px;
 }
 
-.dashboard-drop-status span {
+.dashboard-drop-hint span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -728,16 +728,16 @@
     border-color: color-mix(in srgb, var(--flux-accent) 48%, var(--flux-border));
 }
 
-.dashboard-cell.drop-ready {
+.dashboard-cell.drop-target {
     background: color-mix(in srgb, var(--flux-accent) 4%, var(--flux-surface-2));
     border-color: color-mix(in srgb, var(--flux-accent) 28%, var(--flux-border));
 }
 
-.dashboard-cell.has-widget.drop-ready {
+.dashboard-cell.has-widget.drop-target {
     background: color-mix(in srgb, var(--flux-accent) 3%, transparent);
 }
 
-.dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready {
+.dashboard-grid-frame.adding-widget .dashboard-cell.drop-target {
     border-style: dashed;
 }
 
@@ -854,7 +854,7 @@
     font-size: 15px;
 }
 
-.dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready .dashboard-cell-drop-mark {
+.dashboard-grid-frame.adding-widget .dashboard-cell.drop-target .dashboard-cell-drop-mark {
     opacity: 0.5;
     transform: scale(0.94);
 }
@@ -870,7 +870,7 @@
     transform: scale(1);
 }
 
-.dashboard-grid-frame.adding-widget .dashboard-cell.drop-ready:hover .dashboard-cell-drop-mark,
+.dashboard-grid-frame.adding-widget .dashboard-cell.drop-target:hover .dashboard-cell-drop-mark,
 .dashboard-grid-frame.adding-widget .dashboard-cell.dropping .dashboard-cell-drop-mark {
     opacity: 1;
     transform: scale(1);
@@ -1370,7 +1370,7 @@
     white-space: nowrap;
 }
 
-.dashboard-live-summary .ready {
+.dashboard-live-summary .active {
     background: color-mix(in srgb, var(--mud-palette-success) 9%, transparent);
     border-color: color-mix(in srgb, var(--mud-palette-success) 22%, var(--flux-border));
     color: var(--mud-palette-success);
@@ -1762,7 +1762,7 @@
         padding: 0;
     }
 
-    .dashboard-mode-state {
+    .dashboard-mode-indicator {
         display: none;
     }
 

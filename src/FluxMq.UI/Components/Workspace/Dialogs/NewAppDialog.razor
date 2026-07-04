@@ -2,7 +2,7 @@
     <TitleContent>
         <div class="new-app-dialog-title">
             <span class="new-app-dialog-title-icon" aria-hidden="true">
-                <MudIcon Icon="@Icons.Material.Filled.Apps" Size="Size.Small" />
+                <MudIcon Icon="@Icons.Material.Filled.Apps" Size="Size.Small" aria-hidden="true" />
             </span>
             <MudText Typo="Typo.h6" Class="new-app-dialog-heading">New app</MudText>
         </div>
@@ -11,7 +11,7 @@
         <div class="new-app-dialog-content">
             <section class="new-app-dialog-section" aria-labelledby="new-app-workspace-heading">
                 <div class="new-app-dialog-section-title" id="new-app-workspace-heading">
-                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" aria-hidden="true" />
                     <span>Workspace</span>
                 </div>
 
@@ -41,7 +41,7 @@
 
             <section class="new-app-dialog-section" aria-labelledby="new-app-connection-heading">
                 <div class="new-app-dialog-section-title" id="new-app-connection-heading">
-                    <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" />
+                    <MudIcon Icon="@Icons.Material.Filled.Cable" Size="Size.Small" aria-hidden="true" />
                     <span>Connection</span>
                 </div>
 
@@ -96,7 +96,7 @@
             <section class="new-app-dialog-section compact" aria-labelledby="new-app-security-heading">
                 <div class="new-app-dialog-security-row">
                     <div class="new-app-dialog-section-title" id="new-app-security-heading">
-                        <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
+                        <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" aria-hidden="true" />
                         <span>Security</span>
                     </div>
                     <MudCheckBox T="bool"
@@ -131,14 +131,14 @@
             <MudButton Variant="Variant.Text"
                        Size="Size.Small"
                        Class="new-app-dialog-cancel"
-                       aria-label="Cancel new app"
+                       aria-label="@CancelNewAppLabel"
                        OnClick="@Cancel">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        Size="Size.Small"
                        Class="new-app-dialog-create"
                        Disabled="@(!IsValid)"
-                       aria-label="Create app"
+                       aria-label="@CreateNewAppLabel"
                        OnClick="@Submit">Create</MudButton>
         </div>
     </DialogActions>
@@ -164,6 +164,18 @@
         !string.IsNullOrWhiteSpace(_pipelineName) &&
         !string.IsNullOrWhiteSpace(_host) &&
         _port is >= 1 and <= 65535;
+
+    private string CancelNewAppLabel => $"Cancel {NewAppTargetLabel} setup";
+
+    private string CreateNewAppLabel => $"Create {NewAppTargetLabel} with {FirstPipelineTargetLabel}";
+
+    private string NewAppTargetLabel => string.IsNullOrWhiteSpace(_appName)
+        ? "new app"
+        : _appName.Trim();
+
+    private string FirstPipelineTargetLabel => string.IsNullOrWhiteSpace(_pipelineName)
+        ? "first pipeline"
+        : _pipelineName.Trim();
 
     private void Cancel() => MudDialog.Cancel();
 

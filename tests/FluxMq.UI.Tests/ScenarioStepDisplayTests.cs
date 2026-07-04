@@ -23,12 +23,12 @@ public sealed class ScenarioStepDisplayTests
     }
 
     [Fact]
-    public void StepStatusClass_HandlesSkippedGuardState()
+    public void StepResultMarkerClass_HandlesSkippedGuardStatus()
     {
         ScenarioStepDisplay.StepCardClass(ScenarioStepRunStatus.Skipped)
             .ShouldBe("test-step-card skipped");
-        ScenarioStepDisplay.StepStatusClass(ScenarioStepRunStatus.Skipped)
-            .ShouldBe("test-step-status skipped");
+        ScenarioStepDisplay.StepResultMarkerClass(ScenarioStepRunStatus.Skipped)
+            .ShouldBe("test-step-result-marker skipped");
     }
 
     [Fact]

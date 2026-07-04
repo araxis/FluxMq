@@ -4,29 +4,26 @@
   <img src="design/ui-mockups/01-main-workspace.png" alt="FluxMQ workspace" width="100%">
 </p>
 
-FluxMQ is a next-generation MQTT debugging and observability platform built around a host-independent workflow runtime.
+FluxMQ is a desktop workspace for MQTT debugging, observability, and testing, built around a host-independent workflow runtime. It goes beyond a passive MQTT client: compose message-processing pipelines visually, watch live dashboards and metrics, script and run test scenarios, and explore topic trees and payloads — all from one dense, IDE-like app.
 
-The long-term goal is to go beyond a passive MQTT client and provide a focused tool for:
+## Highlights
 
-- Exploring MQTT topic trees.
-- Inspecting and decoding payloads.
-- Recording and replaying message sessions.
-- Observing broker and topic activity in real time.
-- Extending the app through stable modules and, later, plugins.
+- **Visual pipeline builder** — a node-graph canvas of MQTT triggers/sources, filters, condition routers, dynamic mappers, payload inspectors, publishers, recorders, HTTP/file actors, timers, and correlation/join/merge/window steps; typed ports with drag-to-connect; each node edited in a focused dialog, with Monaco editors for expressions, JSON, and JSONata mapping.
+- **Live dashboards** — KPI tiles, gauges, line/area/bar/donut charts, event tables, topic activity/tree, and QoS/payload breakdowns on an editable grid; light and dark themes.
+- **Metrics** — a flat, one-class-per-metric framework (message/topic counts, event rate, payload bytes, retained, plus windowed variants) surfaced on dashboards and pipeline nodes.
+- **Test scenario studio** — Setup / Stimulus / Observe / Assert / Cleanup phase lanes of steps (publish, trigger, expect, conditional/wait, and assertions including metric thresholds and JSON-schema validation), executed with a run report.
+- **Interactive debugging** — topic explorer, payload inspector, and an MQTT publisher panel.
+- **Headless CLI** — `FluxMq.Cli` validates and runs application JSON without a UI; broker-free generated-traffic samples are included.
 
 ## Status
 
-FluxMQ is in early foundation work.
+FluxMQ is an actively developed .NET MAUI Blazor Hybrid desktop app (Windows) on top of a reusable workflow runtime.
 
-Current state:
-
-- Core project structure in place.
-- MQTTnet selected for MQTT integration.
-- LiteDB selected for local-first storage.
-- `FluxFlow.Engine` package selected for workflow definitions, typed ports, runtime building, lifecycle, mapping, and conditional links.
-- FluxMQ application definitions keep app-owned resources, workflows, dashboards, and tests together while projecting executable resources/workflows into the engine runtime.
-- `FluxMq.App` host boundary can load `FluxMq:FlowApplication` through .NET configuration.
-- `FluxMq.Cli` can validate and run an application JSON file.
+- Workflow runtime via the `FluxFlow.Engine` package: typed ports, runtime building, phase-ordered lifecycle, mapping, and conditional links.
+- MQTTnet for MQTT integration; LiteDB for local-first storage.
+- Application definitions keep app-owned resources, workflows, dashboards, metrics, and tests together while projecting executable resources/workflows into the engine runtime.
+- `FluxMq.App` loads a `FluxMq:FlowApplication` through .NET configuration; `FluxMq.Cli` validates and runs an application JSON file.
+- MudBlazor UI with a shared light/dark design-token theme, a Z.Blazor.Diagrams canvas, and Monaco editors.
 - Project memory and planning files tracked in `memory/`.
 
 ## Architecture Direction

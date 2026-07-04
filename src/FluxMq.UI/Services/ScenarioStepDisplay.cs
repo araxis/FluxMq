@@ -37,15 +37,15 @@ public static class ScenarioStepDisplay
         };
     }
 
-    public static string StepStatusClass(ScenarioStepRunStatus status)
+    public static string StepResultMarkerClass(ScenarioStepRunStatus status)
         => status switch
         {
-            ScenarioStepRunStatus.Passed => "test-step-status passed",
-            ScenarioStepRunStatus.Skipped => "test-step-status skipped",
-            ScenarioStepRunStatus.Failed => "test-step-status failed",
-            ScenarioStepRunStatus.TimedOut => "test-step-status timed-out",
-            ScenarioStepRunStatus.Canceled => "test-step-status canceled",
-            _ => "test-step-status"
+            ScenarioStepRunStatus.Passed => "test-step-result-marker passed",
+            ScenarioStepRunStatus.Skipped => "test-step-result-marker skipped",
+            ScenarioStepRunStatus.Failed => "test-step-result-marker failed",
+            ScenarioStepRunStatus.TimedOut => "test-step-result-marker timed-out",
+            ScenarioStepRunStatus.Canceled => "test-step-result-marker canceled",
+            _ => "test-step-result-marker"
         };
 
     public static string BuildStepSummary(ScenarioStepSnapshot step, ScenarioStepCatalog catalog)

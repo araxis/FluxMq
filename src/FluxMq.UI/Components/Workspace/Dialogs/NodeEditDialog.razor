@@ -20,7 +20,7 @@
                               Error="@(!string.IsNullOrWhiteSpace(NodeIdError))"
                               OnKeyDown="@OnNodeIdKeyDown"
                               aria-label="Node ID"
-                              aria-describedby="@StatusElementId"
+                              aria-describedby="@ValidationElementId"
                               Class="node-edit-dialog-node-id" />
             </section>
             @if (EditorContent is not null)
@@ -35,16 +35,16 @@
         <div class="node-edit-dialog-actions">
             @if (!CanSubmit)
             {
-                <span id="node-edit-dialog-status"
-                      class="node-edit-dialog-action-status"
+                <span id="node-edit-dialog-validation"
+                      class="node-edit-dialog-validation-message"
                       role="status"
-                      aria-live="polite">@SubmitStatusText</span>
+                      aria-live="polite">@SubmitValidationText</span>
             }
             <span class="node-edit-dialog-action-spacer"></span>
             <MudButton OnClick="@Cancel"
                        Variant="Variant.Text"
                        Size="Size.Small"
-                       aria-label="Cancel node edit"
+                       aria-label="@CancelNodeEditLabel"
                        Class="node-edit-dialog-button">Cancel</MudButton>
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
@@ -52,7 +52,7 @@
                        StartIcon="@Icons.Material.Filled.Check"
                        Disabled="@(!CanSubmit)"
                        OnClick="@Submit"
-                       aria-label="Save node edit"
+                       aria-label="@SaveNodeEditLabel"
                        Class="node-edit-dialog-button node-edit-dialog-save">Save</MudButton>
         </div>
     </DialogActions>
@@ -64,7 +64,6 @@
     [Parameter] public string NodeDisplayName { get; set; } = "Node";
     [Parameter] public string NodeId { get; set; } = "";
     [Parameter] public string WorkflowName { get; set; } = "";
-    [Parameter] public Color CategoryColor { get; set; } = Color.Primary;
     [Parameter] public string? ContentClass { get; set; }
     [Parameter] public RenderFragment? EditorContent { get; set; }
     [Parameter] public Func<string?>? EditorValidationError { get; set; }
@@ -89,9 +88,17 @@
 
     private string NormalizedNodeId => _nodeId.Trim();
 
-    private string? StatusElementId => CanSubmit ? null : "node-edit-dialog-status";
+    private string? ValidationElementId => CanSubmit ? null : "node-edit-dialog-validation";
 
-    private string SubmitStatusText => NodeIdError ?? EditorError ?? "Review required";
+    private string SubmitValidationText => NodeIdError ?? EditorError ?? "Review required";
+
+    private string CancelNodeEditLabel => $"Cancel editing {NodeEditTargetLabel}";
+
+    private string SaveNodeEditLabel => $"Save edits for {NodeEditTargetLabel}";
+
+    private string NodeEditTargetLabel => string.IsNullOrWhiteSpace(NodeDisplayName)
+        ? "node"
+        : NodeDisplayName.Trim();
 
     protected override void OnParametersSet()
     {

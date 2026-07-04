@@ -21,7 +21,7 @@ public static class DashboardLatestEventVisualOptions
 
     public const string DefaultHeader = "Latest event";
     public const string DefaultEmptyText = "No events yet";
-    public const string DefaultHeaderColor = "#f3f7fb";
-    public const string DefaultDetailColor = "#9fb0c5";
-    public const string DefaultPayloadColor = "#d3e2f3";
+    public const string DefaultHeaderColor = "var(--mud-palette-text-primary)";
+    public const string DefaultDetailColor = "var(--mud-palette-text-secondary)";
+    public const string DefaultPayloadColor = "var(--mud-palette-text-primary)";
 }
