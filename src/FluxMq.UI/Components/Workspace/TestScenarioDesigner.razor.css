@@ -613,10 +613,15 @@
     display: grid;
     flex: 1 1 auto;
     gap: 6px;
-    grid-template-columns: repeat(auto-fit, minmax(206px, 1fr));
+    /* Lay the phase lanes in a single row, each keeping a 206px floor and sharing extra width.
+       When they can't all fit (narrow window) the row scrolls horizontally instead of auto-fit
+       silently wrapping a lane into the clipped overflow. */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(206px, 1fr);
     min-height: 0;
     min-width: 0;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .test-phase-lanes.drop-active {
@@ -1116,7 +1121,9 @@
     }
 
     .test-phase-lanes {
+        grid-auto-flow: row;
         grid-template-columns: minmax(0, 1fr);
+        overflow-y: auto;
     }
 
     .test-phase-lane {

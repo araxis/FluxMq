@@ -4447,7 +4447,7 @@ public sealed class DashboardEventFilterCatalogTests
         css.ShouldContain("grid-template-columns: minmax(0, 1fr) auto;");
         css.ShouldContain("min-height: 42px;");
         css.ShouldContain("flex-wrap: nowrap;");
-        css.ShouldContain("grid-template-columns: repeat(auto-fit, minmax(206px, 1fr));");
+        css.ShouldContain("grid-auto-columns: minmax(206px, 1fr);");
         css.ShouldContain(".test-phase-lanes.drop-active");
         css.ShouldContain(".test-phase-lane.drop-target");
         css.ShouldContain(".test-phase-lane.empty.drop-target .test-phase-empty");
